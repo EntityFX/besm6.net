@@ -277,8 +277,14 @@ namespace Besm6.Loader
                 return RunRawWords(job);
             }
 
+            if (job.AssemProgram.Count > 0)
+            {
+                // Путь *assem: ассемблируем секцию в память и выполняем.
+                return RunAssem(job);
+            }
+
             // Путь через MONSYS: пишем скрипт на барабан #1, ставим загрузчик.
-            // *assem секции обрабатываются MONSYS (ассемблер, компиляторы ALGOL/FORTRAN).
+            // (компиляторы ALGOL/FORTRAN/B, интерактивные сценарии).
             WriteScriptToDrum(job, rawLines);
             return BootAndRun(job);
         }
@@ -368,8 +374,7 @@ namespace Besm6.Loader
                 _machine.StepTrace = (pc, word) =>
                 {
                     counter[0]++;
-                    if (counter[0] <= 100)
-                        InstructionTrace(pc, word);
+                    InstructionTrace(pc, word);
                 };
             }
 

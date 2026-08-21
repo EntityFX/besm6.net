@@ -29,5 +29,8 @@ namespace Besm6.Core
         E74 = 60, // 074 oct — finish job
         E75 = 61, // 075 oct — write ACC to memory
         E76 = 62, // 076 oct — kernel routine
+        // Long extracodes (opcode & 0o200)
+        E20 = 128, // 200 oct — (reserved/no-op)
+        E21 = 136, // 210 oct — lock/release semaphores (no-op)
     }
 }

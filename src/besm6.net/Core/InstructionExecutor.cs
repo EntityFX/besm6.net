@@ -91,7 +91,12 @@ namespace Besm6.Core
                     break;
 
                 case Opcode.Reg:
-                    throw new ProcessorException("Illegal instruction 002 рег/mod");
+                    // 002 рег/mod — привилегированная инструкция:
+                    // устанавливает регистр модификатора MOD = addr (по C++ «mod»).
+                    // В MONSYS используется для модификации последующих адресов.
+                    mod = addr & 0x7FFF;
+                    applyMod = true;
+                    break;
 
                 case Opcode.Schm:
                     _p.MemStore(m[15], acc);
@@ -436,7 +441,15 @@ namespace Besm6.Core
                     break;
 
                 case Opcode.Vypr:
-                    throw new ProcessorException("Illegal instruction 0320 выпр/iret");
+                    // 0320 выпр/iret — возврат из прерывания:
+                    // PC = ACC (адрес возврата сохранён в аккумулятор),
+                    // сброс флагов конвейера, потребить intercept.
+                    pc = acc;
+                    rightFlag = false;
+                    applyMod = false;
+                    mod = 0;
+                    _p.ConsumeIntercept();
+                    break;
 
                 case Opcode.Stop:
                     return true;

@@ -455,6 +455,213 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
+        public void E57_Assign_MountsTape()
+        {
+            var machine = new MachineCore();
+            bool mounted = false;
+            long mountedId = 0;
+            int mountedUnit = -1;
+            var handler = new ExtracodeHandler(
+                machine,
+                id => null, u => null, d => null,
+                output: s => { },
+                mountTape: (tapeId, unit) => { mounted = true; mountedId = tapeId; mountedUnit = unit; return true; },
+                findTape: (tapeId) => 0,
+                releaseTapes: (mask) => { });
+
+            // E57_ASSIGN = 0o2000 = 1024 decimal.
+            long addr = 1024; // ASSIGN
+            machine.Cpu.SetM(14, addr);
+            long fakeTapeId = 0xB6FBB3E73009L; // TapeMonsys
+            machine.Cpu.SetAcc(fakeTapeId);
+            machine.Cpu.SetM(13, 24); // disk unit 24
+
+            handler.Handle(47, 0); // E57 = 47 dec (0o57)
+
+            Assert.IsTrue(mounted, "E57 ASSIGN должен вызвать mountTape");
+            Assert.AreEqual(fakeTapeId, mountedId);
+            Assert.AreEqual(24, mountedUnit);
+            // ACC = disk unit.
+            Assert.AreEqual(24L, machine.Cpu.GetAcc());
+        }
+
+        [TestMethod]
+        public void E57_Assign_FailsWhenTapeNotFound()
+        {
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine,
+                id => null, u => null, d => null,
+                output: s => { },
+                mountTape: (tapeId, unit) => false, // not found
+                findTape: (tapeId) => 0,
+                releaseTapes: (mask) => { });
+
+            machine.Cpu.SetM(14, 1024); // ASSIGN
+            machine.Cpu.SetAcc(0xDEADBEEF);
+            machine.Cpu.SetM(13, 24);
+
+            bool threw = false;
+            try { handler.Handle(47, 0); } catch (ProcessorException) { threw = true; }
+            Assert.IsTrue(threw, "E57 ASSIGN с несуществующей лентой должен бросить исключение");
+        }
+
+        [TestMethod]
+        public void E57_Release_CallsReleaseTapes()
+        {
+            var machine = new MachineCore();
+            long releasedMask = 0;
+            var handler = new ExtracodeHandler(
+                machine,
+                id => null, u => null, d => null,
+                output: s => { },
+                mountTape: (tapeId, unit) => true,
+                findTape: (tapeId) => 0,
+                releaseTapes: (mask) => { releasedMask = mask; });
+
+            // E57_RELEASE = 0o4000 = 2048 decimal.
+            machine.Cpu.SetM(14, 2048); // RELEASE
+            long bitmask = (1L << 0) | (1L << 3); // release units 0 and 3
+            machine.Cpu.SetAcc(bitmask);
+
+            handler.Handle(47, 0);
+
+            Assert.AreEqual(bitmask, releasedMask);
+            Assert.AreEqual(0L, machine.Cpu.GetAcc(), "After RELEASE, ACC should be 0");
+        }
+
+        [TestMethod]
+        public void E57_Find_ReturnsUnit()
+        {
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine,
+                id => null, u => null, d => null,
+                output: s => { },
+                mountTape: (tapeId, unit) => true,
+                findTape: (tapeId) => tapeId == 0xB6FBB3E73009L ? 24 : 0,
+                releaseTapes: (mask) => { });
+
+            // addr >= 0o10 (8) and no ASSIGN/RELEASE bits → FIND.
+            machine.Cpu.SetM(14, 8); // 0o10 oct = 8 dec
+            long fakeTapeId = 0xB6FBB3E73009L;
+            machine.Cpu.SetAcc(fakeTapeId);
+
+            handler.Handle(47, 0);
+
+            Assert.AreEqual(24L, machine.Cpu.GetAcc(), "FIND должен вернуть unit");
+        }
+
+        [TestMethod]
+        public void E57_Find_NotFound_ReturnsZero()
+        {
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine,
+                id => null, u => null, d => null,
+                output: s => { },
+                mountTape: (tapeId, unit) => true,
+                findTape: (tapeId) => 0, // not found
+                releaseTapes: (mask) => { });
+
+            machine.Cpu.SetM(14, 8); // FIND
+            machine.Cpu.SetAcc(0x12345);
+
+            handler.Handle(47, 0);
+            Assert.AreEqual(0L, machine.Cpu.GetAcc());
+        }
+
+        [TestMethod]
+        public void E57_SpecialAddr7_ThrowsException()
+        {
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null, output: s => { });
+
+            machine.Cpu.SetM(14, 7); // "task paused waiting for tape"
+            bool threw = false;
+            try { handler.Handle(47, 0); } catch (ProcessorException) { threw = true; }
+            Assert.IsTrue(threw, "E57 addr=7 должен бросить исключение");
+        }
+
+        [TestMethod]
+        public void E57_SpecialAddr2_PlotterNoOp()
+        {
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null, output: s => { });
+
+            machine.Cpu.SetM(14, 2); // Calcomp plotter
+            machine.Cpu.SetAcc(0x1234);
+            handler.Handle(47, 0);
+            Assert.AreEqual(0L, machine.Cpu.GetAcc(), "E57 addr=2 (plotter) → ACC=0");
+        }
+
+        [TestMethod]
+        public void E65_Switch_ReturnsSwitchValue()
+        {
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null, output: s => { });
+
+            // addr=1 → switch 1 → 0.
+            machine.Cpu.SetM(14, 1);
+            handler.Handle(53, 0); // E65 = 53 dec
+            Assert.AreEqual(0L, machine.Cpu.GetAcc());
+
+            // addr=322 → 1024.
+            machine.Cpu.SetM(14, 322);
+            handler.Handle(53, 0);
+            Assert.AreEqual(1024L, machine.Cpu.GetAcc());
+        }
+
+        [TestMethod]
+        public void E67_Jump_SetsPC()
+        {
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null, output: s => { });
+
+            // E67: word at M[14], PC = (word >> 24) & 0x7FFF.
+            int targetAddr = 1000;
+            long word = (long)targetAddr << 24;
+            machine.Memory.Write(200, new Word48(word));
+            machine.Cpu.SetM(14, 200);
+
+            handler.Handle(55, 0); // E67 = 55 dec
+            Assert.AreEqual(targetAddr, (int)machine.Cpu.GetPc());
+        }
+
+        [TestMethod]
+        public void E76_Unimplemented_Throws()
+        {
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null, output: s => { });
+
+            // addr=5 → unimplemented (not 0/1, < 10).
+            machine.Cpu.SetM(14, 5);
+            bool threw = false;
+            try { handler.Handle(62, 0); } catch (ProcessorException) { threw = true; }
+            Assert.IsTrue(threw, "E76 addr=5 (unimplemented) должен бросить исключение");
+        }
+
+        [TestMethod]
+        public void E76_ZeroAndOne_NoOp()
+        {
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null, output: s => { });
+
+            // addr=0 and addr=1 are no-ops.
+            machine.Cpu.SetM(14, 0);
+            handler.Handle(62, 0); // should not throw
+            machine.Cpu.SetM(14, 1);
+            handler.Handle(62, 0); // should not throw
+            Assert.IsTrue(true); // reached = no exception
+        }
+
+        [TestMethod]
         public void E70_DrumSector_WriteReadRoundTrip()
         {
             var machine = new MachineCore();
