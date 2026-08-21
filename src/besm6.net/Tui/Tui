@@ -1,0 +1,196 @@
+using System;
+using System.IO;
+using Besm6.Core;
+using Besm6.Asm;
+using Besm6.Loader;
+
+namespace Besm6.Tui
+{
+    public sealed class TuiApp
+    {
+        private readonly Config _config;
+        private readonly string? _jobFile;
+        private MachineCore? _machine;
+        private DubnaLoader? _loader;
+
+        public TuiApp(Config config, string? jobFile)
+        {
+            _config = config;
+            _jobFile = jobFile;
+        }
+
+        public int Run()
+        {
+            Console.WriteLine("=== BESM-6 TUI Debugger ===");
+            Console.WriteLine();
+
+            if (_jobFile != null)
+            {
+                if (!File.Exists(_jobFile))
+                {
+                    Console.WriteLine($"Error: File not found: {_jobFile}");
+                    return 1;
+                }
+            }
+
+            string cmd;
+            while (true)
+            {
+                PrintStatusBar();
+                Console.Write("> ");
+                cmd = (Console.ReadLine() ?? "").Trim().ToLowerInvariant();
+
+                switch (cmd)
+                {
+                    case "": break;
+                    case "quit":
+                    case "exit": goto end;
+                    case "load": CmdLoad(); break;
+                    case "run": CmdRun(); break;
+                    case "step": CmdStep(); break;
+                    case "regs": CmdRegs(); break;
+                    case "mem": CmdMem(); break;
+                    case "dump": CmdDump(); break;
+                    case "asm": CmdAsm(); break;
+                    case "disasm": CmdDisasm(); break;
+                    case "help": CmdHelp(); break;
+                    default: Console.WriteLine($"Unknown: {cmd}. Type 'help'."); break;
+                }
+            }
+            end:
+            Console.WriteLine("BESM-6 TUI debugger exited.");
+            return 0;
+        }
+
+        private void InitMachine()
+        {
+            _machine = MachineFactory.CreateMachine(_config);
+            _loader = MachineFactory.CreateLoader(_config, _machine);
+        }
+
+        private void PrintStatusBar()
+        {
+            if (_machine == null) return;
+            var cpu = _machine.Cpu;
+            Console.Write($"[PC={cpu.PC:X4} ACC={cpu.Acc:X12}] ");
+        }
+
+        private void CmdLoad()
+        {
+            Console.Write("File path: ");
+            var path = Console.ReadLine()?.Trim();
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            {
+                Console.WriteLine("File not found.");
+                return;
+            }
+            _jobFile = path;
+            InitMachine();
+            Console.WriteLine($"Machine ready. PC={_machine!.Cpu.PC:X4}");
+        }
+
+        private void CmdRun()
+        {
+            if (_machine == null || _loader == null || _jobFile == null)
+            {
+                Console.WriteLine("No machine/job loaded. Use 'load' first.");
+                return;
+            }
+            var result = _loader.RunScript(_jobFile);
+            Console.WriteLine(result.Success ? "Execution finished (success)." : "Execution stopped: " + (result.ErrorMessage ?? "unknown"));
+            Console.WriteLine($"PC={_machine.Cpu.PC:X4}");
+        }
+
+        private void CmdStep()
+        {
+            if (_machine == null) { Console.WriteLine("No machine. Use 'load' first."); return; }
+            var cpu = _machine.Cpu;
+            long pc = cpu.PC;
+            var word = _machine.Memory.Read((int)pc);
+            var dis = Disassembler.DisasmWord(word.Value);
+            Console.WriteLine($"Step: {pc:X4} {dis}");
+            cpu.Step();
+            Console.WriteLine($"  PC={cpu.PC:X4} ACC={cpu.Acc:X12}");
+        }
+
+        private void CmdRegs()
+        {
+            if (_machine == null) return;
+            var cpu = _machine.Cpu;
+            Console.WriteLine("--- Registers ---");
+            Console.WriteLine($"  PC  = {cpu.PC:X8}");
+            Console.WriteLine($"  ACC = {cpu.Acc:X12} ({cpu.Acc})");
+            for (int i = 0; i < 16; i++)
+            {
+                Console.WriteLine($"  M{i,2}  = {cpu.GetM(i):X12}");
+            }
+        }
+
+        private void CmdMem()
+        {
+            if (_machine == null) return;
+            Console.Write("Address (hex, default 0): ");
+            var line = Console.ReadLine()?.Trim() ?? "0";
+            int addr;
+            if (!int.TryParse(line, System.Globalization.NumberStyles.HexNumber, null, out addr)) addr = 0;
+            DumpRange(addr, 16);
+        }
+
+        private void CmdDump()
+        {
+            if (_machine == null) return;
+            DumpRange(0, 32);
+        }
+
+        private void DumpRange(int addr, int count)
+        {
+            var mem = _machine!.Memory;
+            int end = Math.Min(addr + count, mem.Size);
+            for (int a = addr; a < end; a++)
+            {
+                var w = mem.Read(a);
+                Console.WriteLine($"  {a:X4}: {w.Value:X12}  {Disassembler.DisasmWord(w.Value)}");
+            }
+        }
+
+        private void CmdAsm()
+        {
+            Console.Write("Instruction: ");
+            var line = Console.ReadLine()?.Trim();
+            if (string.IsNullOrWhiteSpace(line)) return;
+            try
+            {
+                long word = Assembler.Asm(line);
+                Console.WriteLine($"Assembled: {word:X12}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+
+        private void CmdDisasm()
+        {
+            if (_machine == null) { Console.WriteLine("No machine."); return; }
+            Console.Write("Address (hex, default 0): ");
+            var line = Console.ReadLine()?.Trim() ?? "0";
+            if (!int.TryParse(line, System.Globalization.NumberStyles.HexNumber, null, out int addr)) addr = 0;
+            DumpRange(addr, 16);
+        }
+
+        private void CmdHelp()
+        {
+            Console.WriteLine("Commands:");
+            Console.WriteLine("  load    - Load a .dub file");
+            Console.WriteLine("  run     - Run until stop");
+            Console.WriteLine("  step    - Execute one instruction");
+            Console.WriteLine("  regs    - Show registers");
+            Console.WriteLine("  mem     - Show memory at address");
+            Console.WriteLine("  dump    - Dump memory (first 32 words)");
+            Console.WriteLine("  asm     - Assemble an instruction");
+            Console.WriteLine("  disasm  - Disassemble memory");
+            Console.WriteLine("  help    - Show this help");
+            Console.WriteLine("  quit    - Exit TUI");
+        }
+    }
+}
