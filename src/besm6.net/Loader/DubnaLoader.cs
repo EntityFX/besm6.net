@@ -171,6 +171,12 @@ namespace Besm6.Loader
                 }
                 else
                 {
+                    // MONSYS не знает директиву *assem — транслируем в *madlen.
+                    if (trimmed.StartsWith("*assem", StringComparison.OrdinalIgnoreCase))
+                        trimmed = "*madlen" + trimmed.Substring(6);
+                    // MONSYS не знает директиву *forex (FORTRAN-диалект) — транслируем в *fortran.
+                    else if (trimmed.StartsWith("*forex", StringComparison.OrdinalIgnoreCase))
+                        trimmed = "*fortran" + trimmed.Substring(6);
                     WriteCosyLine(drum, ref offset, trimmed);
                 }
             }
@@ -239,12 +245,33 @@ namespace Besm6.Loader
             if (job.AssemProgram.Count > 0)
             {
                 int baseAddr = job.TransMain ?? DefaultLoadBase;
-                foreach (var w in job.AssemProgram)
-                    LoadProgramWord(baseAddr++, w);
-                _machine.Cpu.SetPc(job.TransMain ?? DefaultLoadBase);
-                _memStartBase = job.TransMain ?? DefaultLoadBase;
+
+                // Ассемблируем через ProgramAssembler.
+                var textLines = job.AssemProgram
+                    .Where(w => !w.IsRaw && !string.IsNullOrWhiteSpace(w.Text))
+                    .Select(w => w.Text!)
+                    .ToList();
+                var rawValues = job.AssemProgram
+                    .Where(w => w.IsRaw)
+                    .Select(w => (index: job.AssemProgram.ToList().FindIndex(x => ReferenceEquals(x, w)), w.Value))
+                    .ToList();
+
+                var asmResult = Besm6.Asm.ProgramAssembler.Assemble(textLines, baseAddr);
+                for (int i = 0; i < asmResult.Words.Count; i++)
+                {
+                    int addr = (baseAddr + i) & 0x7FFF;
+                    _machine.Memory.Write(addr, new Word48(asmResult.Words[i]));
+                }
+                foreach (var (idx, val) in rawValues)
+                {
+                    int addr = (baseAddr + idx) & 0x7FFF;
+                    _machine.Memory.Write(addr, new Word48(val));
+                }
+
+                _machine.Cpu.SetPc(baseAddr);
+                _memStartBase = baseAddr;
                 if (Verbose)
-                    Console.WriteLine($"Assembled {job.AssemProgram.Count} words at 0{(_memStartBase):X}, start PC=0{(_memStartBase):X}");
+                    Console.WriteLine($"Assembled {asmResult.Words.Count} words at 0{baseAddr:X}, start PC=0{baseAddr:X}");
                 return _memStartBase;
             }
 
@@ -271,20 +298,25 @@ namespace Besm6.Loader
             _machine.Reset();
             MountScriptTapes(job);
 
-            if (job.RawWords.Count > 0)
+            // Путь MONSYS: компиляция через ОС (MADLEN, BEMSH, ALGOL, FORTRAN, B).
+            // Если есть *execute — ОС компилирует и исполняет программу.
+            // Также: если секция *assem содержит MADLEN-формат (program:, данные) — нужен MONSYS.
+            bool needsOs = job.Execute != null;
+
+            if (!needsOs && job.RawWords.Count > 0)
             {
                 // Минимальный путь: raw-слова прямо в память.
                 return RunRawWords(job);
             }
 
-            if (job.AssemProgram.Count > 0)
+            if (!needsOs && job.AssemProgram.Count > 0)
             {
-                // Путь *assem: ассемблируем секцию в память и выполняем.
+                // Путь *assem без *execute: локальная ассемблерная сборка.
+                // Работает для простых мнемоник (не для MADLEN/BEMSH исходников).
                 return RunAssem(job);
             }
 
-            // Путь через MONSYS: пишем скрипт на барабан #1, ставим загрузчик.
-            // (компиляторы ALGOL/FORTRAN/B, интерактивные сценарии).
+            // Основной путь: пишем скрипт на барабан #1, MONSYS компилирует/запускает.
             WriteScriptToDrum(job, rawLines);
             return BootAndRun(job);
         }
@@ -315,28 +347,51 @@ namespace Besm6.Loader
         public LoadResult RunAssem(DubJob job)
         {
             int baseAddr = job.TransMain ?? DefaultLoadBase;
+
+            // Разделить на сырые слова и мнемонические строки.
+            // Если есть мнемоники — используем ProgramAssembler (2-pass, лейблы).
+            var textLines = new List<string>();
+            var rawValues = new List<(int index, long value)>();
+
+            int wordIdx = 0;
             foreach (var w in job.AssemProgram)
-                LoadProgramWord(baseAddr++, w);
-            _machine.Cpu.SetPc(job.TransMain ?? DefaultLoadBase);
+            {
+                if (w.IsRaw)
+                {
+                    // Сырое слово — записываем на фиксированном месте.
+                    rawValues.Add((wordIdx, w.Value));
+                }
+                else if (!string.IsNullOrWhiteSpace(w.Text))
+                {
+                    textLines.Add(w.Text);
+                }
+                wordIdx++;
+            }
+
+            // Ассемблируем через ProgramAssembler (поддерживает лейблы, MADLEN, BEMSH).
+            var asmResult = Besm6.Asm.ProgramAssembler.Assemble(textLines, baseAddr);
+
+            // Записываем все слова в память.
+            for (int i = 0; i < asmResult.Words.Count; i++)
+            {
+                int addr = (baseAddr + i) & 0x7FFF;
+                _machine.Memory.Write(addr, new Word48(asmResult.Words[i]));
+            }
+
+            // Перезаписываем сырые слова в их позиции.
+            foreach (var (idx, val) in rawValues)
+            {
+                int addr = (baseAddr + idx) & 0x7FFF;
+                _machine.Memory.Write(addr, new Word48(val));
+            }
+
+            _machine.Cpu.SetPc(baseAddr);
             InstallExtracodeHook();
 
             if (Verbose)
-                Console.WriteLine($"Assembled {job.AssemProgram.Count} words at 0{(job.TransMain ?? DefaultLoadBase):X}, start PC=0{(job.TransMain ?? DefaultLoadBase):X}");
+                Console.WriteLine($"Assembled {asmResult.Words.Count} words at 0{baseAddr:X}, start PC=0{baseAddr:X}");
 
             return RunBounded();
-        }
-
-        /// <summary>
-        /// Записать одно слово программы (секция *assem) в адрес addr:
-        /// сырое слово — как есть, мнемоника — после ассемблирования.
-        /// </summary>
-        private void LoadProgramWord(int baseAddr, ProgramWord w)
-        {
-            int addr = baseAddr & 0x7FFF;
-            long value = w.IsRaw
-                ? w.Value
-                : Besm6.Asm.Assembler.Asm(w.Text ?? "");
-            _machine.Memory.Write(addr, new Word48(value));
         }
 
         /// <summary>
