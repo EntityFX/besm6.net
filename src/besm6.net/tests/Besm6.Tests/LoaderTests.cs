@@ -363,11 +363,11 @@ namespace Besm6.Tests
             machine.Memory.Write(512, new Word48(word));
 
             // E64: адрес из M[14]. E64_Pointer в 500, E64_Info в 501.
-            // Pointer: startReg=0, startAddr=512, endReg=0, endAddr=512
-            // Layout: [startReg 44-47][startAddr 29-43][endReg 25-28][endAddr 10-24][flags 0-9]
-            machine.Memory.Write(500, new Word48((512L << 29) | (512L << 10)));
-            // Info: format=0(GOST), last=1(bit 24)
-            machine.Memory.Write(501, new Word48(1L << 24));
+            // Pointer (C++ union E64_Pointer, LSB-first): start_addr биты 38..24,
+            // end_addr биты 14..0. => 512<<24 | 512.
+            machine.Memory.Write(500, new Word48((512L << 24) | 512L));
+            // Info: format=0(GOST), finish=1 (бит 23).
+            machine.Memory.Write(501, new Word48(1L << 23));
             machine.Cpu.SetM(14, 500);
 
             bool captured = false;
@@ -441,9 +441,9 @@ namespace Besm6.Tests
             foreach (byte b in bytes) word = (word << 8) | b;
             machine.Memory.Write(512, new Word48(word));
 
-            // E64_Pointer в 500, E64_Info (format=0, last=1) в 501.
-            machine.Memory.Write(500, new Word48((512L << 29) | (512L << 10)));
-            machine.Memory.Write(501, new Word48(1L << 24));
+            // E64_Pointer в 500, E64_Info (format=0, finish=1) в 501.
+            machine.Memory.Write(500, new Word48((512L << 24) | 512L));
+            machine.Memory.Write(501, new Word48(1L << 23));
             machine.Cpu.SetM(14, 500);
 
             string captured = "";

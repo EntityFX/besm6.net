@@ -11,6 +11,7 @@ namespace Besm6.Loader
     public sealed partial class ExtracodeHandler
     {
         private const int E64_LINE_WIDTH = 128;
+        private const int MemoryNWords = 32768; // MEMORY_NWORDS (32 * 1024)
 
         // GOST constants (hex equivalents of octal)
         private const byte G_SPACE = 0x0F;       // 017
@@ -201,13 +202,19 @@ namespace Besm6.Loader
 
             int ctlAddr = aex;
 
-            // Read E64_Pointer
+            // Read E64_Pointer (C++ union E64_Pointer, битовые поля LSB-first):
+            //   end_addr  : биты 14..0  (Разряды 15-1)
+            //   _1        : биты 19..15
+            //   end_reg   : биты 23..20 (Разряды 24-21)
+            //   start_addr: биты 38..24 (Разряды 39-25)
+            //   flags     : биты 43..39 (Разряды 44-40)
+            //   start_reg : биты 47..44 (Разряды 48-45)
             long ptrWord = MemRead(ctlAddr);
             int startReg = (int)((ptrWord >> 44) & 0xF);
-            int startAddr = (int)((ptrWord >> 29) & 0x7FFF);
-            int endReg = (int)((ptrWord >> 25) & 0xF);
-            int endAddr = (int)((ptrWord >> 10) & 0x7FFF);
-            int flags = (int)(ptrWord & 0x3FF);
+            int startAddr = (int)((ptrWord >> 24) & 0x7FFF);
+            int endReg = (int)((ptrWord >> 20) & 0xF);
+            int endAddr = (int)(ptrWord & 0x7FFF);
+            int flags = (int)((ptrWord >> 39) & 0x1F);
 
             startAddr = (startAddr + (int)cpu.GetM(startReg)) & 0x7FFF;
             endAddr = (endAddr + (int)cpu.GetM(endReg)) & 0x7FFF;
@@ -217,6 +224,16 @@ namespace Besm6.Loader
 
             if (endAddr <= startAddr)
                 endAddr = 0;
+
+            // Special mode for Dubna OS (flags & 010 oct): the data is printed
+            // directly as a byte stream (GOST chars, 0x7E=end, >=0x80=packed spaces).
+            // Port of C++ e64(): if (ptr.field.flags & 010) e64_print_dubna(...).
+            if ((flags & 010) != 0)
+            {
+                E64PrintDubna(startAddr, endAddr);
+                E64Finish();
+                return;
+            }
 
             // Initialize line buffer
             Array.Fill(_e64Line, G_SPACE);
@@ -229,15 +246,25 @@ namespace Besm6.Loader
             for (;;)
             {
                 ctlAddr++;
+                if (ctlAddr >= MemoryNWords)
+                    throw new ProcessorException("Unterminated info list in extracode e64");
 again:
+                // E64_Info (C++ union E64_Info, битовые поля LSB-first):
+                //   repeat1 : биты 6..0  (Разряды 7-1)
+                //   width   : биты 18..12 (Разряды 19-13)
+                //   skip    : биты 22..20 (Разряды 23-21)
+                //   finish  : бит 23     (Разряд 24)
+                //   digits  : биты 30..24 (Разряды 31-25)
+                //   offset  : биты 42..36 (Разряды 43-37)
+                //   format  : биты 47..44 (Разряды 48-45)
                 long infoWord = MemRead(ctlAddr);
                 int format = (int)((infoWord >> 44) & 0xF);
-                int offset = (int)((infoWord >> 37) & 0x7F);
-                int digits = (int)((infoWord >> 25) & 0x7F);
-                int finish = (int)((infoWord >> 24) & 1);
-                int skip = (int)((infoWord >> 21) & 0x7);
-                int width = (int)((infoWord >> 13) & 0x7F);
-                int repeat = (int)((infoWord >> 1) & 0x7F);
+                int offset = (int)((infoWord >> 36) & 0x7F);
+                int digits = (int)((infoWord >> 24) & 0x7F);
+                int finish = (int)((infoWord >> 23) & 1);
+                int skip = (int)((infoWord >> 20) & 0x7);
+                int width = (int)((infoWord >> 12) & 0x7F);
+                int repeat = (int)((infoWord >> 0) & 0x7F);
 
                 _e64Position = offset;
 
@@ -484,6 +511,46 @@ again:
 
         private static bool IsGostEndOfText(byte ch)
             => ch == G_EOF || ch == G_END_OF_INFO || ch == 0x99; // 0231
+
+        // --- Dubna mode (flags & 010 oct): raw byte stream ---
+        // Порт C++ e64_print_dubna (ref/e64.cpp).
+
+        private void E64PrintDubna(int startAddr, int endAddr)
+        {
+            var bp = new BytePointer(_machine.Memory, startAddr);
+
+            byte ch = bp.Get();
+            if (ch > 0 && _e64LineDirty)
+            {
+                // Emit previous line.
+                E64EmitLine();
+            }
+            for (;;)
+            {
+                if (endAddr != 0 && bp.WordAddr == endAddr + 1)
+                    return;
+
+                if (_e64Position == E64_LINE_WIDTH)
+                    return;
+
+                ch = bp.Get();
+                if (ch == 0x7E) // 0176 — end of text
+                {
+                    E64EmitLine();
+                    return;
+                }
+
+                if (ch >= 0x80) // 0200 — packed spaces
+                {
+                    while (ch-- >= 0x80 && _e64Position < E64_LINE_WIDTH)
+                        E64PutChar(G_SPACE);
+                }
+                else if (ch < 0x60) // 0140 — печатный символ ГОСТ
+                {
+                    E64PutChar(ch);
+                }
+            }
+        }
 
         // --- ITM text ---
 
