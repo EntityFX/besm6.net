@@ -110,6 +110,13 @@ namespace Besm6.Loader
             "trans-main", "disc", "file", "overlay", "record", "read", "write",
             "no load list", "start", "stop", "release", "reset", "load", "move",
             "directory", "delete", "catalog", "list", "print",
+            "madlen", "bemsh", "forex", "fortran", "algol", "pascal", "call",
+        };
+
+        /// <summary>Директивы, которые включают режим ассемблерной секции.</summary>
+        private static readonly HashSet<string> AssemDirectives = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "assem", "madlen", "bemsh",
         };
 
         /// <summary>
@@ -159,8 +166,8 @@ namespace Besm6.Loader
                     var card = ParseControlCard(line);
                     job.ControlCards.Add(card);
                     ApplyCard(job, card);
-                    // 'assem' включает режим секции ассемблера; другие карты её закрывают.
-                    inAssem = card.Directive == "assem";
+                    // 'assem'/'madlen'/'bemsh' включают режим секции ассемблера; другие карты её закрывают.
+                    inAssem = AssemDirectives.Contains(card.Directive);
                     continue;
                 }
 
