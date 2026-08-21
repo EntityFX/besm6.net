@@ -16,7 +16,7 @@ namespace Besm6.Loader
         public const int PageNbytes = PageNWords * 6;
         public const int DiskZoneNWords = 8 + 1024;   // 1032
         public const int DiskZoneOffset = 4;          // DISK_ZONE_OFFSET
-        public const int DrumNWords = 040 * 1024;     // 32 барабана * 1024
+        public const int DrumNWords = 32 * 1024;      // 040 oct = 32 барабана * 1024
 
         // Заранее определённые ленты (порт machine.h).
         // В C++ константы заданы восьмеричными литералами в TEXT-кодировке:
