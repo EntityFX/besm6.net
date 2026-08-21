@@ -225,10 +225,10 @@ namespace Besm6.Loader
             if (endAddr <= startAddr)
                 endAddr = 0;
 
-            // Special mode for Dubna OS (flags & 010 oct): the data is printed
-            // directly as a byte stream (GOST chars, 0x7E=end, >=0x80=packed spaces).
-            // Port of C++ e64(): if (ptr.field.flags & 010) e64_print_dubna(...).
-            if ((flags & 010) != 0)
+            // Special mode for Dubna OS (flags & 010 oct, т.е. бит 3 = 8): данные
+            // печатаются напрямую (GOST, 0x7E=конец, >=0x80=упакованные пробелы).
+            // Порт C++ e64(): if (ptr.field.flags & 010) e64_print_dubna(...).
+            if ((flags & 8) != 0)
             {
                 E64PrintDubna(startAddr, endAddr);
                 E64Finish();
