@@ -31,7 +31,7 @@ namespace Besm6.Loader
         private readonly string? _tapesDir;
 
         /// <summary>Предел числа исполненных инструкций (защита от зависаний).</summary>
-    public long InstructionLimit { get; set; } = 1_000_000_000;
+        public long InstructionLimit { get; set; } = 1_000_000_000;
 
         /// <summary>Выводить диагностику загрузки.</summary>
         public bool Verbose { get; set; }

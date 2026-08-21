@@ -19,11 +19,17 @@ namespace Besm6.Loader
         public const int DrumNWords = 040 * 1024;     // 32 барабана * 1024
 
         // Заранее определённые ленты (порт machine.h).
-        public const long TapeMonsys    = 0x2E2F2E333734000B & 0xFFFFFFFFFFFFL; // MONSYS, номер 9
-        public const long TapeLibrar12  = 0x2C29222E212E0012 & 0xFFFFFFFFFFFFL; // LIBRAR, номер 12
-        public const long TapeLibrar37  = 0x2C29222E212E0037 & 0xFFFFFFFFFFFFL; // LIBRAR, номер 37
-        public const long TapeBemsh     = 0x24292F2E21232339 & 0xFFFFFFFFFFFFL; // DISPAC, 739
-        public const long TapeB         = 0x2200000000000007 & 0xFFFFFFFFFFFFL; // B, номер 7
+        // В C++ константы заданы восьмеричными литералами в TEXT-кодировке:
+        //   TAPE_MONSYS    = 055'57'56'63'71'63'00'11  -> 0xB6FBB3E73009
+        //   TAPE_LIBRAR_12 = 054'51'42'62'41'62'00'22  -> 0xB298B2872012
+        //   TAPE_LIBRAR_37 = 054'51'42'62'41'62'00'67  -> 0xB298B2872037
+        //   TAPE_BEMSH     = 044'51'63'60'41'43'33'31  -> 0x929CF08636D9
+        //   TAPE_B         = 042'00'00'00'00'00'00'07  -> 0x880000000007
+        public const long TapeMonsys    = 0xB6FBB3E73009; // MONSYS, номер 9
+        public const long TapeLibrar12  = 0xB298B2872012; // LIBRAR, номер 12
+        public const long TapeLibrar37  = 0xB298B2872037; // LIBRAR, номер 37
+        public const long TapeBemsh     = 0x929CF08636D9; // DISPAC, 739
+        public const long TapeB         = 0x880000000007; // B, номер 7
 
         /// <summary>Идентификатор тома (tape-id).</summary>
         public long VolumeId { get; }
@@ -201,7 +207,7 @@ namespace Besm6.Loader
                 "tapes",
                 Path.Combine("..", "tapes"),
                 Path.Combine("..", "..", "tapes"),
-                "dubna/tapes",
+                "ref/tapes",
                 Path.Combine("..", "dubna", "tapes"),
                 Path.Combine("..", "..", "dubna", "tapes"),
             };

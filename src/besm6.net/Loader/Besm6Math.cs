@@ -14,50 +14,109 @@ namespace Besm6.Loader
         private const int EXPO_BIAS = 64;
 
         // ─── Публичные конверсии ─────────────────────────────────────────────
+        //
+        // Точный порт dubna/besm6_arch.cpp: besm6_to_ieee / ieee_to_besm6.
+        // Число БЭСМ-6: биты 47..41 — порядок (bias=64), биты 40..0 —
+        // мантисса в ДОПОЛНИТЕЛЬНОМ коде (знак в бите 40).
+        // value = mantissa / 2^40 * 2^(exponent - 64), где mantissa — знаковое
+        // 41-битное целое (two's complement).
 
         public static double Besm6ToDouble(long word)
         {
-            if (word == 0) return 0.0;
-            int exponent = (int)((word >> 41) & 0x7F);
-            bool negative = (word & SIGN_BIT) != 0;
-            long magnitude = word & MAGNITUDE_MASK;
-            double value = (double)magnitude / (1L << 40) * Math.Pow(2, exponent - EXPO_BIAS);
-            return negative ? -value : value;
+            // Убрать свёртку.
+            word &= 0xFFFFFFFFFFFFL; // BITS48
+
+            // Порт C++:
+            //   mantissa = (double)(((int64_t)word) << (64 - 48 + 7));
+            // Сдвиг на 23 переносит знак мантиссы (бит 40) в знак 64-битного
+            // целого, т.е. mantissa = (знаковое 41-битное) * 2^23.
+            long shifted = word << 23;
+            double mantissa = shifted;
+
+            int exponent = (int)(word >> 41);
+
+            // Порядок смещён вверх на 64; мантиссу нужно скорректировать.
+            return Math.ScaleB(mantissa, exponent - 64 - 63);
         }
 
-        public static long DoubleToBesm6(double val)
+        public static long DoubleToBesm6(double input)
         {
-            if (double.IsNaN(val) || double.IsInfinity(val)) return 0;
-            if (val == 0.0) return 0;
+            if (double.IsNaN(input) || double.IsInfinity(input))
+                return 0;
 
-            bool negative = val < 0;
-            double absVal = Math.Abs(val);
+            // Переполнение/особы точки: C++ oct-константы как 48-битные значения.
+            const long OVERFLOW_POS = 0xFEFFFFFFFFFFL; // 07757 7777 7777 7777
+            const long SMALLEST_NEG = 0x0BFFFFFFFFFFL; // 0027 7777 7777 7777
+            const long OVERFLOW_NEG = 0xFF0000000000L; // 07760 0000 0000 0000
 
-            int exp = (int)Math.Floor(Math.Log2(absVal));
-            double mantissa = absVal / Math.Pow(2, exp); // [1, 2)
-
-            // magnitude = mantissa * 2^39 (since value = mantissa/2 * 2^(exp+1))
-            long magnitude = (long)(mantissa * (1L << 39));
-
-            // Rounding
-            double remainder = mantissa * (1L << 39) - magnitude;
-            if (remainder >= 0.5)
+            // frexp(input): мантисса в [0.5, 1) (или (-1, -0.5]) и порядок.
+            double m;
+            int exponent;
+            if (input == 0.0)
             {
-                magnitude++;
-                if (magnitude >= (1L << 40))
-                {
-                    magnitude >>= 1;
-                    exp++;
-                }
+                return 0;
+            }
+            else
+            {
+                int ilog = Math.ILogB(input);
+                exponent = ilog + 1;
+                m = Math.ScaleB(input, -exponent);
             }
 
-            int stored_exp = exp + 1;
-            if (stored_exp > 63) return (1L << 48) - (1L << 41); // overflow
-            if (stored_exp < -63) return 0; // underflow
+            // ldexp(mantissa, 40)
+            m = Math.ScaleB(m, 40);
 
-            long word = magnitude | ((long)(stored_exp + EXPO_BIAS) << 41);
-            if (negative) word |= SIGN_BIT;
-            return word;
+            long word;
+            if (m > 0)
+            {
+                // Положительное значение в диапазоне [0.5, 1) * 2^40.
+                word = (long)m;
+                if (m - word >= 0.5)
+                {
+                    word += 1;
+                    if (word == 1L << 40)
+                    {
+                        word >>= 1;
+                        exponent += 1;
+                    }
+                }
+                if (exponent > 63)
+                    return OVERFLOW_POS;
+            }
+            else
+            {
+                // Отрицательное значение в диапазоне (-1, -0.5] * 2^40.
+                if (m == -(1L << 39))
+                {
+                    if (exponent == -64)
+                        return SMALLEST_NEG;
+                    m += m;
+                    exponent -= 1;
+                }
+
+                // Учесть знаковый бит; значение становится положительным.
+                m += 1L << 40;
+
+                word = (long)m;
+                if (m - word > 0.5)
+                {
+                    word += 1;
+                    if (word == 1L << 40)
+                    {
+                        word >>= 1;
+                        exponent += 1;
+                    }
+                }
+                if (exponent > 63)
+                    return OVERFLOW_NEG;
+                word |= 1L << 40;
+            }
+
+            if (exponent < -64)
+                return 0;
+
+            word |= ((long)(exponent + 64)) << 41;
+            return word & 0xFFFFFFFFFFFFL;
         }
 
         // ─── Публичные математические функции ─────────────────────────────────
@@ -99,13 +158,13 @@ namespace Besm6.Loader
         {
             double d = Besm6ToDouble(word);
             if (d <= 0) return 0;
-            return DoubleToBesm6(Math.Log(d, 2));
+            return DoubleToBesm6(Math.Log(d)); // натуральный логарифм ln(x)
         }
 
         public static long Exp(long word)
         {
             double d = Besm6ToDouble(word);
-            return DoubleToBesm6(Math.Pow(2, d));
+            return DoubleToBesm6(Math.Exp(d)); // e^x
         }
 
         public static long Floor(long word)

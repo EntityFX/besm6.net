@@ -47,64 +47,93 @@ namespace Besm6.Core
 
         /// <summary>
         /// Преобразует 48-битное слово в double (IEEE 754).
-        /// Формат БЭСМ-6: [47: Знак] [46-41: Порядок] [40-1: Мантисса] [0: 0]
+        /// Канонический формат БЭСМ-6: биты 47..41 — порядок (bias=64),
+        /// биты 40..0 — мантисса в дополнительном коде (знак в бите 40).
+        /// value = mantissa / 2^40 * 2^(exponent - 64).
         /// </summary>
         public double ToDouble()
         {
-            if (_value == 0) return 0.0;
+            long w = _value;
 
-            long signBit = (_value >> 47) & 1;
-            long order = (_value >> 41) & 0x3F;
-            long mantissa = (_value >> 1) & 0xFFFFFFFFFF;
-
-            // BESM-6: Value = Mantissa * 2^(Order - 47)
-            double val = (double)mantissa * Math.Pow(2, order - 47);
-
-            return signBit == 1 ? -val : val;
+            // Сдвиг на 23 переносит знак мантиссы (бит 40) в знак 64-битного целого,
+            // т.е. mantissa = (знаковое 41-битное) * 2^23.
+            long shifted = w << 23;
+            double mantissa = shifted;
+            int exponent = (int)(w >> 41);
+            return Math.ScaleB(mantissa, exponent - 64 - 63);
         }
 
         /// <summary>
-        /// Создает Word48 из double.
+        /// Создает Word48 из double (порт ieee_to_besm6 из besm6_arch.cpp).
         /// </summary>
         public static Word48 FromDouble(double value)
         {
-            if (value == 0 || double.IsNaN(value) || double.IsInfinity(value)) return new Word48(0);
+            if (double.IsNaN(value) || double.IsInfinity(value))
+                return new Word48(0);
 
-            long sign = value < 0 ? 1L : 0L;
-            double absValue = Math.Abs(value);
+            if (value == 0.0)
+                return new Word48(0);
 
-            // Поиск порядка: 2^39 <= M < 2^40
-            // Order = floor(log2(Value)) + 47 - 39 = floor(log2(Value)) + 8
-            int log2Val = (int)Math.Floor(Math.Log2(absValue));
-            long order = (long)log2Val + 8;
+            // frexp: мантисса в [0.5, 1) (или (-1, -0.5]) и порядок.
+            double m;
+            int exponent;
+            int ilog = Math.ILogB(value);
+            exponent = ilog + 1;
+            m = Math.ScaleB(value, -exponent);
 
-            // Ограничение порядка [0, 63]
-            if (order < 0) order = 0;
-            if (order > 63) order = 63;
+            // ldexp(mantissa, 40)
+            m = Math.ScaleB(m, 40);
 
-            // Вычисляем мантиссу
-            double mDouble = absValue / Math.Pow(2, order - 47);
-            long mantissa = (long)Math.Round(mDouble);
-
-            // Итеративная корректировка для точного попадания в диапазон [2^39, 2^40)
-            while (mantissa < (1L << 39) && order > 0)
+            long word;
+            if (m > 0)
             {
-                order--;
-                mDouble = absValue / Math.Pow(2, order - 47);
-                mantissa = (long)Math.Round(mDouble);
+                // Положительное значение в диапазоне [0.5, 1) * 2^40.
+                word = (long)m;
+                if (m - word >= 0.5)
+                {
+                    word += 1;
+                    if (word == 1L << 40)
+                    {
+                        word >>= 1;
+                        exponent += 1;
+                    }
+                }
+                if (exponent > 63)
+                    return new Word48(0xFEFFFFFFFFFFL); // 07757 7777 7777 7777
             }
-            while (mantissa >= (1L << 40) && order < 63)
+            else
             {
-                order++;
-                mDouble = absValue / Math.Pow(2, order - 47);
-                mantissa = (long)Math.Round(mDouble);
+                // Отрицательное значение в диапазоне (-1, -0.5] * 2^40.
+                if (m == -(1L << 39))
+                {
+                    if (exponent == -64)
+                        return new Word48(0x0BFFFFFFFFFFL); // 0027 7777 7777 7777
+                    m += m;
+                    exponent -= 1;
+                }
+
+                m += 1L << 40;
+
+                word = (long)m;
+                if (m - word > 0.5)
+                {
+                    word += 1;
+                    if (word == 1L << 40)
+                    {
+                        word >>= 1;
+                        exponent += 1;
+                    }
+                }
+                if (exponent > 63)
+                    return new Word48(0xFF0000000000L); // 07760 0000 0000 0000
+                word |= 1L << 40;
             }
 
-            if (mantissa >= (1L << 40)) mantissa = (1L << 40) - 1;
-            if (mantissa < 0) mantissa = 0;
+            if (exponent < -64)
+                return new Word48(0);
 
-            long result = (sign << 47) | (order << 41) | (mantissa << 1);
-            return new Word48(result);
+            word |= ((long)(exponent + 64)) << 41;
+            return new Word48(word);
         }
 
         #endregion
@@ -137,8 +166,10 @@ namespace Besm6.Core
         /// </summary>
         public static Word48 FromOctal(string oct)
         {
+            // Допускает до 17 восьмеричных цифр: старшая (17-я) цифра может быть
+            // только '0' (биты 48..50) — она отбрасывается. Берём младшие 16 цифр.
             if (oct.Length > 16)
-                oct = oct.Substring(0, 16);
+                oct = oct.Substring(oct.Length - 16);
             long val = 0;
             foreach (char c in oct)
             {
