@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450" width="600" height="450">
+  <style>
+    text { font-family: 'Segoe UI', Arial, sans-serif; fill: #333; text-anchor: middle; dominant-baseline: middle; }
+    .title { font-size: 15px; font-weight: bold; fill: #222; }
+    .speed { font-size: 11px; fill: #666; }
+    .label { font-size: 12px; fill: white; font-weight: bold; }
+    .cap { font-size: 10px; fill: #E0E0E0; }
+  </style>
+  <text x="300" y="20" class="title">Иерархическая структура памяти БЭСМ-6</text>
+
+  <!-- Level 1: Сверхбыстрые регистры -->
+  <rect x="150" y="45" width="300" height="55" rx="8" fill="#D0021B" stroke="#8B0010" stroke-width="2"/>
+  <text x="300" y="65" class="label">Сверхбыстрые регистры</text>
+  <text x="300" y="82" class="cap">(ассоциативная память, 16 слов, 0.2 мкс)</text>
+
+  <!-- Arrow -->
+  <line x1="300" y1="100" x2="300" y2="120" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Level 2: ОЗУ -->
+  <rect x="100" y="125" width="400" height="55" rx="8" fill="#F5A623" stroke="#C47A10" stroke-width="2"/>
+  <text x="300" y="145" class="label">Оперативная память (ОЗУ)</text>
+  <text x="300" y="162" class="cap">(ферритовые сердечники, 16K–64K слов, 2 мкс, 4 банка)</text>
+
+  <!-- Arrow -->
+  <line x1="300" y1="180" x2="300" y2="200" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Level 3: НМБ -->
+  <rect x="100" y="205" width="400" height="55" rx="8" fill="#7BC47F" stroke="#4A8C4E" stroke-width="2"/>
+  <text x="300" y="225" class="label">Магнитные барабаны (НМБ)</text>
+  <text x="300" y="242" class="cap">(50–500 Кслов, 10–20 мс)</text>
+
+  <!-- Arrow -->
+  <line x1="300" y1="260" x2="300" y2="280" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Level 4: НМД -->
+  <rect x="100" y="285" width="400" height="55" rx="8" fill="#4A90D9" stroke="#2C5F8A" stroke-width="2"/>
+  <text x="300" y="305" class="label">Магнитные диски (НМД)</text>
+  <text x="300" y="322" class="cap">(5–50 Мбайт, 30–100 мс)</text>
+
+  <!-- Arrow -->
+  <line x1="300" y1="340" x2="300" y2="360" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Level 5: НМЛ -->
+  <rect x="100" y="365" width="400" height="55" rx="8" fill="#9B59B6" stroke="#6C3483" stroke-width="2"/>
+  <text x="300" y="385" class="label">Магнитные ленты (НМЛ)</text>
+  <text x="300" y="402" class="cap">(до 50 Мбайт/катушка, секунды–минуты)</text>
+
+  <!-- Speed indicator on right -->
+  <text x="530" y="72" class="speed">↑ быстрее</text>
+  <text x="530" y="392" class="speed">↓ медленнее</text>
+  <text x="530" y="232" class="speed">↑</text>
+  <text x="530" y="312" class="speed">↑</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
+    </marker>
+  </defs>
+</svg>

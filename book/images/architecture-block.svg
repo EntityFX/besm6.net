@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
+  <style>
+    text { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; fill: #333; text-anchor: middle; dominant-baseline: middle; }
+    .title { font-size: 16px; font-weight: bold; fill: #222; }
+    .subtitle { font-size: 11px; fill: #666; }
+    .arrow { fill: none; stroke: #666; stroke-width: 1.5; marker-end: url(#arrowhead); }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
+    </marker>
+  </defs>
+  <text x="400" y="25" class="title">Блок-схема архитектуры БЭСМ-6</text>
+  <text x="400" y="42" class="subtitle">Пять специализированных функциональных устройств, работающих параллельно</text>
+
+  <!-- Устройство управления -->
+  <rect x="300" y="60" width="200" height="50" rx="8" fill="#4A90D9" stroke="#2C5F8A" stroke-width="2"/>
+  <text x="400" y="80" fill="white" font-weight="bold">Устройство управления (УУ)</text>
+  <text x="400" y="95" fill="#D0E0F0" font-size="10">Выборка, дешифрация, модификация адреса</text>
+
+  <!-- Стрелка от УУ к УВ -->
+  <line x1="400" y1="110" x2="400" y2="140" class="arrow"/>
+
+  <!-- Устройство выборки -->
+  <rect x="300" y="140" width="200" height="50" rx="8" fill="#7BC47F" stroke="#4A8C4E" stroke-width="2"/>
+  <text x="400" y="160" fill="white" font-weight="bold">Устройство выборки (УВ)</text>
+  <text x="400" y="175" fill="#D0F0D0" font-size="10">Чтение операндов из ОЗУ</text>
+
+  <!-- Разветвление на АУ-А и АУ-М -->
+  <line x1="400" y1="190" x2="400" y2="210" class="arrow"/>
+  <line x1="400" y1="210" x2="250" y2="210" class="arrow"/>
+  <line x1="400" y1="210" x2="550" y2="210" class="arrow"/>
+
+  <!-- АУ-А -->
+  <rect x="100" y="220" width="250" height="50" rx="8" fill="#F5A623" stroke="#C47A10" stroke-width="2"/>
+  <text x="225" y="240" fill="white" font-weight="bold">АУ аддитивное (АУ-А)</text>
+  <text x="225" y="255" fill="#FFF0D0" font-size="10">Сложение, вычитание, логические операции</text>
+
+  <!-- АУ-М -->
+  <rect x="450" y="220" width="250" height="50" rx="8" fill="#D0021B" stroke="#8B0010" stroke-width="2"/>
+  <text x="575" y="240" fill="white" font-weight="bold">АУ мультипликативное (АУ-М)</text>
+  <text x="575" y="255" fill="#FFD0D0" font-size="10">Умножение, деление, сдвиги</text>
+
+  <!-- Схождение от АУ-А и АУ-М к УЗ -->
+  <line x1="225" y1="270" x2="225" y2="290" class="arrow"/>
+  <line x1="575" y1="270" x2="575" y2="290" class="arrow"/>
+  <line x1="225" y1="290" x2="400" y2="290" class="arrow"/>
+  <line x1="575" y1="290" x2="400" y2="290" class="arrow"/>
+  <line x1="400" y1="290" x2="400" y2="310" class="arrow"/>
+
+  <!-- Устройство записи -->
+  <rect x="300" y="310" width="200" height="50" rx="8" fill="#9B59B6" stroke="#6C3483" stroke-width="2"/>
+  <text x="400" y="330" fill="white" font-weight="bold">Устройство записи (УЗ)</text>
+  <text x="400" y="345" fill="#E0D0F0" font-size="10">Запись результатов в ОЗУ</text>
+
+  <!-- Память -->
+  <rect x="300" y="375" width="200" height="20" rx="4" fill="#888" stroke="#666" stroke-width="1"/>
+  <text x="400" y="389" fill="white" font-size="10">Оперативная память (ОЗУ) — 4 банка</text>
+</svg>
