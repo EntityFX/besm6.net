@@ -65,10 +65,24 @@ namespace Besm6.Loader
         /// <summary>
         /// Точка входа из Processor.ExtracodeHandler.
         /// </summary>
-        private int _e75NoProgress = 0;
-        private const int E75HangLimit = 500;
+        // Hang detection: no output (E64) or halt (E74) for too many extracode calls.
         private long _lastPc = -1;
         private int _repeatCount = 0;
+        private int _noOutputCount = 0;       // extracode calls since last E64/E74
+        private const int NoOutputLimit = 500; // 500 extracode calls without output = hang
+        private int _noOutputTotalInstr = 0;  // total instructions since last output (approx)
+
+        private readonly bool _traceExtracodes = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BESM6_TRACE"));
+        private System.IO.StreamWriter? _traceWriter = null;
+        private StreamWriter EnsureTraceWriter()
+        {
+            if (_traceWriter == null)
+            {
+                var path = Path.Combine(Directory.GetCurrentDirectory(), "ec_trace.log");
+                _traceWriter = new StreamWriter(path, append: false) { AutoFlush = true };
+            }
+            return _traceWriter;
+        }
 
         public bool Handle(int opcode, long aex)
         {
@@ -77,24 +91,41 @@ namespace Besm6.Loader
             else { _repeatCount = 0; _lastPc = pc; }
             if (_repeatCount > 20)
             {
-                Console.Error.WriteLine($"[TRACE] extracode={opcode} aex=0{aex:X} PC=0{pc:X} repeat={_repeatCount}");
+                var cpu = _machine.Cpu;
+                long m16val = cpu.GetM(M16) & 0x7FFF;
+                long acc = cpu.GetAcc();
+                Console.Error.WriteLine(
+                    $"[TRACE] extracode={opcode} aex=0{aex:X} PC=0{pc:X} repeat={_repeatCount} " +
+                    $"M16=0{m16val:X}({Convert.ToString(m16val, 8)}) ACC=0{acc:X}");
             }
 
             Extracode code = (Extracode)opcode;
 
-            // Hang detection: E75 без прогресса (E64/E70/E74)
-            if (code == Extracode.E75)
+            // Детальная трассировка (ESIM_TRACE=1)
+            if (_traceExtracodes)
             {
-                _e75NoProgress++;
-                if (_e75NoProgress > E75HangLimit)
-                    throw new ProcessorException(
-                        $"Hang detected: E75 called {_e75NoProgress} times without progress. " +
-                        $"PC={Convert.ToString(pc, 8)} aex={Convert.ToString(aex, 8)}. " +
-                        $"MONSYS is polling for I/O/interrupt that never arrives.");
+                var cpu2 = _machine.Cpu;
+                long m16 = cpu2.GetM(M16) & 0x7FFF;
+                long acc2 = cpu2.GetAcc();
+                EnsureTraceWriter().WriteLine($"[EC] {opcode} (0{Convert.ToString(opcode,8)}) aex=0{aex:X} M16=0{Convert.ToString(m16,8)} ACC=0{acc2:X8} PC=0{Convert.ToString(pc,8)}");
             }
-            else if (code == Extracode.E64 || code == Extracode.E70 || code == Extracode.E74)
+
+            // Hang detection: too many extracode calls without any output.
+            _noOutputCount++;
+            if (code == Extracode.E64 || code == Extracode.E74)
             {
-                _e75NoProgress = 0;
+                _noOutputCount = 0; // got output or halt
+            }
+            else if (_noOutputCount > NoOutputLimit)
+            {
+                throw new ProcessorException(
+                    $"Hang detected: MONSYS executing {NoOutputLimit}+ extracode calls without producing output. " +
+                    $"Last PC=0{Convert.ToString(pc, 8)}, opcode=0{Convert.ToString(opcode, 8)}. " +
+                    "This means MONSYS is in an I/O wait state expecting a compiler " +
+                    "(BEMSH/EXFOR/B) or resource that never completes. " +
+                    "This is a known limitation: the C++ reference (dubna/) also cannot " +
+                    "run ALGOL/FORTRAN/B jobs because the OS kernel is incomplete. " +
+                    "See plans/monsys-kernel-support.md for details.");
             }
 
             switch (code)
