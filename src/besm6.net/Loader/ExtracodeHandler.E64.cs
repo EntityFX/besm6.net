@@ -268,6 +268,7 @@ again:
 
                 _e64Position = offset;
 
+                int beforeAddr = startAddr;
                 switch (format)
                 {
                     case 0: case 8:
@@ -289,6 +290,14 @@ again:
                         startAddr = E64PrintHex(startAddr, endAddr, digits, width, repeat);
                         break;
                 }
+
+                // Защита от бесконечного вращения: курсор данных не продвинулся
+                // при установленном конце (терминатор GOST/ITM стоит ровно на слове
+                // end_addr, e64_print_gost возвращает адрес без сдвига). Числовые
+                // форматы всегда сдвигают курсор на >= 1 слово, поэтому на них
+                // эта проверка не влияет.
+                if (endAddr != 0 && startAddr != 0 && startAddr == beforeAddr)
+                    break;
 
                 if (finish != 0)
                 {
