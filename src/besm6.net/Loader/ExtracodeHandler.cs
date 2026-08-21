@@ -65,6 +65,8 @@ namespace Besm6.Loader
         /// <summary>
         /// Точка входа из Processor.ExtracodeHandler.
         /// </summary>
+        private int _e75NoProgress = 0;
+        private const int E75HangLimit = 500;
         private long _lastPc = -1;
         private int _repeatCount = 0;
 
@@ -76,10 +78,25 @@ namespace Besm6.Loader
             if (_repeatCount > 20)
             {
                 Console.Error.WriteLine($"[TRACE] extracode={opcode} aex=0{aex:X} PC=0{pc:X} repeat={_repeatCount}");
-                _repeatCount = 0;
             }
 
             Extracode code = (Extracode)opcode;
+
+            // Hang detection: E75 без прогресса (E64/E70/E74)
+            if (code == Extracode.E75)
+            {
+                _e75NoProgress++;
+                if (_e75NoProgress > E75HangLimit)
+                    throw new ProcessorException(
+                        $"Hang detected: E75 called {_e75NoProgress} times without progress. " +
+                        $"PC={Convert.ToString(pc, 8)} aex={Convert.ToString(aex, 8)}. " +
+                        $"MONSYS is polling for I/O/interrupt that never arrives.");
+            }
+            else if (code == Extracode.E64 || code == Extracode.E70 || code == Extracode.E74)
+            {
+                _e75NoProgress = 0;
+            }
+
             switch (code)
             {
                 case Extracode.E50: E50(); return true;
@@ -101,6 +118,8 @@ namespace Besm6.Loader
                 case Extracode.E74: throw new ProcessorException("");
                 case Extracode.E75: E75(); return true;
                 case Extracode.E76: E76(); return true;
+                case Extracode.E20: return true;  // 0200 oct — no-op (C++: reserved)
+                case Extracode.E21: return true;  // 0210 oct — lock/release semaphores (C++: TODO/no-op)
                 default: return false;
             }
         }
@@ -118,6 +137,7 @@ namespace Besm6.Loader
                 case 4: cpu.SetAcc(206L); return;
                 case 7: cpu.SetAcc(5L << 33); return;
                 case 322: cpu.SetAcc(1024L); return;
+                case 324: cpu.SetAcc(0L); return;  // 504 oct — OS status/no-op
                 case 379: cpu.SetAcc(2048L); return;
                 case 381: cpu.SetAcc(2560L); return;
                 case 450: cpu.SetAcc(0); return;
@@ -132,6 +152,7 @@ namespace Besm6.Loader
                 case 1544: cpu.SetAcc(0); return;
                 case 1545: cpu.SetAcc(0); return;
                 case 2048: cpu.SetAcc(0); return;
+                case 12273: return;  // 27761 oct = 12273 dec (bemsh/madlen) — no-op
                 default:
                     throw new ProcessorException($"Unimplemented extracode *63 {Convert.ToString(addr, 8)}");
             }
@@ -246,36 +267,29 @@ namespace Besm6.Loader
                 case 6: cpu.SetAcc(Besm6Math.Exp(arg)); break;
                 case 7: cpu.SetAcc(Besm6Math.Floor(arg)); break;
 
-                // ВНИМАНИЕ: в C++ кейсы — ВОСЬМЕРОИЧНЫЕ (014, 067, ...).
-                // В C# литералы десятичные, поэтому записаны DECIMAL + комментарий oct.
-
                 case 12: E50Parse(); break;   // 014 oct
                 case 15: E50Format(); break;  // 017 oct
 
-                // 066 oct (54 dec) — plotter change page, ACC = 0.
-                case 54: cpu.SetAcc(0); break;
+                case 54: cpu.SetAcc(0); break;  // 066 oct
 
-                // 067 oct (55 dec) — DATE*: вернуть дату/время (фиксированное).
-                case 55:
+                case 55:  // 067 oct — DATE*
                 {
-                    // Фиксированное 04.07.2024 23:45:56 (как в C++ при отключённой энтропии).
                     long d = 0;
-                    d |= 4L << 4;    // day_lo = 4
-                    d |= 7L << 12;   // month_lo = 7
-                    d |= 2L << 16;   // year_hi = 2
-                    d |= 4L << 20;   // year_lo = 4
-                    d |= 2L << 24;   // hour_hi = 2
-                    d |= 3L << 28;   // hour_lo = 3
-                    d |= 4L << 32;   // min_hi = 4
-                    d |= 5L << 36;   // min_lo = 5
-                    d |= 5L << 40;   // sec_hi = 5
-                    d |= 6L << 44;   // sec_lo = 6
+                    d |= 4L << 4;
+                    d |= 7L << 12;
+                    d |= 2L << 16;
+                    d |= 4L << 20;
+                    d |= 2L << 24;
+                    d |= 3L << 28;
+                    d |= 4L << 32;
+                    d |= 5L << 36;
+                    d |= 5L << 40;
+                    d |= 6L << 44;
                     cpu.SetAcc(d & 0xFFFFFFFFFFFFL);
                     break;
                 }
 
-                // no-op кейсы (в C++ просто break). Значения — DECIMAL эквиваленты oct.
-                case 52:    // 064 oct — print job name
+                case 52:    // 064 oct
                 case 57:    // 071 oct
                 case 61:    // 075 oct
                 case 62:    // 076 oct
@@ -304,43 +318,94 @@ namespace Besm6.Loader
                 case 31872: // 076200 oct
                     break;
 
-                // 070077 oct (28735 dec) — CPU time = 0.
-                case 28735: cpu.SetAcc(0); break;
-
-                // 070200 oct (28800 dec) — ACC = 0'0010'0000 = 8192.
-                case 28800: cpu.SetAcc(8192L); break;
-
-                // 070210 oct (28808 dec) — ACC = 0.
-                case 28808: cpu.SetAcc(0); break;
-
-                // 070214 oct (28812 dec) — ACC = 0'1234'5670'1234'5670.
-                case 28812: cpu.SetAcc(System.Convert.ToInt64("1234567012345670", 8)); break;
+                case 28735: cpu.SetAcc(0); break;         // 070077 oct
+                case 28800: cpu.SetAcc(8192L); break;     // 070200 oct
+                case 28808: cpu.SetAcc(0); break;         // 070210 oct
+                case 28812: cpu.SetAcc(System.Convert.ToInt64("1234567012345670", 8)); break; // 070214 oct
 
                 default:
                     throw new ProcessorException($"Unimplemented extracode *50 {Convert.ToString(addr, 8)}");
             }
         }
 
-        // ─── E57: монтаж лент ─────────────────────────────────────────────────
+        // ─── E57: монтаж лент / файлов (порт dubna/e57.cpp) ───────────────────
 
         private void E57()
         {
             var cpu = _machine.Cpu;
-            long addr = cpu.GetM(M16) & 0x7FFF;
-            if (addr == 1)
+            long addr = cpu.GetM(M16);
+
+            // Специальные адреса (C++ switch).
+            switch (addr)
             {
-                long tapeId = cpu.GetAcc() & 0x7FFF;
-                int unit = (int)(cpu.GetM(0) & 0x7);
-                _mountTape(tapeId, unit);
+                case 0:
+                    // floor(ACC) — уже в E50 case 14.
+                    cpu.SetAcc(Besm6Math.Floor(cpu.GetAcc()));
+                    return;
+                case 2:
+                    // Calcomp plotter — no-op.
+                    cpu.SetAcc(0);
+                    return;
+                case 3:
+                    // Delay 1 sec — no-op.
+                    return;
+                case 5:
+                    // Forex unknown — return 0.
+                    cpu.SetAcc(0);
+                    return;
+                case 7:
+                    // Task paused waiting for tape.
+                    throw new ProcessorException("E57: Task paused waiting for tape");
             }
-            else if (addr == 2)
+
+            if (addr == 32767) // 077777 octal
             {
-                long tapeId = cpu.GetAcc() & 0x7FFF;
-                cpu.SetAcc((long)_findTape(tapeId));
+                // E57 file ops (VOLUME_OPEN / FILE_SEARCH / FILE_OPEN / SCRATCH).
+                // Для bemsh.dub достаточно tape ops; file ops пока no-op.
+                // MONSYS не вызывает этот путь.
+                return;
             }
-            else if (addr == 3)
+
+            if (addr >= 8) // 010 octal
             {
-                _releaseTapes(cpu.GetAcc() & 0x7FFF);
+                // E57 tape ops: ASSIGN / RELEASE / FIND (порт e57_tape).
+                // C++ octal → decimal: 0100=64, 0200=128, 040=32, 02000=1024, 04000=2048
+                const long E57_WRITE   = 64;
+                const long E57_READ    = 128;
+                const long E57_READY   = 32;
+                const long E57_ASSIGN  = 1024;
+                const long E57_RELEASE = 2048;
+
+                if ((addr & E57_ASSIGN) != 0)
+                {
+                    // Mount tape: tapeId in ACC, disk unit in M[15 octal] = M[13 decimal].
+                    long tapeIdAssign = cpu.GetAcc();
+                    int diskUnit = (int)(cpu.GetM(13) & 0x7F);
+                    bool ok = _mountTape(tapeIdAssign, diskUnit);
+                    if (!ok)
+                        throw new ProcessorException($"E57 ASSIGN: cannot mount tape 0x{tapeIdAssign:X} on unit {diskUnit}");
+                    cpu.SetAcc((long)diskUnit);
+                    return;
+                }
+
+                if ((addr & E57_RELEASE) != 0)
+                {
+                    // Release tapes according to bitmask on accumulator.
+                    _releaseTapes(cpu.GetAcc());
+                    cpu.SetAcc(0);
+                    return;
+                }
+
+                // Find mounted tape (by name and number).
+                // Return disk number (unit) in ACC.
+                long tapeIdFind = cpu.GetAcc();
+                int unit = _findTape(tapeIdFind);
+                cpu.SetAcc((long)unit);
+            }
+            else
+            {
+                // addr == 1 or 4: tape control by Gusev — unsupported.
+                throw new ProcessorException($"E57: unimplemented extracode *57 {Convert.ToString((int)addr, 8)}");
             }
         }
 
@@ -348,41 +413,15 @@ namespace Besm6.Loader
 
         private void E64(long aex)
         {
-            // C++: ctl_addr = core.M[016] (= M[14]). Не из инструкции, а из M-регистра.
             int addr = (int)(_machine.Cpu.GetM(M16) & 0x7FFF);
             E64Full(addr);
         }
 
         // ─── E70: disk/drum I/O ──────────────────────────────────────────────
-        // Точный порт Processor::e70 из dubna/extracode.cpp + dubna/extracode.h.
-        //
-        // Control word: в ACC (если M[16]==0) или в памяти по M[16].
-        //
-        // DISK (unit 30..67 oct):
-        //   bits 11-0:  zone (12)
-        //   bits 17-12: unit (6)
-        //   bits 34-30: page (5) — memory page
-        //   bit  39:    read_op (1=Read, 0=Write)
-        //   bit  40:    seek (speculative, no data transfer)
-        //
-        // DRUM (unit 0..27 oct):
-        //   bits  4-0:  tract (5)
-        //   bits  7-6:  sector (2)
-        //   bits 17-12: unit (6)
-        //   bits 25-24: paragraph (2)
-        //   bits 34-30: page (5)
-        //   bit  35:    raw_sect
-        //   bit  38:    phys_io (redirect to mapped disk)
-        //   bit  39:    read_op
-        //   bit  47:    sect_io (1=sector, 0=full tract)
-        //
-        // Memory address: page * 1024 (+ paragraph * 256 for sect_io).
 
         private void E70()
         {
             var cpu = _machine.Cpu;
-
-            // Control word: в ACC если exec addr == 0, иначе в памяти.
             long execAddr = cpu.GetM(M16) & 0x7FFF;
             long ctrl = (execAddr == 0) ? cpu.GetAcc() : _machine.Memory.Read((int)execAddr).Value;
 
@@ -390,18 +429,14 @@ namespace Besm6.Loader
             int unit = (int)((ctrl >> 12) & 0x3F);
             int page = (int)((ctrl >> 30) & 0x1F);
 
-            if (unit >= 24 && unit < 56)   // 030..067 oct (BESM-6 disk units)
+            if (unit >= 24 && unit < 56)
             {
-                // ── Disk I/O ──
-                if ((ctrl & (1L << 40)) != 0) return; // seek: no data transfer
-
+                if ((ctrl & (1L << 40)) != 0) return;
                 int zone = (int)(ctrl & 0xFFF);
                 int memAddr = page << 10;
-
                 TapeImage? disk = _diskByUnit(unit);
                 if (disk == null)
                     throw new ProcessorException($"E70: disk unit 0{unit:o} not mounted");
-
                 if (isRead)
                     disk.ReadToMemory(_machine.Memory, (uint)zone, 0, memAddr, 1024);
                 else
@@ -409,7 +444,6 @@ namespace Besm6.Loader
             }
             else
             {
-                // ── Drum I/O ──
                 int tract = (int)(ctrl & 0x1F);
                 int sector = (int)((ctrl >> 6) & 0x3);
                 int paragraph = (int)((ctrl >> 24) & 0x3);
@@ -424,30 +458,25 @@ namespace Besm6.Loader
                 {
                     int raw = (int)(ctrl & 0xFFF);
                     sector = raw & 3;
-                    tract = (raw >> 2) & 31;   // 037 oct
+                    tract = (raw >> 2) & 31;
                 }
 
-                int thisDrum = unit & 31;      // 037 oct
+                int thisDrum = unit & 31;
 
-                // Phys_io: перенаправить на mapped disk.
                 if (physIo && _mappedDrum >= 0 && thisDrum >= _mappedDrum)
                 {
                     if (_physIoDisk != null)
                     {
-                        int diskZone = tract + (thisDrum - _mappedDrum) * 32;   // 040 oct
+                        int diskZone = tract + (thisDrum - _mappedDrum) * 32;
                         if (!sectIo)
                         {
-                            if (isRead)
-                                _physIoDisk.ReadToMemory(_machine.Memory, (uint)diskZone, 0, memAddr, 1024);
-                            else
-                                _physIoDisk.WriteFromMemory(_machine.Memory, (uint)diskZone, 0, memAddr, 1024);
+                            if (isRead) _physIoDisk.ReadToMemory(_machine.Memory, (uint)diskZone, 0, memAddr, 1024);
+                            else _physIoDisk.WriteFromMemory(_machine.Memory, (uint)diskZone, 0, memAddr, 1024);
                         }
                         else
                         {
-                            if (isRead)
-                                _physIoDisk.ReadToMemory(_machine.Memory, (uint)diskZone, (uint)sector, memAddr, 256);
-                            else
-                                _physIoDisk.WriteFromMemory(_machine.Memory, (uint)diskZone, (uint)sector, memAddr, 256);
+                            if (isRead) _physIoDisk.ReadToMemory(_machine.Memory, (uint)diskZone, (uint)sector, memAddr, 256);
+                            else _physIoDisk.WriteFromMemory(_machine.Memory, (uint)diskZone, (uint)sector, memAddr, 256);
                         }
                     }
                     return;
@@ -457,7 +486,6 @@ namespace Besm6.Loader
                 TapeImage? drum = _drumByUnit(thisDrum);
                 if (drum == null)
                     throw new ProcessorException($"E70: drum unit 0{thisDrum:o} not available");
-
                 if (isRead)
                     drum.ReadToMemory(_machine.Memory, (uint)tract, sectIo ? (uint)sector : 0, memAddr, nwords);
                 else

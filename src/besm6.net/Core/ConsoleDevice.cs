@@ -22,24 +22,32 @@ namespace Besm6.Core
             char c = (char)(value.Value & 0xFF);
             _outputBuffer.Append(c);
             
-            // Сразу выводим в консоль хоста для наглядности
-            Console.Write(c);
+            // Выводим в консоль хоста только при неперенаправленном stdout
+            if (!Console.IsOutputRedirected)
+                Console.Write(c);
         }
 
         public Word48 Read()
         {
             if (string.IsNullOrEmpty(_inputQueue))
             {
-                // В реальном времени мы бы ждали ввода, 
-                // но для симулятора просто вернем 0 или попробуем прочитать из Console.
-                if (Console.KeyAvailable)
+                // Non-blocking ввод: только если stdin не перенаправлен и
+                // есть данные. Иначе — EOF (0), чтобы симуляция не зависла.
+                if (!Console.IsInputRedirected && Console.KeyAvailable)
                 {
-                    var key = Console.ReadKey(true);
-                    _inputQueue = key.KeyChar.ToString();
+                    try
+                    {
+                        var key = Console.ReadKey(true);
+                        _inputQueue = key.KeyChar.ToString();
+                    }
+                    catch
+                    {
+                        return new Word48(0);
+                    }
                 }
                 else
                 {
-                    return new Word48(0);
+                    return new Word48(0); // EOF
                 }
             }
 
