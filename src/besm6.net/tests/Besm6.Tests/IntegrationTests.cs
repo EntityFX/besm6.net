@@ -14,15 +14,17 @@ namespace Besm6.Tests
     public class IntegrationTests
     {
         private StringBuilder _output;
-        private Machine _machine;
+        private MachineCore _machine;
         private DubnaLoader _loader;
 
         [TestInitialize]
         public void Setup()
         {
             _output = new StringBuilder();
-            _machine = new Machine();
-            _loader = new DubnaLoader(_machine);
+            _machine = new MachineCore();
+            _loader = new DubnaLoader(_machine) { Verbose = false };
+            // Перехватываем вывод из ExtracodeHandler.E64
+            _loader.Output = s => _output.Append(s);
             // Перехватываем стандартный вывод для проверки
             Console.SetOut(new StringWriter(_output));
         }
@@ -40,7 +42,12 @@ namespace Besm6.Tests
             // Ожидаемый вывод включает: "ЙOKCEЛ      БЭCM-6/5     ШИФP-12"
             // и логотип "Ж" (ЖЖЖ и т.д.)
             
-            var result = _loader.RunScript("examples/name.dub");
+            // Ищем файл name.dub, поднимаясь вверх по дереву каталогов
+            string path = FindFileInParentDirs("examples", "name.dub");
+            if (path == null)
+                Assert.Inconclusive("File examples/name.dub not found");
+            
+            var result = _loader.RunScript(path);
             string output = _output.ToString();
             
             // Проверяем ключевые части баннера
@@ -56,7 +63,11 @@ namespace Besm6.Tests
         public void ForexDub_ProducesHelloWorld()
         {
             // forex.dub — это пример FORTRAN, который выводит "Hello, World!"
-            var result = _loader.RunScript("examples/forex.dub");
+            string path = FindFileInParentDirs("examples", "forex.dub");
+            if (path == null)
+                Assert.Inconclusive("File examples/forex.dub not found");
+            
+            var result = _loader.RunScript(path);
             string output = _output.ToString();
             
             StringAssert.Contains(output, "Hello, World!", "FOREX пример должен выводить Hello, World!");
@@ -66,10 +77,29 @@ namespace Besm6.Tests
         public void RawHelloDub_ProducesHelloWorld()
         {
             // tests/raw/hello.dub — это простой пример, который выводит "Hello, World!"
-            var result = _loader.RunScript("tests/raw/hello.dub");
+            string path = FindFileInParentDirs("tests/raw", "hello.dub");
+            if (path == null)
+                path = FindFileInParentDirs("src/besm6.net/tests/raw", "hello.dub");
+            if (path == null)
+                Assert.Inconclusive("File tests/raw/hello.dub not found");
+            
+            var result = _loader.RunScript(path);
             string output = _output.ToString();
             
             StringAssert.Contains(output, "Hello, World!", "Raw hello пример должен выводить Hello, World!");
+        }
+
+        private static string FindFileInParentDirs(string relativePath, string fileName)
+        {
+            string currentDir = Directory.GetCurrentDirectory();
+            while (currentDir != null)
+            {
+                string testPath = Path.Combine(currentDir, relativePath, fileName);
+                if (File.Exists(testPath))
+                    return testPath;
+                currentDir = Directory.GetParent(currentDir)?.FullName;
+            }
+            return null;
         }
     }
 }

@@ -19,8 +19,11 @@ namespace Besm6.Tests
                     break;
                 repoRoot = System.IO.Directory.GetParent(repoRoot)?.FullName;
             }
-            string tapesDir = System.IO.Path.Combine(repoRoot!, "tapes");
-            string dubPath = System.IO.Path.Combine(repoRoot!, "examples", "algol.dub");
+            if (repoRoot == null)
+                Assert.Inconclusive("Cannot find repo root with tapes/ and examples/ directories");
+            
+            string tapesDir = System.IO.Path.Combine(repoRoot, "tapes");
+            string dubPath = System.IO.Path.Combine(repoRoot, "examples", "algol.dub");
 
             var machine = new MachineCore();
             var loader = new DubnaLoader(machine, tapesDir)
