@@ -117,8 +117,14 @@ namespace Besm6.Loader
             var path = TapeImage.FindImagePath(tapeId, _tapesDir);
             if (path == null)
             {
-                if (Verbose) Console.WriteLine($"Tape image for id 0x{tapeId:X12} not found");
-                return false;
+                // Порт C++ disk_mount: ВСЕГДА создаёт Disk.
+                // Если файл не найден — создаём пустой диск (нули).
+                if (Verbose) Console.WriteLine($"Tape image for id 0x{tapeId:X12} not found, creating empty disk");
+                // C++ disk_mount: встроенный диск = 288 зон (PAGE_NWORDS × 288).
+                var empty = new TapeImage(tapeId, new byte[TapeImage.PageNWords * 6 * 288], readOnly: true);
+                _disksByUnit[unit] = empty;
+                _disksByTapeId[tapeId] = empty;
+                return true;
             }
 
             var image = TapeImage.LoadFromFile(tapeId, path);

@@ -91,12 +91,9 @@ namespace Besm6.Core
                     break;
 
                 case Opcode.Reg:
-                    // 002 рег/mod — привилегированная инструкция:
-                    // устанавливает регистр модификатора MOD = addr (по C++ «mod»).
-                    // В MONSYS используется для модификации последующих адресов.
-                    mod = addr & 0x7FFF;
-                    applyMod = true;
-                    break;
+                    // 002 рег/mod — привилегированная инструкция.
+                    // C++ (processor.cpp:194-195): throw Exception("Illegal instruction 002 рег/mod");
+                    throw new ProcessorException("Illegal instruction 002 рег/mod");
 
                 case Opcode.Schm:
                     _p.MemStore(m[15], acc);
@@ -470,9 +467,12 @@ namespace Besm6.Core
                     break;
 
                 case Opcode.Tsikl:
-                    aex = addr;
+                    // 0370 цикл / vlm — точный порт C++ processor.cpp:660-670.
+                    // C++ ДЕКРЕМЕНТИРУЕТ M[reg], поддерживает -1 (бесконечный цикл).
                     if (m[reg] == 0) break;
-                    m[reg] = Addr(m[reg] + 1);
+                    if (m[reg] == -1) break; // бесконечный цикл
+                    m[reg] = Addr(m[reg] - 1);
+                    if (m[reg] == 0) break;
                     pc = addr;
                     rightFlag = false;
                     break;
