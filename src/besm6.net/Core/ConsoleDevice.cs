@@ -22,9 +22,8 @@ namespace Besm6.Core
             char c = (char)(value.Value & 0xFF);
             _outputBuffer.Append(c);
             
-            // Выводим в консоль хоста только при неперенаправленном stdout
-            if (!Console.IsOutputRedirected)
-                Console.Write(c);
+            // Всегда выводим в консоль хоста — перехват stdout работает через Console.SetOut
+            Console.Write(c);
         }
 
         public Word48 Read()
