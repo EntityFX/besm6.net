@@ -73,9 +73,7 @@ namespace Besm6.Loader
         /// </summary>
         public void ReadToMemory(IMemory memory, uint zone, uint sector, int addr, int nwords)
         {
-            if (zone >= (uint)NumZones)
-                throw new InvalidOperationException($"Zone number {zone} exceeds disk size ({NumZones})");
-
+            // C++ disk_io не проверяет границы — читает нули при OOB.
             // Dense layout (embedded_to_memory / file_to_memory): word_idx = 1024*zone + 256*sector.
             uint offsetWords = (uint)PageNWords * zone + (uint)(256 * sector);
             int offsetBytes = (int)offsetWords * 6;
@@ -98,11 +96,8 @@ namespace Besm6.Loader
         /// </summary>
         public void WriteFromMemory(IMemory memory, uint zone, uint sector, int addr, int nwords)
         {
-            if (ReadOnly)
-                throw new InvalidOperationException("Cannot write to read-only disk image");
-            if (zone >= (uint)NumZones)
-                throw new InvalidOperationException($"Zone number {zone} exceeds disk size");
-
+            if (ReadOnly) return;
+            // C++ disk_io не проверяет границы — запись в OOB молча игнорируется.
             // Dense layout (memory_to_file): word_idx = 1024*zone + 256*sector.
             uint offsetWords = (uint)PageNWords * zone + (uint)(256 * sector);
             int offsetBytes = (int)offsetWords * 6;
