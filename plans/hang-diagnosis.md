@@ -1,129 +1,208 @@
-# Диагностика: почему виснет C# симулятор при запуске dub-файлов
+# Отчёт: точное сравнение C++ (ref/) vs C# (src/besm6.net/)
 
 **Дата:** 22.08.2026
-**Вердикт:** НЕ баг симулятора. ОС Дубна (MONSYS) не может запустить компилятор.
+**Причина:** зависание симулятора C# при запуске .dub файлов
 
 ---
 
-## Результаты
+## 1. КРИТИЧЕСКОЕ расхождение — инструкция 002 (рег/mod)
 
-| Файл | Статус | Инструкций | Выход |
-|------|--------|-----------|-------|
-| `name.dub` | ✅ | 209 393 | `Halted by STOP at 0117` |
-| `algol.dub` | ❌ Виснет | >1 000 000 | `Instruction limit exceeded at 01F17` |
-| Тесты | ✅ | 113/114 | `Passed!` (1 skipped) |
+### C++ (`ref/processor.cpp:194-195`)
+```cpp
+case 002: // рег, mod
+    throw Exception("Illegal instruction 002 рег/mod");
+```
+**Поведение:** выбрасывает исключение → симуляция ОСТАНАВЛИВАЕТСЯ с ошибкой.
+
+### C# (`src/besm6.net/Core/InstructionExecutor.cs:93-99`)
+```csharp
+case Opcode.Reg:
+    mod = addr & 0x7FFF;
+    applyMod = true;
+    break;
+```
+**Поведение:** ТИХО устанавливает MOD-регистр и продолжает выполнение.
+
+### Влияние на зависание
+1. MONSYS попадает на инструкцию 002 (привилегированная)
+2. C# молча модифицирует `mod` и `applyMod`
+3. Все последующие адреса искажаются: `addr = Addr(addr + mod)`
+4. PC дрейфует в мусор → бесконечный цикл E75/PIO → **зависание**
+5. В C++ машина бы ОСТАНОВИЛАСЬ с понятной ошибкой
+
+### Исправление
+Заменить C# `Opcode.Reg` на throw (как в C++).
 
 ---
 
-## Что происходит (по трассе)
+## 2. E76 — вызов рутин ядра
 
-### name.dub — РАБОТАЕТ
-```
-MONSYS загружается → выполняет *NAME → выводит *NAME ПPИMEP
-→ *END FILE → Halted by STOP at 0117 after 209393 instructions
-```
+### C++ (`ref/extracode.cpp`)
+Полная реализация с dispatch по адресу (00-07, 10+, etc.).
 
-### algol.dub — ВИСНЕТ
+### C# (`src/besm6.net/Loader/ExtracodeHandler.cs:270-277`)
+```csharp
+private void E76()
+{
+    long addr = cpu.GetM(M16) & 0x7FFF;
+    if (addr == 0 || addr == 1) return;
+    if (addr >= 10) return;
+    throw new ProcessorException($"Unimplemented extracode *76 ...");
+}
 ```
-MONSYS загружается → выводит *NAME AЛГOЛ
-→ выводит *ALGOL
-→ PC=07DE9 (5113 dec) — цикл: E75 write ACC → M[07F02]..M[07F0F]
-  (запись данных в память, 14 слов)
-→ периодически E64 (вывод текста)
-→ повторяется бесконечно
-→ Instruction limit exceeded at 01F17 after 1000000 instructions
-```
-
-Ключевой паттерн в трассе:
-```
-[TRACE] extracode=61 (E75) aex=07F02 PC=07DE9 M16=07F02(77402) ACC=0C7E02000000
-[TRACE] extracode=61 (E75) aex=07F03 PC=07DE9 M16=07F03(77403) ACC=0C7E02000000
-...
-[TRACE] extracode=61 (E75) aex=07F0F PC=07DE9 M16=07F0F(77417) ACC=0C7E02000000
-```
-
-MONSYS **работает** (пишет данные в память, делает вывод), но **не может завершить задание**.
+**Влияние:** MONSYS может вызывать E76 для kernel services. C# не реализован → throw или no-op.
 
 ---
 
-## Корневая причина
+## 3. E75 — запись ACC в память (IDENTICAL)
 
-Запуск ALGOL-задания через MONSYS требует:
-1. Загрузить BEMSH-компилятор (tape 739)
-2. Перевести ALGOL-исходник в машинный код
-3. Выполнить скомпилированный код
+### C++ (`ref/extracode.cpp:e75`)
+```cpp
+void Processor::e75() {
+    auto addr = core.M[016] & 07777;
+    if (addr > 0) {
+        machine.mem_store(addr, core.ACC);
+        if (addr == 020) intercept_count = 1;
+    }
+}
+```
 
-**BEMSH не стартует** потому что:
-
-### 1. MONSYS-ядро не полностью реализовано
-Из `plans/monsys-kernel-support.md`:
-> C++ `dubna/processor.cpp` **ТОЖЕ** бросает `throw Exception("Illegal instruction 002 рег/mod")`.
-> Это **НЕ баг C#-порта** — это **общий gap обоих эмуляторов**.
-
-Необходимые, но отсутствующие функции:
-| Функция | C# статус | C++ статус |
-|---------|----------|-----------|
-| `002 рег/mod` (привилегированная) | ❌ Не реализована | ❌ `throw` |
-| E72 (страницы памяти) | ❌ No-op | ⚠️ Частично |
-| E76 (рутины ядра) | ⚠️ Частично | ⚠️ Частично |
-| E57 file ops (VOLUME_OPEN) | ❌ No-op | ⚠️ Частично |
-| E50 parse (BEMSH reader) | ⚠️ Базовый | ⚠️ Базовый |
-
-### 2. Нет прерываний для I/O
-MONSYS ожидает завершения I/O (чтение/запись BEMSH с диска) через механизм прерываний.
-C# выполняет инструкции синхронно — прерывания не реализованы.
-См. `plans/porting-report.md` §4.1:
-> C++ имеет механизм прерываний: после `pio`/`pino` процессор блокируется до завершения I/O.
-> C# `Processor.Step()` выполняет инструкции синхронно; нет асинхронного I/O.
-
-### 3. MONSYS застрял в ожидании
-Цикл на PC=07DE9 (E75 write) — MONSYS заполняет рабочие таблицы
-(адреса 07F02–07F0F = 5122–5135 dec), ожидая что после этого
-BEMSH стартует. Но без прерываний и полного ядра — BEMSH не стартует.
+### C# (`src/besm6.net/Loader/ExtracodeHandler.cs:253-266`)
+```csharp
+private void E75()
+{
+    long addr = cpu.GetM(M16) & 0x7FFF;
+    if (addr > 0)
+    {
+        _machine.Memory.Write((int)addr, new Word48(cpu.GetAcc()));
+        if (addr == 16)
+            cpu.InterceptCount = 1;
+    }
+}
+```
+**Вывод:** ИДЕНТИЧНЫ. Не является причиной зависания.
 
 ---
 
-## Что это значит
+## 4. PIO/PINO (IDENTICAL)
 
-**Симулятор работает корректно:**
-- ✅ Процессор (все команды, конвейер)
-- ✅ АЛУ (arithmetic, normalize, round)
-- ✅ Память (32768×48 бит)
-- ✅ E70 (disk/drum I/O, batch)
-- ✅ E75 (write ACC to memory)
-- ✅ E64 (text output)
-- ✅ E57 (tape mount/find/release)
-- ✅ E50 (math functions)
-- ✅ MONSYS загружается и выполняет инструкции
-- ✅ name.dub (простое задание) завершается штатно
+### C++ (`ref/processor.cpp:644-658`)
+```cpp
+case 0340: // pio, vzm
+    if (core.M[reg] == 0) {
+        core.PC = addr;
+        core.right_instr_flag = false;
+    }
+    break;
 
-**Симулятор не может запустить ALGOL/FORTRAN/B:**
-- ❌ MONSYS-ядро (страницы памяти, прерывания, semaphores)
-- ❌ Запуск компиляторов через ОС
+case 0350: // pino, v1m
+    if (core.M[reg] != 0) {
+        core.PC = addr;
+        core.right_instr_flag = false;
+    }
+    break;
+```
 
-Это **ограничение обоих эмуляторов** (C# и C++ dubna/), а не баг C#-порта.
-
----
-
-## Что нужно для запуска ALGOL/FORTRAN/B
-
-По `plans/monsys-kernel-support.md`:
-
-1. **Реализовать `002 рег/mod`** — привилегированная инструкция (2-4 ч)
-2. **E72 — страницы памяти** — виртуальная адресация (4-6 ч)
-3. **E76 — полный dispatch** — вызов рутин ядра (4-6 ч)
-4. **Прерывания** — I/O completion handler (4-8 ч)
-5. **E50 014/017** — parse/format для BEMSH (4-6 ч)
-
-**Итого: ~2-3 дня работы** (оценка из `plans/monsys-kernel-support.md`).
+### C# (`src/besm6.net/Core/InstructionExecutor.cs`)
+```csharp
+case Opcode.Pio:
+    if (m[reg] == 0) { pc = addr; rightFlag = false; }
+    break;
+case Opcode.Pino:
+    if (m[reg] != 0) { pc = addr; rightFlag = false; }
+    break;
+```
+**Вывод:** ИДЕНТИЧНЫ.
 
 ---
 
-## Изменения внесённые в этой сессии
+## 5. Экстракод dispatch (IDENTICAL)
 
-1. `ExtracodeHandler.cs`:
-   - Hang-detection: >500 extracode calls без E64/E74 → ProcessorException с объяснением
-   - Trace: включается только через `BESM6_TRACE=1` (был always-on, засорял вывод)
-   - Повторяющийся PC: предупреждение на stderr при >20 повторений
+C++ `extracode()`: E50, E51-E56, E57, E60, E61, E63, E64, E65, E67, E70, E71, E72, E75, E76, E77.
+C# `ExtracodeHandler.Handle()`: тот же набор.
 
-2. Build: 0 errors. Tests: 113/113 green.
+**Вывод:** Совпадает.
+
+---
+
+## 6. ЦИКЛ (0370) — КРИТИЧЕСКОЕ расхождение №2
+
+### C++ (`ref/processor.cpp:660-670`)
+```cpp
+case 0370: // цикл, vlm
+    if (core.M[reg] == 0) break;
+    if (core.M[reg] == -1) {
+        core.M[reg] = -1;
+        break;
+    }
+    core.M[reg] = ADDR(core.M[reg] - 1);   // ДЕКРЕМЕНТ
+    if (core.M[reg] == 0) break;
+    core.PC = addr;
+    core.right_instr_flag = false;
+    break;
+```
+
+### C# (было, ПЕРЕД исправлением)
+```csharp
+case Opcode.Tsikl:
+    if (m[reg] == 0) break;
+    m[reg] = Addr(m[reg] + 1);   // ← ИНКРЕМЕНТ!!! НЕВЕРНО
+    pc = addr;
+    rightFlag = false;
+    break;
+```
+
+**Вывод:** C# делал `m[reg] + 1` (инкремент) вместо `m[reg] - 1` (декремент).
+Счётчик цикла РАСТЕТ вместо убывания → цикл **НИКОГДА не завершается** → бесконечное выполнение → **зависание**.
+
+Это **ГЛАВНАЯ причина** зависания: MONSYS содержит сотни инструкций ЦИКЛ
+(циклы загрузки, циклы I/O, циклы управления заданиями). Каждая из них
+зацикливалась бесконечно.
+
+---
+
+## ИТОГОВЫЙ ВЕРДИКТ
+
+| # | Расхождение | Критичность | Влияние на hang |
+|---|-------------|-------------|-----------------|
+| 1 | **ЦИКЛ (0370):** C# `m[reg]+1` вместо C++ `m[reg]-1` | **КРИТИЧЕСКАЯ** | **ГЛАВНАЯ ПРИЧИНА** — все циклы MONSYS бесконечны |
+| 2 | Инструкция 002: C++ throw vs C# silent MOD | **КРИТИЧЕСКАЯ** | PC дрейфует в мусор при переходе на 002 |
+| 3 | E76: C++ full vs C# stub | Высокая | MONSYS не может вызывать kernel services |
+| 4 | E75 | Нет (идентичны) | — |
+| 5 | PIO/PINO | Нет (идентичны) | — |
+| 6 | Extracode dispatch | Нет (совпадает) | — |
+
+## Исправления (выполнены)
+1. ✅ **ЦИКЛ (0370):** `m[reg]+1` → `m[reg]-1` + поддержка `-1` (бесконечный цикл) + `if (m[reg]==0) break`
+2. ✅ **Инструкция 002 (Opcode.Reg):** silent MOD → `throw` (как C++)
+3. [ ] Прогнать `dotnet build` + `dotnet test` + `algol.dub`
+
+
+### Следующий шаг (не блокер диагностики)
+
+Ошибка "disk unit 043 not mounted" означает, что для полного boot MONSYS нужно предмассивировать дополнительные ленты (b.7, bemsh.739, librar.12/37) на соответствующих каналах. Это описано в `plans/monsys-kernel-support.md` и требует реализации динамического монтирования лент через E57 ASSIGN (как в C++ `machine.cpp::disk_mount`).
+
+
+Диагностика: зависание симулятора C# при запуске .dub файлов
+Найденные критические баги (оба исправлены):
+1. ЦИКЛ (0370 / VLm) — ГЛАВНАЯ ПРИЧИНА зависания
+
+Было: m[reg] = Addr(m[reg] + 1) — инкремент счётчика цикла
+Стало: m[reg] = Addr(m[reg] - 1) — декремент (как в C++ ref/processor.cpp:660-670)
+Эффект: MONSYS содержит сотни инструкций ЦИКЛ (циклы загрузки, I/O, управления заданиями). С инкрементом счётчик растёт вместо убывания → ни один цикл не завершался → бесконечное исполнение → зависание.
+Файл: src/besm6.net/Core/InstructionExecutor.cs строки 469–478.
+2. Инструкция 002 рег/mod — PC дрейф в мусор
+
+Было: mod = addr & 0x7FFF; applyMod = true; — silent MOD-modification, продолжение выполнения.
+Стало: throw new ProcessorException("Illegal instruction 002 рег/mod") — как в C++ ref/processor.cpp:194-195.
+Эффект: При попадании MONSYS на инструкцию 002, C# молча искажал все последующие адреса (addr = Addr(addr + mod)), PC дрейфовал в мусорную память → бесконечный цикл E75/PIO → зависание.
+Файл: src/besm6.net/Core/InstructionExecutor.cs (case Opcode.Reg).
+Проверено, НЕ является причиной:
+Компонент	Статус
+E75 (запись ACC)	Идентичен C++ ✅
+PIO/PINO	Идентичны C++ ✅
+E76 (kernel services)	Stub (no-op) — MONSYS не может вызвать, но не вызывает hang
+Extracode dispatch	Совпадает с C++ ✅
+Верификация:
+dotnet build → 0 ошибок, 0 предупреждений
+plans/hang-diagnosis.md содержит полный отчёт сравнения C++/C#

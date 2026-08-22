@@ -467,7 +467,15 @@ namespace Besm6.Loader
                 int memAddr = page << 10;
                 TapeImage? disk = _diskByUnit(unit);
                 if (disk == null)
-                    throw new ProcessorException($"E70: disk unit 0{unit:o} not mounted");
+                {
+                    // Порт C++ disk_mount: если диск не смонтирован — создаём пустой.
+                    // MONSYS при загрузке может обращаться к дискам, которые ещё
+                    // не были смонтированы через E57 ASSIGN.
+                    _mountTape(0, unit);
+                    disk = _diskByUnit(unit);
+                    if (disk == null)
+                        throw new ProcessorException($"E70: disk unit 0{Convert.ToString(unit, 8)} not mounted");
+                }
                 if (isRead)
                     disk.ReadToMemory(_machine.Memory, (uint)zone, 0, memAddr, 1024);
                 else
@@ -516,7 +524,7 @@ namespace Besm6.Loader
                 int nwords = sectIo ? 256 : 1024;
                 TapeImage? drum = _drumByUnit(thisDrum);
                 if (drum == null)
-                    throw new ProcessorException($"E70: drum unit 0{thisDrum:o} not available");
+                        throw new ProcessorException($"E70: drum unit 0{Convert.ToString(thisDrum, 8)} not available");
                 if (isRead)
                     drum.ReadToMemory(_machine.Memory, (uint)tract, sectIo ? (uint)sector : 0, memAddr, nwords);
                 else
