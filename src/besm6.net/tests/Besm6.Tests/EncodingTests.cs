@@ -125,5 +125,42 @@ namespace Besm6.Tests
             Assert.AreEqual((byte)(0x80 + 3), enc[1]);
             Assert.AreEqual((byte)'B', enc[2]);
         }
+
+        [TestMethod]
+        public void GostToUnicode_MonsysBannerChars()
+        {
+            // Тест символов из баннера MONSYS: "ЙOKCEЛ      БЭCM-6/5     ШИФP-12"
+            // Проверяем правильность таблицы GOST->Unicode (latin) для символов баннера.
+            
+            // Й (U+0419, кириллица) -> GOST код 0x29
+            Assert.AreEqual('Й', CosyCodec.GostToUnicode(0x29), "Й at GOST 0x29");
+            
+            // O (латиница, U+004F) -> GOST код 0x2E
+            Assert.AreEqual('O', CosyCodec.GostToUnicode(0x2E), "Latin O at GOST 0x2E");
+            
+            // K (латиница, U+004B) -> GOST код 0x2A
+            Assert.AreEqual('K', CosyCodec.GostToUnicode(0x2A), "Latin K at GOST 0x2A");
+            
+            // C (латиница, U+0043) -> GOST код 0x31 (проверено по таблице gost_to_unicode_lat)
+            Assert.AreEqual('C', CosyCodec.GostToUnicode(0x31), "Latin C at GOST 0x31");
+            
+            // E (кириллица, U+0415) -> GOST код 0x25
+            Assert.AreEqual('Е', CosyCodec.GostToUnicode(0x25), "Cyrillic Е at GOST 0x25");
+            
+            // Л (кириллица, U+041B) -> GOST код 0x2B
+            Assert.AreEqual('Л', CosyCodec.GostToUnicode(0x2B), "Cyrillic Л at GOST 0x2B");
+            
+            // Б (кириллица, U+0411) -> GOST код 0x21
+            Assert.AreEqual('Б', CosyCodec.GostToUnicode(0x21), "Cyrillic Б at GOST 0x21");
+            
+            // Э (кириллица, U+042D) -> GOST код 0x3C
+            Assert.AreEqual('Э', CosyCodec.GostToUnicode(0x3C), "Cyrillic Э at GOST 0x3C");
+            
+            // М (кириллица, U+041C) -> GOST код 0x2C
+            Assert.AreEqual('М', CosyCodec.GostToUnicode(0x2C), "Cyrillic М at GOST 0x2C");
+            
+            // П (кириллица, U+041F) -> GOST код 0x2F
+            Assert.AreEqual('П', CosyCodec.GostToUnicode(0x2F), "Cyrillic П at GOST 0x2F");
+        }
     }
 }
