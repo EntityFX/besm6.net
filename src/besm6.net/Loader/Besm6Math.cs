@@ -1,4 +1,5 @@
 using System;
+using Besm6.Core;
 
 namespace Besm6.Loader
 {
@@ -23,20 +24,10 @@ namespace Besm6.Loader
 
         public static double Besm6ToDouble(long word)
         {
-            // Убрать свёртку.
-            word &= 0xFFFFFFFFFFFFL; // BITS48
-
-            // Порт C++:
-            //   mantissa = (double)(((int64_t)word) << (64 - 48 + 7));
-            // Сдвиг на 23 переносит знак мантиссы (бит 40) в знак 64-битного
-            // целого, т.е. mantissa = (знаковое 41-битное) * 2^23.
-            long shifted = word << 23;
-            double mantissa = shifted;
-
-            int exponent = (int)(word >> 41);
-
-            // Порядок смещён вверх на 64; мантиссу нужно скорректировать.
-            return Math.ScaleB(mantissa, exponent - 64 - 63);
+            // Используем Word48.ToDouble для гарантированно правильной конверсии.
+            // Word48.ToDouble реализует тот же алгоритм, но с правильным обращением
+            // с 48-битными значениями и сдвигами.
+            return new Word48(word).ToDouble();
         }
 
         public static long DoubleToBesm6(double input)
