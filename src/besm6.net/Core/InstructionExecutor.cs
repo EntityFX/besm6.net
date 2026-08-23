@@ -467,12 +467,11 @@ namespace Besm6.Core
                     break;
 
                 case Opcode.Tsikl:
-                    // 0370 цикл / vlm — точный порт C++ processor.cpp:660-670.
-                    // C++ ДЕКРЕМЕНТИРУЕТ M[reg], поддерживает -1 (бесконечный цикл).
+                    // 0370 цикл / vlm — точный порт C++ processor.cpp:762-769.
+                    // C++ ИНКРЕМЕНТИРУЕТ M[reg] при каждом выполнении.
+                    aex = addr;
                     if (m[reg] == 0) break;
-                    if (m[reg] == -1) break; // бесконечный цикл
-                    m[reg] = Addr(m[reg] - 1);
-                    if (m[reg] == 0) break;
+                    m[reg] = Addr(m[reg] + 1);
                     pc = addr;
                     rightFlag = false;
                     break;
