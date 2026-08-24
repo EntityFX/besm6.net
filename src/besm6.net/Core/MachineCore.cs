@@ -19,6 +19,7 @@ namespace Besm6.Core
         public IMemory Memory { get; }
         public Processor Cpu { get; }
         public DeviceManager Devices { get; }
+        public Puncher Puncher { get; }
 
         // Свойство-мост для совместимости с существующим Debugger.
         public Processor Processor => Cpu;
@@ -26,7 +27,7 @@ namespace Besm6.Core
         /// <summary>Хук трассировки: вызывается после каждой инструкции. null = трассировка выключена.</summary>
         public Action<int, long>? StepTrace { get; set; }
 
-        public MachineCore(int memorySize = 32768)
+        public MachineCore(int memorySize = 32768, string? puncherOutputDir = null)
         {
             var coreMemory = new CoreMemory(memorySize);
             Devices = new DeviceManager();
@@ -41,6 +42,7 @@ namespace Besm6.Core
             Memory = new SystemBus(coreMemory, Devices);
 
             Cpu = new Processor(Memory);
+            Puncher = new Puncher(Memory, puncherOutputDir);
         }
 
         /// <summary>

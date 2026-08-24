@@ -247,8 +247,8 @@ namespace Besm6.Tests
             var loader = new DubnaLoader(machine) { InstructionLimit = 1000 };
 
             // Программа: единственная инструкция СТОП (opcode 0xD8, длинный формат)
-            // в левой половине слова по адресу 01000.
-            const int baseAddr = 01000;
+            // в левой половине слова по адресу 01000 (oct) = 512 (dec).
+            const int baseAddr = 512; // 01000 oct (октальные литералы в C# недоступны)
             long stop24 = (1L << 20) | (0xD8L << 12); // длинный формат: бит20 + opcode 0xD8
             long stopWord = stop24 << 24;             // левая половина слова
             var job = new DubJob();
