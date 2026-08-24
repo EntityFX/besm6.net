@@ -308,20 +308,18 @@ namespace Besm6.Loader
 
                 case 54: cpu.SetAcc(0); break;  // 066 oct
 
-                case 55:  // 067 oct — DATE*
+                case 55:  // 067 oct — DATE*, ОС Дубна.
                 {
-                    long d = 0;
-                    d |= 4L << 4;
-                    d |= 7L << 12;
-                    d |= 2L << 16;
-                    d |= 4L << 20;
-                    d |= 2L << 24;
-                    d |= 3L << 28;
-                    d |= 4L << 32;
-                    d |= 5L << 36;
-                    d |= 5L << 40;
-                    d |= 6L << 44;
-                    cpu.SetAcc(d & 0xFFFFFFFFFFFFL);
+                    // Раскладка union E50_Date_Time (ref/extracode.h):
+                    //   decisec  b0-3,  sec_lo  b4-7,  sec_hi  b8-11, min_lo  b12-15,
+                    //   min_hi   b16-19, hour_lo b20-23, hour_hi b24-25 (2 бита),
+                    //   year_lo  b26-29, year_hi b30-33, month_lo b34-37, month_hi b38-41,
+                    //   day_lo   b42-45, day_hi  b46-47 (2 бита)
+                    // Фиксированное значение C++: 04/07/24 23:45:56 (0'101C'9234'5560 hex).
+                    const long d = (6L << 4) | (5L << 8) | (5L << 12) | (4L << 16)
+                                | (3L << 20) | (2L << 24) | (4L << 26) | (2L << 30)
+                                | (7L << 34) | (4L << 42);
+                    cpu.SetAcc(d);
                     break;
                 }
 
@@ -335,7 +333,6 @@ namespace Besm6.Loader
                 case 131:   // 0203 oct
                 case 133:   // 0205 oct
                 case 136:   // 0210 oct
-                case 137:   // 0211 oct
                 case 139:   // 0213 oct
                 case 28815: // 070217 oct
                 case 28819: // 070223 oct
@@ -354,8 +351,11 @@ namespace Besm6.Loader
                 case 31872: // 076200 oct
                     break;
 
+                case 137:   // 0211 oct — C++: throw Exception("Task paused waiting for tape")
+                    throw new ProcessorException("Task paused waiting for tape");
+
                 case 28735: cpu.SetAcc(0); break;         // 070077 oct
-                case 28800: cpu.SetAcc(8192L); break;     // 070200 oct
+                case 28800: cpu.SetAcc(4096L); break;     // 070200 oct — C++: ACC = 0'0010'0000 (бит 12)
                 case 28808: cpu.SetAcc(0); break;         // 070210 oct
                 case 28812: cpu.SetAcc(System.Convert.ToInt64("1234567012345670", 8)); break; // 070214 oct
 
@@ -370,6 +370,15 @@ namespace Besm6.Loader
         {
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
+
+            // Детальная диагностика E57 (BESM6_TRACE).
+            if (_traceExtracodes)
+            {
+                long acc = cpu.GetAcc();
+                long m13 = cpu.GetM(13);
+                EnsureTraceWriter().WriteLine(
+                    $"[E57] addr=0{Convert.ToString(addr, 8)} ACC=0{acc:X} M[13]=0{m13:X}");
+            }
 
             // Специальные адреса (C++ switch).
             switch (addr)
@@ -420,6 +429,13 @@ namespace Besm6.Loader
                     bool ok = _mountTape(tapeIdAssign, diskUnit);
                     if (!ok)
                         throw new ProcessorException($"E57 ASSIGN: cannot mount tape 0x{tapeIdAssign:X} on unit {diskUnit}");
+                    if (_traceExtracodes)
+                    {
+                        TapeImage? mounted = _diskByUnit(diskUnit);
+                        EnsureTraceWriter().WriteLine(
+                            $"[E57] ASSIGN tape=0{tapeIdAssign:X} -> unit=0{Convert.ToString(diskUnit, 8)} " +
+                            $"mounted_id=0{(mounted?.VolumeId.ToString("X") ?? "null")}");
+                    }
                     cpu.SetAcc((long)diskUnit);
                     return;
                 }
@@ -464,6 +480,35 @@ namespace Besm6.Loader
             bool isRead = (ctrl & (1L << 39)) != 0;
             int unit = (int)((ctrl >> 12) & 0x3F);
             int page = (int)((ctrl >> 30) & 0x1F);
+
+            // Детальная диагностика E70 (BESM6_TRACE): декодирование слова управления.
+            if (_traceExtracodes)
+            {
+                int zoneF = (int)(ctrl & 0xFFF);
+                int seek = (int)((ctrl >> 40) & 1);
+                int tract = (int)(ctrl & 0x1F);
+                int sector = (int)((ctrl >> 6) & 0x3);
+                int paragraph = (int)((ctrl >> 24) & 0x3);
+                int rawSect = (int)((ctrl >> 35) & 1);
+                int physIo = (int)((ctrl >> 38) & 1);
+                int sectIo = (int)((ctrl >> 47) & 1);
+                string medium;
+                if (unit >= 24 && unit < 56)
+                {
+                    TapeImage? d = _diskByUnit(unit);
+                    medium = d == null ? "DISK(!!not-mounted!!)" : $"DISK(tape=0{d.VolumeId:X})";
+                }
+                else
+                {
+                    int thisDrum = unit & 31;
+                    medium = physIo == 1 ? $"PHYSIO(drum=0{thisDrum:X},mapped=0{_mappedDrum:X})" : $"DRUM(0{thisDrum:X})";
+                }
+                EnsureTraceWriter().WriteLine(
+                    $"[E70] m16=0{Convert.ToString(execAddr, 8)} cw=0{ctrl:X12} op={(isRead ? "R" : "W")}{(seek == 1 ? "(seek)" : "")} " +
+                    $"unit=0{Convert.ToString(unit, 8)} page=0{Convert.ToString(page, 8)} zone=0{Convert.ToString(zoneF, 8)} " +
+                    $"tract=0{Convert.ToString(tract, 8)} sect={sector} par=0{Convert.ToString(paragraph, 8)} rawSect={rawSect} " +
+                    $"physIo={physIo} sectIo={sectIo} -> {medium}");
+            }
 
             if (unit >= 24 && unit < 56)
             {
