@@ -428,6 +428,13 @@ namespace Besm6.Loader
             HaltedByStop = false;
             long lastReport = 0;
 
+            // Loop detector: if PC oscillates within a small range for a long window,
+            // the machine is stuck in a spin-loop (MONSYS I/O wait, abort path, etc.).
+            const int LoopWindow = 20_000;
+            const int LoopRange = 16;
+            long[] pcHistory = new long[LoopWindow];
+            int pcHistIdx = 0;
+
             // Подключаем трассировку.
             if (InstructionTrace != null)
             {
@@ -451,11 +458,36 @@ namespace Besm6.Loader
                         return LoadResult.Halt(_machine.Cpu.GetPc(), InstructionsExecuted);
                     }
 
+                    // Loop detection: track PC in a sliding window.
+                    long curPc = _machine.Cpu.GetPc();
+                    pcHistory[pcHistIdx % LoopWindow] = curPc;
+                    pcHistIdx++;
+
+                    if (InstructionsExecuted >= LoopWindow && (InstructionsExecuted % LoopWindow) == 0)
+                    {
+                        long minPc = long.MaxValue, maxPc = long.MinValue;
+                        for (int i = 0; i < LoopWindow; i++)
+                        {
+                            long v = pcHistory[i];
+                            if (v < minPc) minPc = v;
+                            if (v > maxPc) maxPc = v;
+                        }
+                        if ((maxPc - minPc) < LoopRange)
+                        {
+                            string diag = $"Loop detected: PC stuck in range 0{minPc:X4}-0{maxPc:X4} " +
+                                         $"for {LoopWindow / 1000}K+ instructions. " +
+                                         "MONSYS is in an I/O wait/abort spin-loop (channel-done not signaled). " +
+                                         "This is a known MONSYS kernel gap (same in C++ dubna reference). " +
+                                         "See plans/monsys-kernel-support.md.";
+                            if (Verbose) Console.WriteLine($"\n  [LOOP] {diag}");
+                            return LoadResult.Failed(diag, curPc, InstructionsExecuted);
+                        }
+                    }
+
                     if (Verbose && InstructionsExecuted - lastReport >= 100_000)
                     {
                         lastReport = InstructionsExecuted;
-                        long pc = _machine.Cpu.GetPc();
-                        Console.Write($"\r  [{InstructionsExecuted / 1000}K] PC=0{pc:X4}   ");
+                        Console.Write($"\r  [{InstructionsExecuted / 1000}K] PC=0{curPc:X4}   ");
                     }
                 }
                 catch (ProcessorException ex)
