@@ -20,6 +20,7 @@ namespace Besm6.Core
         public Processor Cpu { get; }
         public DeviceManager Devices { get; }
         public Puncher Puncher { get; }
+        public Plotter Plotter { get; }
 
         // Свойство-мост для совместимости с существующим Debugger.
         public Processor Processor => Cpu;
@@ -43,6 +44,7 @@ namespace Besm6.Core
 
             Cpu = new Processor(Memory);
             Puncher = new Puncher(Memory, puncherOutputDir);
+            Plotter = new Plotter();
         }
 
         /// <summary>

@@ -216,6 +216,7 @@ namespace Besm6.Loader
             int endAddr = (int)(ptrWord & 0x7FFF);
             int flags = (int)((ptrWord >> 39) & 0x1F);
 
+            int dbgStart = (startAddr + (int)cpu.GetM(startReg)) & 0x7FFF;
             startAddr = (startAddr + (int)cpu.GetM(startReg)) & 0x7FFF;
             endAddr = (endAddr + (int)cpu.GetM(endReg)) & 0x7FFF;
 
@@ -417,32 +418,39 @@ again:
 
         private int E64PrintGost(int startAddr, int endAddr)
         {
-            int wordAddr = startAddr;
-            int byteIdx = 0;
+            var bp = new BytePointer(_machine.Memory, startAddr);
             byte lastCh = G_SPACE;
 
-            while (wordAddr != 0)
+            for (;;)
             {
-                if (endAddr != 0 && wordAddr == endAddr + 1)
-                    return wordAddr;
+                if (bp.WordAddr == 0)
+                    return 0;
 
-                long word = MemRead(wordAddr);
-                byte ch = (byte)((word >> (40 - byteIdx * 8)) & 0xFF);
+                if (endAddr != 0 && bp.WordAddr == endAddr + 1)
+                    return bp.WordAddr;
 
+                byte ch = bp.Get();
                 if (IsGostEndOfText(ch))
                 {
-                    if (byteIdx != 0) wordAddr++;
-                    return wordAddr;
+                    if (bp.ByteIndex != 0)
+                        bp.WordAddr++;
+                    return bp.WordAddr;
                 }
 
-                byteIdx++;
-                if (byteIdx >= 6) { wordAddr++; byteIdx = 0; }
-
+                // Weirdness of e64 in Dispak: when '231' or other EOF
+                // is present in the current word - byte #129 is ignored.
                 if (_e64Position == E64_LINE_WIDTH)
                 {
                     E64EmitLine();
-                    continue;
+                    if (EofInWord(bp.WordAddr))
+                        continue;
                 }
+
+                // Weirdness of e64 in Dispak: overprint '212'
+                // is valid only at position #2, but it affects
+                // previous character as well.
+                if (_e64Position == 0 && bp.Peek() == G_OVERPRINT)
+                    _e64Overprint = true;
 
                 switch (ch)
                 {
@@ -465,43 +473,27 @@ again:
 
                     case G_SET_POS:
                     case G_SET_POS2:
-                    {
-                        long word2 = MemRead(wordAddr);
-                        int nextIdx = byteIdx + 1;
-                        if (nextIdx >= 6) nextIdx = 0;
-                        byte pos = (byte)((word2 >> (40 - nextIdx * 8)) & 0xFF);
-                        _e64Position = pos % E64_LINE_WIDTH;
-                        byteIdx++;
-                        if (byteIdx >= 6) { wordAddr++; byteIdx = 0; }
+                        ch = bp.Get();
+                        _e64Position = ch % E64_LINE_WIDTH;
                         break;
-                    }
 
                     case G_EOLN:
                     case G_REPEAT:
-                    {
-                        long word2 = MemRead(wordAddr);
-                        int nextIdx = byteIdx + 1;
-                        if (nextIdx >= 6) nextIdx = 0;
-                        byte count = (byte)((word2 >> (40 - nextIdx * 8)) & 0xFF);
-                        byteIdx += 2;
-                        if (byteIdx >= 6) { wordAddr++; byteIdx -= 6; }
-
-                        while (count-- > 0)
+                        ch = bp.Get();
+                        while (ch-- > 0)
                         {
                             if (_e64Position == E64_LINE_WIDTH)
                                 E64EmitLine();
                             if (_e64Line[_e64Position] == G_SPACE)
                                 E64PutChar(lastCh);
                             else
-                                _e64Position++;
+                                _e64Position += 1;
                         }
                         break;
-                    }
 
                     case G_OVERPRINT:
                         _e64Overprint = true;
-                        ch = G_SPACE;
-                        goto default;
+                        goto case G_SPACE;
 
                     case G_SPACE:
                     case G_SPACE2:
@@ -515,7 +507,18 @@ again:
                         break;
                 }
             }
-            return 0;
+        }
+
+        private bool EofInWord(int wordAddr)
+        {
+            long w = MemRead(wordAddr);
+            for (int i = 0; i < 6; i++)
+            {
+                byte b = (byte)((w >> (40 - i * 8)) & 0xFF);
+                if (b == 0x99 || b == G_EOF || b == G_END_OF_INFO) // 0231, 0377, 0172
+                    return true;
+            }
+            return false;
         }
 
         private static bool IsGostEndOfText(byte ch)
