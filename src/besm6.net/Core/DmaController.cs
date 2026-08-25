@@ -22,13 +22,13 @@ namespace Besm6.Core
         /// </summary>
         public void TransferMemoryToDevice(int deviceAddr, int startAddr, int count)
         {
-            var device = _deviceManager.GetDevice(deviceAddr);
+            var device = _deviceManager.GetDevice((uint)deviceAddr);
             if (device == null) return;
 
             if (device is MagneticDrumDevice drum)
             {
                 Word48[] buffer = new Word48[count];
-                for (int i = 0; i < count; i++) buffer[i] = _memory.Read(startAddr + i);
+                for (int i = 0; i < count; i++) buffer[i] = _memory.Read((uint)(startAddr + i));
                 drum.WriteBlock(0, buffer);
                 Console.WriteLine($"DMA Block Write: Mem -> Drum | Count: {count}");
             }
@@ -36,8 +36,8 @@ namespace Besm6.Core
             {
                 for (int i = 0; i < count; i++)
                 {
-                    Word48 value = _memory.Read(startAddr + i);
-                    _deviceManager.Write(deviceAddr, value);
+                    Word48 value = _memory.Read((uint)(startAddr + i));
+                    _deviceManager.Write((uint)deviceAddr, value);
                 }
                 Console.WriteLine($"DMA Word Write: Mem -> Device | Count: {count}");
             }
@@ -48,22 +48,22 @@ namespace Besm6.Core
         /// </summary>
         public void TransferDeviceToMemory(int deviceAddr, int startAddr, int count)
         {
-            var device = _deviceManager.GetDevice(deviceAddr);
+            var device = _deviceManager.GetDevice((uint)deviceAddr);
             if (device == null) return;
 
             if (device is MagneticDrumDevice drum)
             {
                 Word48[] buffer = new Word48[count];
                 drum.ReadBlock(0, buffer);
-                for (int i = 0; i < count; i++) _memory.Write(startAddr + i, buffer[i]);
+                for (int i = 0; i < count; i++) _memory.Write((uint)(startAddr + i), buffer[i]);
                 Console.WriteLine($"DMA Block Read: Drum -> Mem | Count: {count}");
             }
             else
             {
                 for (int i = 0; i < count; i++)
                 {
-                    Word48 value = _deviceManager.Read(deviceAddr);
-                    _memory.Write(startAddr + i, value);
+                    Word48 value = _deviceManager.Read((uint)deviceAddr);
+                    _memory.Write((uint)(startAddr + i), value);
                 }
                 Console.WriteLine($"DMA Word Read: Device -> Mem | Count: {count}");
             }

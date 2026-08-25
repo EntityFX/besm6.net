@@ -51,7 +51,7 @@ namespace Besm6.Core
             int a = startAddr;
             while (a < endAddr)
             {
-                var bp = new BytePointer(_memory, a & 0x7FFF);
+                var bp = new BytePointer(_memory, (uint)(a & 0x7FFF));
                 byte[] buf = new byte[144];
                 for (int i = 0; i < 144; i++) buf[i] = bp.Get();
 

@@ -75,7 +75,7 @@ namespace Besm6.Core
                 throw new IndexOutOfRangeException($"Drum address 0x{address:X} out of range.");
 
             int offset = address * 8;
-            long val = BitConverter.ToInt64(_data, offset);
+            ulong val = BitConverter.ToUInt64(_data, offset);
             return new Word48(val);
         }
 

@@ -17,14 +17,14 @@ namespace Besm6.Tests
         public void ToDouble_One_IsOne()
         {
             // 1.0 = (65 << 41) | (1 << 39) = 0x828000000000
-            long one = (65L << 41) | (1L << 39);
+            ulong one = (65UL << 41) | (1UL << 39);
             Assert.AreEqual(1.0, new Word48(one).ToDouble(), 1e-9);
         }
 
         [TestMethod]
         public void FromDouble_One_IsCanonicalWord()
         {
-            long expected = (65L << 41) | (1L << 39);
+            ulong expected = (65UL << 41) | (1UL << 39);
             Assert.AreEqual(expected, Word48.FromDouble(1.0).Value);
         }
 
@@ -44,12 +44,12 @@ namespace Besm6.Tests
         {
             // Word48.ToDouble и Besm6Math.Besm6ToDouble должны описывать ОДНО И ТО ЖЕ
             // число БЭСМ-6 (оба претендуют на канонический формат).
-            long[] words = {
+            ulong[] words = {
                 0,
-                (65L << 41) | (1L << 39),       // 1.0
-                (65L << 41) | (3L << 39),       // 1.5 (mantissa = 3*2^39)
+                (65UL << 41) | (1UL << 39),       // 1.0
+                (65UL << 41) | (3UL << 39),       // 1.5 (mantissa = 3*2^39)
             };
-            foreach (long w in words)
+            foreach (ulong w in words)
             {
                 Assert.AreEqual(
                     Besm6Math.Besm6ToDouble(w),
@@ -66,7 +66,7 @@ namespace Besm6.Tests
         [TestMethod]
         public void ToOctal_FromOctal_RoundTrip()
         {
-            long value = 0x123456789ABCL;
+            ulong value = 0x123456789ABCUL;
             string oct = new Word48(value).ToOctal();
             Assert.AreEqual(16, oct.Length, "48 бит = 16 восьмеричных цифр");
             Assert.AreEqual(value, Word48.FromOctal(oct).Value);
@@ -77,7 +77,7 @@ namespace Besm6.Tests
         {
             // Каноническая 17-символьная запись с ведущим нулём.
             // "04050000000000000" = 1.0; ведущий 0 даёт бит 48, который отбрасывается.
-            long one = (65L << 41) | (1L << 39);
+            ulong one = (65UL << 41) | (1UL << 39);
             Assert.AreEqual(one, Word48.FromOctal("04050000000000000").Value);
         }
     }
