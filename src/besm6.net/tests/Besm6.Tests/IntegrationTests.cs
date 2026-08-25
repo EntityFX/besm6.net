@@ -36,28 +36,33 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
-        [Ignore("Blocked by incomplete MONSYS kernel — both C# and C++ reference fail. See plans/hang-diagnosis.md")]
         public void NameDub_ProducesMonsysBanner()
         {
             // Запускаем name.dub и проверяем, что баннер MONSYS выводится.
-            // Ожидаемый вывод включает: "ЙOKCEЛ      БЭCM-6/5     ШИФP-12"
-            // и логотип "Ж" (ЖЖЖ и т.д.)
-            
+            // Ожидаемый вывод (GOST → Unicode) включает:
+            //   "ЙOKCEЛ      БЭCM-6/5     ШИФP-12"
+            //   "MOHИTOPHAЯ CИCTEMA  ′Д Y Б H A′  -  20/10/88"
+            // и логотип из символов "Ж".
+
             // Ищем файл name.dub, поднимаясь вверх по дереву каталогов
             string path = FindFileInParentDirs("examples", "name.dub");
             if (path == null)
                 Assert.Inconclusive("File examples/name.dub not found");
-            
+
             var result = _loader.RunScript(path);
             string output = _output.ToString();
-            
+
+            Console.WriteLine(output);
+
             // Проверяем ключевые части баннера
             StringAssert.Contains(output, "ЙOKCEЛ", "Баннер MONSYS должен содержать ЙOKCEЛ");
             StringAssert.Contains(output, "БЭCM-6/5", "Баннер MONSYS должен содержать БЭCM-6/5");
             StringAssert.Contains(output, "ШИФP-12", "Баннер MONSYS должен содержать ШИФP-12");
-            StringAssert.Contains(output, "МОНИТОРНАЯ", "Баннер MONSYS должен содержать МОНИТОРНАЯ");
-            StringAssert.Contains(output, "СИСТЕМА", "Баннер MONSYS должен содержать СИСТЕМА");
-            StringAssert.Contains(output, "ДУБНА", "Баннер MONSYS должен содержать ДУБНА");
+            StringAssert.Contains(output, "MOHИTOPHAЯ", "Баннер MONSYS должен содержать MOHИTOPHAЯ");
+            StringAssert.Contains(output, "CИCTEMA", "Баннер MONSYS должен содержать CИCTEMA");
+            StringAssert.Contains(output, "Д Y Б H A", "Баннер MONSYS должен содержать Д Y Б H A");
+            // Логотип из символов Ж.
+            StringAssert.Contains(output, "ЖЖЖЖ", "Баннер MONSYS должен содержать логотип ЖЖЖЖ");
         }
 
         [TestMethod]

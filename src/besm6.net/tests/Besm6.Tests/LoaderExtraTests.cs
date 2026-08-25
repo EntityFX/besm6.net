@@ -280,10 +280,14 @@ namespace Besm6.Tests
             var machine = new MachineCore();
             var handler = MakeHandler(machine);
 
-            // 067 oct (55 dec) = DATE*: 4<<4 | 7<<12 | 2<<16 | 4<<20 | 2<<24 | 3<<28 | 4<<32 | 5<<36 | 5<<40 | 6<<44.
+            // 067 oct (55 dec) = DATE*. Раскладка union E50_Date_Time (ref/extracode.h):
+            //   decisec b0-3, sec_lo b4-7, sec_hi b8-11, min_lo b12-15, min_hi b16-19,
+            //   hour_lo b20-23, hour_hi b24-25, year_lo b26-29, year_hi b30-33,
+            //   month_lo b34-37, month_hi b38-41, day_lo b42-45, day_hi b46-47.
+            // Фиксированное значение C++: 04/07/24 23:45:56 = 0'101C'9234'5560 hex.
             machine.Cpu.SetM(14, 55);
             handler.Handle(40, 0); // *50
-            Assert.AreEqual(0x655432427040L, machine.Cpu.GetAcc());
+            Assert.AreEqual(0x101C92345560L, machine.Cpu.GetAcc());
         }
 
         [TestMethod]
@@ -345,6 +349,105 @@ namespace Besm6.Tests
             handler.Handle(61, 0); // 075 oct
             Assert.AreEqual(42L, machine.Memory.Read(16).Value);
             Assert.AreEqual(1, machine.Cpu.InterceptCount);
+        }
+
+        [TestMethod]
+        public void E61_WatanabePlotter_OutputsBytes()
+        {
+            var machine = new MachineCore();
+            var handler = MakeHandler(machine);
+
+            // Записать байты "AB" + NUL в память по адресу 100.
+            machine.Memory.Write(100, new Word48(0x414200000000L));
+
+            // E61 addr=077777 (32767): ACC = адрес 100 (младшие 15 бит), target=0 (Watanabe).
+            machine.Cpu.SetM(14, 32767);
+            machine.Cpu.SetAcc(100L); // target = 0 (Watanabe), addr = 100
+            handler.Handle(49, 0); // 061 oct = 49 dec
+
+            Assert.AreEqual("AB", machine.Plotter.Watanabe);
+            Assert.AreEqual("", machine.Plotter.Tektronix);
+            Assert.AreEqual(0L, machine.Cpu.GetAcc(), "E61 должен сбросить ACC");
+        }
+
+        [TestMethod]
+        public void E61_TektronixPlotter_OutputsBytes()
+        {
+            var machine = new MachineCore();
+            var handler = MakeHandler(machine);
+
+            // Записать байты "XY" + NUL в память по адресу 200.
+            machine.Memory.Write(200, new Word48(0x585900000000L));
+
+            // E61 addr=077777, target = 01400 oct = 0x300, addr = 200.
+            machine.Cpu.SetM(14, 32767);
+            machine.Cpu.SetAcc((0x300L << 36) | 200L);
+            handler.Handle(49, 0);
+
+            Assert.AreEqual("XY", machine.Plotter.Tektronix);
+            Assert.AreEqual("", machine.Plotter.Watanabe);
+            Assert.AreEqual(0L, machine.Cpu.GetAcc());
+        }
+
+        [TestMethod]
+        public void E61_UnknownTarget_Throws()
+        {
+            var machine = new MachineCore();
+            var handler = MakeHandler(machine);
+
+            // target = 0x500 (не Watanabe и не Tektronix).
+            machine.Cpu.SetM(14, 32767);
+            machine.Cpu.SetAcc((0x500L << 36) | 100L);
+            Assert.Throws<ProcessorException>(() => handler.Handle(49, 0));
+        }
+
+        [TestMethod]
+        public void E61_NonSpecialAddr_ClearsAcc()
+        {
+            var machine = new MachineCore();
+            var handler = MakeHandler(machine);
+
+            machine.Cpu.SetM(14, 5); // не 077777
+            machine.Cpu.SetAcc(12345);
+            handler.Handle(49, 0);
+            Assert.AreEqual(0L, machine.Cpu.GetAcc());
+        }
+
+        [TestMethod]
+        public void E51_Addr1_ReturnsCos()
+        {
+            var machine = new MachineCore();
+            var handler = MakeHandler(machine);
+
+            // E51 addr=1 → cos(0) = 1.
+            machine.Cpu.SetM(14, 1);
+            machine.Cpu.SetAcc(Besm6Math.DoubleToBesm6(0.0));
+            handler.Handle(41, 0); // 051 oct = 41 dec
+            Assert.AreEqual(1.0, Besm6Math.Besm6ToDouble(machine.Cpu.GetAcc()), 1e-6);
+        }
+
+        [TestMethod]
+        public void E52_NonZeroAddr_Throws()
+        {
+            var machine = new MachineCore();
+            var handler = MakeHandler(machine);
+
+            machine.Cpu.SetM(14, 3);
+            Assert.Throws<ProcessorException>(() => handler.Handle(42, 0)); // 052 oct
+        }
+
+        [TestMethod]
+        public void E50_Case066_ChangesPlotterPage()
+        {
+            var machine = new MachineCore();
+            var handler = MakeHandler(machine);
+
+            machine.Cpu.SetM(14, 54); // 066 oct
+            machine.Cpu.SetAcc(123);
+            handler.Handle(40, 0); // *50
+
+            Assert.AreEqual(1, machine.Plotter.PageNumber);
+            Assert.AreEqual(0L, machine.Cpu.GetAcc());
         }
 
         [TestMethod]
