@@ -11,7 +11,7 @@ namespace Besm6.Core
     /// </summary>
     public struct MantissaExponent
     {
-        public int Exponent;
+        public uint Exponent;
         public long Mantissa;
 
         public const long BITS40 = 0xFFFFFFFFFFL;    // биты 40..1 - мантисса (2^40-1)
@@ -23,16 +23,16 @@ namespace Besm6.Core
 
         public MantissaExponent(Word48 word)
         {
-            long val = word.Value;
-            Exponent = (int)((val >> 41) & 0x7F);
-            Mantissa = val & BITS41;
+            ulong val = word.Value;
+            Exponent = (uint)((val >> 41) & 0x7F);
+            Mantissa = (long)(val & BITS41);
 
             // Sign extend: 41-битное значение (биты 40..0, знак в бите 40) -> 64 бита.
             Mantissa <<= 64 - 41;
             Mantissa >>= 64 - 41;
         }
 
-        public MantissaExponent(int exponent, long mantissa)
+        public MantissaExponent(uint exponent, long mantissa)
         {
             Exponent = exponent;
             Mantissa = mantissa;

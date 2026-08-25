@@ -10,23 +10,25 @@ namespace Besm6.Core
     {
         // Используем long для хранения 48-битного значения.
         // Значение всегда хранится в диапазоне [0, 2^48 - 1].
-        private readonly long _value;
+        private readonly ulong _value;
 
-        public const long Mask48 = (1L << 48) - 1;
+        public const ulong Mask48 = (1L << 48) - 1;
 
-        public Word48(long value)
+        public static Word48 Zero = new Word48(0);
+
+        public Word48(ulong value)
         {
             _value = value & Mask48;
         }
 
-        public long Value => _value;
+        public ulong Value => _value;
 
         #region Целочисленное представление
 
         /// <summary>
         /// Получает значение как знаковое 48-битное целое число (дополнительный код).
         /// </summary>
-        public long ToInt48()
+        public ulong ToInt48()
         {
             // Если 47-й бит установлен, число отрицательное
             if ((_value & (1L << 47)) != 0)
@@ -36,7 +38,7 @@ namespace Besm6.Core
             return _value;
         }
 
-        public static Word48 FromInt48(long value)
+        public static Word48 FromInt48(ulong value)
         {
             return new Word48(value);
         }
@@ -53,11 +55,11 @@ namespace Besm6.Core
         /// </summary>
         public double ToDouble()
         {
-            long w = _value;
+            ulong w = _value;
 
             // Сдвиг на 23 переносит знак мантиссы (бит 40) в знак 64-битного целого,
             // т.е. mantissa = (знаковое 41-битное) * 2^23.
-            long shifted = w << 23;
+            ulong shifted = w << 23;
             double mantissa = shifted;
             int exponent = (int)(w >> 41);
             return Math.ScaleB(mantissa, exponent - 64 - 63);
@@ -84,11 +86,11 @@ namespace Besm6.Core
             // ldexp(mantissa, 40)
             m = Math.ScaleB(m, 40);
 
-            long word;
+            ulong word;
             if (m > 0)
             {
                 // Положительное значение в диапазоне [0.5, 1) * 2^40.
-                word = (long)m;
+                word = (ulong)m;
                 if (m - word >= 0.5)
                 {
                     word += 1;
@@ -114,7 +116,7 @@ namespace Besm6.Core
 
                 m += 1L << 40;
 
-                word = (long)m;
+                word = (ulong)m;
                 if (m - word > 0.5)
                 {
                     word += 1;
@@ -132,7 +134,7 @@ namespace Besm6.Core
             if (exponent < -64)
                 return new Word48(0);
 
-            word |= ((long)(exponent + 64)) << 41;
+            word |= ((ulong)(exponent + 64)) << 41;
             return new Word48(word);
         }
 
@@ -151,7 +153,7 @@ namespace Besm6.Core
         /// </summary>
         public string ToOctal()
         {
-            long val = _value;
+            ulong val = _value;
             char[] digits = new char[16];
             for (int i = 15; i >= 0; i--)
             {
@@ -170,10 +172,10 @@ namespace Besm6.Core
             // только '0' (биты 48..50) — она отбрасывается. Берём младшие 16 цифр.
             if (oct.Length > 16)
                 oct = oct.Substring(oct.Length - 16);
-            long val = 0;
+            ulong val = 0;
             foreach (char c in oct)
             {
-                val = (val << 3) | (long)(c - '0');
+                val = (val << 3) | (ulong)(c - '0');
             }
             return new Word48(val);
         }
