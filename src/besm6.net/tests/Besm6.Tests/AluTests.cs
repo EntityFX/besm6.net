@@ -24,12 +24,12 @@ namespace Besm6.Tests
         private sealed class LinearMemory : IMemory
         {
             private readonly Word48[] _words = new Word48[32768];
-            public Word48 Read(int address) => _words[address & 0x7FFF];
-            public void Write(int address, Word48 word) => _words[address & 0x7FFF] = word;
+            public Word48 Read(uint address) => _words[address & 0x7FFF];
+            public void Write(uint address, Word48 word) => _words[address & 0x7FFF] = word;
             public int Size => 32768;
         }
 
-        private void SetAcc(string oct) => _cpu.SetAcc(FromOctal(oct));
+        private void SetAcc(string oct) => _cpu.SetAcc(FromOctal(oct).Value);
         private Word48 GetAcc() => _cpu.GetAcc();
         private void SetRau(ulong rau) => _cpu.SetRau(rau);
 
@@ -126,7 +126,7 @@ namespace Besm6.Tests
             try
             {
                 SetAcc("04050000000000000");
-                _cpu.ArithDivide(0);
+                _cpu.ArithDivide(new Word48(0));
                 Assert.Fail("Expected ProcessorException was not thrown");
             }
             catch (ProcessorException)
@@ -159,28 +159,28 @@ namespace Besm6.Tests
         {
             SetAcc(octA);
             _cpu.ArithAdd(FromOctal(octX), false, false);
-            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Add failed: {octA} + {octX} = {ToOctal(GetAcc())} (Expected: {octExpected})");
+            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Add failed: {octA} + {octX} = {ToOctal(GetAcc().Value)} (Expected: {octExpected})");
         }
 
         private void VerifySub(string octA, string octX, string octExpected)
         {
             SetAcc(octA);
             _cpu.ArithAdd(FromOctal(octX), false, true);
-            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Sub failed: {octA} - {octX} = {ToOctal(GetAcc())} (Expected: {octExpected})");
+            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Sub failed: {octA} - {octX} = {ToOctal(GetAcc().Value)} (Expected: {octExpected})");
         }
 
         private void VerifyMul(string octA, string octX, string octExpected)
         {
             SetAcc(octA);
             _cpu.ArithMultiply(FromOctal(octX));
-            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Multiply failed: {octA} * {octX} = {ToOctal(GetAcc())} (Expected: {octExpected})");
+            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Multiply failed: {octA} * {octX} = {ToOctal(GetAcc().Value)} (Expected: {octExpected})");
         }
 
         private void VerifyDiv(string octA, string octX, string octExpected)
         {
             SetAcc(octA);
             _cpu.ArithDivide(FromOctal(octX));
-            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Divide failed: {octA} / {octX} = {ToOctal(GetAcc())} (Expected: {octExpected})");
+            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Divide failed: {octA} / {octX} = {ToOctal(GetAcc().Value)} (Expected: {octExpected})");
         }
 
         private void VerifyChangeSign(string octA, string octExpected)
@@ -188,14 +188,14 @@ namespace Besm6.Tests
             SetAcc(octA);
             // Смена знака аккумулятора (команда «знак» с отрицательным операндом): negateAcc=true.
             _cpu.ArithChangeSign(true);
-            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"ChangeSign failed: {octA} -> {ToOctal(GetAcc())} (Expected: {octExpected})");
+            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"ChangeSign failed: {octA} -> {ToOctal(GetAcc().Value)} (Expected: {octExpected})");
         }
 
         private void VerifyShift(string octA, int shift, string octExpected)
         {
             SetAcc(octA);
             _cpu.ArithShift(shift);
-            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Shift failed: {octA} by {shift} = {ToOctal(GetAcc())} (Expected: {octExpected})");
+            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Shift failed: {octA} by {shift} = {ToOctal(GetAcc().Value)} (Expected: {octExpected})");
         }
 
         private static Word48 FromOctal(string oct)
@@ -206,7 +206,7 @@ namespace Besm6.Tests
             return new Word48(val);
         }
 
-        private static string ToOctal(long val)
+        private static string ToOctal(ulong val)
         {
             char[] digits = new char[16];
             for (int i = 15; i >= 0; i--)

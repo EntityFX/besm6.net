@@ -23,7 +23,7 @@ namespace Besm6.Loader
         private void E50Parse()
         {
             var cpu = _machine.Cpu;
-            long input = cpu.GetAcc();
+            long input = (long)cpu.GetAcc().Value;
 
             int srcAddr = (int)(input & 0x7FFF);
             bool starSlashFlag = ((input >> 16) & 1) != 0;
@@ -61,13 +61,13 @@ namespace Besm6.Loader
             // ─── Char mode (positional scanning) ───
             if (charMode)
             {
-                var bp = new BytePointer(mem, wordAddr, byteIdx);
+                var bp = new BytePointer(mem, (uint)wordAddr, (uint)byteIdx);
                 for (; ; )
                 {
                     if (bp.WordAddr == 0)
                     {
                         cpu.SetM(14, 0);
-                        cpu.SetRmr((long)index << 24);
+                        cpu.SetRmr((ulong)index << 24);
                         cpu.SetAcc(0);
                         return;
                     }
@@ -76,46 +76,46 @@ namespace Besm6.Loader
                     if (c == 0 || c == 0x0A)
                     {
                         cpu.SetM(14, 0);
-                        cpu.SetRmr(((long)index << 24) | c);
+                        cpu.SetRmr(((ulong)index << 24) | c);
                         long result = ((long)c << 40) | ((long)' ' << 32) | ((long)' ' << 24)
                                     | ((long)' ' << 16) | ((long)' ' << 8) | ' ';
-                        cpu.SetAcc(result);
+                        cpu.SetAcc((ulong)result);
                     }
                     else if (IsDigit(c))
                     {
                         cpu.SetM(14, 1);
-                        cpu.SetRmr(((long)index << 24) | c);
+                        cpu.SetRmr(((ulong)index << 24) | c);
                         long result = ((long)c << 40) | ((long)' ' << 32) | ((long)' ' << 24)
                                     | ((long)' ' << 16) | ((long)' ' << 8) | ' ';
-                        cpu.SetAcc(result);
+                        cpu.SetAcc((ulong)result);
                     }
                     else if ((c == '*' || c == '/') && starSlashFlag)
                     {
                         cpu.SetM(14, 2);
-                        cpu.SetRmr(((long)index << 24) | c);
+                        cpu.SetRmr(((ulong)index << 24) | c);
                         long result = ((long)c << 40) | ((long)' ' << 32) | ((long)' ' << 24)
                                     | ((long)' ' << 16) | ((long)' ' << 8) | ' ';
-                        cpu.SetAcc(result);
+                        cpu.SetAcc((ulong)result);
                     }
                     else if (IsChar(c))
                     {
                         cpu.SetM(14, 2);
-                        cpu.SetRmr(((long)index << 24) | c);
+                        cpu.SetRmr(((ulong)index << 24) | c);
                         long result = ((long)c << 40) | ((long)' ' << 32) | ((long)' ' << 24)
                                     | ((long)' ' << 16) | ((long)' ' << 8) | ' ';
-                        cpu.SetAcc(result);
+                        cpu.SetAcc((ulong)result);
                     }
                     else
                     {
                         cpu.SetM(14, 3);
-                        cpu.SetRmr(((long)index << 24) | c);
+                        cpu.SetRmr(((ulong)index << 24) | c);
                         long result = ((long)c << 40) | ((long)' ' << 32) | ((long)' ' << 24)
                                     | ((long)' ' << 16) | ((long)' ' << 8) | ' ';
-                        cpu.SetAcc(result);
+                        cpu.SetAcc((ulong)result);
                     }
                     // Save state and return.
-                    _e50ParseLastWordAddr = bp.WordAddr;
-                    _e50ParseLastByteIndex = bp.ByteIndex;
+                    _e50ParseLastWordAddr = (int)bp.WordAddr;
+                    _e50ParseLastByteIndex = (int)bp.ByteIndex;
                     _e50ParseIndex = index;
                     return;
                 }
@@ -123,7 +123,7 @@ namespace Besm6.Loader
 
             // ─── Token mode ───
             {
-                var bp = new BytePointer(mem, wordAddr, byteIdx);
+                var bp = new BytePointer(mem, (uint)wordAddr, (uint)byteIdx);
                 for (; ; )
                 {
                     if (bp.WordAddr == 0)
@@ -139,8 +139,8 @@ namespace Besm6.Loader
                         case 0:
                         case 0x0A:
                             cpu.SetM(14, 6);
-                            _e50ParseLastWordAddr = bp.WordAddr;
-                            _e50ParseLastByteIndex = bp.ByteIndex;
+                            _e50ParseLastWordAddr = (int)bp.WordAddr;
+                            _e50ParseLastByteIndex = (int)bp.ByteIndex;
                             _e50ParseIndex = index;
                             cpu.SetAcc(c);
                             return;
@@ -162,11 +162,11 @@ namespace Besm6.Loader
                                     value = (value << 3) + (c - '0');
                                 }
                                 cpu.SetM(14, 1);
-                                cpu.SetRmr(((long)index << 24) | c);
-                                _e50ParseLastWordAddr = bp.WordAddr;
-                                _e50ParseLastByteIndex = bp.ByteIndex;
+                                cpu.SetRmr(((ulong)index << 24) | c);
+                                _e50ParseLastWordAddr = (int)bp.WordAddr;
+                                _e50ParseLastByteIndex = (int)bp.ByteIndex;
                                 _e50ParseIndex = index;
-                                cpu.SetAcc(value);
+                                cpu.SetAcc((ulong)value);
                                 return;
                             }
 
@@ -186,16 +186,16 @@ namespace Besm6.Loader
                                         value = (value << 3) + (c - '0');
                                     }
                                     cpu.SetM(14, 1);
-                                    cpu.SetRmr(((long)index << 24) | c);
-                                    _e50ParseLastWordAddr = bp.WordAddr;
-                                    _e50ParseLastByteIndex = bp.ByteIndex;
+                                    cpu.SetRmr(((ulong)index << 24) | c);
+                                    _e50ParseLastWordAddr = (int)bp.WordAddr;
+                                    _e50ParseLastByteIndex = (int)bp.ByteIndex;
                                     _e50ParseIndex = index;
-                                    cpu.SetAcc(-value);
+                                    cpu.SetAcc((ulong)(-value));
                                     return;
                                 }
                                 cpu.SetM(14, 6);
-                                _e50ParseLastWordAddr = bp.WordAddr;
-                                _e50ParseLastByteIndex = bp.ByteIndex;
+                                _e50ParseLastWordAddr = (int)bp.WordAddr;
+                                _e50ParseLastByteIndex = (int)bp.ByteIndex;
                                 _e50ParseIndex = index;
                                 cpu.SetAcc((byte)'-');
                                 return;
@@ -209,8 +209,8 @@ namespace Besm6.Loader
                                 return;
                             }
                             cpu.SetM(14, 6);
-                            _e50ParseLastWordAddr = bp.WordAddr;
-                            _e50ParseLastByteIndex = bp.ByteIndex;
+                            _e50ParseLastWordAddr = (int)bp.WordAddr;
+                            _e50ParseLastByteIndex = (int)bp.ByteIndex;
                             _e50ParseIndex = index;
                             cpu.SetAcc(c);
                             return;
@@ -219,8 +219,8 @@ namespace Besm6.Loader
                             if (!IsChar(c))
                             {
                                 cpu.SetM(14, 6);
-                                _e50ParseLastWordAddr = bp.WordAddr;
-                                _e50ParseLastByteIndex = bp.ByteIndex;
+                                _e50ParseLastWordAddr = (int)bp.WordAddr;
+                                _e50ParseLastByteIndex = (int)bp.ByteIndex;
                                 _e50ParseIndex = index;
                                 cpu.SetAcc(c);
                                 return;
@@ -252,14 +252,14 @@ namespace Besm6.Loader
             long rmr = 0;
             for (int i = 6; i < 12; i++)
                 rmr |= (long)(byte)ident[i] << ((11 - i) * 8);
-            cpu.SetRmr(rmr);
-            _e50ParseLastWordAddr = bp.WordAddr;
-            _e50ParseLastByteIndex = bp.ByteIndex;
+            cpu.SetRmr((ulong)rmr);
+            _e50ParseLastWordAddr = (int)bp.WordAddr;
+            _e50ParseLastByteIndex = (int)bp.ByteIndex;
             _e50ParseIndex = index;
             long acc = 0;
             for (int i = 0; i < 6; i++)
                 acc |= (long)(byte)ident[i] << ((5 - i) * 8);
-            cpu.SetAcc(acc);
+            cpu.SetAcc((ulong)acc);
         }
 
         // ─── E50 017: format real number (порт dubna/e50.cpp e50_format_real) ──
@@ -267,7 +267,7 @@ namespace Besm6.Loader
         private void E50Format()
         {
             var cpu = _machine.Cpu;
-            long input = cpu.GetAcc();
+            long input = (long)cpu.GetAcc().Value;
 
             int destAddr = (int)(input & 0x7FFF);
             bool rightAlign = ((input >> 15) & 1) != 0;
@@ -280,7 +280,7 @@ namespace Besm6.Loader
             int actualSrc = srcAddr;
             if (srcReg != 0)
                 actualSrc = (srcAddr + (int)cpu.GetM(srcReg)) & 0x7FFF;
-            double value = _machine.Memory.Read(actualSrc).ToDouble();
+            double value = _machine.Memory.Read((uint)actualSrc).ToDouble();
 
             int outAddr = destAddr;
             if (destAddr != 0 || destReg != 0)
@@ -328,14 +328,14 @@ namespace Besm6.Loader
             }
 
             var mem = _machine.Memory;
-            var bp = new BytePointer(mem, outAddr, 0);
+            var bp = new BytePointer(mem, (uint)outAddr, 0);
             foreach (char ch in result)
                 bp.Put((byte)ch);
             while (bp.ByteIndex != 0)
                 bp.Put((byte)' ');
 
-            cpu.SetM(14, overflow ? 1 : 0);
-            cpu.SetAcc((long)width);
+            cpu.SetM(14, (uint)(overflow ? 1 : 0));
+            cpu.SetAcc((ulong)width);
         }
 
         private static bool GoodForFixedFormat(double value, int precision)

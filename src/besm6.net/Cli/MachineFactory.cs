@@ -15,7 +15,7 @@ namespace Besm6
         {
             cfg ??= Config.Load();
             int memSize = cfg.MemorySize;
-            return new MachineCore(memSize);
+            return new MachineCore((uint)memSize);
         }
 
         /// <summary>

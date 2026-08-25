@@ -61,7 +61,7 @@ namespace Besm6.Cli
                 {
                     loader.InstructionTrace = (pc, word) =>
                     {
-                        string dis = Disassembler.DisasmWord(word);
+                        string dis = Disassembler.DisasmWord((long)word);
                         Console.WriteLine($"  PC=0{pc:X5}  {dis}");
                     };
                 }

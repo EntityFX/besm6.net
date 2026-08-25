@@ -43,7 +43,7 @@ namespace Besm6.Core
             ulong word = _memory.Read(WordAddr).Value;
             int shift = (int)(40 - ByteIndex * 8);
             ulong mask = (ulong)(0xFFL << shift);
-            word = (ulong)((word & ~mask) | (ch << shift));
+            word = (word & ~mask) | ((ulong)ch << shift);
             _memory.Write(WordAddr, new Word48(word));
             Increment();
         }

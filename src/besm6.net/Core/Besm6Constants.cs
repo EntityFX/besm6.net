@@ -89,7 +89,7 @@ namespace Besm6.Core
 
         // ─── Операции ─────────────────────────────────────────────────────────
         /// <summary>n-й бит (1-index, нумерация БЭСМ-6).</summary>
-        public static long OnBit(int n) => 1L << (n - 1);
+        public static ulong OnBit(int n) => 1UL << (n - 1);
 
         /// <summary>Нормализация адреса: 15-битная маска.</summary>
         public static uint Addr(uint a) => a & AddrMask;

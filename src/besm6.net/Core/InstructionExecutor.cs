@@ -31,45 +31,45 @@ namespace Besm6.Core
         /// </summary>
         public bool Execute()
         {
-            ref long pc = ref _p._pc;
-            ref long acc = ref _p._acc;
-            ref long rmr = ref _p._rmr;
-            ref long rau = ref _p._rau;
-            ref long mod = ref _p._mod;
-            ref long rk = ref _p._rk;
-            ref long aex = ref _p._aex;
+            ref uint pc = ref _p._pc;
+            ulong acc = _p._acc.Value;
+            ulong rmr = _p._rmr.Value;
+            ref uint rau = ref _p._rau;
+            ref uint mod = ref _p._mod;
+            ref uint rk = ref _p._rk;
+            ref uint aex = ref _p._aex;
             var m = _p._m;
             ref bool rightFlag = ref _p._rightInstrFlag;
             ref bool applyMod = ref _p._applyModReg;
 
-            pc &= 0x7FFF;
+            pc &= 0x7FFFu;
 
-            long word = _p.MemFetch(pc);
+            ulong word = _p.MemFetch(pc);
             if (rightFlag)
-                rk = word & 0xFFFFFF;
+                rk = (uint)word;
             else
-                rk = (word >> 24) & 0xFFFFFF;
+                rk = (uint)(word >> 24);
 
-            rk &= 0xFFFFFF;
+            rk &= 0xFFFFFFu;
 
-            int reg = (int)((rk >> 20) & 0x0F);
-            long addr;
-            long opcode;
+            int reg = (int)((rk >> 20) & 0x0Fu);
+            uint addr;
+            uint opcode;
 
-            if ((rk & OnBit(20)) != 0)
+            if (((ulong)rk & OnBit(20)) != 0)
             {
-                addr = rk & 0x7FFF;
-                opcode = (rk >> 12) & 0xF8;
+                addr = rk & 0x7FFFu;
+                opcode = (rk >> 12) & 0xF8u;
             }
             else
             {
-                addr = rk & 0xFFF;
-                if ((rk & OnBit(19)) != 0)
-                    addr |= 0x7000;
-                opcode = (rk >> 12) & 0x3F;
+                addr = rk & 0xFFFu;
+                if (((ulong)rk & OnBit(19)) != 0)
+                    addr |= 0x7000u;
+                opcode = (rk >> 12) & 0x3Fu;
             }
 
-            long nextPc = Addr(pc + 1);
+            uint nextPc = Addr(pc + 1);
             if (rightFlag)
             {
                 pc += 1;
@@ -83,7 +83,7 @@ namespace Besm6.Core
             if (applyMod)
                 addr = Addr(addr + mod);
 
-            long nextMod = 0;
+            uint nextMod = 0;
             Opcode op = (Opcode)opcode;
 
             // Instruction-level trace
@@ -126,28 +126,36 @@ namespace Besm6.Core
                 case Opcode.Sl:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    _p.ArithAdd(_p.MemLoad(aex), false, false);
+                    _p.ArithAdd(Word48.FromInt48(_p.MemLoad(aex)), false, false);
+                    acc = _p._acc.Value;
+                    rmr = _p._rmr.Value;
                     _p.SetAdditive();
                     break;
 
                 case Opcode.Vch:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    _p.ArithAdd(_p.MemLoad(aex), false, true);
+                    _p.ArithAdd(Word48.FromInt48(_p.MemLoad(aex)), false, true);
+                    acc = _p._acc.Value;
+                    rmr = _p._rmr.Value;
                     _p.SetAdditive();
                     break;
 
                 case Opcode.Vchob:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    _p.ArithAdd(_p.MemLoad(aex), true, false);
+                    _p.ArithAdd(Word48.FromInt48(_p.MemLoad(aex)), true, false);
+                    acc = _p._acc.Value;
+                    rmr = _p._rmr.Value;
                     _p.SetAdditive();
                     break;
 
                 case Opcode.Vchab:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    _p.ArithAdd(_p.MemLoad(aex), true, true);
+                    _p.ArithAdd(Word48.FromInt48(_p.MemLoad(aex)), true, true);
+                    acc = _p._acc.Value;
+                    rmr = _p._rmr.Value;
                     _p.SetAdditive();
                     break;
 
@@ -186,7 +194,9 @@ namespace Besm6.Core
                 case Opcode.Znak:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    _p.ArithChangeSign((( _p.MemLoad(aex) >> 40) & 1) != 0);
+                    _p.ArithChangeSign(((_p.MemLoad(aex) >> 40) & 1u) != 0);
+                    acc = _p._acc.Value;
+                    rmr = _p._rmr.Value;
                     _p.SetAdditive();
                     break;
 
@@ -201,14 +211,18 @@ namespace Besm6.Core
                 case Opcode.Del:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    _p.ArithDivide(_p.MemLoad(aex));
+                    _p.ArithDivide(Word48.FromInt48(_p.MemLoad(aex)));
+                    acc = _p._acc.Value;
+                    rmr = _p._rmr.Value;
                     _p.SetMultiplicative();
                     break;
 
                 case Opcode.Umn:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    _p.ArithMultiply(_p.MemLoad(aex));
+                    _p.ArithMultiply(Word48.FromInt48(_p.MemLoad(aex)));
+                    acc = _p._acc.Value;
+                    rmr = _p._rmr.Value;
                     _p.SetMultiplicative();
                     break;
 
@@ -231,7 +245,7 @@ namespace Besm6.Core
                 case Opcode.Ched:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    acc = Processor.Besm6CountOnes(acc) + _p.MemLoad(aex);
+                    acc = (ulong)Processor.Besm6CountOnes(acc) + _p.MemLoad(aex);
                     if ((acc & BIT49) != 0) acc = (acc + 1) & BITS48;
                     rmr = 0;
                     _p.SetLogical();
@@ -244,7 +258,7 @@ namespace Besm6.Core
                     {
                         int n = Processor.Besm6HighestBit(acc);
                         _p.ArithShift(48 - n);
-                        acc = n + _p.MemLoad(aex);
+                        acc = (ulong)n + _p.MemLoad(aex);
                         if ((acc & BIT49) != 0) acc = (acc + 1) & BITS48;
                     }
                     else
@@ -259,6 +273,8 @@ namespace Besm6.Core
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
                     _p.ArithAddExponent((int)(_p.MemLoad(aex) >> 41) - 64);
+                    acc = _p._acc.Value;
+                    rmr = _p._rmr.Value;
                     _p.SetMultiplicative();
                     break;
 
@@ -266,6 +282,8 @@ namespace Besm6.Core
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
                     _p.ArithAddExponent(64 - (int)(_p.MemLoad(aex) >> 41));
+                    acc = _p._acc.Value;
+                    rmr = _p._rmr.Value;
                     _p.SetMultiplicative();
                     break;
 
@@ -273,18 +291,20 @@ namespace Besm6.Core
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
                     _p.ArithShift((int)(_p.MemLoad(aex) >> 41) - 64);
+                    acc = _p._acc.Value;
+                    rmr = _p._rmr.Value;
                     _p.SetLogical();
                     break;
 
                 case Opcode.Rzh:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    rau = (_p.MemLoad(aex) >> 41) & 0x3F;
+                    rau = (uint)((_p.MemLoad(aex) >> 41) & 0x3Fu);
                     break;
 
                 case Opcode.Schrzh:
                     aex = Addr(addr + m[reg]);
-                    acc = (rau & aex & 0x7F) << 41;
+                    acc = (rau & aex & 0x7Fu) << 41;
                     _p.SetLogical();
                     break;
 
@@ -296,9 +316,10 @@ namespace Besm6.Core
                     }
                     else
                     {
-                        long x = rmr;
+                        ulong x = rmr;
                         acc = (acc & ~BITS41) | (rmr & BITS40);
-                        _p.ArithAddExponent((int)(aex & 0x7F) - 64);
+                        _p.ArithAddExponent((int)(aex & 0x7Fu) - 64);
+                        acc = _p._acc.Value;
                         rmr = x;
                     }
                     break;
@@ -311,38 +332,44 @@ namespace Besm6.Core
 
                 case Opcode.Slpa:
                     aex = Addr(addr + m[reg]);
-                    _p.ArithAddExponent((int)(aex & 0x7F) - 64);
+                    _p.ArithAddExponent((int)(aex & 0x7Fu) - 64);
+                    acc = _p._acc.Value;
+                    rmr = _p._rmr.Value;
                     _p.SetMultiplicative();
                     break;
 
                 case Opcode.Vchpa:
                     aex = Addr(addr + m[reg]);
-                    _p.ArithAddExponent(64 - (int)(aex & 0x7F));
+                    _p.ArithAddExponent(64 - (int)(aex & 0x7Fu));
+                    acc = _p._acc.Value;
+                    rmr = _p._rmr.Value;
                     _p.SetMultiplicative();
                     break;
 
                 case Opcode.Sda:
                     aex = Addr(addr + m[reg]);
-                    _p.ArithShift((int)(aex & 0x7F) - 64);
+                    _p.ArithShift((int)(aex & 0x7Fu) - 64);
+                    acc = _p._acc.Value;
+                    rmr = _p._rmr.Value;
                     _p.SetLogical();
                     break;
 
                 case Opcode.Rza:
                     aex = Addr(addr + m[reg]);
-                    rau = aex & 0x3F;
+                    rau = aex & 0x3Fu;
                     break;
 
                 case Opcode.Ui:
                     aex = Addr(addr + m[reg]);
-                    m[aex & 0xF] = Addr(acc);
+                    m[aex & 0xFu] = Addr((uint)acc);
                     m[0] = 0;
                     break;
 
                 case Opcode.Uim:
                 {
                     aex = Addr(addr + m[reg]);
-                    long rg = aex & 0xF;
-                    long ad = Addr(acc);
+                    uint rg = aex & 0xFu;
+                    uint ad = Addr((uint)acc);
                     if (rg != 15) m[15] = Addr(m[15] - 1);
                     acc = _p.MemLoad(rg != 15 ? m[15] : ad);
                     m[rg] = ad;
@@ -353,7 +380,7 @@ namespace Besm6.Core
 
                 case Opcode.Schi:
                     aex = Addr(addr + m[reg]);
-                    acc = Addr(m[aex & 0xF]);
+                    acc = Addr(m[aex & 0xFu]);
                     _p.SetLogical();
                     break;
 
@@ -364,13 +391,13 @@ namespace Besm6.Core
 
                 case Opcode.Uii:
                     aex = addr;
-                    m[aex & 0xF] = m[reg];
+                    m[aex & 0xFu] = m[reg];
                     m[0] = 0;
                     break;
 
                 case Opcode.Sli:
                     aex = addr;
-                    m[aex & 0xF] = Addr(m[aex & 0xF] + m[reg]);
+                    m[aex & 0xFu] = Addr(m[aex & 0xFu] + m[reg]);
                     m[0] = 0;
                     break;
 
@@ -388,7 +415,7 @@ namespace Besm6.Core
                 case Opcode.Mod:
                     if (addr == 0 && reg == 15) m[15] = Addr(m[15] - 1);
                     aex = Addr(addr + m[reg]);
-                    nextMod = Addr(_p.MemLoad(aex));
+                    nextMod = Addr((uint)_p.MemLoad(aex));
                     break;
 
                 case Opcode.Uia:
@@ -461,7 +488,7 @@ namespace Besm6.Core
                     // 0320 выпр/iret — возврат из прерывания:
                     // PC = ACC (адрес возврата сохранён в аккумулятор),
                     // сброс флагов конвейера, потребить intercept.
-                    pc = acc;
+                    pc = (uint)acc;
                     rightFlag = false;
                     applyMod = false;
                     mod = 0;
@@ -469,6 +496,8 @@ namespace Besm6.Core
                     break;
 
                 case Opcode.Stop:
+                    _p._acc = Word48.FromInt48(acc);
+                    _p._rmr = Word48.FromInt48(rmr);
                     return true;
 
                 case Opcode.Pio:
@@ -511,38 +540,42 @@ namespace Besm6.Core
             if (nextMod != 0) { mod = nextMod; applyMod = true; }
             else { applyMod = false; }
 
+            _p._acc = Word48.FromInt48(acc);
+            _p._rmr = Word48.FromInt48(rmr);
             return false;
 
         load_modifier:
             aex = Addr(addr + m[reg]);
-            acc = Addr(m[aex & 0xF]);
+            acc = Addr(m[aex & 0xFu]);
             _p.SetLogical();
             if (nextMod != 0) { mod = nextMod; applyMod = true; }
             else { applyMod = false; }
+            _p._acc = Word48.FromInt48(acc);
+            _p._rmr = Word48.FromInt48(rmr);
             return false;
         }
 
-        private static void PrepareStack(ref long addr, int reg, long[] m)
+        private static void PrepareStack(ref uint addr, int reg, uint[] m)
         {
             if (addr == 0 && reg == 15)
                 m[15] = Addr(m[15] - 1);
         }
 
-        private static bool IsExtracode(long opcode)
+        private static bool IsExtracode(uint opcode)
         {
             if (opcode >= 0x28 && opcode <= 0x3F) return true;
             if (opcode == 0x80 || opcode == 0x88) return true;
             return false;
         }
 
-        private static long Addr(long x) => Besm6Constants.Addr(x);
-        private static long OnBit(int n) => Besm6Constants.OnBit(n);
+        private static uint Addr(uint x) => Besm6Constants.Addr(x);
+        private static ulong OnBit(int n) => Besm6Constants.OnBit(n);
 
-        private const long BIT41 = Besm6Constants.BIT41;
-        private const long BIT48 = Besm6Constants.BIT48;
-        private const long BIT49 = Besm6Constants.BIT49;
-        private const long BITS40 = Besm6Constants.BITS40;
-        private const long BITS41 = Besm6Constants.BITS41;
-        private const long BITS48 = Besm6Constants.BITS48;
+        private const ulong BIT41 = Besm6Constants.BIT41;
+        private const ulong BIT48 = Besm6Constants.BIT48;
+        private const ulong BIT49 = Besm6Constants.BIT49;
+        private const ulong BITS40 = Besm6Constants.BITS40;
+        private const ulong BITS41 = Besm6Constants.BITS41;
+        private const ulong BITS48 = Besm6Constants.BITS48;
     }
 }
