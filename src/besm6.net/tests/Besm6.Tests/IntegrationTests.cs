@@ -66,7 +66,7 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
-        [Ignore("Blocked by incomplete MONSYS kernel — both C# and C++ reference fail. See plans/hang-diagnosis.md")]
+        //[Ignore("Blocked by incomplete MONSYS kernel — both C# and C++ reference fail. See plans/hang-diagnosis.md")]
         public void ForexDub_ProducesHelloWorld()
         {
             // forex.dub — это пример FORTRAN, который выводит "Hello, World!"

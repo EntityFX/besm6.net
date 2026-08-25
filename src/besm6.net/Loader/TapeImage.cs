@@ -192,25 +192,41 @@ namespace Besm6.Loader
         }
 
         /// <summary>
-        /// Каталог образов по умолчанию: tapes/ (корень проекта), затем dubna/tapes, затем BESM6_PATH.
+        /// Каталог образов по умолчанию: поиск вверх от текущей директории и от
+        /// AppContext.BaseDirectory до каталога tapes/ (или ref/tapes).
+        /// Переменная окружения BESM6_PATH имеет приоритет.
         /// </summary>
         public static string DefaultTapesDir()
         {
-            // Относительно рабочей директории или поиск вверх до tapes/.
-            var candidates = new[]
+            // 1. Явный каталог из окружения.
+            string? env = Environment.GetEnvironmentVariable("BESM6_PATH");
+            if (!string.IsNullOrWhiteSpace(env) && Directory.Exists(env))
+                return env;
+
+            // 2. Подъём от рабочей директории до tapes/.
+            string? found = FindTapesDirUpFrom(Environment.CurrentDirectory);
+            // 3. Подъём от каталога сборки (важно при запуске тестов из bin/Debug/netX.0).
+            if (found == null)
+                found = FindTapesDirUpFrom(Path.GetDirectoryName(AppContext.BaseDirectory));
+
+            return found ?? "tapes";
+        }
+
+        private static string? FindTapesDirUpFrom(string? dir)
+        {
+            int depth = 0;
+            while (dir != null && depth < 12)
             {
-                "tapes",
-                Path.Combine("..", "tapes"),
-                Path.Combine("..", "..", "tapes"),
-                "ref/tapes",
-                Path.Combine("..", "dubna", "tapes"),
-                Path.Combine("..", "..", "dubna", "tapes"),
-            };
-            foreach (var c in candidates)
-            {
-                if (Directory.Exists(c)) return c;
+                string candidate = Path.Combine(dir, "tapes");
+                if (Directory.Exists(candidate))
+                    return candidate;
+                string refCandidate = Path.Combine(dir, "ref", "tapes");
+                if (Directory.Exists(refCandidate))
+                    return refCandidate;
+                dir = Path.GetDirectoryName(dir);
+                depth++;
             }
-            return "tapes";
+            return null;
         }
     }
 }
