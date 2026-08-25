@@ -258,6 +258,7 @@ namespace Besm6.Core
                     {
                         int n = Processor.Besm6HighestBit(acc);
                         _p.ArithShift(48 - n);
+                        rmr = _p._rmr.Value;
                         acc = (ulong)n + _p.MemLoad(aex);
                         if ((acc & BIT49) != 0) acc = (acc + 1) & BITS48;
                     }
@@ -318,6 +319,7 @@ namespace Besm6.Core
                     {
                         ulong x = rmr;
                         acc = (acc & ~BITS41) | (rmr & BITS40);
+                        _p._acc = Word48.FromInt48(acc);
                         _p.ArithAddExponent((int)(aex & 0x7Fu) - 64);
                         acc = _p._acc.Value;
                         rmr = x;
