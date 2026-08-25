@@ -38,6 +38,30 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
+        public void TapeIdByName_ChannelOverridesName()
+        {
+            // Канал — десятичное значение восьмеричного номера из карты '*tape:NN/...'.
+            // Ключевой случай CERN: '*tape:12/librar,32' → LIBRAR 12 (не 37!).
+            Assert.AreEqual(TapeImage.TapeLibrar12, TapeImage.TapeIdByName("librar", 10), "012 oct");
+            Assert.AreEqual(TapeImage.TapeLibrar37, TapeImage.TapeIdByName("librar", 31), "037 oct");
+            Assert.AreEqual(TapeImage.TapeMonsys, TapeImage.TapeIdByName("monsys", 9), "011 oct");
+            Assert.AreEqual(TapeImage.TapeB, TapeImage.TapeIdByName("b", 7), "007 oct");
+            Assert.AreEqual(TapeImage.TapeBemsh, TapeImage.TapeIdByName("bemsh", 217), "0331 oct");
+
+            // Канал 0 (не задан) — legacy-поведение по имени.
+            Assert.AreEqual(TapeImage.TapeLibrar37, TapeImage.TapeIdByName("librar", 0));
+            Assert.AreEqual(TapeImage.TapeLibrar12, TapeImage.TapeIdByName("librar12", 0));
+        }
+
+        [TestMethod]
+        public void TapeIdByName_UnknownChannelFallsBackToName()
+        {
+            // Неизвестный канал → fallback по имени (старое поведение).
+            Assert.AreEqual(TapeImage.TapeB, TapeImage.TapeIdByName("b", 5));
+            Assert.AreEqual(0, TapeImage.TapeIdByName("no-such-tape", 5));
+        }
+
+        [TestMethod]
         public void FindImagePath_ReturnsNullForUnknownTapeAndEmptyDir()
         {
             // Неизвестный tape-id → null.

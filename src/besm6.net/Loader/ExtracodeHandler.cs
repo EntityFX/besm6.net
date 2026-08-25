@@ -206,11 +206,13 @@ namespace Besm6.Loader
                 case 372: cpu.SetAcc(512L); return;
                 case 381: cpu.SetAcc(4608L); return;
                 case 382: cpu.SetAcc(3584L); return;
-                case 496: cpu.SetAcc(34359739904L); return;
+                case 496: cpu.SetAcc(0x800000600L); return;  // 0760 oct — адреса СТАТУС и ИПД (C++ e65)
                 case 497: cpu.SetAcc(2048L); return;
                 case 498: cpu.SetAcc(4096L); return;
-                case 500: cpu.SetAcc(143497262541046L); return;
-                case 502: cpu.SetAcc(87149724850530L); return;
+                case 500: //0764 Get version of Dubna OS.
+                    cpu.SetAcc(0x82828F5C28F6L); return; //0'4050'1217'2702'4366
+                case 502: //0766
+                    cpu.SetAcc(0x4F4320645962L); return;  // 0766 oct — 'OC ДYБ' (C++ e65)
                 case 514: cpu.SetAcc(233475L); return;
                 case 1024: cpu.SetAcc(0); return;
                 case 1536: cpu.SetAcc(0); return;

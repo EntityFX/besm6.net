@@ -141,7 +141,9 @@ namespace Besm6.Loader
         {
             foreach (var mount in job.TapeMounts)
             {
-                long tapeId = TapeImage.TapeIdByName(mount.Name);
+                // Выбор tape-id: приоритет — канал (восьмеричный номер из карты),
+                // имя — fallback. Иначе '*tape:12/librar,32' монтировал бы librar.37.
+                long tapeId = TapeImage.TapeIdByName(mount.Name, mount.Channel);
                 if (tapeId == 0) continue;
                 MountTape(24 + (mount.Channel & 0x1F), tapeId);
             }

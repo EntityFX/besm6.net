@@ -172,6 +172,31 @@ namespace Besm6.Loader
         }
 
         /// <summary>
+        /// Выбрать tape-id по карте '*tape:канал/имя,Z'.
+        /// Приоритет — канал: номер ленты в tape-id — это тот же восьмеричный канал
+        /// из карты (канон. константы: 011'oct→Monsys, 012'oct→Librar12,
+        /// 037'oct→Librar37, 007'oct→B, 0331'oct→Bemsh). Имя — только fallback.
+        /// </summary>
+        public static long TapeIdByName(string name, int channel)
+        {
+            // channel — десятичное значение восьмеричного номера канала из карты.
+            switch (channel)
+            {
+                case 9:   // 011 oct — MONSYS
+                    return TapeMonsys;
+                case 10:  // 012 oct — LIBRAR 12 (CERN librar.12)
+                    return TapeLibrar12;
+                case 31:  // 037 oct — LIBRAR 37
+                    return TapeLibrar37;
+                case 7:   // 007 oct — B (компилятор)
+                    return TapeB;
+                case 217: // 0331 oct — BEMSH / DISPAC
+                    return TapeBemsh;
+            }
+            // Неизвестный канал — fallback по имени (старое поведение).
+            return TapeIdByName(name);
+        }
+        /// <summary>
         /// Найти файл образа по tape-id в каталоге dubna/tapes (или BESM6_PATH).
         /// </summary>
         public static string? FindImagePath(long tapeId, string? tapesDir = null)
