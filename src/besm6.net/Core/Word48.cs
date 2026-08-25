@@ -59,7 +59,9 @@ namespace Besm6.Core
 
             // Сдвиг на 23 переносит знак мантиссы (бит 40) в знак 64-битного целого,
             // т.е. mantissa = (знаковое 41-битное) * 2^23.
-            ulong shifted = w << 23;
+            // Важно: результат интерпретируем как ЗНАКОВОЕ 64-битное число —
+            // иначе знак мантиссы теряется (ulong всегда положителен).
+            long shifted = (long)(w << 23);
             double mantissa = shifted;
             int exponent = (int)(w >> 41);
             return Math.ScaleB(mantissa, exponent - 64 - 63);
