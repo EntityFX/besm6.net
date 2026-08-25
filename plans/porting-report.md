@@ -209,3 +209,38 @@
 4. ⚠️ **Добавить progress** — в `RunBounded()` печатать PC каждые N инструкций.
 5. ⚠️ **E72** — реализовать страницы памяти (если MONSYS их использует).
 6. ⚠️ **Ускорить E70** — использовать `Span<long>` для batch copy.
+
+
+C# и C++ идут __параллельно и совпадают__ до точки ASSIGN и после. Нужно найти реальную точку отказа в C#. Поищу в C# треке: (1) прямые диск-чтения `DISK(`, (2) E57 WAIT (addr=07), и посмотрю финал:
+
+Теперь я вижу: в C# __нет__ ни одного `-> DISK(` чтения (загрузка B-компилятора с b.7), и C# уходит в `*57 7` (WAIT, PC=022003) — __тогда как C++ делает `02514 *70 2664 → Disk 40 Read Zone 20`__. Нужно увидеть, где именно C# расходится. Смотрю C# L140-330:
+
+C# идёт по тому же пути, что C++. Но вижу несоответствие: в C# `sect=1` при cw=080C7C0011001, а C++ пишет "Sector 0". Проверю каноническое определение полей E70 control word в C++:
+
+
+Ключевое расхождение найдено. В C++ после `00051 *70 45` идёт `02514 *70 2664 → Disk 40 Read` (загрузка B-компилятора), а в C# после аналогичного — `*57 7` (WAIT, PC=022003). Разные PC = разные кодовые пути. Смотрю `print_e70` в C++ и что C# делает с барабанами 1/2:
+
+Now I have the C# E57/E70 logic. Key findings:
+
+- __C# E57 `case 7`__ = `throw ProcessorException("E57: Task paused waiting for tape")` — this is *fatal* in C#, but in C++ it's a *task pause* the monitor recovers from. However, __C++ never reaches case 7__ in this run.
+- __C# E70__: `physIo && thisDrum >= _mappedDrum` → routes to `_physIoDisk`; unit in `[24,56)` → `_diskByUnit(unit)`. So the direct `*70 2664` (unit 040=32) *would* correctly hit `_diskByUnit(040)`. The routing is fine — __the problem is MONSYS branching to WAIT instead of issuing that read.__
+
+The branch depends on data. The last shared op is `00051 *70 45` (Drum 20 Read [76000-77777] Zone 4), whose content traces back to __MONSYS disk zone 0__ (read via phys_io). So the divergence is almost certainly in what `_physIoDisk` / the drum images actually contain. Let me read the DubnaLoader.
+
+This is decisive. I aligned the __entire E70 sequence__ in both traces — they are __byte-for-byte identical__ (same units, zones, sectors, pages, ops, in the same order). Both:
+
+- Read COSY script from Drum 1 Zone 0 → page 037
+- Run the same job-card loop (Drum 20 W/R Zone 4, phys_io reads of zones 7/0/30/31/24/13/21/24/30/31/1s0, etc.)
+- Last shared op: __`Drum 20 Read Zone 4 [76000-77777]`__ (m16=045) — the job card
+
+Then:
+
+- __C++__ → `02514 *70 2664 → Disk 40 Read` (B-compiler)
+- __C#__ → `022003 *57 7 → WAIT` (fatal)
+
+So it's the __same MONSYS code__ (identical PCs through the shared prefix) branching __differently on the job-card data__ it just read. The job card is __COZY-6 (6-bit) encoded text on the drum__. If C#'s encoding of the COSY script differs from C++', MONSYS reads a different job card and takes the WAIT path. Let me compare the two encoders and the actual script.
+
+
+Both pack 6 COZY bytes into a 48-bit word with byte[0] most significant — __identical word packing__. So the difference must be in the COZY byte encoding itself (`EncodeCosy`) or the KOI-7 mapping. The hello.dub script has directives `*name`, `*tape:7/b,40`, `*library:40`, `*trans-main:40020`, the B program, `*execute`. Let me compare the two COZY encoders.
+
+__The E70 sequences are 100% identical__ (all 41 ops: same units, pages, zones, sectors, ops). So the divergence is NOT in E70. It's in the __E57 (tape mount) state__ that MONSYS queries after reading the job card. Let me compare the E57 sequences in both traces.
