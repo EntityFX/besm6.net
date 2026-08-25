@@ -304,7 +304,7 @@ namespace Besm6.Core
 
                 case Opcode.Schrzh:
                     aex = Addr(addr + m[reg]);
-                    acc = (rau & aex & 0x7Fu) << 41;
+                    acc = ((ulong)(rau & aex & 0x7Fu)) << 41;
                     _p.SetLogical();
                     break;
 
