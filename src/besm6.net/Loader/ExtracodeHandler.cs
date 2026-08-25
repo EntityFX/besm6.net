@@ -131,13 +131,14 @@ namespace Besm6.Loader
             switch (code)
             {
                 case Extracode.E50: E50(); return true;
-                case Extracode.E51: _machine.Cpu.SetAcc(Besm6Math.Sin(_machine.Cpu.GetAcc())); return true;
-                case Extracode.E52: _machine.Cpu.SetAcc(Besm6Math.Cos(_machine.Cpu.GetAcc())); return true;
-                case Extracode.E53: _machine.Cpu.SetAcc(Besm6Math.Atan(_machine.Cpu.GetAcc())); return true;
-                case Extracode.E54: _machine.Cpu.SetAcc(Besm6Math.Asin(_machine.Cpu.GetAcc())); return true;
-                case Extracode.E55: _machine.Cpu.SetAcc(Besm6Math.Log(_machine.Cpu.GetAcc())); return true;
-                case Extracode.E56: _machine.Cpu.SetAcc(Besm6Math.Exp(_machine.Cpu.GetAcc())); return true;
+                case Extracode.E51: E51(); return true;
+                case Extracode.E52: E52(); return true;
+                case Extracode.E53: E53(); return true;
+                case Extracode.E54: E54(); return true;
+                case Extracode.E55: E55(); return true;
+                case Extracode.E56: E56(); return true;
                 case Extracode.E57: E57(); return true;
+                case Extracode.E61: E61(); return true;
                 case Extracode.E63: E63(); return true;
                 case Extracode.E64: E64(aex); return true;
                 case Extracode.E65: E65(); return true;
@@ -306,7 +307,10 @@ namespace Besm6.Loader
                 case 12: E50Parse(); break;   // 014 oct
                 case 15: E50Format(); break;  // 017 oct
 
-                case 54: cpu.SetAcc(0); break;  // 066 oct
+                case 54: // 066 oct — смена страницы плоттера.
+                    _machine.Plotter.ChangePage();
+                    cpu.SetAcc(0);
+                    break;
 
                 case 55:  // 067 oct — DATE*, ОС Дубна.
                 {
@@ -364,6 +368,62 @@ namespace Besm6.Loader
             }
         }
 
+        // ─── E51-E56: элементарные функции (порт dubna/extracode.cpp e51..e56) ──
+        // Диспетчеризация по M[16] (индексный регистр 16): addr=0 — основная функция.
+        // Только *51 поддерживает addr=1 (cos).
+
+        private void E51()
+        {
+            var cpu = _machine.Cpu;
+            long addr = cpu.GetM(M16);
+            switch (addr)
+            {
+                case 0: cpu.SetAcc(Besm6Math.Sin(cpu.GetAcc())); return;
+                case 1: cpu.SetAcc(Besm6Math.Cos(cpu.GetAcc())); return;
+                default: throw new ProcessorException($"Unimplemented extracode *51 {Convert.ToString(addr, 8)}");
+            }
+        }
+
+        private void E52()
+        {
+            var cpu = _machine.Cpu;
+            long addr = cpu.GetM(M16);
+            if (addr != 0) throw new ProcessorException($"Unimplemented extracode *52 {Convert.ToString(addr, 8)}");
+            cpu.SetAcc(Besm6Math.Cos(cpu.GetAcc()));
+        }
+
+        private void E53()
+        {
+            var cpu = _machine.Cpu;
+            long addr = cpu.GetM(M16);
+            if (addr != 0) throw new ProcessorException($"Unimplemented extracode *53 {Convert.ToString(addr, 8)}");
+            cpu.SetAcc(Besm6Math.Atan(cpu.GetAcc()));
+        }
+
+        private void E54()
+        {
+            var cpu = _machine.Cpu;
+            long addr = cpu.GetM(M16);
+            if (addr != 0) throw new ProcessorException($"Unimplemented extracode *54 {Convert.ToString(addr, 8)}");
+            cpu.SetAcc(Besm6Math.Asin(cpu.GetAcc()));
+        }
+
+        private void E55()
+        {
+            var cpu = _machine.Cpu;
+            long addr = cpu.GetM(M16);
+            if (addr != 0) throw new ProcessorException($"Unimplemented extracode *55 {Convert.ToString(addr, 8)}");
+            cpu.SetAcc(Besm6Math.Log(cpu.GetAcc()));
+        }
+
+        private void E56()
+        {
+            var cpu = _machine.Cpu;
+            long addr = cpu.GetM(M16);
+            if (addr != 0) throw new ProcessorException($"Unimplemented extracode *56 {Convert.ToString(addr, 8)}");
+            cpu.SetAcc(Besm6Math.Exp(cpu.GetAcc()));
+        }
+
         // ─── E57: монтаж лент / файлов (порт dubna/e57.cpp) ───────────────────
 
         private void E57()
@@ -388,7 +448,8 @@ namespace Besm6.Loader
                     cpu.SetAcc(Besm6Math.Floor(cpu.GetAcc()));
                     return;
                 case 2:
-                    // Calcomp plotter — no-op.
+                    // Output to Calcomp plotter.
+                    _machine.Plotter.CalcompPutCh((char)(cpu.GetAcc() & 0xFF));
                     cpu.SetAcc(0);
                     return;
                 case 3:
@@ -459,6 +520,59 @@ namespace Besm6.Loader
                 // addr == 1 or 4: tape control by Gusev — unsupported.
                 throw new ProcessorException($"E57: unimplemented extracode *57 {Convert.ToString((int)addr, 8)}");
             }
+        }
+
+        // ─── E61: управление дисплеем VT-340 / плоттеры (порт dubna/e61) ────
+
+        private void E61()
+        {
+            var cpu = _machine.Cpu;
+            long addr = cpu.GetM(M16);
+
+            if (addr == 0x7FFF) // 077777 octal
+            {
+                // Вывод на плоттер Watanabe или Tektronix.
+                // Адрес начала данных — в младших 15 битах ACC; тип плоттера — в старших 12 битах.
+                var bp = new BytePointer(_machine.Memory, (int)(cpu.GetAcc() & 0x7FFF));
+                switch ((cpu.GetAcc() >> 36) & 0xFFF)
+                {
+                    case 0:
+                        // Watanabe WX4675.
+                        for (;;)
+                        {
+                            byte ch = bp.Get();
+                            if (ch == 0) break;
+                            _machine.Plotter.WatanabePutCh((char)ch);
+                        }
+                        break;
+
+                    case 0x300: // 01400 octal
+                        // Tektronix.
+                        if (bp.WordAddr == 0)
+                        {
+                            // Начало новой команды.
+                        }
+                        else
+                        {
+                            for (;;)
+                            {
+                                byte ch = bp.Get();
+                                if (ch == 0) break;
+                                _machine.Plotter.TektronixPutCh((char)ch);
+                            }
+                        }
+                        break;
+
+                    default:
+                        throw new ProcessorException(
+                            $"Extracode *61 77777: unknown target {Convert.ToString((cpu.GetAcc() >> 36) & 0xFFF, 8)}");
+                }
+                cpu.SetAcc(0);
+                return;
+            }
+
+            // Неизвестный адрес — сброс ACC.
+            cpu.SetAcc(0);
         }
 
         // ─── E64: вывод текста (полный протокол, см. ExtracodeHandler.E64.cs) ───
