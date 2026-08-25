@@ -14,9 +14,9 @@ namespace Besm6.Asm
         /// Преобразовать строку ассемблера в 48-битное слово.
         /// Формат: [left_instruction] [, right_instruction] [; comment]
         /// </summary>
-        public static long Asm(string src)
+        public static ulong Asm(string src)
         {
-            long left = 0, right = 0;
+            ulong left = 0, right = 0;
             int pos = 0;
 
             string? end = ParseInstruction(src, ref pos, ref left);
@@ -41,7 +41,7 @@ namespace Besm6.Asm
             if (pos < src.Length && src[pos] != ';' && src[pos] != '\n' && src[pos] != '\r')
                 throw new FormatException($"Bad extra symbols: {src}");
 
-            long word = (left << 24) | right;
+            ulong word = (left << 24) | right;
             return word & 0xFFFFFFFFFFFFL; // 48-bit mask
         }
 
@@ -49,7 +49,7 @@ namespace Besm6.Asm
         /// Парсить одну инструкцию (полу-слово: 24 бита).
         /// Поддерживает восьмеричное и мнемоническое представление.
         /// </summary>
-        private static string? ParseInstruction(string src, ref int pos, ref long result)
+        private static string? ParseInstruction(string src, ref int pos, ref ulong result)
         {
             pos = SkipSpaces(src, pos);
             if (pos >= src.Length) return null;
@@ -128,7 +128,7 @@ namespace Besm6.Asm
                 }
             }
 
-            result = (long)reg << 20 | (long)opcode << 12 | (long)addr;
+            result = (ulong)reg << 20 | (ulong)opcode << 12 | (ulong)addr;
             return src;
         }
 

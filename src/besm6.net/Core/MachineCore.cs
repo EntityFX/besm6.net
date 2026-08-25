@@ -26,9 +26,9 @@ namespace Besm6.Core
         public Processor Processor => Cpu;
 
         /// <summary>Хук трассировки: вызывается после каждой инструкции. null = трассировка выключена.</summary>
-        public Action<int, long>? StepTrace { get; set; }
+        public Action<int, ulong>? StepTrace { get; set; }
 
-        public MachineCore(int memorySize = 32768, string? puncherOutputDir = null)
+        public MachineCore(uint memorySize = 32768, string? puncherOutputDir = null)
         {
             var coreMemory = new CoreMemory(memorySize);
             Devices = new DeviceManager();
@@ -62,9 +62,9 @@ namespace Besm6.Core
         {
             for (int i = 0; i < program.Length; i++)
             {
-                Memory.Write(startAddress + i, program[i]);
+                Memory.Write((uint)(startAddress + i), program[i]);
             }
-            Cpu.SetPc(startAddress);
+            Cpu.SetPc((uint)startAddress);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace Besm6.Core
 
             for (int i = 0; i < wordCount; i++)
             {
-                long val = BitConverter.ToInt64(data, i * 8);
+                ulong val = BitConverter.ToUInt64(data, i * 8);
                 program[i] = new Word48(val);
             }
 
@@ -98,7 +98,7 @@ namespace Besm6.Core
             if (StepTrace != null)
             {
                 int pc = (int)Cpu.GetPc();
-                StepTrace(pc, Memory.Read(pc).Value);
+                StepTrace(pc, Memory.Read((uint)pc).Value);
             }
             return stopped;
         }

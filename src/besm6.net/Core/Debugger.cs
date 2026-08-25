@@ -67,7 +67,7 @@ namespace Besm6.Core
                     case "pc":
                         if (parts.Length > 1 && TryParseAddr(parts[1], out int pc))
                         {
-                            _machine.Cpu.SetPc(pc);
+                            _machine.Cpu.SetPc((uint)pc);
                             Console.WriteLine($"PC = {pc:X5}");
                         }
                         else
@@ -133,7 +133,7 @@ namespace Besm6.Core
             for (int i = 0; i < count; i++)
             {
                 int addr = (address + i) & 0x7FFF;
-                Word48 w = _machine.Memory.Read(addr);
+                Word48 w = _machine.Memory.Read((uint)addr);
                 Console.WriteLine($"{addr:X5}: {w.ToOctal()}  ({w.Value:X12})");
             }
         }
@@ -144,9 +144,9 @@ namespace Besm6.Core
             for (int i = 0; i < count; i++)
             {
                 int addr = (address + i) & 0x7FFF;
-                Word48 w = _machine.Memory.Read(addr);
-                long left = (w.Value >> 24) & 0xFFFFFF;
-                long right = w.Value & 0xFFFFFF;
+                Word48 w = _machine.Memory.Read((uint)addr);
+                ulong left = (w.Value >> 24) & 0xFFFFFFu;
+                ulong right = w.Value & 0xFFFFFFu;
                 Console.WriteLine($"{addr:X5}: L=0x{left:X6} R=0x{right:X6}");
             }
         }

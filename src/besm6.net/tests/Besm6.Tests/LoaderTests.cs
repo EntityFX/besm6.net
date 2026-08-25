@@ -1,4 +1,4 @@
-using Besm6.Core;
+﻿using Besm6.Core;
 using Besm6.Loader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -170,14 +170,14 @@ namespace Besm6.Tests
         [TestMethod]
         public void DoubleToBesm6_Zero_ReturnsZero()
         {
-            Assert.AreEqual(0L, Besm6Math.DoubleToBesm6(0.0));
+            Assert.AreEqual(0UL, Besm6Math.DoubleToBesm6(0.0));
         }
 
         [TestMethod]
         public void RoundTrip_PositiveValue()
         {
             double val = 1.5;
-            long word = Besm6Math.DoubleToBesm6(val);
+            ulong word = Besm6Math.DoubleToBesm6(val);
             double back = Besm6Math.Besm6ToDouble(word);
             Assert.AreEqual(val, back, 1e-6);
         }
@@ -186,7 +186,7 @@ namespace Besm6.Tests
         public void RoundTrip_NegativeValue()
         {
             double val = -3.75;
-            long word = Besm6Math.DoubleToBesm6(val);
+            ulong word = Besm6Math.DoubleToBesm6(val);
             double back = Besm6Math.Besm6ToDouble(word);
             Assert.AreEqual(val, back, 1e-5);
         }
@@ -195,7 +195,7 @@ namespace Besm6.Tests
         public void RoundTrip_SmallValue()
         {
             double val = 0.25;
-            long word = Besm6Math.DoubleToBesm6(val);
+            ulong word = Besm6Math.DoubleToBesm6(val);
             double back = Besm6Math.Besm6ToDouble(word);
             Assert.AreEqual(val, back, 1e-8);
         }
@@ -203,8 +203,8 @@ namespace Besm6.Tests
         [TestMethod]
         public void Sqrt_One_Is_One()
         {
-            long one = Besm6Math.DoubleToBesm6(1.0);
-            long result = Besm6Math.Sqrt(one);
+            ulong one = Besm6Math.DoubleToBesm6(1.0);
+            ulong result = Besm6Math.Sqrt(one);
             double val = Besm6Math.Besm6ToDouble(result);
             Assert.AreEqual(1.0, val, 1e-8);
         }
@@ -212,8 +212,8 @@ namespace Besm6.Tests
         [TestMethod]
         public void Sqrt_Four_Is_Two()
         {
-            long four = Besm6Math.DoubleToBesm6(4.0);
-            long result = Besm6Math.Sqrt(four);
+            ulong four = Besm6Math.DoubleToBesm6(4.0);
+            ulong result = Besm6Math.Sqrt(four);
             double val = Besm6Math.Besm6ToDouble(result);
             Assert.AreEqual(2.0, val, 1e-8);
         }
@@ -221,8 +221,8 @@ namespace Besm6.Tests
         [TestMethod]
         public void Sin_Zero_Is_Zero()
         {
-            long zero = Besm6Math.DoubleToBesm6(0.0);
-            long result = Besm6Math.Sin(zero);
+            ulong zero = Besm6Math.DoubleToBesm6(0.0);
+            ulong result = Besm6Math.Sin(zero);
             double val = Besm6Math.Besm6ToDouble(result);
             Assert.AreEqual(0.0, val, 1e-10);
         }
@@ -230,8 +230,8 @@ namespace Besm6.Tests
         [TestMethod]
         public void Cos_Zero_Is_One()
         {
-            long zero = Besm6Math.DoubleToBesm6(0.0);
-            long result = Besm6Math.Cos(zero);
+            ulong zero = Besm6Math.DoubleToBesm6(0.0);
+            ulong result = Besm6Math.Cos(zero);
             double val = Besm6Math.Besm6ToDouble(result);
             Assert.AreEqual(1.0, val, 1e-10);
         }
@@ -249,10 +249,10 @@ namespace Besm6.Tests
             // Программа: единственная инструкция СТОП (opcode 0xD8, длинный формат)
             // в левой половине слова по адресу 01000 (oct) = 512 (dec).
             const int baseAddr = 512; // 01000 oct (октальные литералы в C# недоступны)
-            long stop24 = (1L << 20) | (0xD8L << 12); // длинный формат: бит20 + opcode 0xD8
-            long stopWord = stop24 << 24;             // левая половина слова
+            ulong stop24 = (1UL << 20) | (0xD8UL << 12); // длинный формат: бит20 + opcode 0xD8
+            ulong stopWord = stop24 << 24;             // левая половина слова
             var job = new DubJob();
-            job.RawWords.Add(stopWord & 0xFFFFFFFFFFFFL);
+            job.RawWords.Add((long)(stopWord & 0xFFFFFFFFFFFFUL));
             job.TransMain = baseAddr;
 
             var result = loader.RunJob(job, System.Array.Empty<string>());
@@ -271,17 +271,17 @@ namespace Besm6.Tests
             loader.BootMsDubna();
 
             // Проверка, что PC установлен в 02010 (oct) = 1032 (dec).
-            Assert.AreEqual(1032, machine.Cpu.GetPc());
+            Assert.AreEqual(1032UL, (ulong)machine.Cpu.GetPc());
 
             // Проверка, что данные в 03000 (oct) = 1536 (dec) не нулевые (INPUTCAL).
-            long w03000 = machine.Memory.Read(1536).Value;
-            Assert.AreNotEqual(0L, w03000, "Слово 03000 (INPUTCAL) не должно быть нулевым");
+            ulong w03000 = machine.Memory.Read(1536).Value;
+            Assert.AreNotEqual(0UL, w03000, "Слово 03000 (INPUTCAL) не должно быть нулевым");
 
             // Проверка, что загрузчик-код записан в 02010..02023 (oct) = 1032..1043 (dec).
             bool anyNonZero = false;
             for (int i = 1032; i <= 1043; i++)
             {
-                if (machine.Memory.Read(i).Value != 0)
+                if (machine.Memory.Read((uint)i).Value != 0)
                 {
                     anyNonZero = true;
                     break;
@@ -299,12 +299,12 @@ namespace Besm6.Tests
             // 01000 (oct) = 512 (dec): atx 1234  (записать ACC в память по адресу 1234)
             // 01001 (oct) = 513 (dec): stop      (остановиться)
             int baseAddr = 512;
-            long atxWord = Besm6.Asm.Assembler.Asm("atx 1234") << 24;
-            long stopWord = ((1L << 20) | (0xD8L << 12)) << 24;
+            ulong atxWord = Besm6.Asm.Assembler.Asm("atx 1234") << 24;
+            ulong stopWord = ((1UL << 20) | (0xD8UL << 12)) << 24;
 
             var job = new DubJob();
-            job.RawWords.Add(atxWord & 0xFFFFFFFFFFFFL);
-            job.RawWords.Add(stopWord & 0xFFFFFFFFFFFFL);
+            job.RawWords.Add((long)(atxWord & 0xFFFFFFFFFFFFUL));
+            job.RawWords.Add((long)(stopWord & 0xFFFFFFFFFFFFUL));
             job.TransMain = baseAddr;
 
             var result = loader.RunJob(job, System.Array.Empty<string>());
@@ -312,8 +312,8 @@ namespace Besm6.Tests
             Assert.IsTrue(result.Instructions >= 2);
 
             // ACC = 0, поэтому atx 1234 (oct) = 668 (dec) записывает 0 в память[668].
-            long mem1234 = machine.Memory.Read(668).Value;
-            Assert.AreEqual(0L, mem1234, "atx 1234 хранит ACC(0) в памяти[1234]");
+            ulong mem1234 = machine.Memory.Read(668).Value;
+            Assert.AreEqual(0UL, mem1234, "atx 1234 хранит ACC(0) в памяти[1234]");
         }
     }
 
@@ -337,8 +337,8 @@ namespace Besm6.Tests
 
             handler.Handle(51, 0); // 063 oct = 51 dec
 
-            long acc = machine.Cpu.GetAcc();
-            Assert.AreEqual(206L, acc);
+            ulong acc = machine.Cpu.GetAcc().Value;
+            Assert.AreEqual(206UL, acc);
         }
 
         [TestMethod]
@@ -357,7 +357,7 @@ namespace Besm6.Tests
             // Записать "HI" + end-of-text в память 512.
             // GOST-Latin: H=0x4D (oct 115), I=0x82 (oct 202), end=0x7A (oct 172).
             byte[] bytes = { 0x2D, 0x42, 0x7A, 0, 0, 0 };
-            long word = 0;
+            ulong word = 0;
             foreach (byte b in bytes)
                 word = (word << 8) | b;
             machine.Memory.Write(512, new Word48(word));
@@ -365,9 +365,9 @@ namespace Besm6.Tests
             // E64: адрес из M[14]. E64_Pointer в 500, E64_Info в 501.
             // Pointer (C++ union E64_Pointer, LSB-first): start_addr биты 38..24,
             // end_addr биты 14..0. => 512<<24 | 512.
-            machine.Memory.Write(500, new Word48((512L << 24) | 512L));
+            machine.Memory.Write(500, new Word48((512UL << 24) | 512UL));
             // Info: format=0(GOST), finish=1 (бит 23).
-            machine.Memory.Write(501, new Word48(1L << 23));
+            machine.Memory.Write(501, new Word48(1UL << 23));
             machine.Cpu.SetM(14, 500);
 
             bool captured = false;
@@ -400,8 +400,8 @@ namespace Besm6.Tests
 
             handler.Handle(61, 0); // 075 oct = 61 dec
 
-            long mem = machine.Memory.Read(520).Value;
-            Assert.AreEqual(42L, mem);
+            ulong mem = machine.Memory.Read(520).Value;
+            Assert.AreEqual(42UL, mem);
         }
 
         [TestMethod]
@@ -415,19 +415,19 @@ namespace Besm6.Tests
             machine.Cpu.SetM(14, 0);
             machine.Cpu.SetAcc(Besm6Math.DoubleToBesm6(4.0));
             handler.Handle(40, 0); // *50
-            Assert.AreEqual(2.0, Besm6Math.Besm6ToDouble(machine.Cpu.GetAcc()), 1e-3);
+            Assert.AreEqual(2.0, Besm6Math.Besm6ToDouble(machine.Cpu.GetAcc().Value), 1e-3);
 
             // sin(0.0) = 0.0
             machine.Cpu.SetM(14, 1);
             machine.Cpu.SetAcc(Besm6Math.DoubleToBesm6(0.0));
             handler.Handle(40, 0);
-            Assert.AreEqual(0.0, Besm6Math.Besm6ToDouble(machine.Cpu.GetAcc()), 1e-6);
+            Assert.AreEqual(0.0, Besm6Math.Besm6ToDouble(machine.Cpu.GetAcc().Value), 1e-6);
 
             // cos(0.0) = 1.0
             machine.Cpu.SetM(14, 2);
             machine.Cpu.SetAcc(Besm6Math.DoubleToBesm6(0.0));
             handler.Handle(40, 0);
-            Assert.AreEqual(1.0, Besm6Math.Besm6ToDouble(machine.Cpu.GetAcc()), 1e-6);
+            Assert.AreEqual(1.0, Besm6Math.Besm6ToDouble(machine.Cpu.GetAcc().Value), 1e-6);
         }
 
         [TestMethod]
@@ -437,13 +437,13 @@ namespace Besm6.Tests
             // "HI" + end-of-text в памяти 512.
             // GOST-Latin: H=0x2D (oct 055), I=0x42 (oct 102), end=0x7A (oct 172).
             byte[] bytes = { 0x2D, 0x42, 0x7A, 0, 0, 0 };
-            long word = 0;
+            ulong word = 0;
             foreach (byte b in bytes) word = (word << 8) | b;
             machine.Memory.Write(512, new Word48(word));
 
             // E64_Pointer в 500, E64_Info (format=0, finish=1) в 501.
-            machine.Memory.Write(500, new Word48((512L << 24) | 512L));
-            machine.Memory.Write(501, new Word48(1L << 23));
+            machine.Memory.Write(500, new Word48((512UL << 24) | 512UL));
+            machine.Memory.Write(501, new Word48(1UL << 23));
             machine.Cpu.SetM(14, 500);
 
             string captured = "";
@@ -471,18 +471,18 @@ namespace Besm6.Tests
 
             // E57_ASSIGN = 0o2000 = 1024 decimal.
             long addr = 1024; // ASSIGN
-            machine.Cpu.SetM(14, addr);
-            long fakeTapeId = 0xB6FBB3E73009L; // TapeMonsys
+            machine.Cpu.SetM(14, (uint)addr);
+            ulong fakeTapeId = 0xB6FBB3E73009UL; // TapeMonsys
             machine.Cpu.SetAcc(fakeTapeId);
             machine.Cpu.SetM(13, 24); // disk unit 24
 
             handler.Handle(47, 0); // E57 = 47 dec (0o57)
 
             Assert.IsTrue(mounted, "E57 ASSIGN должен вызвать mountTape");
-            Assert.AreEqual(fakeTapeId, mountedId);
+            Assert.AreEqual(fakeTapeId, (ulong)mountedId);
             Assert.AreEqual(24, mountedUnit);
             // ACC = disk unit.
-            Assert.AreEqual(24L, machine.Cpu.GetAcc());
+            Assert.AreEqual(24UL, machine.Cpu.GetAcc().Value);
         }
 
         [TestMethod]
@@ -510,24 +510,24 @@ namespace Besm6.Tests
         public void E57_Release_CallsReleaseTapes()
         {
             var machine = new MachineCore();
-            long releasedMask = 0;
+            ulong releasedMask = 0;
             var handler = new ExtracodeHandler(
                 machine,
                 id => null, u => null, d => null,
                 output: s => { },
                 mountTape: (tapeId, unit) => true,
                 findTape: (tapeId) => 0,
-                releaseTapes: (mask) => { releasedMask = mask; });
+                releaseTapes: (mask) => { releasedMask = (ulong)mask; });
 
             // E57_RELEASE = 0o4000 = 2048 decimal.
             machine.Cpu.SetM(14, 2048); // RELEASE
-            long bitmask = (1L << 0) | (1L << 3); // release units 0 and 3
+            ulong bitmask = (1UL << 0) | (1UL << 3); // release units 0 and 3
             machine.Cpu.SetAcc(bitmask);
 
             handler.Handle(47, 0);
 
             Assert.AreEqual(bitmask, releasedMask);
-            Assert.AreEqual(0L, machine.Cpu.GetAcc(), "After RELEASE, ACC should be 0");
+            Assert.AreEqual(0UL, machine.Cpu.GetAcc().Value, "After RELEASE, ACC should be 0");
         }
 
         [TestMethod]
@@ -544,12 +544,12 @@ namespace Besm6.Tests
 
             // addr >= 0o10 (8) and no ASSIGN/RELEASE bits → FIND.
             machine.Cpu.SetM(14, 8); // 0o10 oct = 8 dec
-            long fakeTapeId = 0xB6FBB3E73009L;
+            ulong fakeTapeId = 0xB6FBB3E73009UL;
             machine.Cpu.SetAcc(fakeTapeId);
 
             handler.Handle(47, 0);
 
-            Assert.AreEqual(24L, machine.Cpu.GetAcc(), "FIND должен вернуть unit");
+            Assert.AreEqual(24UL, machine.Cpu.GetAcc().Value, "FIND должен вернуть unit");
         }
 
         [TestMethod]
@@ -568,7 +568,7 @@ namespace Besm6.Tests
             machine.Cpu.SetAcc(0x12345);
 
             handler.Handle(47, 0);
-            Assert.AreEqual(0L, machine.Cpu.GetAcc());
+            Assert.AreEqual(0UL, machine.Cpu.GetAcc().Value);
         }
 
         [TestMethod]
@@ -594,7 +594,7 @@ namespace Besm6.Tests
             machine.Cpu.SetM(14, 2); // Calcomp plotter
             machine.Cpu.SetAcc(0x1234);
             handler.Handle(47, 0);
-            Assert.AreEqual(0L, machine.Cpu.GetAcc(), "E57 addr=2 (plotter) → ACC=0");
+            Assert.AreEqual(0UL, machine.Cpu.GetAcc().Value, "E57 addr=2 (plotter) → ACC=0");
         }
 
         [TestMethod]
@@ -607,12 +607,12 @@ namespace Besm6.Tests
             // addr=1 → switch 1 → 0.
             machine.Cpu.SetM(14, 1);
             handler.Handle(53, 0); // E65 = 53 dec
-            Assert.AreEqual(0L, machine.Cpu.GetAcc());
+            Assert.AreEqual(0UL, machine.Cpu.GetAcc().Value);
 
             // addr=322 → 1024.
             machine.Cpu.SetM(14, 322);
             handler.Handle(53, 0);
-            Assert.AreEqual(1024L, machine.Cpu.GetAcc());
+            Assert.AreEqual(1024UL, machine.Cpu.GetAcc().Value);
         }
 
         [TestMethod]
@@ -624,7 +624,7 @@ namespace Besm6.Tests
 
             // E67: word at M[14], PC = (word >> 24) & 0x7FFF.
             int targetAddr = 1000;
-            long word = (long)targetAddr << 24;
+            ulong word = (ulong)targetAddr << 24;
             machine.Memory.Write(200, new Word48(word));
             machine.Cpu.SetM(14, 200);
 
@@ -672,10 +672,10 @@ namespace Besm6.Tests
 
             // Заполнить memory[0..255].
             for (int i = 0; i < 256; i++)
-                machine.Memory.Write(i, new Word48(i * 7L));
+                machine.Memory.Write((uint)i, new Word48((ulong)i * 7UL));
 
             // E70 write: sectIo(bit47)=1, rawSect(bit35)=1, unit=1(bits12-17), write(bit39=0).
-            long writeCtrl = (1L << 47) | (1L << 35) | (1L << 12);
+            ulong writeCtrl = (1UL << 47) | (1UL << 35) | (1UL << 12);
             machine.Cpu.SetM(14, 0);
             machine.Cpu.SetAcc(writeCtrl);
             handler.Handle(56, 0); // *70
@@ -684,11 +684,11 @@ namespace Besm6.Tests
 
             // Стереть memory и считать обратно с барабана.
             for (int i = 0; i < 256; i++)
-                machine.Memory.Write(i, new Word48(0));
-            machine.Cpu.SetAcc(writeCtrl | (1L << 39)); // read
+                machine.Memory.Write((uint)i, new Word48(0));
+            machine.Cpu.SetAcc(writeCtrl | (1UL << 39)); // read
             handler.Handle(56, 0);
-            Assert.AreEqual(7L, machine.Memory.Read(1).Value, "Чтение сектора: memory[1]");
-            Assert.AreEqual(14L, machine.Memory.Read(2).Value, "Чтение сектора: memory[2]");
+            Assert.AreEqual(7UL, machine.Memory.Read(1).Value, "Чтение сектора: memory[1]");
+            Assert.AreEqual(14UL, machine.Memory.Read(2).Value, "Чтение сектора: memory[2]");
         }
     }
 }

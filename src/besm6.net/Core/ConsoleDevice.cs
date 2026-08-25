@@ -52,7 +52,7 @@ namespace Besm6.Core
 
             char c = _inputQueue[0];
             _inputQueue = _inputQueue.Substring(1);
-            return new Word48((int)c);
+            return new Word48((uint)c);
         }
 
         public void Clear()
