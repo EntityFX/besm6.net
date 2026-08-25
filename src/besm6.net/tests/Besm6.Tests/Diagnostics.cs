@@ -33,7 +33,7 @@ namespace Besm6.Tests
             };
 
             // Capture all instructions.
-            var trace = new System.Collections.Generic.List<(int pc, long word)>();
+            var trace = new System.Collections.Generic.List<(int pc, ulong word)>();
             loader.InstructionTrace = (pc, word) => trace.Add((pc, word));
 
             var job = JobParser.ParseFile(dubPath);

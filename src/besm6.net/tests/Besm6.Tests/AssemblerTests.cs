@@ -9,54 +9,54 @@ namespace Besm6.Tests
         [TestMethod]
         public void Asm_ShortOpcode_NoAddress()
         {
-            long word = Assembler.Asm("stx");
+            ulong word = Assembler.Asm("stx");
             // stx = opcode 1, reg=0, addr=0 → left half = 1 << 12
-            Assert.AreEqual(1L << 12, word >> 24);
+            Assert.AreEqual(1UL << 12, word >> 24);
         }
 
         [TestMethod]
         public void Asm_MnemonicWithAddress()
         {
             // "xta 10" → opcode=8(xta), addr="10" octal=8, reg=0
-            long word = Assembler.Asm("xta 10");
-            long left = word >> 24;
-            Assert.AreEqual(8L, (left >> 12) & 0x7FL);   // opcode mask
-            Assert.AreEqual(8L, left & 0xFFFL);           // addr mask, "10" oct = 8 dec
+            ulong word = Assembler.Asm("xta 10");
+            ulong left = word >> 24;
+            Assert.AreEqual(8UL, (left >> 12) & 0x7FUL);   // opcode mask
+            Assert.AreEqual(8UL, left & 0xFFFUL);           // addr mask, "10" oct = 8 dec
         }
 
         [TestMethod]
         public void Asm_MnemonicWithRegister()
         {
             // "xta 10(2)" → opcode=8, addr="10" oct=8, reg=2
-            long word = Assembler.Asm("xta 10(2)");
-            long left = word >> 24;
-            Assert.AreEqual(8L, (left >> 12) & 0x7FL);
-            Assert.AreEqual(8L, left & 0xFFFL);
-            Assert.AreEqual(2L, (left >> 20) & 7L);
+            ulong word = Assembler.Asm("xta 10(2)");
+            ulong left = word >> 24;
+            Assert.AreEqual(8UL, (left >> 12) & 0x7FUL);
+            Assert.AreEqual(8UL, left & 0xFFFUL);
+            Assert.AreEqual(2UL, (left >> 20) & 7UL);
         }
 
         [TestMethod]
         public void Asm_OctalForm()
         {
             // "0 1 10" = reg=0, opcode=1, addr="10" oct=8
-            long word = Assembler.Asm("0 1 10");
-            long left = word >> 24;
-            Assert.AreEqual(0L, (left >> 20) & 7L);
-            Assert.AreEqual(1L, (left >> 12) & 0x7FL);
-            Assert.AreEqual(8L, left & 0xFFFL);
+            ulong word = Assembler.Asm("0 1 10");
+            ulong left = word >> 24;
+            Assert.AreEqual(0UL, (left >> 20) & 7UL);
+            Assert.AreEqual(1UL, (left >> 12) & 0x7FUL);
+            Assert.AreEqual(8UL, left & 0xFFFUL);
         }
 
         [TestMethod]
         public void Asm_TwoHalfWords()
         {
             // "xta 10, stx 20" → left: opcode=8, addr=8; right: opcode=1, addr=16
-            long word = Assembler.Asm("xta 10, stx 20");
-            long left = (word >> 24) & 0xFFFFFFL;
-            long right = word & 0xFFFFFFL;
-            Assert.AreEqual(8L, (left >> 12) & 0x7FL);   // xta
-            Assert.AreEqual(8L, left & 0xFFFL);            // "10" oct = 8
-            Assert.AreEqual(1L, (right >> 12) & 0x7FL);  // stx
-            Assert.AreEqual(16L, right & 0xFFFL);          // "20" oct = 16
+            ulong word = Assembler.Asm("xta 10, stx 20");
+            ulong left = (word >> 24) & 0xFFFFFFUL;
+            ulong right = word & 0xFFFFFFUL;
+            Assert.AreEqual(8UL, (left >> 12) & 0x7FUL);   // xta
+            Assert.AreEqual(8UL, left & 0xFFFUL);            // "10" oct = 8
+            Assert.AreEqual(1UL, (right >> 12) & 0x7FUL);  // stx
+            Assert.AreEqual(16UL, right & 0xFFFUL);          // "20" oct = 16
         }
 
         [TestMethod]
@@ -77,8 +77,8 @@ namespace Besm6.Tests
         [TestMethod]
         public void Asm_DisasmRoundTrip()
         {
-            long word = Assembler.Asm("xta 10(2)");
-            string dis = Disassembler.DisasmWord(word);
+            ulong word = Assembler.Asm("xta 10(2)");
+            string dis = Disassembler.DisasmWord((long)word);
             StringAssert.Contains(dis, "xta");
         }
     }

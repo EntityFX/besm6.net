@@ -40,7 +40,7 @@ namespace Besm6.Loader
         public Action<string>? Output { get; set; }
 
         /// <summary>Трассировка инструкций (для отладки). null = выключена.</summary>
-        public Action<int, long>? InstructionTrace { get; set; }
+        public Action<int, ulong>? InstructionTrace { get; set; }
 
         /// <summary>
         /// Обработчик ввода с терминала (E71 flags=6).
@@ -241,9 +241,9 @@ namespace Besm6.Loader
                 for (int i = 0; i < job.RawWords.Count; i++)
                 {
                     int addr = (baseAddr + i) & 0x7FFF;
-                    _machine.Memory.Write(addr, new Word48(job.RawWords[i]));
+                    _machine.Memory.Write((uint)addr, new Word48((ulong)job.RawWords[i]));
                 }
-                _machine.Cpu.SetPc(baseAddr);
+                _machine.Cpu.SetPc((uint)baseAddr);
                 _memStartBase = baseAddr;
                 if (Verbose)
                     Console.WriteLine($"Loaded {job.RawWords.Count} raw words at 0{baseAddr:X}, start PC=0{baseAddr:X}");
@@ -268,15 +268,15 @@ namespace Besm6.Loader
                 for (int i = 0; i < asmResult.Words.Count; i++)
                 {
                     int addr = (baseAddr + i) & 0x7FFF;
-                    _machine.Memory.Write(addr, new Word48(asmResult.Words[i]));
+                    _machine.Memory.Write((uint)addr, new Word48((ulong)asmResult.Words[i]));
                 }
                 foreach (var (idx, val) in rawValues)
                 {
                     int addr = (baseAddr + idx) & 0x7FFF;
-                    _machine.Memory.Write(addr, new Word48(val));
+                    _machine.Memory.Write((uint)addr, new Word48((ulong)val));
                 }
 
-                _machine.Cpu.SetPc(baseAddr);
+                _machine.Cpu.SetPc((uint)baseAddr);
                 _memStartBase = baseAddr;
                 if (Verbose)
                     Console.WriteLine($"Assembled {asmResult.Words.Count} words at 0{baseAddr:X}, start PC=0{baseAddr:X}");
@@ -338,9 +338,9 @@ namespace Besm6.Loader
             for (int i = 0; i < job.RawWords.Count; i++)
             {
                 int addr = (baseAddr + i) & 0x7FFF;
-                _machine.Memory.Write(addr, new Word48(job.RawWords[i]));
+                _machine.Memory.Write((uint)addr, new Word48((ulong)job.RawWords[i]));
             }
-            _machine.Cpu.SetPc(baseAddr);
+            _machine.Cpu.SetPc((uint)baseAddr);
             InstallExtracodeHook();
 
             if (Verbose)
@@ -383,17 +383,17 @@ namespace Besm6.Loader
             for (int i = 0; i < asmResult.Words.Count; i++)
             {
                 int addr = (baseAddr + i) & 0x7FFF;
-                _machine.Memory.Write(addr, new Word48(asmResult.Words[i]));
+                _machine.Memory.Write((uint)addr, new Word48((ulong)asmResult.Words[i]));
             }
 
             // Перезаписываем сырые слова в их позиции.
             foreach (var (idx, val) in rawValues)
             {
                 int addr = (baseAddr + idx) & 0x7FFF;
-                _machine.Memory.Write(addr, new Word48(val));
+                _machine.Memory.Write((uint)addr, new Word48((ulong)val));
             }
 
-            _machine.Cpu.SetPc(baseAddr);
+            _machine.Cpu.SetPc((uint)baseAddr);
             InstallExtracodeHook();
 
             if (Verbose)
@@ -548,18 +548,18 @@ namespace Besm6.Loader
             // Магический код (Mikhail Popov, STARTJOB routine):
             //
             // Адреса: 02010(oct)=1032(dec), 03000(oct)=1536(dec), 03010(oct)=1544(dec)
-            mem.Write(1032, new Word48(asm("vtm -5(1),     *70 3002")));   // читаем ТРП для загрузчика
-            mem.Write(1033, new Word48(asm("xta 377,       atx 3010")));   // берём тракт MONITOR*+/MONTRAN
-            mem.Write(1034, new Word48(asm("xta 363,       atx 100")));    // восстановим испорченный IОLISТ*
-            mem.Write(1035, new Word48(asm("vtm 53401(17), utc")));        // магазин
-            mem.Write(1036, new Word48(asm("*70 3010(1),   utc")));        // каталоги
-            mem.Write(1037, new Word48(asm("vlm 2014(1),   ita 17")));     // aload по адресу 716b
-            mem.Write(1038, new Word48(asm("atx 716,       *70 717")));    // infloa по адресу 717b — статический загрузчик
-            mem.Write(1039, new Word48(asm("xta 17,        ati 16")));     //
-            mem.Write(1040, new Word48(asm("atx 2(16),     arx 3001")));   // прибавляем 10b
-            mem.Write(1041, new Word48(asm("atx 17,        xta 3000")));   // 'INPUTCAL'
-            mem.Write(1042, new Word48(asm("atx (16),      vtm 1673(15)"))); // call CHEKJOB*
-            mem.Write(1043, new Word48(asm("uj (17),       utc")));        // в статический загрузчик
+            mem.Write(1032, new Word48((ulong)asm("vtm -5(1),     *70 3002")));   // читаем ТРП для загрузчика
+            mem.Write(1033, new Word48((ulong)asm("xta 377,       atx 3010")));   // берём тракт MONITOR*+/MONTRAN
+            mem.Write(1034, new Word48((ulong)asm("xta 363,       atx 100")));    // восстановим испорченный IОLISТ*
+            mem.Write(1035, new Word48((ulong)asm("vtm 53401(17), utc")));        // магазин
+            mem.Write(1036, new Word48((ulong)asm("*70 3010(1),   utc")));        // каталоги
+            mem.Write(1037, new Word48((ulong)asm("vlm 2014(1),   ita 17")));     // aload по адресу 716b
+            mem.Write(1038, new Word48((ulong)asm("atx 716,       *70 717")));    // infloa по адресу 717b — статический загрузчик
+            mem.Write(1039, new Word48((ulong)asm("xta 17,        ati 16")));     //
+            mem.Write(1040, new Word48((ulong)asm("atx 2(16),     arx 3001")));   // прибавляем 10b
+            mem.Write(1041, new Word48((ulong)asm("atx 17,        xta 3000")));   // 'INPUTCAL'
+            mem.Write(1042, new Word48((ulong)asm("atx (16),      vtm 1673(15)"))); // call CHEKJOB*
+            mem.Write(1043, new Word48((ulong)asm("uj (17),       utc")));        // в статический загрузчик
 
             // Данные таблицы (03000-03010 oct = 1536-1544 dec).
             mem.Write(1536, new Word48(183533445462124L));                // 05156606564434154 oct = 'INPUTCAL' in Text encoding

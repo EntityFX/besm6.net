@@ -87,7 +87,7 @@ namespace Besm6.Loader
                     byte byteVal = (bytePos + b < Data.Length) ? Data[bytePos + b] : (byte)0;
                     w = (w << 8) | byteVal;
                 }
-                memory.Write((addr + i) & 0x7FFF, new Word48(w & 0xFFFFFFFFFFFFL));
+                memory.Write(((uint)(addr + i)) & 0x7FFFu, new Word48((ulong)(w & 0xFFFFFFFFFFFFL)));
             }
         }
 
@@ -104,7 +104,7 @@ namespace Besm6.Loader
 
             for (int i = 0; i < nwords; i++)
             {
-                long w = memory.Read((addr + i) & 0x7FFF).Value & 0xFFFFFFFFFFFFL;
+                ulong w = memory.Read(((uint)(addr + i)) & 0x7FFFu).Value & 0xFFFFFFFFFFFFu;
                 if (offsetBytes + i * 6 + 6 <= Data.Length)
                 {
                     Data[offsetBytes + i * 6 + 0] = (byte)(w >> 40);

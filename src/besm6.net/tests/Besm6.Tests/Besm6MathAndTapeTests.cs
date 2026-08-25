@@ -99,7 +99,7 @@ namespace Besm6.Tests
         public void DoubleToBesm6_One_IsCanonicalWord()
         {
             // 1.0 = 2^47 + 2^41 + 2^39 (oct: 0405 0000 0000 0000 0)
-            long expected = (1L << 47) | (1L << 41) | (1L << 39);
+            ulong expected = (1UL << 47) | (1UL << 41) | (1UL << 39);
             Assert.AreEqual(expected, Besm6Math.DoubleToBesm6(1.0));
         }
 
@@ -107,7 +107,7 @@ namespace Besm6.Tests
         public void DoubleToBesm6_NegativeOne_IsCanonicalWord()
         {
             // -1.0 = 2^47 + 2^40 (oct: 0402 0000 0000 0000 0)
-            long expected = (1L << 47) | (1L << 40);
+            ulong expected = (1UL << 47) | (1UL << 40);
             Assert.AreEqual(expected, Besm6Math.DoubleToBesm6(-1.0));
         }
 
@@ -115,14 +115,14 @@ namespace Besm6.Tests
         public void DoubleToBesm6_Two_IsCanonicalWord()
         {
             // 2.0 = 2^47 + 2^42 + 2^39 (oct: 0411 0000 0000 0000 0)
-            long expected = (1L << 47) | (1L << 42) | (1L << 39);
+            ulong expected = (1UL << 47) | (1UL << 42) | (1UL << 39);
             Assert.AreEqual(expected, Besm6Math.DoubleToBesm6(2.0));
         }
 
         [TestMethod]
         public void DoubleToBesm6_Zero_IsZero()
         {
-            Assert.AreEqual(0L, Besm6Math.DoubleToBesm6(0.0));
+            Assert.AreEqual(0UL, Besm6Math.DoubleToBesm6(0.0));
         }
 
         [TestMethod]
@@ -131,7 +131,7 @@ namespace Besm6.Tests
             double[] values = { 0.25, 0.5, 1.0, 1.5, 2.0, -0.5, -3.75, 100.0, 0.001 };
             foreach (double val in values)
             {
-                long word = Besm6Math.DoubleToBesm6(val);
+                ulong word = Besm6Math.DoubleToBesm6(val);
                 double back = Besm6Math.Besm6ToDouble(word);
                 Assert.AreEqual(val, back, Math.Abs(val) * 1e-9 + 1e-12,
                     $"Round-trip {val:R} -> {back:R} (word=0x{word:X12})");
@@ -142,9 +142,9 @@ namespace Besm6.Tests
         public void Log_IsNaturalLogarithm()
         {
             // ln(e) = 1.0; используем exp(1.0) как вход и проверяем, что log даёт ~1.0.
-            long eWord = Besm6Math.Exp(Besm6Math.DoubleToBesm6(1.0));
+            ulong eWord = Besm6Math.Exp(Besm6Math.DoubleToBesm6(1.0));
             double eVal = Besm6Math.Besm6ToDouble(eWord);
-            long logWord = Besm6Math.Log(Besm6Math.DoubleToBesm6(eVal));
+            ulong logWord = Besm6Math.Log(Besm6Math.DoubleToBesm6(eVal));
             double logVal = Besm6Math.Besm6ToDouble(logWord);
             Assert.AreEqual(1.0, logVal, 1e-6, $"log(exp(1)) должно быть 1.0, получено {logVal:R}");
         }
@@ -153,7 +153,7 @@ namespace Besm6.Tests
         public void Exp_IsNaturalExponential()
         {
             // exp(0) = 1.0.
-            long word = Besm6Math.Exp(Besm6Math.DoubleToBesm6(0.0));
+            ulong word = Besm6Math.Exp(Besm6Math.DoubleToBesm6(0.0));
             Assert.AreEqual(1.0, Besm6Math.Besm6ToDouble(word), 1e-9);
         }
 

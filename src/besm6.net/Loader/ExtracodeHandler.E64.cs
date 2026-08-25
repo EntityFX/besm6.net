@@ -187,7 +187,7 @@ namespace Besm6.Loader
         {
             addr &= 0x7FFF;
             if (addr == 0) return 0;
-            return _machine.Memory.Read(addr).Value;
+            return (long)_machine.Memory.Read((uint)addr).Value;
         }
 
         /// <summary>
@@ -418,7 +418,7 @@ again:
 
         private int E64PrintGost(int startAddr, int endAddr)
         {
-            var bp = new BytePointer(_machine.Memory, startAddr);
+            var bp = new BytePointer(_machine.Memory, (uint)startAddr);
             byte lastCh = G_SPACE;
 
             for (;;)
@@ -427,14 +427,14 @@ again:
                     return 0;
 
                 if (endAddr != 0 && bp.WordAddr == endAddr + 1)
-                    return bp.WordAddr;
+                    return (int)bp.WordAddr;
 
                 byte ch = bp.Get();
                 if (IsGostEndOfText(ch))
                 {
                     if (bp.ByteIndex != 0)
                         bp.WordAddr++;
-                    return bp.WordAddr;
+                    return (int)bp.WordAddr;
                 }
 
                 // Weirdness of e64 in Dispak: when '231' or other EOF
@@ -442,7 +442,7 @@ again:
                 if (_e64Position == E64_LINE_WIDTH)
                 {
                     E64EmitLine();
-                    if (EofInWord(bp.WordAddr))
+                    if (EofInWord((int)bp.WordAddr))
                         continue;
                 }
 
@@ -529,7 +529,7 @@ again:
 
         private void E64PrintDubna(int startAddr, int endAddr)
         {
-            var bp = new BytePointer(_machine.Memory, startAddr);
+            var bp = new BytePointer(_machine.Memory, (uint)startAddr);
 
             byte ch = bp.Get();
             if (ch > 0 && _e64LineDirty)
@@ -754,7 +754,7 @@ again:
 
                 if (word != 0 && word != (1L << 40))
                 {
-                    value = Besm6Math.Besm6ToDouble(word);
+                    value = Besm6Math.Besm6ToDouble((ulong)word);
                     if (value < 0) value = -value;
                     value = RealExponent(value, ref exponent);
                 }

@@ -60,7 +60,7 @@ namespace Besm6.Core
 
             byte[] buffer = new byte[8];
             Array.Copy(_diskImage, _currentPosition, buffer, 0, 8);
-            long val = BitConverter.ToInt64(buffer, 0);
+            ulong val = BitConverter.ToUInt64(buffer, 0);
             _currentPosition += 8;
 
             return new Word48(val);

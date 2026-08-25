@@ -84,7 +84,7 @@ namespace Besm6.Loader
             return _traceWriter;
         }
 
-        public bool Handle(int opcode, long aex)
+        public bool Handle(int opcode, uint aex)
         {
             long pc = _machine.Cpu.GetPc();
             if (pc == _lastPc) _repeatCount++;
@@ -93,7 +93,7 @@ namespace Besm6.Loader
             {
                 var cpu = _machine.Cpu;
                 long m16val = cpu.GetM(M16) & 0x7FFF;
-                long acc = cpu.GetAcc();
+                long acc = (long)cpu.GetAcc().Value;
                 Console.Error.WriteLine(
                     $"[TRACE] extracode={opcode} aex=0{aex:X} PC=0{pc:X} repeat={_repeatCount} " +
                     $"M16=0{m16val:X}({Convert.ToString(m16val, 8)}) ACC=0{acc:X}");
@@ -106,7 +106,7 @@ namespace Besm6.Loader
             {
                 var cpu2 = _machine.Cpu;
                 long m16 = cpu2.GetM(M16) & 0x7FFF;
-                long acc2 = cpu2.GetAcc();
+                long acc2 = (long)cpu2.GetAcc().Value;
                 EnsureTraceWriter().WriteLine($"[EC] {opcode} (0{Convert.ToString(opcode,8)}) aex=0{aex:X} M16=0{Convert.ToString(m16,8)} ACC=0{acc2:X8} PC=0{Convert.ToString(pc,8)}");
             }
 
@@ -228,12 +228,12 @@ namespace Besm6.Loader
                 default:
                     if (addr >= 448 && addr < 496) // 0700..0757 oct — выключатели пульта
                     {
-                        cpu.SetAcc(1L << ((int)(495 - addr)));
+                        cpu.SetAcc((ulong)(1L << ((int)(495 - addr))));
                         return;
                     }
                     if (addr >= 3072 && addr < 3072 + 128) // 06000..06000+127 oct — таблица ALLTOISO
                     {
-                        cpu.SetAcc(CosyCodec.AllToIso[(int)(addr - 3072)]);
+                        cpu.SetAcc((ulong)CosyCodec.AllToIso[(int)(addr - 3072)]);
                         return;
                     }
                     throw new ProcessorException($"Unimplemented extracode *65 {Convert.ToString(addr, 8)}");
@@ -245,8 +245,8 @@ namespace Besm6.Loader
         private void E67()
         {
             var cpu = _machine.Cpu;
-            long word = _machine.Memory.Read((int)(cpu.GetM(M16) & 0x7FFF)).Value;
-            cpu.SetPc((word >> 24) & 0x7FFF);
+            ulong word = (ulong)_machine.Memory.Read((uint)(cpu.GetM(M16) & 0x7FFF)).Value;
+            cpu.SetPc((uint)(word >> 24) & 0x7FFF);
         }
 
         // ─── E72: ОС Дубна (страницы памяти) ─────────────────────────────────
@@ -265,7 +265,7 @@ namespace Besm6.Loader
             // Exact port of C++ e75(): if (addr > 0) mem_store + intercept check.
             if (addr > 0)
             {
-                _machine.Memory.Write((int)addr, new Word48(cpu.GetAcc()));
+                _machine.Memory.Write((uint)addr, new Word48(cpu.GetAcc().Value));
 
                 // addr == 020 oct (16 dec) → enable intercept for overflow/div-zero.
                 if (addr == 16)
@@ -294,7 +294,7 @@ namespace Besm6.Loader
         {
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16) & 0x7FFF;
-            long arg = cpu.GetAcc();
+            ulong arg = cpu.GetAcc().Value;
             switch (addr)
             {
                 case 0: cpu.SetAcc(Besm6Math.Sqrt(arg)); break;
@@ -363,7 +363,7 @@ namespace Besm6.Loader
                 case 28735: cpu.SetAcc(0); break;         // 070077 oct
                 case 28800: cpu.SetAcc(4096L); break;     // 070200 oct — C++: ACC = 0'0010'0000 (бит 12)
                 case 28808: cpu.SetAcc(0); break;         // 070210 oct
-                case 28812: cpu.SetAcc(System.Convert.ToInt64("1234567012345670", 8)); break; // 070214 oct
+                case 28812: cpu.SetAcc(System.Convert.ToUInt64("1234567012345670", 8)); break; // 070214 oct
 
                 default:
                     throw new ProcessorException($"Unimplemented extracode *50 {Convert.ToString(addr, 8)}");
@@ -380,8 +380,8 @@ namespace Besm6.Loader
             long addr = cpu.GetM(M16);
             switch (addr)
             {
-                case 0: cpu.SetAcc(Besm6Math.Sin(cpu.GetAcc())); return;
-                case 1: cpu.SetAcc(Besm6Math.Cos(cpu.GetAcc())); return;
+                case 0: cpu.SetAcc(Besm6Math.Sin(cpu.GetAcc().Value)); return;
+                case 1: cpu.SetAcc(Besm6Math.Cos(cpu.GetAcc().Value)); return;
                 default: throw new ProcessorException($"Unimplemented extracode *51 {Convert.ToString(addr, 8)}");
             }
         }
@@ -391,7 +391,7 @@ namespace Besm6.Loader
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *52 {Convert.ToString(addr, 8)}");
-            cpu.SetAcc(Besm6Math.Cos(cpu.GetAcc()));
+            cpu.SetAcc(Besm6Math.Cos(cpu.GetAcc().Value));
         }
 
         private void E53()
@@ -399,7 +399,7 @@ namespace Besm6.Loader
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *53 {Convert.ToString(addr, 8)}");
-            cpu.SetAcc(Besm6Math.Atan(cpu.GetAcc()));
+            cpu.SetAcc(Besm6Math.Atan(cpu.GetAcc().Value));
         }
 
         private void E54()
@@ -407,7 +407,7 @@ namespace Besm6.Loader
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *54 {Convert.ToString(addr, 8)}");
-            cpu.SetAcc(Besm6Math.Asin(cpu.GetAcc()));
+            cpu.SetAcc(Besm6Math.Asin(cpu.GetAcc().Value));
         }
 
         private void E55()
@@ -415,7 +415,7 @@ namespace Besm6.Loader
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *55 {Convert.ToString(addr, 8)}");
-            cpu.SetAcc(Besm6Math.Log(cpu.GetAcc()));
+            cpu.SetAcc(Besm6Math.Log(cpu.GetAcc().Value));
         }
 
         private void E56()
@@ -423,7 +423,7 @@ namespace Besm6.Loader
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *56 {Convert.ToString(addr, 8)}");
-            cpu.SetAcc(Besm6Math.Exp(cpu.GetAcc()));
+            cpu.SetAcc(Besm6Math.Exp(cpu.GetAcc().Value));
         }
 
         // ─── E57: монтаж лент / файлов (порт dubna/e57.cpp) ───────────────────
@@ -436,7 +436,7 @@ namespace Besm6.Loader
             // Детальная диагностика E57 (BESM6_TRACE).
             if (_traceExtracodes)
             {
-                long acc = cpu.GetAcc();
+                long acc = (long)cpu.GetAcc().Value;
                 long m13 = cpu.GetM(13);
                 EnsureTraceWriter().WriteLine(
                     $"[E57] addr=0{Convert.ToString(addr, 8)} ACC=0{acc:X} M[13]=0{m13:X}");
@@ -447,11 +447,11 @@ namespace Besm6.Loader
             {
                 case 0:
                     // floor(ACC) — уже в E50 case 14.
-                    cpu.SetAcc(Besm6Math.Floor(cpu.GetAcc()));
+                    cpu.SetAcc(Besm6Math.Floor(cpu.GetAcc().Value));
                     return;
                 case 2:
                     // Output to Calcomp plotter.
-                    _machine.Plotter.CalcompPutCh((char)(cpu.GetAcc() & 0xFF));
+                    _machine.Plotter.CalcompPutCh((char)(cpu.GetAcc().Value & 0xFF));
                     cpu.SetAcc(0);
                     return;
                 case 3:
@@ -487,7 +487,7 @@ namespace Besm6.Loader
                 if ((addr & E57_ASSIGN) != 0)
                 {
                     // Mount tape: tapeId in ACC, disk unit in M[15 octal] = M[13 decimal].
-                    long tapeIdAssign = cpu.GetAcc();
+                    long tapeIdAssign = (long)cpu.GetAcc().Value;
                     int diskUnit = (int)(cpu.GetM(13) & 0x7F);
                     bool ok = _mountTape(tapeIdAssign, diskUnit);
                     if (!ok)
@@ -499,23 +499,23 @@ namespace Besm6.Loader
                             $"[E57] ASSIGN tape=0{tapeIdAssign:X} -> unit=0{Convert.ToString(diskUnit, 8)} " +
                             $"mounted_id=0{(mounted?.VolumeId.ToString("X") ?? "null")}");
                     }
-                    cpu.SetAcc((long)diskUnit);
+                    cpu.SetAcc((ulong)diskUnit);
                     return;
                 }
 
                 if ((addr & E57_RELEASE) != 0)
                 {
                     // Release tapes according to bitmask on accumulator.
-                    _releaseTapes(cpu.GetAcc());
+                    _releaseTapes((long)cpu.GetAcc().Value);
                     cpu.SetAcc(0);
                     return;
                 }
 
                 // Find mounted tape (by name and number).
                 // Return disk number (unit) in ACC.
-                long tapeIdFind = cpu.GetAcc();
+                long tapeIdFind = (long)cpu.GetAcc().Value;
                 int unit = _findTape(tapeIdFind);
-                cpu.SetAcc((long)unit);
+                cpu.SetAcc((ulong)unit);
             }
             else
             {
@@ -535,8 +535,8 @@ namespace Besm6.Loader
             {
                 // Вывод на плоттер Watanabe или Tektronix.
                 // Адрес начала данных — в младших 15 битах ACC; тип плоттера — в старших 12 битах.
-                var bp = new BytePointer(_machine.Memory, (int)(cpu.GetAcc() & 0x7FFF));
-                switch ((cpu.GetAcc() >> 36) & 0xFFF)
+                var bp = new BytePointer(_machine.Memory, (uint)(cpu.GetAcc().Value & 0x7FFF));
+                switch ((cpu.GetAcc().Value >> 36) & 0xFFF)
                 {
                     case 0:
                         // Watanabe WX4675.
@@ -567,7 +567,7 @@ namespace Besm6.Loader
 
                     default:
                         throw new ProcessorException(
-                            $"Extracode *61 77777: unknown target {Convert.ToString((cpu.GetAcc() >> 36) & 0xFFF, 8)}");
+                            $"Extracode *61 77777: unknown target {Convert.ToString(((int)cpu.GetAcc().Value >> 36) & 0xFFF, 8)}");
                 }
                 cpu.SetAcc(0);
                 return;
@@ -591,7 +591,7 @@ namespace Besm6.Loader
         {
             var cpu = _machine.Cpu;
             long execAddr = cpu.GetM(M16) & 0x7FFF;
-            long ctrl = (execAddr == 0) ? cpu.GetAcc() : _machine.Memory.Read((int)execAddr).Value;
+            long ctrl = (execAddr == 0) ? (long)cpu.GetAcc().Value : (long)_machine.Memory.Read((uint)execAddr).Value;
 
             bool isRead = (ctrl & (1L << 39)) != 0;
             int unit = (int)((ctrl >> 12) & 0x3F);
@@ -708,7 +708,7 @@ namespace Besm6.Loader
         {
             var cpu = _machine.Cpu;
             int ctlAddr = (int)(cpu.GetM(M16) & 0x7FFF);
-            long word = _machine.Memory.Read(ctlAddr).Value;
+            long word = (long)_machine.Memory.Read((uint)ctlAddr).Value;
 
             int startReg = (int)((word >> 44) & 0xF);
             int flags    = (int)((word >> 39) & 0x1F);
@@ -732,7 +732,7 @@ namespace Besm6.Loader
                 {
                     int a1 = start, a2 = end;
                     E64Finish();
-                    var bp = new BytePointer(_machine.Memory, a1);
+                    var bp = new BytePointer(_machine.Memory, (uint)a1);
                     byte c = 1;
                     var sb = new System.Text.StringBuilder();
                     while (c != 0)
@@ -759,7 +759,7 @@ namespace Besm6.Loader
                     string inp = _input("");
                     string koi7 = CosyCodec.Utf8ToKoi7(inp, buflen);
                     if (koi7.Length < buflen) koi7 += '\0'; // завершающий нулевой байт, если влезает
-                    var bp = new BytePointer(_machine.Memory, start);
+                    var bp = new BytePointer(_machine.Memory, (uint)start);
                     for (int i = 0; i < koi7.Length; i++) bp.Put((byte)koi7[i]);
                     while (bp.ByteIndex != 0) bp.Put(0); // дописать нулями до конца слова
                     return;

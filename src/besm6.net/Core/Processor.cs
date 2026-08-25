@@ -15,12 +15,12 @@ namespace Besm6.Core
         private const uint RAU_MODE = (uint)RauFlags.Mode;
 
         // Биты (нумерация БЭСМ-6: 40-й бит = битовый индекс 39 и т.д.)
-        private const long BIT41 = Besm6Constants.BIT41;
-        private const long BIT48 = Besm6Constants.BIT48;
-        private const long BIT49 = Besm6Constants.BIT49;
-        private const long BITS40 = Besm6Constants.BITS40;
-        private const long BITS41 = Besm6Constants.BITS41;
-        private const long BITS48 = Besm6Constants.BITS48;
+        private const ulong BIT41 = Besm6Constants.BIT41;
+        private const ulong BIT48 = Besm6Constants.BIT48;
+        private const ulong BIT49 = Besm6Constants.BIT49;
+        private const ulong BITS40 = Besm6Constants.BITS40;
+        private const ulong BITS41 = Besm6Constants.BITS41;
+        private const ulong BITS48 = Besm6Constants.BITS48;
 
         // Внутреннее состояние процессора (CoreState).
         internal uint _pc;              // счётчик команд (Program Counter)
@@ -49,7 +49,7 @@ namespace Besm6.Core
         /// продолжается), либо false, чтобы поведение осталось прежним (исключение).
         /// Если обработчик не назначен — поведение не меняется.
         /// </summary>
-        public Func<int, long, bool>? ExtracodeHandler { get; set; }
+        public Func<int, uint, bool>? ExtracodeHandler { get; set; }
 
         public Processor(IMemory memory)
         {
@@ -137,9 +137,9 @@ namespace Besm6.Core
         public void SetAcc(ulong val) => _acc = Word48.FromInt48(val & BITS48);
         public void SetRmr(ulong val) => _rmr = Word48.FromInt48(val & BITS48);
 
-        public long GetPc() => _pc;
-        public long GetM(int index) => _m[index & 0xF];
-        public long GetRau() => _rau;
+        public uint GetPc() => _pc;
+        public uint GetM(int index) => _m[index & 0xF];
+        public uint GetRau() => _rau;
         public Word48 GetAcc() => _acc;
         public Word48 GetRmr() => _rmr;
 
@@ -150,24 +150,24 @@ namespace Besm6.Core
         public void ArithAdd(Word48 val, bool negateAcc, bool negateVal) => _alu.Add(val, negateAcc, negateVal);
         public void ArithAddExponent(int val) => _alu.AddExponent(val);
         public void ArithChangeSign(bool negateAcc) => _alu.ChangeSign(negateAcc);
-        public void ArithMultiply(long val) => _alu.Multiply(val);
-        public void ArithDivide(long val) => _alu.Divide(val);
+        public void ArithMultiply(Word48 val) => _alu.Multiply(val);
+        public void ArithDivide(Word48 val) => _alu.Divide(val);
         public void ArithShift(int nbits) => _alu.Shift(nbits);
 
         #endregion
 
         #region Вспомогательные операции (порт besm6_arch.cpp)
 
-        private static long Addr(long x) => Besm6Constants.Addr(x);
+        private static uint Addr(uint x) => Besm6Constants.Addr(x);
 
-        private static long OnBit(int n) => Besm6Constants.OnBit(n);
+        private static ulong OnBit(int n) => Besm6Constants.OnBit(n);
 
-        internal static int Besm6HighestBit(long val)
+        internal static int Besm6HighestBit(ulong val)
         {
             int n = 32, cnt = 0;
             do
             {
-                long tmp = val;
+                ulong tmp = val;
                 if ((tmp >>= n) != 0)
                 {
                     cnt += n;
@@ -177,7 +177,7 @@ namespace Besm6.Core
             return 48 - cnt;
         }
 
-        internal static int Besm6CountOnes(long word)
+        internal static int Besm6CountOnes(ulong word)
         {
             int c = 0;
             while (word != 0)
@@ -188,9 +188,9 @@ namespace Besm6.Core
             return c;
         }
 
-        internal static long Besm6Pack(long val, long mask)
+        internal static ulong Besm6Pack(ulong val, ulong mask)
         {
-            long result = 0;
+            ulong result = 0;
             while (mask != 0)
             {
                 if ((mask & 1) != 0)
@@ -205,9 +205,9 @@ namespace Besm6.Core
             return result & BITS48;
         }
 
-        internal static long Besm6Unpack(long val, long mask)
+        internal static ulong Besm6Unpack(ulong val, ulong mask)
         {
-            long result = 0;
+            ulong result = 0;
             for (int i = 0; i < 48; i++)
             {
                 result <<= 1;

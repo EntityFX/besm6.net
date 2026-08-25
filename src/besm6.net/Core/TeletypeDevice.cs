@@ -72,7 +72,7 @@ namespace Besm6.Core
 
             // В БЭСМ-6 символы упаковывались в слова. 
             // Упрощенно возвращаем код символа в Word48.
-            return Word48.FromInt48((int)c);
+            return Word48.FromInt48((uint)c);
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace Besm6.Core
         /// </summary>
         public void WriteCharacter(Word48 word)
         {
-            char c = (char)word.ToInt48();
+            char c = (char)(uint)word.ToInt48();
             _outputBuffer.Append(c);
             
             // В реальном времени здесь была бы печать на бумаге

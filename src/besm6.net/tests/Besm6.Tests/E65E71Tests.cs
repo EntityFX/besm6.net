@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using Besm6.Core;
@@ -26,9 +26,9 @@ namespace Besm6.Tests
             {
                 var machine = new MachineCore();
                 var handler = MakeHandler(machine);
-                machine.Cpu.SetM(14, addr);
+                machine.Cpu.SetM(14, (uint)addr);
                 handler.Handle(E65, 0);
-                Assert.AreEqual(0L, machine.Cpu.GetAcc(), $"addr=0{Convert.ToString(addr, 8)}");
+                Assert.AreEqual(0UL, machine.Cpu.GetAcc().Value, $"addr=0{Convert.ToString(addr, 8)}");
             }
         }
 
@@ -40,7 +40,7 @@ namespace Besm6.Tests
             var handler = MakeHandler(machine);
             machine.Cpu.SetM(14, 342);
             handler.Handle(E65, 0);
-            Assert.AreEqual(3072L, machine.Cpu.GetAcc());
+            Assert.AreEqual(3072UL, machine.Cpu.GetAcc().Value);
         }
 
         [TestMethod]
@@ -48,18 +48,18 @@ namespace Besm6.Tests
         {
             // C++: if (addr >= 0700 && addr < 0760) ACC = 1 << (0757 - addr).
             // Все литералы — десятичные (октальные литералы в C# недоступны).
-            CheckE65Shift(448, 1L << 47); // 0700 oct = 448 dec
-            CheckE65Shift(470, 1L << 25); // 0726 oct = 470 dec
-            CheckE65Shift(495, 1L << 0);  // 0757 oct = 495 dec
+            CheckE65Shift(448, 1UL << 47); // 0700 oct = 448 dec
+            CheckE65Shift(470, 1UL << 25); // 0726 oct = 470 dec
+            CheckE65Shift(495, 1UL << 0);  // 0757 oct = 495 dec
         }
 
-        private static void CheckE65Shift(long addr, long expected)
+        private static void CheckE65Shift(int addr, ulong expected)
         {
             var machine = new MachineCore();
             var handler = MakeHandler(machine);
-            machine.Cpu.SetM(14, addr);
+            machine.Cpu.SetM(14, (uint)addr);
             handler.Handle(E65, 0);
-            Assert.AreEqual(expected, machine.Cpu.GetAcc(), $"addr=0{Convert.ToString(addr, 8)}");
+            Assert.AreEqual(expected, machine.Cpu.GetAcc().Value, $"addr=0{Convert.ToString(addr, 8)}");
         }
 
         [TestMethod]
@@ -67,32 +67,32 @@ namespace Besm6.Tests
         {
             // C++: if (addr >= 06000 && addr < 06000+128) ACC = all_to_iso[addr-06000].
             // 06000 oct = 3072 dec.
-            long baseAddr = 3072;
+            int baseAddr = 3072;
             for (int idx = 0; idx < 128; idx++)
             {
                 var machine = new MachineCore();
                 var handler = MakeHandler(machine);
-                machine.Cpu.SetM(14, baseAddr + idx);
+                machine.Cpu.SetM(14, (uint)(baseAddr + idx));
                 handler.Handle(E65, 0);
-                Assert.AreEqual(CosyCodec.AllToIso[idx], machine.Cpu.GetAcc(), $"idx={idx}");
+                Assert.AreEqual((ulong)CosyCodec.AllToIso[idx], machine.Cpu.GetAcc().Value, $"idx={idx}");
             }
         }
 
         [TestMethod]
         public void E65_AllToIso_KnownValues()
         {
-            AssertE65AllToIso(3072 + 0, 0xF00F00300000L);   // GOST=0360
-            AssertE65AllToIso(3072 + 1, 0xF10F5B312001L);   // GOST=0361
-            AssertE65AllToIso(3072 + 127, 0x400FC000007FL); // последняя запись
+            AssertE65AllToIso(3072 + 0, 0xF00F00300000UL);   // GOST=0360
+            AssertE65AllToIso(3072 + 1, 0xF10F5B312001UL);   // GOST=0361
+            AssertE65AllToIso(3072 + 127, 0x400FC000007FUL); // последняя запись
         }
 
-        private static void AssertE65AllToIso(long addr, long expected)
+        private static void AssertE65AllToIso(int addr, ulong expected)
         {
             var machine = new MachineCore();
             var handler = MakeHandler(machine);
-            machine.Cpu.SetM(14, addr);
+            machine.Cpu.SetM(14, (uint)addr);
             handler.Handle(E65, 0);
-            Assert.AreEqual(expected, machine.Cpu.GetAcc(), $"addr=0{Convert.ToString(addr, 8)}");
+            Assert.AreEqual(expected, machine.Cpu.GetAcc().Value, $"addr=0{Convert.ToString(addr, 8)}");
         }
 
         [TestMethod]
@@ -114,10 +114,10 @@ namespace Besm6.Tests
             var handler = MakeHandler(machine, output: s => captured.Append(s));
 
             // В памяти по адресу 100: "HI\0" (KOI-7, строчные латинские в KOI-7 не ASCII-совместимы).
-            machine.Memory.Write(100, new Word48(0x484900000000L));
+            machine.Memory.Write(100, new Word48(0x484900000000UL));
 
             // Контрольное слово: flags=4, start_reg=0, start=100, end_reg=0, end=110.
-            long ctrl = (4L << 39) | (100L << 24) | 110L;
+            ulong ctrl = (4UL << 39) | (100UL << 24) | 110UL;
             machine.Memory.Write(200, new Word48(ctrl));
             machine.Cpu.SetM(14, 200); // M[16] = адрес контрольного слова
             machine.Cpu.SetM(0, 0);    // start_reg/end_reg = 0
@@ -134,14 +134,14 @@ namespace Besm6.Tests
             var handler = MakeHandler(machine, input: p => "AB");
 
             // Контрольное слово: flags=6, start=100, end=110.
-            long ctrl = (6L << 39) | (100L << 24) | 110L;
+            ulong ctrl = (6UL << 39) | (100UL << 24) | 110UL;
             machine.Memory.Write(200, new Word48(ctrl));
             machine.Cpu.SetM(14, 200);
             machine.Cpu.SetM(0, 0);
 
             handler.Handle(E71, 0);
 
-            long w = machine.Memory.Read(100).Value;
+            ulong w = machine.Memory.Read(100).Value;
             Assert.AreEqual((byte)'A', (byte)((w >> 40) & 0xFF), "байт 0 = 'A'");
             Assert.AreEqual((byte)'B', (byte)((w >> 32) & 0xFF), "байт 1 = 'B'");
             Assert.AreEqual(0x00, (byte)((w >> 24) & 0xFF), "байт 2 = NUL");
@@ -159,10 +159,10 @@ namespace Besm6.Tests
 
                 // Одна перфокарта = 24 слова в адресе 100..123.
                 for (int i = 0; i < 24; i++)
-                    machine.Memory.Write(100 + i, new Word48(i * 7L));
+                    machine.Memory.Write((uint)(100 + i), new Word48((ulong)i * 7UL));
 
                 // flags=1, start=100, end=123 → (123-100+1)=24 кратно 24.
-                long ctrl = (1L << 39) | (100L << 24) | 123L;
+                ulong ctrl = (1UL << 39) | (100UL << 24) | 123UL;
                 machine.Memory.Write(200, new Word48(ctrl));
                 machine.Cpu.SetM(14, 200);
                 machine.Cpu.SetM(0, 0);
@@ -187,7 +187,7 @@ namespace Besm6.Tests
             var handler = MakeHandler(machine);
 
             // (end-start+1) = 25 — не кратно 24.
-            long ctrl = (1L << 39) | (100L << 24) | 124L;
+            ulong ctrl = (1UL << 39) | (100UL << 24) | 124UL;
             machine.Memory.Write(200, new Word48(ctrl));
             machine.Cpu.SetM(14, 200);
             machine.Cpu.SetM(0, 0);
@@ -202,7 +202,7 @@ namespace Besm6.Tests
             var handler = MakeHandler(machine);
 
             // flags=2 (неизвестный) — в C++ бездействие, не бросает.
-            long ctrl = (2L << 39) | (100L << 24) | 110L;
+            ulong ctrl = (2UL << 39) | (100UL << 24) | 110UL;
             machine.Memory.Write(200, new Word48(ctrl));
             machine.Cpu.SetM(14, 200);
             machine.Cpu.SetM(0, 0);

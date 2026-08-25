@@ -128,7 +128,7 @@ namespace Besm6.Tui
                     if (arg.Length == 0) { _status = "asm <instruction>"; return true; }
                     try
                     {
-                        long w = Assembler.Asm(arg);
+                        ulong w = Assembler.Asm(arg);
                         _status = "asm: " + arg + " = 0x" + w.ToString("X12");
                     }
                     catch (Exception ex) { _status = "asm error: " + ex.Message; }
@@ -141,7 +141,7 @@ namespace Besm6.Tui
                     if (!int.TryParse(parts[0], System.Globalization.NumberStyles.HexNumber, null, out int wa))
                     { _status = "bad address"; return true; }
                     if (!TryParseWord(parts[1], out long wv)) { _status = "bad value"; return true; }
-                    _machine.Memory.Write(wa & 0x7FFF, new Word48(wv));
+                    _machine.Memory.Write((uint)(wa & 0x7FFF), new Word48((ulong)wv));
                     _memBase = (wa & ~0xF) & 0x7FFF;
                     _status = "wrote 0x" + wv.ToString("X12") + " @ " + wa.ToString("X4");
                     return true;
@@ -167,8 +167,8 @@ namespace Besm6.Tui
         {
             var cpu = _machine!.Cpu;
             long before = cpu.PC;
-            var word = _machine.Memory.Read((int)before & 0x7FFF);
-            var dis = Disassembler.DisasmWord(word.Value);
+            var word = _machine.Memory.Read((uint)((int)before & 0x7FFF));
+            var dis = Disassembler.DisasmWord((long)word.Value);
             bool stopped = cpu.Step();
             _instrCount++;
             if (stopped) { _halted = true; _running = false; _status = "HALTED by STOP @" + before.ToString("X4"); }
@@ -242,8 +242,8 @@ namespace Besm6.Tui
                 sb.Append("  ").Append(b).Append('\n');
             }
 
-            Row("PC    " + Hex(cpu.PC), "ACC   " + Hex(cpu.Acc));
-            Row("RMR   " + Hex(cpu.Rmr), "MOD   " + Hex(cpu.Mod));
+            Row("PC    " + Hex(cpu.PC), "ACC   " + Hex(cpu.Acc.Value));
+            Row("RMR   " + Hex(cpu.Rmr.Value), "MOD   " + Hex((ulong)cpu.Mod));
             Row("RAU   " + Hex(cpu.Rau), "MODE  " + cpu.AluMode);
             Row("STEPS " + _instrCount.ToString(), "STATE " + (_halted ? "HALTED" : (_running ? "RUNNING" : "IDLE")));
             sb.Append('\n');
@@ -252,9 +252,9 @@ namespace Besm6.Tui
             sb.Append(GRAY).Append("   индексные:").Append(RESET).Append('\n');
             for (int i = 0; i < 8; i++)
             {
-                sb.Append("   ").Append(M(i)).Append(" ").Append(Hex(cpu.GetM(i)).PadRight(16));
+                sb.Append("   ").Append(M(i)).Append(" ").Append(Hex((ulong)cpu.GetM(i)).PadRight(16));
                 sb.Append(GRAY).Append("│").Append(RESET).Append("  ");
-                sb.Append(M(i + 8)).Append(" ").Append(Hex(cpu.GetM(i + 8)));
+                sb.Append(M(i + 8)).Append(" ").Append(Hex((ulong)cpu.GetM(i + 8)));
                 sb.Append('\n');
             }
             sb.Append('\n');
@@ -280,14 +280,14 @@ namespace Besm6.Tui
             {
                 int a = (_memBase + i) & 0x7FFF;
                 if (a >= mem.Size) break;
-                var w = mem.Read(a);
+                var w = mem.Read((uint)a);
                 bool isPc = (a == pc);
                 if (isPc) sb.Append(YELLOW);
 
                 sb.Append("   ").Append(a.ToString("X4")).Append(GRAY).Append(" │ ").Append(RESET);
                 sb.Append(w.Value.ToString("X12")).Append(GRAY).Append(" │ ").Append(RESET);
-                sb.Append(Disassembler.DisasmHalf(w.Value >> 24)).Append(" ");
-                sb.Append(Disassembler.DisasmHalf(w.Value & 0xFFFFFFL));
+                sb.Append(Disassembler.DisasmHalf((long)(w.Value >> 24))).Append(" ");
+                sb.Append(Disassembler.DisasmHalf((long)(w.Value & 0xFFFFFFL)));
                 if (isPc)
                 {
                     sb.Append(BOLD).Append(GREEN).Append("  ◄ PC").Append(RESET);
@@ -319,7 +319,7 @@ namespace Besm6.Tui
             sb.Append(" ");
         }
 
-        private static string Hex(long v) => "0x" + (v & Word48.Mask48).ToString("X12");
+        private static string Hex(ulong v) => "0x" + (v & Word48.Mask48).ToString("X12");
 
         private bool TryParseWord(string s, out long val)
         {

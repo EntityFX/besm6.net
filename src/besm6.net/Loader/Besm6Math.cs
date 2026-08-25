@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Besm6.Core;
 
 namespace Besm6.Loader
@@ -22,7 +22,7 @@ namespace Besm6.Loader
         // value = mantissa / 2^40 * 2^(exponent - 64), где mantissa — знаковое
         // 41-битное целое (two's complement).
 
-        public static double Besm6ToDouble(long word)
+        public static double Besm6ToDouble(ulong word)
         {
             // Используем Word48.ToDouble для гарантированно правильной конверсии.
             // Word48.ToDouble реализует тот же алгоритм, но с правильным обращением
@@ -30,7 +30,7 @@ namespace Besm6.Loader
             return new Word48(word).ToDouble();
         }
 
-        public static long DoubleToBesm6(double input)
+        public static ulong DoubleToBesm6(double input)
         {
             if (double.IsNaN(input) || double.IsInfinity(input))
                 return 0;
@@ -107,37 +107,37 @@ namespace Besm6.Loader
                 return 0;
 
             word |= ((long)(exponent + 64)) << 41;
-            return word & 0xFFFFFFFFFFFFL;
+            return (ulong)(word & 0xFFFFFFFFFFFFL);
         }
 
         // ─── Публичные математические функции ─────────────────────────────────
 
-        public static long Sqrt(long word)
+        public static ulong Sqrt(ulong word)
         {
             double d = Besm6ToDouble(word);
             if (d < 0) d = 0;
             return DoubleToBesm6(Math.Sqrt(d));
         }
 
-        public static long Sin(long word)
+        public static ulong Sin(ulong word)
         {
             double d = Besm6ToDouble(word);
             return DoubleToBesm6(Math.Sin(d));
         }
 
-        public static long Cos(long word)
+        public static ulong Cos(ulong word)
         {
             double d = Besm6ToDouble(word);
             return DoubleToBesm6(Math.Cos(d));
         }
 
-        public static long Atan(long word)
+        public static ulong Atan(ulong word)
         {
             double d = Besm6ToDouble(word);
             return DoubleToBesm6(Math.Atan(d));
         }
 
-        public static long Asin(long word)
+        public static ulong Asin(ulong word)
         {
             double d = Besm6ToDouble(word);
             if (d < -1) d = -1;
@@ -145,20 +145,20 @@ namespace Besm6.Loader
             return DoubleToBesm6(Math.Asin(d));
         }
 
-        public static long Log(long word)
+        public static ulong Log(ulong word)
         {
             double d = Besm6ToDouble(word);
             if (d <= 0) return 0;
             return DoubleToBesm6(Math.Log(d)); // натуральный логарифм ln(x)
         }
 
-        public static long Exp(long word)
+        public static ulong Exp(ulong word)
         {
             double d = Besm6ToDouble(word);
             return DoubleToBesm6(Math.Exp(d)); // e^x
         }
 
-        public static long Floor(long word)
+        public static ulong Floor(ulong word)
         {
             double d = Besm6ToDouble(word);
             return DoubleToBesm6(Math.Floor(d));
