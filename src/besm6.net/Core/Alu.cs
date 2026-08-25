@@ -193,7 +193,7 @@ namespace Besm6.Core
             if (acc.Mantissa == 0 && (rau & RAU_NORM_DISABLE) == 0)
                 goto zero;
 
-            _proc._acc = Word48.FromInt48(((acc.Exponent & 0x7Fu) << 41) | ((ulong)acc.Mantissa & BITS41));
+            _proc._acc = Word48.FromInt48((((ulong)acc.Exponent & 0x7Fu) << 41) | ((ulong)acc.Mantissa & BITS41));
             _proc._rmr = Word48.FromInt48(mr & BITS40);
 
             if ((acc.Exponent & 0x80u) != 0)
