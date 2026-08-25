@@ -9,33 +9,33 @@ namespace Besm6.Core
     public class Processor
     {
         // Регистр режима АЛУ (RAU).
-        private const long RAU_LOG           = (long)RauFlags.Log;
-        private const long RAU_MULT          = (long)RauFlags.Mult;
-        private const long RAU_ADD           = (long)RauFlags.Add;
-        private const long RAU_MODE          = (long)RauFlags.Mode;
+        private const uint RAU_LOG = (uint)RauFlags.Log;
+        private const uint RAU_MULT = (uint)RauFlags.Mult;
+        private const uint RAU_ADD = (uint)RauFlags.Add;
+        private const uint RAU_MODE = (uint)RauFlags.Mode;
 
         // Биты (нумерация БЭСМ-6: 40-й бит = битовый индекс 39 и т.д.)
-        private const long BIT41  = Besm6Constants.BIT41;
-        private const long BIT48  = Besm6Constants.BIT48;
-        private const long BIT49  = Besm6Constants.BIT49;
+        private const long BIT41 = Besm6Constants.BIT41;
+        private const long BIT48 = Besm6Constants.BIT48;
+        private const long BIT49 = Besm6Constants.BIT49;
         private const long BITS40 = Besm6Constants.BITS40;
         private const long BITS41 = Besm6Constants.BITS41;
         private const long BITS48 = Besm6Constants.BITS48;
 
         // Внутреннее состояние процессора (CoreState).
-        internal long _pc;              // счётчик команд (Program Counter)
-        internal long _acc;             // сумматор (ACC)
-        internal long _rmr;             // регистр младших разрядов (RMR)
-        internal readonly long[] _m = new long[16]; // индекс-регистры M[0..15]
-        internal long _mod;             // регистр модификации MOD
-        internal long _rau;             // режим АЛУ
+        internal uint _pc;              // счётчик команд (Program Counter)
+        internal Word48 _acc;             // сумматор (ACC)
+        internal Word48 _rmr;             // регистр младших разрядов (RMR)
+        internal readonly uint[] _m = new uint[16]; // индекс-регистры M[0..15]
+        internal uint _mod;             // регистр модификации MOD
+        internal uint _rau;             // режим АЛУ
         internal int _interceptCount;   // перехват overflow/div-by-zero (E75 при addr==020)
-        internal long _interceptAddr = 16; // адрес перехвата; по умолчанию 020 (oct) = 16 (dec), как C++ intercept_addr{020}
+        internal uint _interceptAddr = 16; // адрес перехвата; по умолчанию 020 (oct) = 16 (dec), как C++ intercept_addr{020}
         internal bool _rightInstrFlag;  // выполнять правую половину слова
         internal bool _applyModReg;     // модифицировать адрес через MOD
 
-        internal long _rk;              // регистр команд
-        internal long _aex;             // исполнительный адрес
+        internal uint _rk;              // регистр команд
+        internal uint _aex;             // исполнительный адрес
 
         private readonly IMemory _memory;
         internal readonly Alu _alu;
@@ -62,8 +62,8 @@ namespace Besm6.Core
         public void Reset()
         {
             _pc = 1;
-            _acc = 0;
-            _rmr = 0;
+            _acc = Word48.FromInt48(0);
+            _rmr = Word48.FromInt48(0);
             for (int i = 0; i < 16; i++) _m[i] = 0;
             _mod = 0;
             _rau = 0;
@@ -74,10 +74,10 @@ namespace Besm6.Core
 
         #region Доступ к регистрам (для тестов)
 
-        public long PC { get => _pc; set => _pc = value; }
-        public long Acc { get => _acc; set => _acc = value & BITS48; }
-        public long Rmr => _rmr;
-        public long Rau { get => _rau; set => _rau = value & 0x3F; }
+        public uint PC { get => _pc; set => _pc = value; }
+        public Word48 Acc { get => _acc; set => _acc = value; }
+        public Word48 Rmr => _rmr;
+        public uint Rau { get => _rau; set => _rau = value & 0x3F; }
         public bool OnRightInstruction => _rightInstrFlag;
 
         /// <summary>Человекочитаемый режим АЛУ (для отладчика/панели).</summary>
@@ -95,7 +95,7 @@ namespace Besm6.Core
         /// <summary>Потребить перехват (после срабатывания ошибки).</summary>
         public void ConsumeIntercept() => _interceptCount = 0;
         /// <summary>Адрес перехвата (по умолчанию 020 oct = 16 dec, как C++ intercept_addr).</summary>
-        public long InterceptAddr { get => _interceptAddr; set => _interceptAddr = value & 0x7FFF; }
+        public uint InterceptAddr { get => _interceptAddr; set => _interceptAddr = value; }
 
         /// <summary>
         /// Перехват арифметической ошибки (overflow / div-zero). Точный порт
@@ -131,23 +131,23 @@ namespace Besm6.Core
             // C#-порт не реализует corr_stack — метод-заглушка для совместимости с machine.cpp.
         }
 
-        public void SetPc(long val) => _pc = val;
-        public void SetM(int index, long val) => _m[index & 0xF] = val;
-        public void SetRau(long val) => _rau = val & 0x3F;
-        public void SetAcc(long val) => _acc = val & BITS48;
-        public void SetRmr(long val) => _rmr = val & BITS48;
+        public void SetPc(uint val) => _pc = val;
+        public void SetM(int index, uint val) => _m[index & 0xF] = val;
+        public void SetRau(ulong val) => _rau = (uint)(val & 0x3F);
+        public void SetAcc(ulong val) => _acc = Word48.FromInt48(val & BITS48);
+        public void SetRmr(ulong val) => _rmr = Word48.FromInt48(val & BITS48);
 
         public long GetPc() => _pc;
         public long GetM(int index) => _m[index & 0xF];
         public long GetRau() => _rau;
-        public long GetAcc() => _acc;
-        public long GetRmr() => _rmr;
+        public Word48 GetAcc() => _acc;
+        public Word48 GetRmr() => _rmr;
 
         #endregion
 
         #region Арифметика АЛУ (делегирование в Alu)
 
-        public void ArithAdd(long val, bool negateAcc, bool negateVal) => _alu.Add(val, negateAcc, negateVal);
+        public void ArithAdd(Word48 val, bool negateAcc, bool negateVal) => _alu.Add(val, negateAcc, negateVal);
         public void ArithAddExponent(int val) => _alu.AddExponent(val);
         public void ArithChangeSign(bool negateAcc) => _alu.ChangeSign(negateAcc);
         public void ArithMultiply(long val) => _alu.Multiply(val);
@@ -238,28 +238,28 @@ namespace Besm6.Core
 
         #region Память (с семантикой адреса 0, как в C++ Machine)
 
-        internal long MemFetch(long addr)
+        internal ulong MemFetch(ulong addr)
         {
             addr &= 0x7FFF;
             if (addr == 0)
                 return 0;
-            return _memory.Read((int)addr).Value;
+            return _memory.Read((uint)addr).Value;
         }
 
-        internal long MemLoad(long addr)
+        internal ulong MemLoad(uint addr)
         {
             addr &= 0x7FFF;
             if (addr == 0)
                 return 0;
-            return _memory.Read((int)addr).Value;
+            return _memory.Read(addr).Value;
         }
 
-        internal void MemStore(long addr, long val)
+        internal void MemStore(uint addr, ulong val)
         {
             addr &= 0x7FFF;
             if (addr == 0)
                 return;
-            _memory.Write((int)addr, new Word48(val));
+            _memory.Write(addr, new Word48(val));
         }
 
         #endregion

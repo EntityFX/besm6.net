@@ -10,12 +10,12 @@ namespace Besm6.Core
     {
         private readonly IMemory _coreMemory;
         private readonly DeviceManager _deviceManager;
-        private readonly int _deviceStartAddr;
-        private readonly int _deviceEndAddr;
+        private readonly uint _deviceStartAddr;
+        private readonly uint _deviceEndAddr;
 
         public int Size => _coreMemory.Size;
 
-        public SystemBus(IMemory coreMemory, DeviceManager deviceManager, int deviceStartAddr = 0x1000, int deviceEndAddr = 0x1FFF)
+        public SystemBus(IMemory coreMemory, DeviceManager deviceManager, uint deviceStartAddr = 0x1000, uint deviceEndAddr = 0x1FFF)
         {
             _coreMemory = coreMemory;
             _deviceManager = deviceManager;
@@ -23,7 +23,7 @@ namespace Besm6.Core
             _deviceEndAddr = deviceEndAddr;
         }
 
-        public Word48 Read(int address)
+        public Word48 Read(uint address)
         {
             if (address >= _deviceStartAddr && address <= _deviceEndAddr)
             {
@@ -32,7 +32,7 @@ namespace Besm6.Core
             return _coreMemory.Read(address);
         }
 
-        public void Write(int address, Word48 value)
+        public void Write(uint address, Word48 value)
         {
             if (address >= _deviceStartAddr && address <= _deviceEndAddr)
             {

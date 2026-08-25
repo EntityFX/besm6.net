@@ -11,7 +11,7 @@ namespace Besm6.Core
         public const int MemoryWords = 32768;
 
         /// <summary>Маска 15-битного адреса ядра.</summary>
-        public const long AddrMask = 0x7FFF;
+        public const uint AddrMask = 0x7FFF;
 
         // ─── Слово (нумерация БЭСМ-6: BIT40 = 40-й бит = битовый индекс 39) ───
         /// <summary>40-й бит (индекс 39): старший бит мантиссы.</summary>
@@ -92,6 +92,6 @@ namespace Besm6.Core
         public static long OnBit(int n) => 1L << (n - 1);
 
         /// <summary>Нормализация адреса: 15-битная маска.</summary>
-        public static long Addr(long a) => a & AddrMask;
+        public static uint Addr(uint a) => a & AddrMask;
     }
 }
