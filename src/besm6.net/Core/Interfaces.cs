@@ -10,14 +10,14 @@ namespace Besm6.Core
         /// </summary>
         /// <param name="address">15-битный адрес ячейки памяти.</param>
         /// <returns>48-битное слово.</returns>
-        Word48 Read(int address);
+        Word48 Read(uint address);
 
         /// <summary>
         /// Записывает слово в память по указанному адресу.
         /// </summary>
         /// <param name="address">15-битный адрес ячейки памяти.</param>
         /// <param name="word">Слово для записи.</param>
-        void Write(int address, Word48 word);
+        void Write(uint address, Word48 word);
 
         /// <summary>
         /// Общий размер доступной памяти в словах.

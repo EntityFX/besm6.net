@@ -9,12 +9,12 @@ namespace Besm6.Core
     /// </summary>
     public class DeviceManager
     {
-        private readonly Dictionary<int, IDevice> _devices = new Dictionary<int, IDevice>();
+        private readonly Dictionary<uint, IDevice> _devices = new Dictionary<uint, IDevice>();
 
         /// <summary>
         /// Подключить устройство по определенному адресу.
         /// </summary>
-        public void RegisterDevice(int address, IDevice device)
+        public void RegisterDevice(uint address, IDevice device)
         {
             _devices[address] = device;
         }
@@ -22,7 +22,7 @@ namespace Besm6.Core
         /// <summary>
         /// Запись данных в устройство.
         /// </summary>
-        public void Write(int address, Word48 value)
+        public void Write(uint address, Word48 value)
         {
             if (_devices.TryGetValue(address, out var device))
             {
@@ -33,7 +33,7 @@ namespace Besm6.Core
         /// <summary>
         /// Чтение данных из устройства.
         /// </summary>
-        public Word48 Read(int address)
+        public Word48 Read(uint address)
         {
             if (_devices.TryGetValue(address, out var device))
             {
@@ -44,7 +44,7 @@ namespace Besm6.Core
 
         public IEnumerable<IDevice> GetDevices() => _devices.Values;
 
-        public IDevice GetDevice(int address)
+        public IDevice GetDevice(uint address)
         {
             if (_devices.TryGetValue(address, out var device))
                 return device;

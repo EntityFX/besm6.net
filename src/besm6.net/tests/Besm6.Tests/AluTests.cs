@@ -30,8 +30,8 @@ namespace Besm6.Tests
         }
 
         private void SetAcc(string oct) => _cpu.SetAcc(FromOctal(oct));
-        private long GetAcc() => _cpu.GetAcc();
-        private void SetRau(long rau) => _cpu.SetRau(rau);
+        private Word48 GetAcc() => _cpu.GetAcc();
+        private void SetRau(ulong rau) => _cpu.SetRau(rau);
 
         [TestMethod]
         public void Test_Alu_Add()
@@ -198,12 +198,12 @@ namespace Besm6.Tests
             Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Shift failed: {octA} by {shift} = {ToOctal(GetAcc())} (Expected: {octExpected})");
         }
 
-        private static long FromOctal(string oct)
+        private static Word48 FromOctal(string oct)
         {
-            long val = 0;
+            ulong val = 0;
             foreach (char c in oct)
-                val = (val << 3) | (long)(c - '0');
-            return new Word48(val).Value;
+                val = (val << 3) | (ulong)(c - '0');
+            return new Word48(val);
         }
 
         private static string ToOctal(long val)

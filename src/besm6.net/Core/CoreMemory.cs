@@ -9,12 +9,12 @@ namespace Besm6.Core
     public class CoreMemory : IMemory
     {
         private readonly Word48[][] _banks;
-        private readonly int _numBanks = 8;
-        private readonly int _wordsPerBank;
+        private readonly uint _numBanks = 8;
+        private readonly uint _wordsPerBank;
         
-        public int Size => _numBanks * _wordsPerBank;
+        public int Size => (int)(_numBanks * _wordsPerBank);
 
-        public CoreMemory(int size = 32768)
+        public CoreMemory(uint size = 32768)
         {
             if (size < 0) throw new ArgumentException("Size cannot be negative");
             if (size % _numBanks != 0)
@@ -28,10 +28,10 @@ namespace Besm6.Core
             }
         }
 
-        public Word48 Read(int address)
+        public Word48 Read(uint address)
         {
-            int bankIndex = address % _numBanks;
-            int offset = address / _numBanks;
+            uint bankIndex = address % _numBanks;
+            uint offset = address / _numBanks;
 
             if (offset < 0 || offset >= _wordsPerBank)
                 throw new IndexOutOfRangeException($"Memory access violation at address 0x{address:X5} (Bank {bankIndex})");
@@ -39,10 +39,10 @@ namespace Besm6.Core
             return _banks[bankIndex][offset];
         }
 
-        public void Write(int address, Word48 word)
+        public void Write(uint address, Word48 word)
         {
-            int bankIndex = address % _numBanks;
-            int offset = address / _numBanks;
+            uint bankIndex = address % _numBanks;
+            uint offset = address / _numBanks;
 
             if (offset < 0 || offset >= _wordsPerBank)
                 throw new IndexOutOfRangeException($"Memory access violation at address 0x{address:X5} (Bank {bankIndex})");

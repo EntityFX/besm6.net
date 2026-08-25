@@ -11,10 +11,10 @@ namespace Besm6.Core
     public struct BytePointer
     {
         private readonly IMemory _memory;
-        public int WordAddr;
-        public int ByteIndex;
+        public uint WordAddr;
+        public uint ByteIndex;
 
-        public BytePointer(IMemory memory, int wordAddr, int byteIndex = 0)
+        public BytePointer(IMemory memory, uint wordAddr, uint byteIndex = 0)
         {
             _memory = memory;
             WordAddr = wordAddr;
@@ -24,8 +24,8 @@ namespace Besm6.Core
         /// <summary>Читает байт на текущей позиции без инкремента.</summary>
         public byte Peek()
         {
-            long word = _memory.Read(WordAddr).Value;
-            int shift = 40 - ByteIndex * 8;
+            ulong word = _memory.Read(WordAddr).Value;
+            int shift = (int)(40 - ByteIndex * 8);
             return (byte)((word >> shift) & 0xFF);
         }
 
@@ -40,10 +40,10 @@ namespace Besm6.Core
         /// <summary>Записывает байт и инкрементирует.</summary>
         public void Put(byte ch)
         {
-            long word = _memory.Read(WordAddr).Value;
-            int shift = 40 - ByteIndex * 8;
-            long mask = 0xFFL << shift;
-            word = (word & ~mask) | ((long)ch << shift);
+            ulong word = _memory.Read(WordAddr).Value;
+            int shift = (int)(40 - ByteIndex * 8);
+            ulong mask = (ulong)(0xFFL << shift);
+            word = (ulong)((word & ~mask) | (ch << shift));
             _memory.Write(WordAddr, new Word48(word));
             Increment();
         }
