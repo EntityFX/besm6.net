@@ -1426,15 +1426,68 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
-        public void Test_Vypr_Iret()
+        public void Test_Vypr_Illegal_Throws()
         {
-            // выпр (iret): переход по ACC (адрес возврата), сброс правого флага и MOD.
-            _cpu.SetAcc(O("12"));              // адрес возврата в ACC
-            StoreWord("10", Asm("выпр, сч 0"));
-            StoreWord("11", Asm("стоп 76543(2), сч 0")); // путь при ошибке
-            StoreWord("12", Asm("стоп, сч 0"));          // адрес возврата
-            Run();
-            Assert.AreEqual(O("12"), _cpu.GetPc()); // переход выполнен: PC == ACC
+            // 0320 выпр/iret — нелегальная инструкция (как в C++ референсе).
+            ExpectIllegal("0320 выпр/iret", Asm("выпр, сч 0"));
+        }
+
+        // ─── Экстракоды: диспетчеризация (э50..э77, э20/э21) ───────────────
+        // Путь в InstructionExecutor:
+        //   aex = addr + M[reg]; M[14] = aex;
+        //   if (ExtracodeHandler != null && ExtracodeHandler(op, aex)) break;
+        //   else throw "Extracode N not implemented".
+
+        [TestMethod]
+        public void Test_Extracode_NoHandler_Throws()
+        {
+            // э50 без обработчика — инструкция не может быть выполнена.
+            ExpectIllegal("э50 (no handler)", Asm("э50 0(0)"));
+        }
+
+        [TestMethod]
+        public void Test_Extracode_HandlerFalse_Throws()
+        {
+            // э64: обработчик возвращает false → поведение как без обработчика.
+            _cpu.ExtracodeHandler = (op, aex) => false;
+            ExpectIllegal("э64 (handler=false)", Asm("э64 0(0)"));
+        }
+
+        [TestMethod]
+        public void Test_Extracode_HandlerTrue_SetsExchangeReg_AndContinues()
+        {
+            // э50 100(2), M[2]=5 → aex = 0o100 + 5 = 0o105; M[14] = aex; продолжаем.
+            uint seenOp = 0, seenAex = 0;
+            _cpu.ExtracodeHandler = (int op, uint aex) => { seenOp = (uint)op; seenAex = aex; return true; };
+            _cpu.SetM(2, 5);
+            StoreWord("10", Asm("э50 100(2)"));
+            StoreWord("11", Asm("стоп, сч 0"));
+
+            _cpu.SetPc((uint)O("10"));
+            bool stopped = _cpu.Step();
+
+            Assert.IsFalse(stopped, "extracode не является СТОП");
+            Assert.AreEqual(40u, seenOp, "opcode = E50 (0o50)");
+            Assert.AreEqual((uint)O("105"), seenAex, "aex = 0o100 + 5");
+            Assert.AreEqual((uint)O("105"), _cpu.GetM(14), "M[14] = исполнительный адрес");
+        }
+
+        [TestMethod]
+        public void Test_Extracode_Long_E20_Handler()
+        {
+            // э20 — длинный экстракод (opcode 0o200 = 128).
+            int seenOp = -1;
+            uint seenAex = 0;
+            _cpu.ExtracodeHandler = (int op, uint aex) => { seenOp = op; seenAex = aex; return true; };
+            StoreWord("10", Asm("э20 200(3)"));
+            _cpu.SetM(3, 0);
+            _cpu.SetPc((uint)O("10"));
+            bool stopped = _cpu.Step();
+
+            Assert.IsFalse(stopped);
+            Assert.AreEqual(128, seenOp, "opcode = E20 (0o200)");
+            Assert.AreEqual((uint)O("200"), seenAex, "aex = 0o200");
+            Assert.AreEqual((uint)O("200"), _cpu.GetM(14));
         }
     }
 }

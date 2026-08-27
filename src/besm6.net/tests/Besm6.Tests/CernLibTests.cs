@@ -8,6 +8,11 @@ namespace Besm6.Tests
     ///  a400 (lib1): арифметика слов, форматирование вывода, CERN-линковка;
     ///  z005 (lib2): DATE*/DATEZB/IDATZA (детерминизм даты) — самый простой тест.
     /// w303 (lib2) в C++ закомментирован (вечный цикл) — здесь тоже [Ignore].
+    ///
+    /// Known limitation (a400/z005): MONSYS-ядро неполное — сбой на э63(0) [M[16]=0]
+    /// при настройке сессии. Это НЕ баг C#: C++ dubna/ ТАКЖЕ падает (e63 default→throw),
+    /// и C++ cernlib_test.cpp cernlib_a400/z005 тоже фейлят. Подробности в комментарии
+    /// к ExtracodeHandler.E63 и в plans/monsys-kernel-support.md.
     /// </summary>
     [TestClass]
     [DoNotParallelize]
