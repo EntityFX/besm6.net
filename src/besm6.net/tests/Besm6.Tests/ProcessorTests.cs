@@ -67,6 +67,22 @@ namespace Besm6.Tests
             Assert.Fail("Processor did not halt within 100000 instructions");
         }
 
+        // Убеждается, что исполнение слова word (по адресу 10) бросает ProcessorException.
+        private void ExpectIllegal(string op, ulong word)
+        {
+            StoreWord("10", word);
+            _cpu.SetPc((uint)O("10"));
+            try
+            {
+                _cpu.Step();
+            }
+            catch (ProcessorException)
+            {
+                return;
+            }
+            Assert.Fail($"{op}: ожидалось исключение ProcessorException, но оно не выброшено");
+        }
+
         [TestMethod]
         public void Test_Uj()
         {
@@ -1243,6 +1259,182 @@ namespace Besm6.Tests
             long pcBefore = _cpu.GetPc();
             _cpu.StackCorrection();
             Assert.AreEqual(pcBefore, _cpu.GetPc());
+        }
+
+        // ─── Стек (точный порт C++ cpu_test.cpp: stack) ────────────────────
+        // Проверяет стек (M[15]) в связке с зп/сч/счм/уим/уи/сда/мод/переходами.
+
+        [TestMethod]
+        public void Test_Stack()
+        {
+            StoreWord("10", Asm("уиа 2010(12), счи 12"));
+            StoreWord("11", Asm("нтж 2000, уи 12"));
+            StoreWord("12", Asm("сч, зп 2010"));
+            StoreWord("13", Asm("зп 2011, зп 2012"));
+            StoreWord("14", Asm("уиа 2011(17), сч 2000"));
+            StoreWord("15", Asm("зп (17), сли 17(12)"));
+            StoreWord("16", Asm("слиа -1(17), пв 102(15)"));
+            StoreWord("17", Asm("уиа 2007(17), сч"));
+            StoreWord("20", Asm("зп 1(17), зп 3(17)"));
+            StoreWord("21", Asm("сч 2000, мода 2"));
+            StoreWord("22", Asm("зп (17), сли 17(12)"));
+            StoreWord("23", Asm("слиа 2(17), пв 102(15)"));
+            StoreWord("24", Asm("сч, зп 2011"));
+            StoreWord("25", Asm("уиа 2013(17), сч (17)"));
+            StoreWord("26", Asm("уи 2, сда 130"));
+            StoreWord("27", Asm("уи 3, сч (17)"));
+            StoreWord("30", Asm("уи 4, сда 130"));
+            StoreWord("31", Asm("уи 5, сч (17)"));
+            StoreWord("32", Asm("уи 6, сда 140"));
+            StoreWord("33", Asm("уи 7, пв 117(15)"));
+            StoreWord("34", Asm("уиа 2013(17), мода -1"));
+            StoreWord("35", Asm("сч (17), уи 6"));
+            StoreWord("36", Asm("сда 140, уи 7"));
+            StoreWord("37", Asm("сч -2(17), уи 4"));
+            StoreWord("40", Asm("сда 140, уи 5"));
+            StoreWord("41", Asm("сч -3(17), уи 2"));
+            StoreWord("42", Asm("сда 140, уи 3"));
+            StoreWord("43", Asm("слиа -3(17), пв 117(15)"));
+            StoreWord("44", Asm("уиа 1(4), уиа -1(7)"));
+            StoreWord("45", Asm("уиа -1(3), уиа 2013(17)"));
+            StoreWord("46", Asm("мод (17), уиа (6)"));
+            StoreWord("47", Asm("мод (17), уиа (4)"));
+            StoreWord("50", Asm("мод (17), уиа (2)"));
+            StoreWord("51", Asm("мода, пв 117(15)"));
+            StoreWord("52", Asm("уиа 2010(17), сч 2003"));
+            StoreWord("53", Asm("счм, счм 2004"));
+            StoreWord("54", Asm("счм 2005, мод -2(17)"));
+            StoreWord("55", Asm("уиа (2), пино 101(2)"));
+            StoreWord("56", Asm("сли 17(12), слиа -2(17)"));
+            StoreWord("57", Asm("пино 101(17), уиа 2010(17)"));
+            StoreWord("60", Asm("сч 2001, счм 2002"));
+            StoreWord("61", Asm("и (17), пе 101"));
+            StoreWord("62", Asm("сч 2001, счм 2002"));
+            StoreWord("63", Asm("слц (17), счм 2001"));
+            StoreWord("64", Asm("счм 2002, или (17)"));
+            StoreWord("65", Asm("нтж (17), пе 101"));
+            StoreWord("66", Asm("сч 2001, счм 2002"));
+            StoreWord("67", Asm("счм 2000, сбр (17)"));
+            StoreWord("70", Asm("рзб (17), нтж 2001"));
+            StoreWord("71", Asm("пе 101, счм 2000"));
+            StoreWord("72", Asm("чед (17), нтж 2006"));
+            StoreWord("73", Asm("пе 101, счм 2000"));
+            StoreWord("74", Asm("нед (17), нтж 2003"));
+            StoreWord("75", Asm("пе 101, сч 2000"));
+            StoreWord("76", Asm("зп (17), сд (17)"));
+            StoreWord("77", Asm("пе 101, мода"));
+            StoreWord("100", Asm("стоп 12345(6), мода")); // Magic opcode: Pass
+            StoreWord("101", Asm("стоп 76543(2), мода")); // Magic opcode: Fail
+            StoreWord("102", Asm("пино 101(17), сч 2010"));
+            StoreWord("103", Asm("уи 2, пино 101(2)"));
+            StoreWord("104", Asm("сда 130, уи 2"));
+            StoreWord("105", Asm("пино 101(2), сч 2012"));
+            StoreWord("106", Asm("уи 2, пино 101(2)"));
+            StoreWord("107", Asm("сда 130, уи 2"));
+            StoreWord("110", Asm("пино 101(2), сч 2011"));
+            StoreWord("111", Asm("уи 2, сда 130"));
+            StoreWord("112", Asm("уи 3, слиа 1(2)"));
+            StoreWord("113", Asm("пино 101(2), слиа 1(3)"));
+            StoreWord("114", Asm("пино 101(3), сч 2007"));
+            StoreWord("115", Asm("зп 2010, зп 2011"));
+            StoreWord("116", Asm("зп 2012, пб (15)"));
+            StoreWord("117", Asm("сли 17(12), слиа 1(17)"));
+            StoreWord("120", Asm("пино 101(17), слиа -1(2)"));
+            StoreWord("121", Asm("пино 101(2), слиа 1(3)"));
+            StoreWord("122", Asm("пино 101(3), пино 101(4)"));
+            StoreWord("123", Asm("пино 101(5), слиа -1(6)"));
+            StoreWord("124", Asm("пино 101(6), слиа 1(7)"));
+            StoreWord("125", Asm("пино 101(7), пб (15)"));
+            StoreWord("2000", Cw("07777777777777777"));
+            StoreWord("2001", Cw("05252525252525252"));
+            StoreWord("2002", Cw("02525252525252525"));
+            StoreWord("2003", Cw("00000000000000001"));
+            StoreWord("2004", Cw("00000000000000002"));
+            StoreWord("2005", Cw("00000000000000003"));
+            StoreWord("2006", Cw("00000000000000060"));
+            StoreWord("2007", Cw("07777777700000001"));
+
+            Run("10");
+
+            Assert.AreEqual(O("100"), _cpu.GetPc());
+            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
+            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("2010"), _cpu.GetM(15));
+        }
+
+        // ─── Нелегальные инструкции (порт исключений dubna/processor.cpp) ──
+
+        [TestMethod]
+        public void Test_Illegal_Reg_Mod_Throws()
+        {
+            // 002 рег/mod — привилегированная, не исполняется.
+            ExpectIllegal("002 рег/mod", Asm("рег 0(0)"));
+        }
+
+        [TestMethod]
+        public void Test_Illegal_Zpp_Throws()
+        {
+            // 032 зпп — нелегальная.
+            ExpectIllegal("032 зпп", Asm("зпп 0(0)"));
+        }
+
+        [TestMethod]
+        public void Test_Illegal_Schp_Throws()
+        {
+            // 033 счп — нелегальная.
+            ExpectIllegal("033 счп", Asm("счп 0(0)"));
+        }
+
+        [TestMethod]
+        public void Test_Illegal_Sop_Throws()
+        {
+            // 046 соп — нелегальная.
+            ExpectIllegal("046 соп", Asm("соп 0(0)"));
+        }
+
+        [TestMethod]
+        public void Test_Illegal_Op47_Throws()
+        {
+            // 047 — нелегальная.
+            ExpectIllegal("047", Asm("э47 0(0)"));
+        }
+
+        // ─── Остальные не покрытые коды инструкций ─────────────────────────
+
+        [TestMethod]
+        public void Test_E36_BranchWhenMZero()
+        {
+            // э36 — переход при M[reg]==0 (семантика идентична ПИО).
+            _cpu.SetM(2, 0);
+            StoreWord("10", Asm("втбрз 12(2), сч 0"));
+            StoreWord("11", Asm("стоп 76543(2), сч 0"));
+            StoreWord("12", Asm("стоп 12345(6), сч 0"));
+            Run();
+            Assert.AreEqual(O("12"), _cpu.GetPc());
+        }
+
+        [TestMethod]
+        public void Test_E36_NoBranchWhenMNonZero()
+        {
+            // э36 — при M[reg]!=0 переход не происходит, исполняется следующая.
+            _cpu.SetM(2, 1);
+            StoreWord("10", Asm("втбрз 12(2), сч 0"));
+            StoreWord("11", Asm("стоп 76543(2), сч 0"));
+            StoreWord("12", Asm("стоп 12345(6), сч 0"));
+            Run();
+            Assert.AreEqual(O("11"), _cpu.GetPc());
+        }
+
+        [TestMethod]
+        public void Test_Vypr_Iret()
+        {
+            // выпр (iret): переход по ACC (адрес возврата), сброс правого флага и MOD.
+            _cpu.SetAcc(O("12"));              // адрес возврата в ACC
+            StoreWord("10", Asm("выпр, сч 0"));
+            StoreWord("11", Asm("стоп 76543(2), сч 0")); // путь при ошибке
+            StoreWord("12", Asm("стоп, сч 0"));          // адрес возврата
+            Run();
+            Assert.AreEqual(O("12"), _cpu.GetPc()); // переход выполнен: PC == ACC
         }
     }
 }
