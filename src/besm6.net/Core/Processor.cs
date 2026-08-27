@@ -51,6 +51,12 @@ namespace Besm6.Core
         /// </summary>
         public Func<int, uint, bool>? ExtracodeHandler { get; set; }
 
+        // Поля текущей инструкции экстракода для трассировки в формате C++ (см. ref/trace.cpp print_instruction).
+        // Заполняются InstructionExecutor.ExtracodeDispatch перед вызовом ExtracodeHandler.
+        public int ExtracodeReg { get; set; }
+        public uint ExtracodeRawAddr { get; set; }
+        public bool ExtracodeRightFlag { get; set; }
+
         public Processor(IMemory memory)
         {
             _memory = memory;

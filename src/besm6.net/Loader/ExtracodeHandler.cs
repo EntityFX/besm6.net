@@ -101,13 +101,43 @@ namespace Besm6.Loader
 
             Extracode code = (Extracode)opcode;
 
-            // Детальная трассировка (ESIM_TRACE=1)
+            // Детальная трассировка — формат идентичен C++ (ref/trace.cpp print_instruction +
+            // print_executive_address + besm6_print_instruction_octal/mnemonics), чтобы можно
+            // было напрямую diff'ить с трассой dubna_ref.exe -t.
+            //   <PC:5oct> <L|R>: <reg:2> <opcode:3> <addr:4> <mnemonic> [= exec-addr]
             if (_traceExtracodes)
             {
                 var cpu2 = _machine.Cpu;
-                long m16 = cpu2.GetM(M16) & 0x7FFF;
-                long acc2 = (long)cpu2.GetAcc().Value;
-                EnsureTraceWriter().WriteLine($"[EC] {opcode} (0{Convert.ToString(opcode,8)}) aex=0{aex:X} M16=0{Convert.ToString(m16,8)} ACC=0{acc2:X8} PC=0{Convert.ToString(pc,8)}");
+                int reg = cpu2.ExtracodeReg;
+                uint rawAddr = cpu2.ExtracodeRawAddr;
+                bool rFlag = cpu2.ExtracodeRightFlag;
+
+                static string Oct(long v, int width) => Convert.ToString(v, 8).PadLeft(width, '0');
+
+                // mnemonic = *NN [addr] [(reg)]  (см. besm6_print_instruction_mnemonics)
+                string mnem = "*" + Convert.ToString(opcode, 8);
+                if (rawAddr != 0)
+                {
+                    mnem += " ";
+                    if (rawAddr >= 0x7FC0) mnem += "-" + Convert.ToString((rawAddr ^ 0x7FFF) + 1, 8);
+                    else mnem += Convert.ToString(rawAddr, 8);
+                }
+                if (reg != 0)
+                {
+                    if (rawAddr == 0) mnem += " ";
+                    mnem += "(" + Convert.ToString(reg, 8) + ")";
+                }
+
+                // исполнительный адрес (см. print_executive_address): = M[reg], если reg != 0
+                string execAddr = "";
+                if (reg != 0)
+                {
+                    long mreg = cpu2.GetM(reg) & 0x7FFF;
+                    execAddr = " = " + Convert.ToString(mreg, 8);
+                }
+
+                EnsureTraceWriter().WriteLine(
+                    $"{Oct(pc, 5)} {(rFlag ? 'R' : 'L')}: {Oct(reg, 2)} {Oct(opcode, 3)} {Oct(rawAddr, 4)} {mnem}{execAddr}");
             }
 
             // Hang detection: too many extracode calls without any output.
@@ -157,6 +187,24 @@ namespace Besm6.Loader
         }
 
         // ─── E63: ОС Дубна ───────────────────────────────────────────────────
+        //
+        // Extracode 063 — «manage time limit» / служебные запросы ОС (порт dubna/extracode.cpp).
+        // M[16] (индекс-регистр 14) = подкоманда.
+        //
+        // ВАЖНО (диагностика, 27.08.2026, tests-run + BESM6_TRACE):
+        //   MONSYS при настройке сессии вызывает серию э63, затем подкоманду 0:
+        //     [EC] 063 M16=0765  — имя организации (йоксел)      PC=02561
+        //     [EC] 063 M16=07    — номер машины                   PC=02563
+        //     [EC] 063 M16=0502  — адрес процессного дескриптора  PC=02567
+        //     [EC] 063 M16=00    — НЕ РЕАЛИЗОВАНО                 PC=02571  ← сбой
+        //   Подкоманда 0 отсуствует В обоих референсах: C++ dubna/extracode.cpp e63()
+        //   (case default → throw) и этот порт. Это НЕ баг C# — общий gap ядра MONSYS
+        //   (см. plans/monsys-kernel-support.md, «C++ reference тоже не запускает ALGOL/FORTRAN/B»).
+        //   Тесты CernLibTests (a400/z005), IntegrationTests.NameDub, DiagShiftTest.Shift9
+        //   — верные порты аспирационных тестов C++ (cernlib_test.cpp cernlib_a400/z005),
+        //   которые в C++ ТАКЖЕ падают на этой же подкоманде.
+        //   => Не реализовывать э63(0) «наугад»: это отклонение от C++-референса, а тесты
+        //      не пройдут, т.к. им нужно полное ядро (E50 parse/format, instr 002, semaphore, ...).
 
         private void E63()
         {

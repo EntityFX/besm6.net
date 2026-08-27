@@ -26,26 +26,43 @@ namespace Besm6.Asm
         /// </summary>
         public static string DisasmHalf(long halfWord)
         {
-            long reg = (halfWord >> 20) & 0x7;
-            long opcode = (halfWord >> 12) & 0xFF;
-            long addr = halfWord & 0x3FFF;
-
-            // Бит 7 (0x80) = длинная команда, бит 6 (0x40) = расширенный адрес.
-            bool isLong = (opcode & 0x80) != 0;
-            bool ext = (opcode & 0x40) != 0; // 0100 octal = 0x40
-
-            string opname;
+            // Точный порт besm6_print_instruction_mnemonics (dubna/besm6_arch.cpp).
+            long reg = (halfWord >> 20) & 0xF;           // (cmd >> 20) & 017
+            bool isLong = (halfWord & (1L << 19)) != 0;  // ONEBIT(20) — бит 19
+            long opcode, addr;
             if (isLong)
-                opname = OpcodeTable.LongMadlen[(opcode >> 3) & 0xF];
+            {
+                opcode = (halfWord >> 12) & 0xF8;        // (cmd >> 12) & 0370
+                addr = halfWord & 0x7FFF;                // cmd & BITS(15)
+            }
             else
-                opname = OpcodeTable.ShortMadlen[opcode & 0x3F];
+            {
+                opcode = (halfWord >> 12) & 0x3F;        // (cmd >> 12) & 077
+                addr = halfWord & 0xFFF;                 // cmd & 07777 (12 бит)
+                if ((halfWord & (1L << 18)) != 0)        // ONEBIT(19) — расширенный адрес
+                    addr |= 0x7000;                       // addr |= 070000
+            }
 
-            if (addr == 0 && reg == 0)
-                return opname;
+            string opname = isLong
+                ? OpcodeTable.LongMadlen[(opcode >> 3) & 0xF]
+                : OpcodeTable.ShortMadlen[opcode & 0x3F];
 
+            var sb = new System.Text.StringBuilder();
+            sb.Append(opname);
+            if (addr != 0)
+            {
+                sb.Append(' ');
+                if (addr >= 0x7FC0)                                  // addr >= 077700 — отрицательный
+                    sb.Append('-').Append(ToOctal(((addr ^ 0x7FFF) + 1)));  // (addr ^ 077777) + 1
+                else
+                    sb.Append(ToOctal(addr));
+            }
             if (reg != 0)
-                return $"{opname} {ToOctal(addr)}({ToOctal(reg)})";
-            return $"{opname} {ToOctal(addr)}";
+            {
+                if (addr == 0) sb.Append(' ');
+                sb.Append('(').Append(ToOctal(reg)).Append(')');
+            }
+            return sb.ToString();
         }
 
         /// <summary>
