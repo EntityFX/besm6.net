@@ -487,15 +487,8 @@ namespace Besm6.Core
                     break;
 
                 case Opcode.Vypr:
-                    // 0320 выпр/iret — возврат из прерывания:
-                    // PC = ACC (адрес возврата сохранён в аккумулятор),
-                    // сброс флагов конвейера, потребить intercept.
-                    pc = (uint)acc;
-                    rightFlag = false;
-                    applyMod = false;
-                    mod = 0;
-                    _p.ConsumeIntercept();
-                    break;
+                    // C++ (processor.cpp:734-735): throw Exception("Illegal instruction 32 выпр/iret");
+                    throw new ProcessorException("Illegal instruction 320 выпр/iret");
 
                 case Opcode.Stop:
                     _p._acc = Word48.FromInt48(acc);
@@ -532,6 +525,10 @@ namespace Besm6.Core
                     {
                         aex = Addr(addr + m[reg]);
                         m[14] = aex;
+                        // Сохраняем поля инструкции для трассировки в формате C++ (print_instruction).
+                        _p.ExtracodeReg = reg;
+                        _p.ExtracodeRawAddr = addr;
+                        _p.ExtracodeRightFlag = rightFlag;
                         if (_p.ExtracodeHandler != null && _p.ExtracodeHandler((int)opcode, aex))
                             break;
                         throw new ProcessorException($"Extracode {(int)opcode} not implemented");
