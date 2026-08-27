@@ -36,6 +36,9 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
+        // Known limitation: MONSYS-ядро неполное — сбой на э63(0) [M[16]=0] при настройке
+        // сессии (см. комментарий к ExtracodeHandler.E63). C++ dubna/ тоже падает;
+        // это аспирационный тест, требующий полного ядра MONSYS.
         public void NameDub_ProducesMonsysBanner()
         {
             // Запускаем name.dub и проверяем, что баннер MONSYS выводится.
