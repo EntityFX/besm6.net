@@ -31,6 +31,7 @@ namespace Besm6
             return new DubnaLoader(machine, tapesDir)
             {
                 InstructionLimit = cfg.DefaultLimit,
+                UseWallClock = cfg.UseWallClock,
             };
         }
     }

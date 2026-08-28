@@ -1,173 +1,614 @@
-# Отчёт: Расхождение C# (besm6.net) ↔ C++ (dubna/) на загрузке MONSYS
+﻿# Отчёт: поиск расхождений C# vs C++ (BESM-6), тесты a400 / z005
 
-**Цель отчёта:** дать самодостаточную «точку старта» для повторного расследования — почему C# MONSYS падает в `E57 WAIT` (case 7), тогда как C++-референс проходит дальше и загружает B-компилятор.
-
-**Статус:** 66/66 юнит-тестов C# проходят; `dotnet build` — 0 ошибок. Пробег MONSYS падает на фазе загрузки job (не на ядре).
-
----
-
-## 0. Резюме (TL;DR)
-
-- **Фатальная точка C#:** `ec_trace.log`:
-  ```
-  [EC] 47 (057) aex=07 M16=07 ACC=0900000002000 PC=022003
-  [E57] addr=07 ACC=0900000002000 M[13]=053F
-  ```
-  → `ExtracodeHandler.E57()` `case 7:` → `throw ProcessorException("E57: Task paused waiting for tape")`. **Фатально.**
-- **C++ в той же точке:** `02514 *70 2664 → Disk 40 Read Zone 20` (загрузка B-компилятора с b.7) и продолжается.
-- **Ключевой факт:** последовательность **всех 41 E70-операции идентична побайтово** в обоих треках (одинаковые unit/page/zone/sector/op и порядок). → расхождение **НЕ в маршрутизации/декодировании E70**.
-- **Последняя общая операция:** `00051 *70 45` — `Drum 20 Read Zone 4 [76000-77777]` (это **job card**). После неё MONSYS (один и тот же код, PC совпадают до этой точки) **ветвится по-разному**:
-  - C++ → `*70 2664` (Disk 40 Read, B-компилятор)
-  - C# → `*57 7` (WAIT, фатальный throw)
-- **Вывод:** MONSYS читает job-card с барабана и на её данных (или на состоянии, которое он из неё извлекает через E57) выбирает путь. Разные пути ⇒ либо **разное содержимое job-card (COSY-6 кодировка)**, либо **разное состояние E57 (ASSIGN/монтирование)**. Это две открытые гипотезы.
+Дата: 2026-08-27
+Ветка работы: сохранение состояния процессора + обработка RAU-режима после экстракодов.
 
 ---
 
-## 1. Среда и файлы
+## 1. TL;DR
 
-| Роль | Путь | Примечание |
-|---|---|---|
-| C# исходники | `src/besm6.net/` | `Core/` (Processor, CoreMemory, Word48), `Loader/` (DubnaLoader, ExtracodeHandler, CosyCodec, TapeImage, JobParser), `Asm/` |
-| C++ референс | `ref/` | `extracode.cpp`, `e57.cpp`, `e70dec.cpp`, `machine.cpp/h`, `processor.cpp`, `cosy.cpp`, `disk.cpp`, `drum.cpp`, `session.cpp` |
-| C# extracode-трейс | `ec_trace.log` (~45 KB) | строки `[EC] …` и `[E70] …` |
-| C# instruction-трейс | `instr_trace.log` (~837 KB) | по инструкции |
-| Ядро MONSYS | `monsys.9` | **байт-в-байт идентично** в C# и C++ |
-| Job-скрипт (B) | `examples/b/hello.dub` | директивы `*name`, `*tape:7/b,40`, `*library:40`, `*trans-main:40020`, `*execute` |
-| B-компилятор | `b.7` (tape image) | монтируется как **disk 40** |
-| Предыдущий отчёт | `plans/porting-report.md` | содержит ход расследования |
-
----
-
-## 2. Методология (как сравнивали)
-
-1. **Byte-compare `monsys.9`** (C# vs C++) → идентично. Исключено «разное ядро».
-2. **Сравнение декодирования E70 control word** (первая E70) → идентично. Исключено «неверное декодирование слов управления».
-3. **Проверка drum→disk маппинга** → «расхождение» оказалось артефактом: C#-лог печатает `:X` = **HEX**, т.е. `drum=011`/`mapped=011` (hex) = `021` (octal) = 17 — **совпадает** с C++ `map_drum_to_disk(021, 030)`. Исключено.
-4. **Построчное выравнивание всех 41 E70-операций** в обоих треках → **100% идентичны**. Исключено «расхождение в E70».
-5. **Сравнение E70-хендлеров** (C# `ExtracodeHandler.E70()` vs C++ `Processor::e70()`) → маршрутизация (disk `[24,56)`, drum, phys-io) совпадает по смыслу. Исключено.
-6. **Сравнение E57-хендлеров** (C# `ExtracodeHandler.E57()` vs C++ `Processor::e57()`/`e57_tape()`) → найдено: C# `case 7` = **`throw` (фатально)**, C++ `case 7` = recoverable pause. Но C++ к case 7 **не приходит**.
-7. **Фиксация точки расхождения** → `00051 *70 45` (последняя общая) ⇒ разные PC.
+- Внесена правка: после каждого экстракода в `InstructionExecutor.cs` теперь вызывается
+  `_p.SetLogical()` (точное соответствие C++ `core.set_logical()` в `processor.cpp:639-640`).
+- **Тесты a400 и z005 всё равно падают.** Ошибка:
+  `Loop detected: PC stuck in range 05762-05763 for 20K+ instructions` (детектор циклов
+  в `DubnaLoader.cs`, `LoopWindow = 20000`, `LoopRange = 16`).
+- Вывод C# **совпадает** с expected **до строки 31** (`*NO LOAD LIST`), но **не достигает**
+  строки 32 (`*EXECUTE`) и вывода тела теста (строки 33-46).
+- Ключевой факт (после коррекции арифметики): C# и C++ зацикливаются **на одном и том же
+  адресе** `22370-22372 dec` (`53542-53544 oct` = `05762-05764 hex`), но **получают из памяти
+  разные инструкции** на этих адресах. Расходится **состояние/память**, а не поток программы.
+- Вывод: `SetLogical()` - **необходим, но недостаточен**. Корень - более раннее расхождение
+  (RAU-режим / ACC / стек-указатель M[15]).
 
 ---
 
-## 3. Точка расхождения (точная)
+## 2. Что сделано
 
-| | C++ (dubna) | C# (besm6.net) |
-|---|---|---|
-| Последняя общая оп. | `00051 *70 45` — Drum 20 Read Zone 4 [76000-77777] (**job card**) | аналогично |
-| Следующая оп. | `02514 *70 2664` → **Disk 40 Read Zone 20** (B-компилятор) | `022003 *57 7` → **WAIT** (фатальный throw) |
-| Контекст ASSIGN | `24130 … *57 … = 2070` → «Mount b.7 as disk 40» | `[E57] ASSIGN tape=0880000000007 -> unit=040 mounted_id=0880000000007` |
+### 2.1. `SetLogical()` после экстракода
+Файл: `src/besm6.net/Core/InstructionExecutor.cs`
 
-Оба делают ASSIGN (b.7 → disk 40) одинаково. Расхождение — в **следующем** выборе MONSYS.
-
----
-
-## 4. Кодовые ссылки (быстрый старт)
-
-| Что | C++ | C# |
-|---|---|---|
-| E70 (disk/drum) | `ref/extracode.cpp:129-190` | `src/besm6.net/Loader/ExtracodeHandler.cs` → `E70()` |
-| E70 decode control word | `ref/extracode.cpp:131-139` (`E70_Info`, `info.word = M[016]?mem:ACC`) | `E70()`: `execAddr=M16&0x7FFF; ctrl=(0?ACC:mem); isRead=bit39; unit=(ctrl>>12)&0x3F; page=(ctrl>>30)&0x1F` |
-| E70 disk-ветка | `ref/extracode.cpp:148` `disk_io(op, unit-030, zone, 0, page<<10, 1024)` | `E70()`: `unit in [24,56)` → `_diskByUnit(unit)`, `memAddr=page<<10`, `ReadToMemory(zone,0,memAddr,1024)` |
-| E70 drum/phys-io | `ref/extracode.cpp:153-190` | `E70()`: `tract=ctrl&0x1F; sector=(ctrl>>6)&3; paragraph=(ctrl>>24)&3; physIo=bit38; sectIo=bit47; rawSect=bit35` |
-| E70 phys-io зона | `ref/extracode.cpp:172` `zone = tract + (this_drum-mapped_drum)*040` | `E70()`: `diskZone = tract + (thisDrum-_mappedDrum)*32` |
-| E57 dispatch | `ref/e57.cpp:31-74` | `ExtracodeHandler.cs` → `E57()` |
-| **E57 case 7 (WAIT)** | `ref/e57.cpp:51-53` (recoverable) | `ExtracodeHandler.cs` `E57()`: `case 7: throw …` (**фатально**) |
-| E57 ASSIGN | `ref/e57.cpp:95-102` `disk_mount(M[015], ACC, write)`; `ACC=M[015]` | `E57()`: `diskUnit=M[13]&0x7F; _mountTape(ACC,diskUnit); SetAcc(diskUnit)` |
-| E57 FIND | `ref/e57.cpp` (e57_tape) | `E57()`: `_findTape(ACC)` → `SetAcc(unit)` |
-| `disk_mount` | `ref/machine.cpp:415-420` (`disk_unit-=030`) | `DubnaLoader.cs` / `ExtracodeHandler.cs` `_mountTape` |
-| `map_drum_to_disk` | `ref/machine.cpp:685-693`; `map_drum_to_disk(021,030)` в `machine.cpp:937` | `DubnaLoader.cs` `_mappedDrum`,`_physIoDisk` |
-| `PHYS_IO_UNIT` | `ref/machine.h:139` = `0100` (octal) | `DubnaLoader.cs` |
-| COSY-кодек | `ref/cosy.cpp` | `src/besm6.net/Loader/CosyCodec.cs` → `EncodeCosy`/`DecodeCosy` |
-| Трейс E70 (C#) | — | `ExtracodeHandler.cs` E70 trace block (`[E70] …`, формат `:X` = **hex**) |
-
-**Важно про трейс C#:** формат `Convert.ToString(x,8)` для unit/page/zone, но `:X` (HEX) для `drum`/`mapped`/`tape`. Не путать.
-
----
-
-
-## 5. Гипотезы
-
-### ✅ Опровергнуто
-- **Drum→disk маппинг** — «расхождение» было артефактом hex/octal в логе.
-- **Расхождение в E70-маршрутизации/декодировании** — все 41 оп. идентичны.
-- **Phys-io маппинг** — `mapped_drum=021` в обоих; формула зоны `tract+(thisDrum-mapped)*32` совпадает.
-- **Disk-unit offset** (`-030` в C++ vs нет в C#) — каждая система самосогласована (ASSIGN и READ используют один и тот же индекс); физический диск один и тот же (b.7 → disk 40).
-
-### 🟡 Подтверждено
-- **C# E57 `case 7` = фатальный `throw`**, C++ = recoverable pause; C++ к case 7 не приходит.
-- **Разные PC** после последней общей операции → MONSYS ветвится по-разному на данных job-card / состоянии E57.
-- **E70 последовательность идентична** (41 оп., порядок, поля).
-- ASSIGN одинаков (b.7 → disk 40) в обоих.
-
-### 🔴 Открыто (главные кандидаты)
-1. **COSY-кодировка job-card:** `EncodeCosy`/KOI-7-маппинг C# vs C++ — если разное, MONSYS читает другую job-card ⇒ другой путь.
-2. **Состояние E57 после ASSIGN:** что лежит в ACC/M[13]/M[15] после ASSIGN и что возвращает `_findTape`/ASSIGN в C# vs C++.
-
----
-
-## 6. Следующие шаги (по приоритету)
-
-1. **Сравнить содержимое job-card побайтово.**
-   - Job-card = `Drum 20 Zone 4 [76000-77777]` (256 слов × 48 бит).
-   - В C#: дампить `_drumByUnit(20).ReadToMemory(...)` в `page 037` после `00051 *70 45`.
-   - В C++: аналогичный дамп (`machine.drum_io('r', 20, 4, 0, addr, 256)`).
-   - Сравнить 256×6 байт. Любая разница = корневая причина.
-2. **Сравнить COSY-энкодеры:** `CosyCodec.EncodeCosy` (C#) vs `cosy.cpp` (C++) + KOI-7/GOST-10859 таблицы. Проверить порядок байт в слове (byte[0] MSB vs LSB) и кодирование пробелов.
-3. **Если job-card идентична → искать в E57-состоянии:** после ASSIGN дампить `ACC`, `M[13]`, `M[15]` в обоих; сравнить результат `_findTape`/ASSIGN.
-4. **Добавить в C# дамп E70-данных** (эквивалент C++ `dump_io_flag`, `ref/machine.cpp:343-346`), чтобы иметь побайтовый дамп каждой E70-операции.
-5. **Локализация ветвления:** в C# поставить точечный дамп ACC/M13/M16/PC за 1–2 инструкции до `022003` и до C++ `02514`, чтобы увидеть, от какого именно слова MONSYS выбирает путь.
-
----
-
-## 7. Что проверить ПЕРВЫМ делом (чек-лист для новой сессии)
-
-- [ ] Прочитать `CosyCodec.cs` (`EncodeCosy`) и `ref/cosy.cpp` — сравнить побайтово.
-- [ ] Прочитать `ExtracodeHandler.cs` `E57()` целиком (case 7 + ASSIGN + FIND) — сверить с `ref/e57.cpp`.
-- [ ] Прочитать `DubnaLoader.cs`: `_mountTape`, `_mappedDrum`, `_physIoDisk`, `_diskByUnit`, `_drumByUnit` — сверить с `machine.cpp` `disk_mount`/`map_drum_to_disk`/`disk_io`.
-- [ ] Сгенерировать в C# побайтовый дамп job-card (`Drum 20 Zone 4`) и сравнить с C++.
-- [ ] Проверить: в C# `case 7` = `throw`; надо ли сделать его recoverable (как в C++)? Но это **лечение симптома**, не причины — C++ к нему не приходит.
-- [ ] Подтвердить: последние общие PC `…00051 *70 45`, затем C++ `02514`, C# `022003`.
-
----
-
-
-## 8. Приложения (сырые строки)
-
-### C# `ec_trace.log` (финал до падения)
+C++ (`ref/processor.cpp:637-640`) для всех экстракодов (050-077, 0200, 0210):
 ```
-[EC] 56 (070) aex=021 M16=041 ACC=080C7C0011001 PC=076673
-[E70] m16=041 cw=080C7C0011001 op=R unit=021 page=037 zone=01 tract=01 sect=0 par=00 rawSect=0 physIo=1 sectIo=1 -> PHYSIO(drum=011,mapped=011)
-[EC] 56 (070) aex=02B M16=053 ACC=04C0010000 PC=077203
-[E70] m16=053 cw=00004C0010000 op=W unit=020 page=023 zone=00 tract=00 sect=0 par=00 rawSect=0 physIo=0 sectIo=0 -> DRUM(010)
-[EC] 61 (075) aex=029 M16=051 ACC=038025090000 PC=076106
-[EC] 61 (075) aex=02B M16=053 ACC=09800D0C0000 PC=076106
-[EC] 56 (070) aex=025 M16=045 ACC=000000163 PC=051
-[E70] m16=045 cw=00087C0010004 op=R unit=020 page=037 zone=04 tract=04 sect=0 par=00 rawSect=0 physIo=0 sectIo=0 -> DRUM(010)
-[EC] 47 (057) aex=07 M16=07 ACC=0900000002000 PC=022003
-[E57] addr=07 ACC=0900000002000 M[13]=053F
+Aex        = ADDR(addr + core.M[reg]);
+core.M[14] = Aex;
+extracode(opcode);
+core.set_logical();   // <-- ВСЕГДА после экстракода
+break;
 ```
-> `ACC=0900000002000` — слово-статус/код job-card, по которому MONSYS решил «ждать ленту». `M[13]=053F`.
+C# - теперь:
+```
+if (_p.ExtracodeHandler != null && _p.ExtracodeHandler((int)opcode, aex))
+{
+    acc = _p._acc.Value;   // ре-чт (обработчик мог менять ACC/RMR)
+    rmr = _p._rmr.Value;
+    _p.SetLogical();       // <-- добавлено, = C++ set_logical()
+    break;
+}
+```
+`SetLogical()` в C# эквивалентен C++ `set_logical()`
+(`core.ALU.mode = core.ALU.mode2 = Logical`).
 
-### C++ (финал, из `plans/porting-report.md`)
+### 2.2. Проверены (соответствуют C++):
+- `Tsikl` / vlm (0370): `m[reg]=Addr(m[reg]+1)` + ветка, `if(m[reg]==0) break` - идентично C++.
+- `Uim` / sti (041): идентично C++ `processor.cpp:556-576`. **OK.**
+- `Schi` / ita (042): идентично C++ `processor.cpp:578-583`. **OK.**
+- `Vchob` / x-a (006): соответствует C++ `processor.cpp:238-249`. **OK.**
+
+---
+
+## 3. Результаты тестов
+
 ```
-00051 *70 45   → Drum 20 Read [76000-77777] = Zone 4   (job card)
-02514 *70 2664 → Disk 40 Read [74000-75777] = Zone 20   (B-компилятор)
-… продолжает
+dotnet test .../Besm6.Tests.csproj -c Release --no-build --filter "FullyQualifiedName~CernLibTests"
+```
+```
+Failed Beacon_MatchesExpectFile (1,"a400")
+  result: Error at 05762: Loop detected: PC stuck in range 05762-05763 for 20K+ instructions.
+Failed Beacon_MatchesExpectFile (2,"z005")   (то же самое)
+Failed: 2, Passed: 0, Skipped: 1
+```
+Артефакты: `tests-run/cernlib/{actual,diff}_a400.txt`, `{actual,diff}_z005.txt`.
+
+### 3.1. Сравнение вывода a400
+`expect_a400.txt` - 46 строк. C# (`actual_a400.txt`) выдаёт корректно строки **1-31**:
+```
+26  *NAME A400
+27  *TAPE:12/******,32
+28  *LIBRARY:1,2,3,5,12,23
+29  *CALL SETFTN:ONE,LONG
+30  *NO LIST
+31  *NO LOAD LIST
+    <-- C# ПАДАЕТ здесь (цикл); строки 32-46 (*EXECUTE, тело BOOLEAN ARITHMETIC) НЕ достигнуты
+```
+C++ доходит до конца (в `expect_a400.txt` строки 33-46 = тело теста).
+
+---
+
+## 4. Разбор циклов (ВАЖНО, с коррекцией адресов)
+
+> ⚠️ Ранее я ошибся в арифметике `8^4` (писал 32768, правильно 4096) и неверно заключил,
+> что циклы C# и C++ на разных адресах. **Правильно: это ОДИН и тот же адрес.**
+
+`53542 oct = 5*4096 + 3*512 + 5*64 + 4*8 + 2 = 22370 dec = 0x5762 hex`.
+`53544 oct = 22372 dec = 0x5764 hex`.
+
+### 4.1. Цикл в C++ (`ref` trace `tests-run/cpp_a400_i.txt`)
+Адреса в octal:
+```
+53536 R: vzm (12)
+53537 L: ita 12          (042) M[12] <- ACC
+53537 R: x-a 323(1)      (006) ACC  += mem(323+M1)
+53540 L: sti 12          (041) M[12] <- ADDR(ACC);  ACC <- mem(--M15)
+53540 R: uj 141(1)       (пб)
+53542 L: utm 1(3)        (0250) M[3] <- M[1]
+53542 R: atx -1(3)       (000)  M[3] -= 1
+53543 L: utc 141(1)      (0220) ACC  <- M[1]
+53543 R: vlm (12)        (0370) если M[12]!=0: M[12]++, ветка на 53542
+53542 … (тело, итер. 2)
+53543 R: vlm (12)        -> M[12]==0, ВЫХОД
+53544 L: uj 101(1)       (пб)
+```
+**C++ делает ровно 2 итерации** и выходит: `M[12]` стартует `= 32767 (0x7FFF)`, после `+1 -> 0`.
+### 4.2. Цикл в C# (`instr_trace.log` в `bin/Release/net8.0`)
+Адреса в hex (`pc:X5`):
+```
+0575F L: vzm  (10)  (22367)
+0575F R: ita  (10)  (22367) M[10] <- ACC
+05760 L: x-a  211(1) (22368)
+05760 R: sti  (10)  (22368) M[10] <- ADDR(ACC)   [acc=01FFFFFFFFFF, rau=13]
+05761 L: uj   97(1) (22369)
+05762 R: utm  1(3)  (22370)  <-- PRAVAYA polovina
+05763 L: зп   32767(3) (22371)
+05763 R: utc  97(1) (22371)
+05764 L: vlm  (10) -> 22370  <-- ЦИКЛ (M[10]), НЕ выходит
+05764 R: uj 65(1)   (выход при M[10]==0 - не достигается)
 ```
 
-### C# E57 case 7 (код)
-```csharp
-case 7:
-    // Task paused waiting for tape.
-    throw new ProcessorException("E57: Task paused waiting for tape");
-```
+### 4.3. Несоответствие на ОДНОМ адресе (главное расхождение)
+Сопоставляем **один и тот же адрес** `22370-22372 dec`:
 
-### C++ E57 case 7 (код)
+| Адрес | C++ (ref) | C# (besm6.net) |
+|-------|-----------|----------------|
+| 22370 (53542 / 0x5762) L | `utm 1(3)` | *(в цикле не выполняется)* |
+| 22370 R | `atx -1(3)` | `utm 1(3)` |
+| 22371 (53543 / 0x5763) L | `utc 141(1)` | `зп 32767(3)` |
+| 22371 R | `vlm (12)` | `utc 97(1)` |
+| 22372 (53544 / 0x5764) L | `uj 101(1)` (выход) | `vlm (10)` (цикл) |
+
+**Вывод:** на этих адресах у C# и у C++ **разное содержимое слов памяти**. Либо (а) это
+**разные участки программы** (поток ушёл в разную ветку ранее и попал в другой под-цикл
+с vlm на M[10] вместо M[12]), либо (б) **память/реестры M[] расходятся** из-за раннего
+разбега RAU/ACC/M[15]. Оба механизма дают одну картину (зацикливание на 22370-22372),
+поэтому **следующий шаг - найти ТОЧКУ**, где C# впервые отклоняется от C++.
+
+---
+
+## 5. Старт совпадает, расхождение позже
+
+Начало обоих трейсов - один адрес `1032 dec` (`00408 hex = 02010 oct`), оба выполняют
+`vtm`/`*70` и входят в vlm(1)-цикл «Load 50 names from TRP» на `1036-1037 dec`:
+```
+C++ : 02014 L: *70  | 02015 L: vlm 2014(1)   (повторы, корректный выход)
+C#  : 0040C R: 56   | 0040D R: Tsikl(1)      (повторы)
+```
+Далее:
+- C# строки 21-32 (`1038-1043 dec`): `ita15, зп, *70, xta, уи, зп, слц, зп, сл, зп, втбр, пб M[15]`,
+  затем **прыжок в M[15]=22273 dec (0x5701)** -> мусорная зона `зп 0(0)` (строки 33-60+).
+- C++ строки 26-37 (`1037-1043 dec`): `ita17, atx716, *70, xta17, ati16, atx2(16), arx3001,
+  atx17, xta3000, atx(16), vtm1673(15), uj(17)` -> возврат в `53401 oct = 21953 dec`.
+
+Расхождение **M[15] (стек)**: C# `M[15]=22273 dec`, C++ `M[17 oct]=M[15 dec]=21953 dec`.
+Разность `320 dec` - к этому моменту C# уже «накопил» лишние/другие `зп/зпм`.
+
+---
+
+## 6. Рабочие гипотезы (в порядке приоритета)
+
+1. **RAU-режим на условных переходах (Po/пе).** `Po`/`Pe` выбирают ветку по RAU
+   (Additive-знак BIT41, Multiplicative-нуль BIT48, Logical-нуль). Если C# в момент
+   `Po/пе` в другом RAU-режиме, чем C++ - ветка другая -> другой M[15]/M[12]/M[10] ->
+   разный vlm-цикл. `SetLogical()` после экстракода лечит **часть** случаев, но не все.
+2. **Пропущенный `set_*` в иных местах** (не только после экстракода). Сверить **все**
+   `set_logical/set_additive/set_multiplicative` в `processor.cpp` (строки 191,209,222,235,
+   248,261,274,288,302,318,331,345,358,371,385,399,415,443,456,469,484,503,527,533,541,574,
+   582,640) с аналогами C#.
+3. **Расхождение стека M[15]/corr_stack** (`PrepareStack`, `corr_stack=1` в C++ при
+   `!addr && reg==017`). Если C# некорректно эмулирует поправку стека - `uj M[15]`
+   уйдёт в мусор (наблюдается: C# прыгает в `0x5701` = зона `зп 0(0)`).
+4. **Состояние ACC до `x-a`/`sti`** (значение, из которого `ADDR(ACC)` даёт счётчик vlm).
+   Разный ACC -> разный M[12]/M[10] -> разное число итераций.
+
+---
+
+## 7. Инструменты и артефакты
+
+- C++ trace: `tests-run/cpp_a400_i.txt` (2 952 294 строк), формат
+  `<PC:5oct> <L|R>: <reg:2> <opcode:3oct> <addr:4oct> <mnemonic> [= exec]`.
+- C# instr trace: `src/besm6.net/tests/Besm6.Tests/bin/Release/net8.0/instr_trace.log`
+  (~30 МБ), включается `BESM6_INSTR_TRACE=1`, формат
+  `<pc:X5hex> R=L|R op=<dec> reg=<dec> addr=<dec> acc=<hex12> rau=<hex> mod=<dec> m14=<dec> <Op>`.
+  > Осторожно: **PC в C# hex, в C++ octal** - приводить к dec перед сравнением.
+- C# ec trace: `.../ec_trace.log`, включает `BESM6_TRACE=1` (детектор повторений PC>20).
+- Детектор циклов (C#): `DubnaLoader.cs:435-487` (`LoopWindow=20000`, `LoopRange=16`).
+- Детектор «hang» (C#): `ExtracodeHandler.cs:143-159` (`NoOutputLimit=500` на E64/E74).
+
+---
+
+## 8. План следующих шагов
+
+1. **Найти первую точку расхождения.** Свести оба трейса к `dec`-адресам и сделать
+   построчный diff по `(address, half, opcode, reg)` начиная со строки ~20, где C# уже
+   в `1038 dec` (`ita15`), а C++ - в `1037 dec` (`ita17`). Первая пара с разным opcode
+   на одном адресе = корневая точка.
+2. **Вывести RAU и M[] в C# trace.** Расширить строку trace: добавить `m0..m15` (хотя бы
+   m10, m12, m13, m14, m15); `acc` уже есть. Сверить RAU в месте `Po/пе` с C++.
+3. **Сверить все `set_*` режимы.** Таблица «инструкция -> режим после» C++ vs C#; закрыть
+   несовпадения (особенно `Po/пе`, `Po`, `Pe`, `зп`, `зпм`, `уи`, `slt`).
+4. **Проверить `PrepareStack` / `corr_stack`.** Убедиться, что C# корректно эмулирует
+   `if(!addr && reg==017) M[017]=ADDR(M[017]-1); corr_stack=1;` во всех инструкциях,
+   где это есть в C++.
+5. **Отладочный «стоп-снимок»:** добавить опцию `BESM6_STOP_AT=<dec-addr>`, чтобы на
+   точке расхождения дампнуть `ACC,RMR,PC,M[0..15],RAU,MOD` и сравнить с C++.
+6. **Регрессия:** после каждой правки прогонять
+   `dotnet test ... --filter "FullyQualifiedName~CernLibTests"` + `ProcessorTests` +
+   `Besm6MathAndTapeTests`, чтобы не сломать уже работающие.
+
+---
+
+## 9. Что уже УВЕРЕННО известно (не гипотезы)
+
+- vlm (цикл) в C# - корректный порт (инкремент + `if 0 break`).
+- sti / ita / x-a - корректные порты.
+- `SetLogical()` после экстракода - добавлен, совпадает с C++.
+- a400/z005 **не** падают на «hang-детекторе» E64/E74; падают на **PC-детекторе**
+  (DubnaLoader: 20K инструкций в диапазоне <16).
+- Вывод C# корректен до `*NO LOAD LIST` (строка 31 из 46).
+- Зацикливание - на адресе `22370-22372 dec`; vlm идёт по **M[10]** в C# и по **M[12]** в C++.
+- Старт (`1032 dec`) и vlm(1)-цикл (`1036-1037 dec`) - **совпадают**.
+- M[15] (стек) к моменту `uj M[15]` - **разный** (C# `22273`, C++ `21953`).
+
+
+---
+
+**Прорыв!** C++ `boot_ms_dubna` (`machine.cpp:946-962`) хранит **каждое слово с ДВЕМИ инструкциями** (левая/правая):
+```
+02010: vtm -5(1), *70 3002
+02011: xta 377,  atx 3010
+02012: xta 363,  atx 100
+02013: vtm 53401(17), utc
+02014: *70 3010(1), utc
+02015: vlm 2014(1), ita 17
+02016: atx 716, *70 717
+02017: xta 17, ati 16
+02020: atx 2(16), arx 30101
+02021: atx 17, xta 3000
+02022: atx (16), vtm 1673(15)
+02023: uj (17), utc
+```
+А C#-трек на том же `1032 dec` показывает `R=R Uia M[1]` (ПРАВАЯ половина!), потом `1033 dec L=E70`. То есть в C# **инструкции разложены по другим половинам слова / порядок выполнения другой**. Сравниваю C# `BootMsDubna` с C++.
+
+
+
+Да. Я посмотрел именно `EntityFX/besm6.net:cernlib-port` и сравнил критические места с текущим `besm6/dubna`. Уже нашлись несколько конкретных расхождений, причём два из них могут полностью объяснять нынешний уход MONSYS в `Э63(0)`.
+
+### 1. Критическая ошибка: возврат из экстракода
+
+В оригинальном `dubna` экстракод **всегда продолжает выполнение со следующего 48-битного машинного слова**. Если экстракод стоял в левой половине слова, правая половина **не исполняется**:
+
 ```cpp
-case 7:
-    // Delay the task, presumably waiting for tape to be installed by operator.
-    throw Exception("Task paused waiting for tape");
+// dubna/extracode.cpp
+if (core.right_instr_flag) {
+    core.PC += 1;
+    core.right_instr_flag = false;
+}
 ```
-> Оба «бросают», но в C++ это обрабатывается монитором как pause (recoverable), в C# — летально. Тем не менее **C++ к этой ветке не приходит** — значит, причина в том, что MONSYS её выбирает, а не в семантике броска.
 
+Это явно зафиксировано в референсе. 
+
+В C# сейчас обычная логика `Execute()` сначала переключает половину слова:
+
+```csharp
+if (rightFlag)
+{
+    pc += 1;
+    rightFlag = false;
+}
+else
+{
+    rightFlag = true;
+}
+```
+
+
+
+Но при вызове `ExtracodeHandler` дополнительного перехода на следующее слово нет:
+
+```csharp
+if (_p.ExtracodeHandler != null &&
+    _p.ExtracodeHandler((int)opcode, aex))
+    break;
+```
+
+
+
+То есть получается:
+
+```text
+             C++ dubna                besm6.net сейчас
+
+Э63 в LEFT   выполнить Э63            выполнить Э63
+             PC := PC+1               PC тот же
+             half := LEFT             half := RIGHT
+                 ↓                         ↓
+          следующее слово          ПРАВАЯ ПОЛОВИНА
+                                   текущего слова
+```
+
+Это очень серьёзное расхождение управления потоком. Оно легко может привести к совершенно корректно декодируемому, но **никогда не предполагавшемуся** `Э63(0)` через несколько инструкций.
+
+Поэтому я бы пока вообще не считал `Э63(0)` первопричиной.
+
+---
+
+### 2. Ещё более неприятное: результат экстракода в ACC затирается
+
+В начале `InstructionExecutor.Execute()` делается копия:
+
+```csharp
+ulong acc = _p._acc.Value;
+ulong rmr = _p._rmr.Value;
+```
+
+
+
+Обработчики экстракодов при этом работают непосредственно с `Processor`. Например `E63`:
+
+```csharp
+case 1: cpu.SetAcc(206L); return;
+case 7: cpu.SetAcc(5L << 33); return;
+...
+```
+
+а `E50` аналогично делает:
+
+```csharp
+cpu.SetAcc(Besm6Math.Sqrt(arg));
+cpu.SetAcc(Besm6Math.Sin(arg));
+...
+```
+
+
+
+Но после возврата из обработчика `InstructionExecutor` выполняет:
+
+```csharp
+_p._acc = Word48.FromInt48(acc);
+_p._rmr = Word48.FromInt48(rmr);
+```
+
+
+
+То есть происходит:
+
+```text
+ACC = старое значение
+
+E63:
+    cpu.SetAcc(результат)
+           ↓
+Processor._acc = результат
+
+возврат в Execute()
+           ↓
+Processor._acc = локальный acc
+           ↓
+ACC = СТАРОЕ ЗНАЧЕНИЕ
+```
+
+Это почти наверняка ломает не только CERNLIB, но и множество экстракодов вообще.
+
+Например оригинальный C++ для `Э63(0502)` возвращает адрес дескриптора процесса через `ACC = 02000`.  В C# обработчик тоже устанавливает это значение, но текущий `InstructionExecutor` затем может его затереть.
+
+### 3. После экстракода должен выставляться логический режим РАУ
+
+В C++:
+
+```cpp
+Aex        = ADDR(addr + core.M[reg]);
+core.M[14] = Aex;
+extracode(opcode);
+core.set_logical();
+break;
+```
+
+
+
+В C# после обработчика `SetLogical()` отсутствует. 
+
+Это тоже архитектурно значимо: последующая условная логика может интерпретировать ACC не в том режиме.
+
+---
+
+## Я бы первым делом исправил dispatch экстракодов
+
+Минимально — примерно так:
+
+```csharp
+default:
+    if (IsExtracode(opcode))
+    {
+        aex = Addr(addr + m[reg]);
+        m[14] = aex;
+
+        _p.ExtracodeReg = reg;
+        _p.ExtracodeRawAddr = addr;
+        _p.ExtracodeRightFlag = rightFlag;
+
+        //
+        // C++ Processor::extracode():
+        // return from extracode to the next machine word.
+        //
+        if (rightFlag)
+        {
+            pc = Addr(pc + 1);
+            rightFlag = false;
+        }
+
+        if (_p.ExtracodeHandler != null &&
+            _p.ExtracodeHandler((int)opcode, aex))
+        {
+            //
+            // Handler modifies Processor directly.
+            // Synchronize local cached registers.
+            //
+            acc = _p._acc.Value;
+            rmr = _p._rmr.Value;
+
+            //
+            // processor.cpp does core.set_logical()
+            // after every extracode.
+            //
+            _p.SetLogical();
+
+            break;
+        }
+
+        throw new ProcessorException(
+            $"Extracode {(int)opcode} not implemented");
+    }
+
+    throw new ProcessorException($"Unknown instruction {opcode}");
+```
+
+Это исправляет сразу три вещи:
+
+1. пропуск правой половины слова после экстракода в LEFT;
+2. сохранение результата `SetAcc()/SetRmr()` обработчика;
+3. `RAU = logical` после экстракода.
+
+Я бы именно этот фикс сделал **до любых изменений `E63(0)`**.
+
+### 4. Комментарий про «C++ тоже падает на a400/z005» выглядит ошибочным
+
+Сейчас в вашей ветке написано:
+
+> `C++ cernlib_test.cpp cernlib_a400/z005 тоже фейлят`
+
+
+
+То же утверждение продублировано непосредственно возле `E63`. 
+
+Но в текущем upstream `dubna`:
+
+* CERNLIB-набор специально включается через `make test-all`;
+* файл содержит **более 400 тестов**;
+* `cernlib_a400` является активным тестом; 
+* `cernlib_z005` тоже является активным тестом. 
+* README прямо описывает `make test-all` как запуск тестов вместе с CERN Library tests. 
+
+При этом действительно сам upstream `E63()` не имеет case `0` и бросит исключение, если реально получит такую подкоманду. 
+
+Из этого следует важный вывод:
+
+> **Нормальный upstream-путь a400/z005, скорее всего, вообще не должен доходить до `E63(0)`.**
+
+Поэтому ваше наблюдение `0765 → 07 → 0502 → 00` очень похоже не на отсутствующую функцию MONSYS, а на **расхождение состояния CPU до этой точки**.
+
+И первые два найденных бага как раз способны такое расхождение создать.
+
+---
+
+### 5. Есть ещё один настоящий gap: `corr_stack`
+
+В C# `StackCorrection()` сейчас сознательно является заглушкой:
+
+```csharp
+public void StackCorrection()
+{
+    // C#-порт не реализует corr_stack
+}
+```
+
+
+
+В C++ `corr_stack` сбрасывается для каждой инструкции и выставляется, например, при `STX`/`XTS`; это позволяет откатить изменение `M[017]`, если инструкция была прервана исключением/перехватом. Например:
+
+```cpp
+core.M[017] = ADDR(core.M[017] - 1);
+corr_stack  = 1;
+```
+
+и наоборот для push. 
+
+Это я бы поставил **P1 после extracode fix**. Для нормального линейного выполнения оно не всегда проявляется, но при MONSYS/overflow/intercept даст очень неприятные рассинхронизации стека.
+
+---
+
+## Что интересно: CERN fixture у вас сделан правильно
+
+Я отдельно сверил prolog upstream:
+
+```text
+*name ...
+*tape:12/librar,32
+*library:1,2,3,5,12,23
+*call setftn:one,long
+*no list
+*no load list
+...
+*end file
+```
+
+Это именно то, что использует upstream `test_cernlib()`. 
+
+Так что сейчас я бы **не копал job setup, библиотечные tape или сам FORTRAN**. Сначала CPU/extracode semantics.
+
+## Предлагаемый порядок доведения порта
+
+```text
+P0
+ ├─ extracode → всегда next machine word
+ ├─ не затирать ACC/RMR после handler
+ └─ set_logical() после extracode
+        │
+        ▼
+Повторить a400
+        │
+        ├── проходит дальше → отлично
+        │
+        └── diverges
+              │
+              ▼
+        C++/C# instruction trace
+        до ПЕРВОЙ отличающейся инструкции
+              │
+              ▼
+P1
+ └─ corr_stack / intercept semantics
+              │
+              ▼
+P2
+ └─ переносить весь CERNLIB test matrix
+```
+
+Причём я бы не сравнивал конечный stdout на этом этапе. Нужно сравнивать после каждой инструкции:
+
+```text
+PC
+left/right
+RK
+ACC
+RMR
+RAU
+MOD
+M[0..15]
+Aex
+```
+
+и остановиться **ровно на первом различии**. Тогда вместо отладки тысяч инструкций MONSYS мы получим одну конкретную несовместимость C# ↔ C++.
+
+На текущем состоянии ветки мой главный кандидат на первопричину — **не `E63(0)`, а неверная семантика возврата из экстракода плюс затирание ACC после обработчика**.
+
+Могу следующим сообщением пройти `InstructionExecutor.cs` целиком инструкция-за-инструкцией против `dubna/processor.cpp` и составить полный список несовпадений, а затем дать готовый patch для `cernlib-port` с регрессионными тестами на эти три ошибки.
+
+
+---
+
+I've gathered decisive evidence. Let me give you the verified picture and a concrete path forward.
+
+## What I verified (ground truth, not assumption)
+
+__1. Your three P0 fixes are already in the working tree__ — I confirmed via `git diff` on `InstructionExecutor.cs` (uncommitted, on top of `1a8bbc2`): the extracode PC-advance, ACC/RMR preservation, and `SetLogical()` are all present. You don't need to re-apply them.
+
+__2. They fixed the `*63 0` crash but exposed a deeper problem.__ Running a400 + z005 *with* those fixes in place, both now fail with:
+
+```javascript
+Error at 05762: Loop detected: PC stuck in range 05762-05763 for 20K+ instructions.
+MONSYS is in an I/O wait/abort spin-loop (channel-done not signaled).
+instructions: 360000
+```
+
+- a400: output __494/1211 chars__, __character-0 divergence: actual starts with a NUL (`\u0000`)__ that `expect_a400.txt` lacks, and ends in garbage `ЖЖЖ`.
+- z005: same loop error.
+
+__3. The "known MONSYS kernel gap (same in C++ dubna reference)" is WRONG.__ I verified against the real C++ artifacts:
+
+- `cpp_a400.txt`: C++ a400 __succeeds__ — full `BOOLEAN ARITHMETIC TEST A400`, compile/link, octal results, `Elapsed time: 0.044 s, Simulated: 2805935 instructions`.
+- `cpp_a400_t.txt`: C++ __also loops on E61__ (`061 0000 *61 = 34464`) hundreds of times near the end (PC `34015`–`34033` octal) — then *exits* it and halts with `*74`. So an E61 loop is __legitimate MONSYS behavior__, not a bug.
+- __Decisive:__ I searched the full 98MB C++ instruction trace for `^05762` — __zero hits__. C++ *never executes* PC `05762`. Yet C# parks there in a spin-loop.
+
+## What this means
+
+The failure is __not__ extracode semantics (that's already fixed) and __not__ a shared MONSYS gap. It's a __state divergence right after the MONSYS banner__: C# takes a branch into an I/O-wait loop at `05762` that C++ never enters. The leading NUL + `ЖЖЖ` garbage corroborate that C# is reading a wrong/zero word (a bad branch condition) at that point. So the real bug is a __state difference (ACC / M-register / flag) that flips a branch__ — exactly the class of bug your P0 fixes addressed, but in a different spot.
+
+## Proposed next step (concrete)
+
+1. __Generate a C# instruction trace__ for a400 (the `StepTrace` hook already exists in `DubnaLoader.cs`) and capture the last ~200 instructions before the `05762` loop.
+2. __Compare against `cpp_a400_i.txt`__ at the matching banner-exit point to find the exact first divergent word (ACC / M / flag).
+3. __Fix the divergence__ (likely in the branch/flag logic or a register left wrong) and re-run a400 + z005.
+
+Before I sink into that (it's the real work), I want to confirm direction with you, since your message framed this as "apply P0 → re-run":
+
+Cline has a question:
+
+The P0 fixes are already applied and a400 now fails at a post-banner state divergence (C# spins at PC 05762, which C++ never reaches; C++ also legitimately loops on E61 then halts *74). How should I proceed?
