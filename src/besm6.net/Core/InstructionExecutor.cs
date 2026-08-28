@@ -69,6 +69,11 @@ namespace Besm6.Core
                 opcode = (rk >> 12) & 0x3Fu;
             }
 
+            // Трассировка в формате C++ (аналог ref/processor.cpp:151 → Processor::print_instruction):
+            // фиксируем pc/rightFlag/rk/opcode ДО advance PC, поэтому строка C# = строке C++
+            // по PC/L-R/RK (без смещения и без преобразования hex↔oct). Фильтрация по экстракодам — в хуке.
+            _p.TraceInstruction?.Invoke(pc, rightFlag, rk, opcode);
+
             uint nextPc = Addr(pc + 1);
             if (rightFlag)
             {
@@ -525,12 +530,42 @@ namespace Besm6.Core
                     {
                         aex = Addr(addr + m[reg]);
                         m[14] = aex;
+                        // Точный порт C++ Processor::extracode() (dubna/extracode.cpp:30-36):
+                        // «Return from extracode to the next machine word» — экстракод
+                        // потребляет всё 48-битное слово (левую и правую половины),
+                        // поэтому если правая половина ещё не выполнена, пропускаем её
+                        // и продолжаем с левой половины следующего слова.
+                        // Без этой логики C# выполняет инструкцию из правой половины
+                        // (например 02567 R после «*63 502» в a400), чего C++ не делает,
+                        // и состояние (ACC/M[14]) расходится.
+                        if (rightFlag)
+                        {
+                            pc += 1;
+                            rightFlag = false;
+                        }
                         // Сохраняем поля инструкции для трассировки в формате C++ (print_instruction).
                         _p.ExtracodeReg = reg;
                         _p.ExtracodeRawAddr = addr;
                         _p.ExtracodeRightFlag = rightFlag;
                         if (_p.ExtracodeHandler != null && _p.ExtracodeHandler((int)opcode, aex))
+                        {
+                            // Обработчик экстракода может изменить ACC/RMR напрямую
+                            // (например E63: cpu.SetAcc(...)). Локальные копии acc/rmr
+                            // захвачены в начале Execute() и «просрочены» — если их не
+                            // обновить, финальная запись `_p._acc = Word48.FromInt48(acc)`
+                            // внизу перезапишет изменения обработчика старым значением.
+                            // (В C++ такой проблемы нет: там core.ACC используется
+                            // напрямую, без локальной копии.)
+                            acc = _p._acc.Value;
+                            rmr = _p._rmr.Value;
+                            // Точный порт C++ processor.cpp:639-640: после каждого
+                            // экстракода вызывается core.set_logical() — RAU-режим
+                            // приводится к ЛОГИЧЕСКОМУ. Влияет на условные переходы
+                            // по/пе (Po/Pe) и весь дальнейший поток; без этого C#
+                            // расходится с C++ по RAU-режиму и улетает в MONSYS-цикл.
+                            _p.SetLogical();
                             break;
+                        }
                         throw new ProcessorException($"Extracode {(int)opcode} not implemented");
                     }
                     throw new ProcessorException($"Unknown instruction {opcode}");

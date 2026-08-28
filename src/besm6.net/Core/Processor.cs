@@ -51,6 +51,14 @@ namespace Besm6.Core
         /// </summary>
         public Func<int, uint, bool>? ExtracodeHandler { get; set; }
 
+        /// <summary>
+        /// Хук трассировки инструкции — точный аналог C++ <c>Processor::print_instruction()</c>
+        /// (ref/trace.cpp:240). Вызывается в НАЧАЛЕ инструкции: после fetch RK и decode
+        /// (reg/addr/opcode), НО до advance PC и до исполнения (ref/processor.cpp:151).
+        /// Аргументы: (pc, rightFlag, rk, opcode). null = выключен.
+        /// </summary>
+        public Action<uint, bool, uint, uint>? TraceInstruction { get; set; }
+
         // Поля текущей инструкции экстракода для трассировки в формате C++ (см. ref/trace.cpp print_instruction).
         // Заполняются InstructionExecutor.ExtracodeDispatch перед вызовом ExtracodeHandler.
         public int ExtracodeReg { get; set; }
@@ -85,6 +93,9 @@ namespace Besm6.Core
         public Word48 Rmr => _rmr;
         public uint Rau { get => _rau; set => _rau = value & 0x3F; }
         public bool OnRightInstruction => _rightInstrFlag;
+
+        /// <summary>Флаг применения MOD к адресам (C++ core.apply_mod_reg) — для трассировки регистров.</summary>
+        public bool ApplyModReg => _applyModReg;
 
         /// <summary>Человекочитаемый режим АЛУ (для отладчика/панели).</summary>
         public string AluMode => IsLogical() ? "LOG" : (IsMultiplicative() ? "MUL" : "ADD");

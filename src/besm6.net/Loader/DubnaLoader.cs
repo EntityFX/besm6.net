@@ -33,6 +33,17 @@ namespace Besm6.Loader
         /// <summary>Предел числа исполненных инструкций (защита от зависаний).</summary>
         public long InstructionLimit { get; set; } = 1_000_000_000;
 
+        /// <summary>
+        /// E50 067 (DATE*): реальное системное время (C++: entropy включена по
+        /// умолчанию) или фиксированная дата (C++: -r). Проксирует
+        /// <see cref="ExtracodeHandler.UseWallClock"/>.
+        /// </summary>
+        public bool UseWallClock
+        {
+            get => _extracode.UseWallClock;
+            set => _extracode.UseWallClock = value;
+        }
+
         /// <summary>Выводить диагностику загрузки.</summary>
         public bool Verbose { get; set; }
 
@@ -41,6 +52,19 @@ namespace Besm6.Loader
 
         /// <summary>Трассировка инструкций (для отладки). null = выключена.</summary>
         public Action<int, ulong>? InstructionTrace { get; set; }
+
+        /// <summary>
+        /// Трассировка в формате C++ (аналог ref/processor.cpp:151 → Processor::print_instruction,
+        /// ref/trace.cpp:240). Срабатывает в НАЧАЛЕ инструкции (после fetch RK и decode, ДО advance PC)
+        /// с (pc, rightFlag, rk, opcode). null = выключена.
+        /// </summary>
+        public Action<uint, bool, uint, uint>? CppInstructionTrace { get; set; }
+
+        /// <summary>
+        /// Трассировка изменений регистров после каждого шага (см. MachineCore.RegisterTrace).
+        /// null = выключена.
+        /// </summary>
+        public Action<string, ulong>? RegisterTrace { get; set; }
 
         /// <summary>
         /// Обработчик ввода с терминала (E71 flags=6).
@@ -446,6 +470,20 @@ namespace Besm6.Loader
                     counter[0]++;
                     InstructionTrace(pc, word);
                 };
+            }
+
+            // Трассировка в формате C++ (аналог machine.trace_instruction → cpu.print_instruction):
+            // фиксирует pc/rightFlag/rk/opcode ДО advance PC.
+            if (CppInstructionTrace != null)
+            {
+                _machine.Cpu.TraceInstruction = (pc, rf, rk, op) => CppInstructionTrace(pc, rf, rk, op);
+            }
+
+            // Трассировка изменений регистров (аналог C++ print_registers после cpu.step()).
+            if (RegisterTrace != null)
+            {
+                _machine.BeginRegisterTrace();
+                _machine.RegisterTrace = RegisterTrace;
             }
 
             while (InstructionsExecuted < limit)

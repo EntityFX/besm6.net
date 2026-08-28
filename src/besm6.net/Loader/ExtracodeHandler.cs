@@ -24,6 +24,12 @@ namespace Besm6.Loader
 
         private const int M16 = 14; // индекс-регистр 16 = M[14] в нумерации БЭСМ-6
 
+        /// <summary>
+        /// E50 067 (DATE*): реальное системное время (по умолчанию, как в C++ с
+        /// включённой entropy) или фиксированная дата при выключенном времени (C++: -r).
+        /// </summary>
+        public bool UseWallClock { get; set; } = true;
+
         // Phys_io remap (drum → disk redirection, set via MapDrumToDisk).
         private int _mappedDrum = -1;
         private int _physIoDiskUnit = -1;
@@ -37,7 +43,10 @@ namespace Besm6.Loader
         {
             _mappedDrum = drum;
             _physIoDiskUnit = diskUnit;
-            _physIoDisk = disk;
+            // Порт C++ map_drum_to_disk (ref/machine.cpp:685-694): КЛОНИруем диск,
+            // чтобы phys-io записи шли в копию, а оригинал (MONSYS) остался нетронутым.
+            // Иначе MONSYS читает уже изменённые данные и зацикливается в I/O-wait/abort.
+            _physIoDisk = new TapeImage(disk.VolumeId, (byte[])disk.Data.Clone(), readOnly: false);
         }
 
         public ExtracodeHandler(
@@ -364,16 +373,46 @@ namespace Besm6.Loader
 
                 case 55:  // 067 oct — DATE*, ОС Дубна.
                 {
+                    // Порт C++ (ref/e50.cpp:437-474):
+                    //   если machine.is_entropy_enabled() — реальное текущее местное
+                    //   время (localtime), иначе фиксированная дата для тестов.
+                    // В C++ entropy включена по умолчанию (ref/main.cpp:101-103),
+                    // только -r отключает её (ref/main.cpp:193-196).
                     // Раскладка union E50_Date_Time (ref/extracode.h):
                     //   decisec  b0-3,  sec_lo  b4-7,  sec_hi  b8-11, min_lo  b12-15,
                     //   min_hi   b16-19, hour_lo b20-23, hour_hi b24-25 (2 бита),
                     //   year_lo  b26-29, year_hi b30-33, month_lo b34-37, month_hi b38-41,
                     //   day_lo   b42-45, day_hi  b46-47 (2 бита)
-                    // Фиксированное значение C++: 04/07/24 23:45:56 (0'101C'9234'5560 hex).
-                    const long d = (6L << 4) | (5L << 8) | (5L << 12) | (4L << 16)
-                                | (3L << 20) | (2L << 24) | (4L << 26) | (2L << 30)
-                                | (7L << 34) | (4L << 42);
-                    cpu.SetAcc(d);
+                    ulong word;
+                    if (UseWallClock)
+                    {
+                        var now = DateTime.Now; // C++: localtime
+                        word = (ulong)((now.Day / 10) & 0x3) << 46
+                            | (ulong)(now.Day % 10) << 42
+                            | (ulong)((now.Month / 10) & 0xF) << 38
+                            | (ulong)(now.Month % 10) << 34
+                            | (ulong)(((now.Year % 100) / 10) & 0xF) << 30   // C++: tm_year = year-1900, берут 2 последних цифры
+                            | (ulong)((now.Year % 100) % 10) << 26
+                            | (ulong)((now.Hour / 10) & 0x3) << 24
+                            | (ulong)(now.Hour % 10) << 20
+                            | (ulong)((now.Minute / 10) & 0xF) << 16
+                            | (ulong)(now.Minute % 10) << 12
+                            | (ulong)((now.Second / 10) & 0xF) << 8
+                            | (ulong)(now.Second % 10) << 4;
+                        // decisec (b0-3) = 0 (C++: result.field.decisec = 0).
+                    }
+                    else
+                    {
+                        // Фиксированное значение C++ (entropy отключена, -r):
+                        // 04/07/24 23:45:56, tm = {day=24, mon=6(+1=7), year=124, 23:45:56}.
+                        word = (2UL << 46) | (4UL << 42)   // day_hi=2, day_lo=4
+                            | (7UL << 34)                  // month_lo=7
+                            | (2UL << 30) | (4UL << 26)    // year_hi=2, year_lo=4
+                            | (3UL << 24) | (4UL << 20)    // hour_hi=3, hour_lo=4
+                            | (5UL << 16) | (6UL << 12)    // min_hi=5, min_lo=6
+                            | (5UL << 8)  | (6UL << 4);    // sec_hi=5, sec_lo=6
+                    }
+                    cpu.SetAcc(word);
                     break;
                 }
 
