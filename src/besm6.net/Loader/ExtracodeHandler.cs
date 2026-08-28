@@ -25,10 +25,14 @@ namespace Besm6.Loader
         private const int M16 = 14; // индекс-регистр 16 = M[14] в нумерации БЭСМ-6
 
         /// <summary>
-        /// E50 067 (DATE*): реальное системное время (по умолчанию, как в C++ с
-        /// включённой entropy) или фиксированная дата при выключенном времени (C++: -r).
+        /// E50 067 (DATE*): реальное системное время или фиксированная дата (04/07/2024 23:45:56).
+        /// По умолчанию — фиксированная дата (entropy OFF), как в C++ <c>Machine</c>
+        /// (ref/machine.h:77 <c>entropy_flag{}</c> = false) и в gtest-фикстурах — это
+        /// детерминированное значение для тестов. CLI (ref/main.cpp:103) явно включает
+        /// wall clock (<c>session.enable_entropy()</c>), флаг <c>-r</c> отключает;
+        /// в C# это настраивается через <c>Config.UseWallClock</c> / <c>MachineFactory</c>.
         /// </summary>
-        public bool UseWallClock { get; set; } = true;
+        public bool UseWallClock { get; set; } = false;
 
         // Phys_io remap (drum → disk redirection, set via MapDrumToDisk).
         private int _mappedDrum = -1;
@@ -403,14 +407,20 @@ namespace Besm6.Loader
                     }
                     else
                     {
-                        // Фиксированное значение C++ (entropy отключена, -r):
-                        // 04/07/24 23:45:56, tm = {day=24, mon=6(+1=7), year=124, 23:45:56}.
-                        word = (2UL << 46) | (4UL << 42)   // day_hi=2, day_lo=4
-                            | (7UL << 34)                  // month_lo=7
-                            | (2UL << 30) | (4UL << 26)    // year_hi=2, year_lo=4
-                            | (3UL << 24) | (4UL << 20)    // hour_hi=3, hour_lo=4
-                            | (5UL << 16) | (6UL << 12)    // min_hi=5, min_lo=6
-                            | (5UL << 8)  | (6UL << 4);    // sec_hi=5, sec_lo=6
+                        // Фиксированное значение C++ (entropy отключена, ref/e50.cpp:456-470):
+                        //   day_hi=0, day_lo=4   → 04
+                        //   month_hi=0, month_lo=7 → July (ИЮЛ)
+                        //   year_hi=2, year_lo=4  → 2024
+                        //   hour_hi=2, hour_lo=3  → 23
+                        //   min_hi=4, min_lo=5    → 45
+                        //   sec_hi=5, sec_lo=6    → 56
+                        //   decisec=0
+                        word = (4UL << 42)                // day_lo=4
+                            | (7UL << 34)                 // month_lo=7
+                            | (2UL << 30) | (4UL << 26)   // year_hi=2, year_lo=4
+                            | (2UL << 24) | (3UL << 20)   // hour_hi=2, hour_lo=3
+                            | (4UL << 16) | (5UL << 12)   // min_hi=4, min_lo=5
+                            | (5UL << 8)  | (6UL << 4);   // sec_hi=5, sec_lo=6
                     }
                     cpu.SetAcc(word);
                     break;
