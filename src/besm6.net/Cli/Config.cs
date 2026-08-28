@@ -39,6 +39,14 @@ namespace Besm6
         public int MemorySize { get; set; } = 32768;
 
         /// <summary>
+        /// E50 067 (DATE*): использовать реальное системное время (localtime).
+        /// В C++ (ref/main.cpp:101-103) «entropy» включена по умолчанию,
+        /// флаг -r отключает её и возвращает фиксированную дату.
+        /// </summary>
+        [JsonPropertyName("useWallClock")]
+        public bool UseWallClock { get; set; } = true;
+
+        /// <summary>
         /// Загрузить конфигурацию из файла. Если файл не найден — дефолтные значения.
         /// </summary>
         public static Config Load(string? path = null)

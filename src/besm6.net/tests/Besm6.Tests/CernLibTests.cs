@@ -58,8 +58,21 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
+        public void GenTrace()
+        {
+            if (System.Environment.GetEnvironmentVariable("BESM6_TRACE") == null)
+                return; // самм-оф: без env-переменной просто пропускаем
+            string dir = _fx.ArtifactsDir;
+            System.IO.Directory.CreateDirectory(dir);
+            string tracePath = System.IO.Path.Combine(dir, "csh_a400_trace.txt");
+            var result = _fx.GenerateTrace(1, "a400", tracePath);
+            Console.WriteLine("Trace written: " + tracePath + " | result=" + result + " instr=" + result.Instructions);
+        }
+
+        [TestMethod]
         [Ignore("В C++ cernlib_test.cpp закомментирован: вечный цикл (не портится до изменения expect)")]
         public void W303_LoopsForever()
+
         {
             _fx.RunAndCompare(2, "w303", out _, out _, out _);
         }

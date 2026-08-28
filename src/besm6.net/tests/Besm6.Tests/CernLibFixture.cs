@@ -92,10 +92,82 @@ namespace Besm6.Tests
             return false;
         }
 
+        /// <summary>
+        /// Исполнить тест с трассировкой ТОЛЬКО экстракодов (как C++ debug_extracodes) в
+        /// формате C++ Processor::print_instruction (ref/trace.cpp:240): каждая строка
+        /// «{PC:5oct} {R|L}: {octal(RK)}». Срабатывает в НАЧАЛЕ инструкции (после fetch RK,
+        /// ДО advance PC), поэтому строка N C#-трейса = строка N C++-трейса (1:1, без смещения
+        /// и без преобразования hex↔oct). Для diff берутся префиксы инструкций из C++-трейса
+        /// (без мнемоники/«= result»/«Drum …») — см. tests-run/_difftrace.ps1.
+        /// </summary>
+        public LoadResult GenerateTrace(int lib, string name, string tracePath)
+        {
+            string libDir = Path.Combine(RefTestsDir, "lib" + lib);
+            string src = Path.Combine(libDir, name + ".f");
+            if (!File.Exists(src)) throw new FileNotFoundException("нет исходника: " + src);
+
+            string jobPath = WriteJobFile(lib, name, src);
+
+            var traceWriter = new StreamWriter(tracePath, false, new UTF8Encoding(false));
+            _loader.CppInstructionTrace = (pc, rightFlag, rk, opcode) =>
+            {
+                if (IsExtracodeTraced(opcode))
+                    traceWriter.WriteLine(OctPc(pc) + " " + (rightFlag ? "R" : "L") + ": " + OctalInstr(rk));
+            };
+            LoadResult result;
+            try
+            {
+                result = _loader.RunScript(jobPath);
+            }
+            finally
+            {
+                _loader.CppInstructionTrace = null;
+                traceWriter.Flush();
+                traceWriter.Close();
+            }
+            return result;
+        }
+
+        // --- Формат трассировки: точный порт C++ (ref/besm6_arch.cpp, ref/trace.cpp) ---
+
+        /// <summary>is_extracode() (ref/besm6_arch.cpp:102) минус E75 (C++ trace_instruction: opcode != 075).</summary>
+        private static bool IsExtracodeTraced(uint opcode)
+        {
+            if (opcode == 0x3D) return false;                  // 0o75: E75 не трассируется
+            if (opcode >= 0x28 && opcode <= 0x3F) return true; // 0o50..0o77: Э50..Э77 (короткие)
+            if (opcode == 0x80 || opcode == 0x88) return true; // 0o200, 0o210: Э20, Э21 (длинная форма)
+            return false;
+        }
+
+        /// <summary>PC в 5 восьмеричных разрядах (std::setfill('0') << std::setw(5) в print_instruction).</summary>
+        private static string OctPc(uint pc) => Convert.ToString(pc & 0x7FFF, 8).PadLeft(5, '0');
+
+        /// <summary>Число в N восьмеричных разрядах (std::setfill('0') << std::setw(N)).</summary>
+        private static string Oct(int x, int width) => Convert.ToString(x, 8).PadLeft(width, '0');
+
+        /// <summary>
+        /// besm6_print_instruction_octal (ref/besm6_arch.cpp:280):
+        /// reg(2) + [длинная: mid(2) addr(5)] | [короткая: op(3) addr(4)].
+        /// </summary>
+        private static string OctalInstr(uint rk)
+        {
+            int reg = (int)(rk >> 20) & 0x0F;
+            if ((rk & 0x80000u) != 0)   // ONEBIT(20) — длинная инструкция
+            {
+                int mid = (int)((rk >> 15) & 0x1F);   // 0o37
+                int addrL = (int)(rk & 0x7FFF);       // 0o77777
+                return Oct(reg, 2) + " " + Oct(mid, 2) + " " + Oct(addrL, 5);
+            }
+            int op = (int)((rk >> 12) & 0x7F);        // 0o177
+            int addr = (int)(rk & 0xFFF);             // 0o7777
+            return Oct(reg, 2) + " " + Oct(op, 3) + " " + Oct(addr, 4);
+        }
+
         // ---------------------------------------------------------------
         // job-файл: пролог + исходник + '*end file' (как в C++ fixture).
         // ---------------------------------------------------------------
         private string WriteJobFile(int lib, string name, string srcPath)
+
         {
             string prolog = "*name " + name + "\n" +
                             "*tape:12/librar,32\n" +
