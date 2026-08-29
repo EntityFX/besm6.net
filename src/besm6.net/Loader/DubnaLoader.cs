@@ -47,6 +47,17 @@ namespace Besm6.Loader
         /// <summary>Выводить диагностику загрузки.</summary>
         public bool Verbose { get; set; }
 
+        /// <summary>
+        /// Эвристика обнаружения spin-loop (PC в узком диапазоне долго).
+        /// В C++-референсе такого детектора НЕТ — он исполняет цикл, пока тот не
+        /// завершится естественно, и опирается только на предел инструкций (-l).
+        /// Поэтому детектор по умолчанию ВЫКЛЮЧЕН, чтобы точно соответствовать C++.
+        /// Его можно включить флагом --loop-detect для отладки реальных зависаний:
+        /// но эвристика (PC в узком диапазоне) не отличает легитимный цикл MONSYS
+        /// (например, 42K итераций в a400, который C++ завершает) от бесконечного.
+        /// </summary>
+        public bool LoopDetect { get; set; } = false;
+
         /// <summary>Аккумуляция вывода программ (для перехвата в тестах/CLI).</summary>
         public Action<string>? Output { get; set; }
 
@@ -449,6 +460,19 @@ namespace Besm6.Loader
 
         private LoadResult RunBounded()
         {
+            try
+            {
+                return RunBoundedCore();
+            }
+            finally
+            {
+                // Canonical TSV trace: гарантированный flush при любом выходе.
+                _machine.Cpu.CanonFlush();
+            }
+        }
+
+        private LoadResult RunBoundedCore()
+        {
             long limit = InstructionLimit;
             InstructionsExecuted = 0;
             HaltedByStop = false;
@@ -503,7 +527,7 @@ namespace Besm6.Loader
                     pcHistory[pcHistIdx % LoopWindow] = curPc;
                     pcHistIdx++;
 
-                    if (InstructionsExecuted >= LoopWindow && (InstructionsExecuted % LoopWindow) == 0)
+                    if (LoopDetect && InstructionsExecuted >= LoopWindow && (InstructionsExecuted % LoopWindow) == 0)
                     {
                         long minPc = long.MaxValue, maxPc = long.MinValue;
                         for (int i = 0; i < LoopWindow; i++)
@@ -548,6 +572,9 @@ namespace Besm6.Loader
 
                     if (_machine.Cpu.Intercept(ex.Message))
                     {
+                        // Canonical TSV trace: POST-снимок для перехваченной инструкции —
+                        // состояние ПОСЛЕ StackCorrection()+Intercept() (как в C++ machine.cpp).
+                        _machine.Cpu.CanonPost(_machine.Cpu.GetPc(), _machine.Cpu._rightInstrFlag);
                         // Intercept applied — resume from intercept address.
                         if (Verbose)
                             Console.Write($"\r  [INTERCEPT @ 0{_machine.Cpu.GetPc():X4}] {ex.Message} → 0{_machine.Cpu.GetPc():X4}\n");

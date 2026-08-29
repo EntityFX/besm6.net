@@ -14,7 +14,7 @@ namespace Besm6.Cli
     {
         public string Name => "run";
         public string Description => "Load and execute a .dub job script";
-        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--config path]";
+        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--no-loop-detect] [--config path]";
 
         public int Execute(string[] args)
         {
@@ -30,6 +30,8 @@ namespace Besm6.Cli
             bool trace = false;
             string? configPath = null;
             string? regsFile = null;
+            bool loopDetect = false;
+            bool noLoopDetect = false;
 
             for (int i = 1; i < args.Length; i++)
             {
@@ -53,6 +55,15 @@ namespace Besm6.Cli
                     case "--config" when i + 1 < args.Length:
                         configPath = args[++i];
                         break;
+                    case "--loop-detect":
+                        // Включить эвристику spin-loop (отладка реальных зависаний).
+                        loopDetect = true;
+                        break;
+                    case "--no-loop-detect":
+                        // Отключить эвристику spin-loop (по умолчанию и так выключена).
+                        loopDetect = false;
+                        noLoopDetect = true;
+                        break;
                 }
             }
 
@@ -65,6 +76,7 @@ namespace Besm6.Cli
                 var loader = MachineFactory.CreateLoader(cfg);
                 loader.InstructionLimit = limit;
                 loader.Verbose = verbose;
+                loader.LoopDetect = loopDetect && !noLoopDetect;
 
                 if (trace)
                 {
