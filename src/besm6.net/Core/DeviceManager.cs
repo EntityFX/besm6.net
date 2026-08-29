@@ -42,6 +42,9 @@ namespace Besm6.Core
             return new Word48(0);
         }
 
+        /// <summary>Зарегистрировано ли устройство по указанному адресу.</summary>
+        public bool HasDevice(uint address) => _devices.ContainsKey(address);
+
         public IEnumerable<IDevice> GetDevices() => _devices.Values;
 
         public IDevice GetDevice(uint address)

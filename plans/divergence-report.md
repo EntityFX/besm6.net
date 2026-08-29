@@ -612,3 +612,5 @@ Before I sink into that (it's the real work), I want to confirm direction with y
 Cline has a question:
 
 The P0 fixes are already applied and a400 now fails at a post-banner state divergence (C# spins at PC 05762, which C++ never reaches; C++ also legitimately loops on E61 then halts *74). How should I proceed?
+---
+Декодер C++ идентичен C#.
