@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Text;
 
 namespace Besm6.Core
 {
@@ -286,6 +288,95 @@ namespace Besm6.Core
         /// Возвращает true, когда процессор остановлен (инструкция СТОП).
         /// </summary>
         public bool Step() => _executor.Execute();
+
+        #region Canonical TSV trace (дифференциальное сравнение с C++ dubna)
+
+        /// <summary>
+        /// Канонический машинно-сравнимый трасс (TSV). Включается env-переменной
+        /// BESM6_CANON_TRACE=путь. Одна строка = одна реально выполненная инструкция:
+        /// PRE-снимок состояния (ДО advance PC/half и ДО исполнения) + POST-снимок.
+        /// Схема колонок идентична instrumented C++ (ref/processor.cpp canon_pre/canon_post).
+        /// half = исполняемая половина (L: старшие 24 бита слова, R: младшие).
+        /// Все адреса — unsigned decimal; ACC/RMR/raw48/rk24 — hex.
+        /// </summary>
+        private StreamWriter? _canonTrace;
+        private bool _canonOn;
+        private bool _canonChecked;
+        private ulong _canonSeq;
+
+        private void CanonCheck()
+        {
+            if (_canonChecked) return;
+            _canonChecked = true;
+            string? path = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE");
+            if (string.IsNullOrEmpty(path)) return;
+            var w = new StreamWriter(path, false, new UTF8Encoding(false));
+            w.WriteLine("seq\tpc\thalf\traw48\trk24\topcode\treg\taddr");
+            w.WriteLine("acc_b\trmr_b\trau_b\tmod_b\tamod_b\taex_b\ticnt_b\tiadr_b");
+            for (int i = 0; i < 16; i++) w.Write("m" + i + "_b\t");
+            w.WriteLine();
+            w.WriteLine("acc_a\trmr_a\trau_a\tmod_a\tamod_a\taex_a\ticnt_a\tiadr_a\tpc_a\thalf_a");
+            for (int i = 0; i < 16; i++) w.Write("m" + i + "_a\t");
+            w.WriteLine();
+            _canonTrace = w;
+            _canonOn = true;
+        }
+
+        internal bool CanonOn
+        {
+            get { CanonCheck(); return _canonOn; }
+        }
+
+        internal void CanonPre(uint pc, bool right, ulong word, uint rk, uint opcode, int reg, uint addr)
+        {
+            CanonCheck();
+            if (!_canonOn) return;
+            ulong seq = _canonSeq++;
+            var sb = new StringBuilder(256);
+            sb.Append(seq).Append('\t')
+              .Append(pc).Append('\t')
+              .Append(right ? 'R' : 'L').Append('\t')
+              .Append(word.ToString("X12")).Append('\t')
+              .Append(rk.ToString("X6")).Append('\t')
+              .Append(opcode).Append('\t')
+              .Append(reg).Append('\t')
+              .Append(addr).Append('\n')
+              .Append(_acc.Value.ToString("X12")).Append('\t')
+              .Append(_rmr.Value.ToString("X12")).Append('\t')
+              .Append(_rau).Append('\t')
+              .Append(_mod).Append('\t')
+              .Append(_applyModReg ? 1 : 0).Append('\t')
+              .Append(_aex).Append('\t')
+              .Append(_interceptCount).Append('\t')
+              .Append(_interceptAddr).Append('\n');
+            for (int i = 0; i < 16; i++) sb.Append(_m[i]).Append(i == 15 ? '\n' : '\t');
+            _canonTrace!.Write(sb.ToString());
+        }
+
+        internal void CanonPost(uint pc, bool right)
+        {
+            if (!_canonOn) return;
+            var sb = new StringBuilder(256);
+            sb.Append(_acc.Value.ToString("X12")).Append('\t')
+              .Append(_rmr.Value.ToString("X12")).Append('\t')
+              .Append(_rau).Append('\t')
+              .Append(_mod).Append('\t')
+              .Append(_applyModReg ? 1 : 0).Append('\t')
+              .Append(_aex).Append('\t')
+              .Append(_interceptCount).Append('\t')
+              .Append(_interceptAddr).Append('\t')
+              .Append(pc).Append('\t')
+              .Append(right ? 'R' : 'L').Append('\n');
+            for (int i = 0; i < 16; i++) sb.Append(_m[i]).Append(i == 15 ? '\n' : '\t');
+            _canonTrace!.Write(sb.ToString());
+        }
+
+        internal void CanonFlush()
+        {
+            _canonTrace?.Flush();
+        }
+
+        #endregion
     }
 
     public class ProcessorException : Exception

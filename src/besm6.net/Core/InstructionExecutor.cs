@@ -74,6 +74,17 @@ namespace Besm6.Core
             // по PC/L-R/RK (без смещения и без преобразования hex↔oct). Фильтрация по экстракодам — в хуке.
             _p.TraceInstruction?.Invoke(pc, rightFlag, rk, opcode);
 
+            // Канонический PRE-снимок (canonical TSV trace): ДО advance PC/half и
+            // ДО применения модификатора — состояние ровно такое, как видит инструкция.
+            // half = исполняемая половина (L = старшие 24 бита, R = младшие).
+            _p.CanonPre(pc, rightFlag, word, rk, opcode, reg, addr);
+
+            // Фиксируем PRE pc/half для legacy instr-trace: раньше лог печатал
+            // pc/rightFlag ПОСЛЕ advance/toggle, что делало поле «R=» значением
+            // УЖЕ СЛЕДУЮЩЕЙ инструкции и порождало ложное «смещение фазы» в diff.
+            uint tPc = pc;
+            bool tRight = rightFlag;
+
             uint nextPc = Addr(pc + 1);
             if (rightFlag)
             {
@@ -95,7 +106,7 @@ namespace Besm6.Core
             if (_instrTrace)
             {
                 var w = GetInstrWriter();
-                w.WriteLine($"{pc:X5} R={(rightFlag?"R":"L")} op={opcode,3} reg={reg,2} addr={addr,5} " +
+                w.WriteLine($"{tPc:X5} R={(tRight?"R":"L")} op={opcode,3} reg={reg,2} addr={addr,5} " +
                     $"acc={acc:X12} rau={rau:X1} mod={mod,5} m14={m[14],5} {op}");
             }
 
@@ -576,6 +587,7 @@ namespace Besm6.Core
 
             _p._acc = Word48.FromInt48(acc);
             _p._rmr = Word48.FromInt48(rmr);
+            _p.CanonPost(pc, rightFlag);
             return false;
 
         load_modifier:
@@ -586,6 +598,7 @@ namespace Besm6.Core
             else { applyMod = false; }
             _p._acc = Word48.FromInt48(acc);
             _p._rmr = Word48.FromInt48(rmr);
+            _p.CanonPost(pc, rightFlag);
             return false;
         }
 
