@@ -399,6 +399,7 @@ namespace Besm6.Core
         private bool _canonOn;
         private bool _canonChecked;
         private ulong _canonSeq;
+        private StringBuilder? _canonPending;
 
         private void CanonCheck()
         {
@@ -407,13 +408,13 @@ namespace Besm6.Core
             string? path = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE");
             if (string.IsNullOrEmpty(path)) return;
             var w = new StreamWriter(path, false, new UTF8Encoding(false));
-            w.WriteLine("seq\tpc\thalf\traw48\trk24\topcode\treg\taddr");
-            w.WriteLine("acc_b\trmr_b\trau_b\tmod_b\tamod_b\taex_b\ticnt_b\tiadr_b");
-            for (int i = 0; i < 16; i++) w.Write("m" + i + "_b\t");
-            w.WriteLine();
-            w.WriteLine("acc_a\trmr_a\trau_a\tmod_a\tamod_a\taex_a\ticnt_a\tiadr_a\tpc_a\thalf_a");
-            for (int i = 0; i < 16; i++) w.Write("m" + i + "_a\t");
-            w.WriteLine();
+            var header = new StringBuilder(512);
+            header.Append("seq\tpc\thalf\traw48\trk24\topcode\treg\taddr")
+                  .Append("\tacc_b\trmr_b\trau_b\tmod_b\tamod_b\taex_b\ticnt_b\tiadr_b");
+            for (int i = 0; i < 16; i++) header.Append("\tm").Append(i).Append("_b");
+            header.Append("\tacc_a\trmr_a\trau_a\tmod_a\tamod_a\taex_a\ticnt_a\tiadr_a\tpc_a\thalf_a");
+            for (int i = 0; i < 16; i++) header.Append("\tm").Append(i).Append("_a");
+            w.WriteLine(header.ToString());
             _canonTrace = w;
             _canonOn = true;
         }
@@ -428,43 +429,45 @@ namespace Besm6.Core
             CanonCheck();
             if (!_canonOn) return;
             ulong seq = _canonSeq++;
-            var sb = new StringBuilder(256);
-            sb.Append(seq).Append('\t')
-              .Append(pc).Append('\t')
-              .Append(right ? 'R' : 'L').Append('\t')
-              .Append(word.ToString("X12")).Append('\t')
-              .Append(rk.ToString("X6")).Append('\t')
-              .Append(opcode).Append('\t')
-              .Append(reg).Append('\t')
-              .Append(addr).Append('\n')
-              .Append(_acc.Value.ToString("X12")).Append('\t')
-              .Append(_rmr.Value.ToString("X12")).Append('\t')
-              .Append(_rau).Append('\t')
-              .Append(_mod).Append('\t')
-              .Append(_applyModReg ? 1 : 0).Append('\t')
-              .Append(_aex).Append('\t')
-              .Append(_interceptCount).Append('\t')
-              .Append(_interceptAddr).Append('\n');
-            for (int i = 0; i < 16; i++) sb.Append(_m[i]).Append(i == 15 ? '\n' : '\t');
-            _canonTrace!.Write(sb.ToString());
+            var sb = new StringBuilder(512);
+            sb.Append(seq)
+              .Append('\t').Append(pc)
+              .Append('\t').Append(right ? 'R' : 'L')
+              .Append('\t').Append(word.ToString("X12"))
+              .Append('\t').Append(rk.ToString("X6"))
+              .Append('\t').Append(opcode)
+              .Append('\t').Append(reg)
+              .Append('\t').Append(addr)
+              .Append('\t').Append(_acc.Value.ToString("X12"))
+              .Append('\t').Append(_rmr.Value.ToString("X12"))
+              .Append('\t').Append(_rau)
+              .Append('\t').Append(_mod)
+              .Append('\t').Append(_applyModReg ? 1 : 0)
+              .Append('\t').Append(_aex)
+              .Append('\t').Append(_interceptCount)
+              .Append('\t').Append(_interceptAddr);
+            for (int i = 0; i < 16; i++) sb.Append('\t').Append(_m[i]);
+            _canonPending = sb;
         }
 
         internal void CanonPost(uint pc, bool right)
         {
             if (!_canonOn) return;
-            var sb = new StringBuilder(256);
-            sb.Append(_acc.Value.ToString("X12")).Append('\t')
-              .Append(_rmr.Value.ToString("X12")).Append('\t')
-              .Append(_rau).Append('\t')
-              .Append(_mod).Append('\t')
-              .Append(_applyModReg ? 1 : 0).Append('\t')
-              .Append(_aex).Append('\t')
-              .Append(_interceptCount).Append('\t')
-              .Append(_interceptAddr).Append('\t')
-              .Append(pc).Append('\t')
-              .Append(right ? 'R' : 'L').Append('\n');
-            for (int i = 0; i < 16; i++) sb.Append(_m[i]).Append(i == 15 ? '\n' : '\t');
-            _canonTrace!.Write(sb.ToString());
+            if (_canonPending == null) return;
+            var sb = _canonPending;
+            sb.Append('\t').Append(_acc.Value.ToString("X12"))
+              .Append('\t').Append(_rmr.Value.ToString("X12"))
+              .Append('\t').Append(_rau)
+              .Append('\t').Append(_mod)
+              .Append('\t').Append(_applyModReg ? 1 : 0)
+              .Append('\t').Append(_aex)
+              .Append('\t').Append(_interceptCount)
+              .Append('\t').Append(_interceptAddr)
+              .Append('\t').Append(pc)
+              .Append('\t').Append(right ? 'R' : 'L');
+            for (int i = 0; i < 16; i++) sb.Append('\t').Append(_m[i]);
+            _canonTrace!.WriteLine(sb.ToString());
+            _canonPending = null;
         }
 
         internal void CanonFlush()

@@ -90,6 +90,7 @@ namespace Besm6.Loader
             _fileSearch = fileSearch ?? ((disc, file, write) => 0);
             _fileMount = fileMount ?? ((unit, offset, write, fileOffset) => 8);
             _scratchMount = scratchMount ?? ((unit, zones) => { });
+            Array.Fill(_e64Line, G_SPACE);
         }
 
         /// <summary>
@@ -467,7 +468,7 @@ namespace Besm6.Loader
                     throw new ProcessorException("Task paused waiting for tape");
 
                 case 28735: cpu.SetAcc(0); break;         // 070077 oct
-                case 28800: cpu.SetAcc(4096L); break;
+                case 28800: cpu.SetAcc(0x8000UL); break;   // 070200 oct: 0'0010'0000 in dubna/e50.cpp
                 case 28808: cpu.SetAcc(0); break;         // 070210 oct
                 case 28812: cpu.SetAcc(System.Convert.ToUInt64("1234567012345670", 8)); break; // 070214 oct
 
