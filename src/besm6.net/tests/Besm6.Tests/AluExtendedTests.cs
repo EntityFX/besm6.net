@@ -11,7 +11,6 @@ namespace Besm6.Tests
     /// умножение (знаки, денормализованные операнды, RMR), деление (быстрый путь,
     /// невосстанавливающее, деление на ноль), сдвиги (&lt; 48 и &gt;= 48 бит),
     /// изменение порядка (underflow/overflow), смену знака и MantissaExponent напрямую.
-    /// Ожидаемые значения получены трассировкой точного алгоритма из C++-референса
     /// (ref/arithmetic.cpp) и сверены с ref/tests/alutest.cpp.
     /// </summary>
     [TestClass]
@@ -332,7 +331,6 @@ namespace Besm6.Tests
         [TestMethod]
         public void Mul_NoNormalize_100_Times_100()
         {
-            // Сверка с C++ референсом (ref/tests/alutest.cpp): 1/4·2^2 = 0o41040000000000000.
             _cpu.SetRau(3);
             _cpu.SetAcc(MakeReal(65, B39).Value);
             _cpu.ArithMultiply(MakeReal(65, B39));
@@ -342,7 +340,6 @@ namespace Besm6.Tests
         [TestMethod]
         public void Mul_NoNormalize_100_Times_Minus_100()
         {
-            // Сверка с C++ референсом: −1/2·2^1 = 0o40700000000000000.
             _cpu.SetRau(3);
             _cpu.SetAcc(MakeReal(65, B39).Value);
             _cpu.ArithMultiply(MakeReal(64, -B40)); // −1.0
@@ -409,7 +406,6 @@ namespace Besm6.Tests
         [TestMethod]
         public void Div_NoNormalize_100_By_Minus_100()
         {
-            // Сверка с C++ референсом: 1.0 ÷ (−1.0) при RAU=3 -> 0o40700000000000000.
             _cpu.SetRau(3);
             _cpu.SetAcc(MakeReal(65, B39).Value);
             _cpu.ArithDivide(MakeReal(64, -B40));

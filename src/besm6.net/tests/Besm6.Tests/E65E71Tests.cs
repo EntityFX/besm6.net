@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using Besm6.Core;
@@ -9,7 +9,6 @@ namespace Besm6.Tests
 {
     /// <summary>
     /// Тесты экстракодов *65 (выключатели/таблица ALLTOISO) и *71 (терминал/перфоратор)
-    /// после переноса логики из C++-референса (dubna/extracode.cpp).
     /// </summary>
     [TestClass]
     public class E65E71Tests
@@ -35,7 +34,6 @@ namespace Besm6.Tests
         [TestMethod]
         public void E65_Case0526_ReturnsAllToIsoTableAddress()
         {
-            // C++ case 0526 (342 dec): ACC = 06000 (3072 dec) — адрес таблицы ALLTOISO.
             var machine = new MachineCore();
             var handler = MakeHandler(machine);
             machine.Cpu.SetM(14, 342);
@@ -46,7 +44,6 @@ namespace Besm6.Tests
         [TestMethod]
         public void E65_BitShiftRange_0700_0757()
         {
-            // C++: if (addr >= 0700 && addr < 0760) ACC = 1 << (0757 - addr).
             // Все литералы — десятичные (октальные литералы в C# недоступны).
             CheckE65Shift(448, 1UL << 47); // 0700 oct = 448 dec
             CheckE65Shift(470, 1UL << 25); // 0726 oct = 470 dec
@@ -65,7 +62,6 @@ namespace Besm6.Tests
         [TestMethod]
         public void E65_AllToIso_TableRange()
         {
-            // C++: if (addr >= 06000 && addr < 06000+128) ACC = all_to_iso[addr-06000].
             // 06000 oct = 3072 dec.
             int baseAddr = 3072;
             for (int idx = 0; idx < 128; idx++)
@@ -201,7 +197,6 @@ namespace Besm6.Tests
             var machine = new MachineCore();
             var handler = MakeHandler(machine);
 
-            // flags=2 (неизвестный) — в C++ бездействие, не бросает.
             ulong ctrl = (2UL << 39) | (100UL << 24) | 110UL;
             machine.Memory.Write(200, new Word48(ctrl));
             machine.Cpu.SetM(14, 200);

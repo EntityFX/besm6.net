@@ -33,7 +33,7 @@ namespace Besm6.Cli
             bool loopDetect = false;
             bool noLoopDetect = false;
             bool noWallClock = false;
-            bool hangDetect = true;   // детектор зависания включён по умолчанию (диагностика MONSYS)
+            bool hangDetect = false;
             bool noHangDetect = false;
 
             for (int i = 1; i < args.Length; i++)
@@ -50,17 +50,13 @@ namespace Besm6.Cli
                         trace = true;
                         break;
                     case "--trace-regs" when i + 1 < args.Length:
-                        // Трассировка в формате C++ (-d ir): строка инструкции + изменения
                         // регистров после каждого шага (см. ref/trace.cpp print_instruction/
-                        // print_registers). Используется для построчного diff с C++-трейсом.
                         regsFile = args[++i];
                         break;
                     case "--config" when i + 1 < args.Length:
                         configPath = args[++i];
                         break;
                     case "--no-wall-clock":
-                        // Фиксированная дата для E50(067)/DATE* (аналог C++ -r, entropy off).
-                        // Обязательно для детерминированного сравнения с C++, запущенным с -r:
                         // workload-и (CERNLIB a400/z005, MONSYS-задачи) используют значение
                         // DATE* в потоке управления, и реальные часы ломают воспроизводимость.
                         noWallClock = true;
@@ -75,13 +71,12 @@ namespace Besm6.Cli
                         noLoopDetect = true;
                         break;
                     case "--hang-detect":
-                        // Включить эвристику зависания (по умолчанию и так включена).
+                        // Включить эвристику зависания явно.
                         hangDetect = true;
                         noHangDetect = false;
                         break;
                     case "--no-hang-detect":
                         // Отключить эвристику зависания (500+ экстракодов без вывода) —
-                        // точное соответствие C++-референсу, где такого детектора нет.
                         hangDetect = false;
                         noHangDetect = true;
                         break;
@@ -112,7 +107,6 @@ namespace Besm6.Cli
 
                 if (regsFile != null)
                 {
-                    // Трассировка в формате C++ (-d ir): построчно сопоставима с C++-трейсом.
                     regsWriter = new StreamWriter(regsFile, false, new UTF8Encoding(false));
                     Action<string> sink = line => regsWriter!.WriteLine(line);
                     loader.CppInstructionTrace = (pc, rf, rk, op) =>
@@ -143,7 +137,6 @@ namespace Besm6.Cli
             }
         }
 
-        // --- Формат трассировки: точный порт C++ (ref/besm6_arch.cpp:280, ref/trace.cpp) ---
 
         private static string OctW(ulong x, int width) => Convert.ToString((long)x, 8).PadLeft(width, '0');
 
@@ -169,7 +162,6 @@ namespace Besm6.Cli
             OctW((v >> 36) & 0xFFF, 4) + " " + OctW((v >> 24) & 0xFFF, 4) + " " +
             OctW((v >> 12) & 0xFFF, 4) + " " + OctW(v & 0xFFF, 4);
 
-        /// <summary>Строка изменения регистра (формат C++ print_registers, ref/trace.cpp:319).</summary>
         private static string RegLine(string name, ulong val)
         {
             switch (name)

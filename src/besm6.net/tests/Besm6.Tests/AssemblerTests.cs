@@ -67,7 +67,6 @@ namespace Besm6.Tests
         [TestMethod]
         public void DisasmHalf_RegOnly_Spacing()
         {
-            // адрес 0, рег != 0 → "xta (2)" (пробел, без "0"), как в C++.
             long hw = (2L << 20) | (8L << 12);
             Assert.AreEqual("xta (2)", Disassembler.DisasmHalf(hw));
         }
@@ -75,7 +74,6 @@ namespace Besm6.Tests
         [TestMethod]
         public void DisasmHalf_NegativeAddress()
         {
-            // длинная, addr = 0o77700 → "-100" (двухкомплементарный, как в C++).
             long hw = 0x87FC0; // long *20 + addr 0x7FC0
             Assert.AreEqual("*20 -100", Disassembler.DisasmHalf(hw));
         }

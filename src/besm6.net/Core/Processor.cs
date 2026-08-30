@@ -5,7 +5,6 @@ using System.Text;
 namespace Besm6.Core
 {
     /// <summary>
-    /// Точный порт процессора БЭСМ-6 из C++ референса (dubna/processor.cpp
     /// и dubna/arithmetic.cpp). Полный набор инструкций.
     /// </summary>
     public class Processor
@@ -32,13 +31,25 @@ namespace Besm6.Core
         internal uint _mod;             // регистр модификации MOD
         internal uint _rau;             // режим АЛУ
         internal int _interceptCount;   // перехват overflow/div-by-zero (E75 при addr==020)
-        internal uint _interceptAddr = 16; // адрес перехвата; по умолчанию 020 (oct) = 16 (dec), как C++ intercept_addr{020}
+        internal uint _interceptAddr = 16;
         internal bool _rightInstrFlag;  // выполнять правую половину слова
         internal bool _applyModReg;     // модифицировать адрес через MOD
-        internal int _corrStack;        // C++ int corr_stack{} (processor.h:93) — поправка M[017] при прерывании инструкции
+        internal int _corrStack;
 
         internal uint _rk;              // регистр команд
         internal uint _aex;             // исполнительный адрес
+
+        private bool _debugFetchArmed;
+        private uint _debugFetchAddr;
+        private uint _debugFetchCont;
+        private bool _debugFetchPrintInfo;
+        private bool _debugMemoryArmed;
+        private uint _debugMemoryAddr;
+        private uint _debugMemoryCont;
+        private bool _debugMemoryPrintInfo;
+        private uint _debugMemoryMode;
+        private bool _debugWatchSuppressed;
+        private uint _debugPrevAbort;
 
         private readonly IMemory _memory;
         internal readonly Alu _alu;
@@ -55,14 +66,12 @@ namespace Besm6.Core
         public Func<int, uint, bool>? ExtracodeHandler { get; set; }
 
         /// <summary>
-        /// Хук трассировки инструкции — точный аналог C++ <c>Processor::print_instruction()</c>
         /// (ref/trace.cpp:240). Вызывается в НАЧАЛЕ инструкции: после fetch RK и decode
         /// (reg/addr/opcode), НО до advance PC и до исполнения (ref/processor.cpp:151).
         /// Аргументы: (pc, rightFlag, rk, opcode). null = выключен.
         /// </summary>
         public Action<uint, bool, uint, uint>? TraceInstruction { get; set; }
 
-        // Поля текущей инструкции экстракода для трассировки в формате C++ (см. ref/trace.cpp print_instruction).
         // Заполняются InstructionExecutor.ExtracodeDispatch перед вызовом ExtracodeHandler.
         public int ExtracodeReg { get; set; }
         public uint ExtracodeRawAddr { get; set; }
@@ -88,6 +97,10 @@ namespace Besm6.Core
             _rightInstrFlag = false;
             _applyModReg = false;
             _corrStack = 0;
+            _debugFetchArmed = false;
+            _debugMemoryArmed = false;
+            _debugWatchSuppressed = false;
+            _debugPrevAbort = 0;
         }
 
         #region Доступ к регистрам (для тестов)
@@ -98,7 +111,6 @@ namespace Besm6.Core
         public uint Rau { get => _rau; set => _rau = value & 0x3F; }
         public bool OnRightInstruction => _rightInstrFlag;
 
-        /// <summary>Флаг применения MOD к адресам (C++ core.apply_mod_reg) — для трассировки регистров.</summary>
         public bool ApplyModReg => _applyModReg;
 
         /// <summary>Человекочитаемый режим АЛУ (для отладчика/панели).</summary>
@@ -110,17 +122,14 @@ namespace Besm6.Core
         /// <summary>
         /// Счётчик перехвата (intercept_count): 0 — перехват отключён,
         /// 1 — перехватить следующую ошибку арифметики (overflow/div-by-zero).
-        /// Ставится E75 при записи по addr == 020 (C++ e75).
         /// </summary>
         public int InterceptCount { get => _interceptCount; set => _interceptCount = value; }
         /// <summary>Потребить перехват (после срабатывания ошибки).</summary>
         public void ConsumeIntercept() => _interceptCount = 0;
-        /// <summary>Адрес перехвата (по умолчанию 020 oct = 16 dec, как C++ intercept_addr).</summary>
         public uint InterceptAddr { get => _interceptAddr; set => _interceptAddr = value; }
 
         /// <summary>
         /// Перехват арифметической ошибки (overflow / div-zero). Точный порт
-        /// C++ Processor::intercept (dubna/processor.cpp:68-85):
         /// если перехват вооружён (InterceptCount>0) и сообщение — "Arithmetic overflow"
         /// или "Division by zero", то InterceptCount--, PC=InterceptAddr,
         /// right_instr_flag=false, apply_mod_reg=false, MOD=0, вернуть true.
@@ -142,18 +151,13 @@ namespace Besm6.Core
         }
 
         /// <summary>
-        /// Корректировка стека при перехвате. Точный порт C++ Processor::stack_correction
         /// (dubna/processor.cpp:127-131): core.M[017] += corr_stack; corr_stack = 0.
         /// corr_stack выставляется инструкциями, предварительно изменившими M[017]
         /// (сл/вч/.../стx: +1, счм: -1, уим/мод(стек): +1) и сбрасывается в начале
-        /// каждой инструкции (C++ processor.cpp:184). Вызывается при арифметическом
-        /// исключении ПЕРЕД Intercept — как в C++ machine.cpp:131-134 — чтобы откатить
         /// недоисполненное изменение стека.
         /// </summary>
         public void StackCorrection()
         {
-            // C++: core.M[017] += corr_stack; corr_stack = 0;
-            // Без ADDR-маски — ровно как в C++ (беззнаковое сложение по модулю слова).
             _m[15] = (uint)(_m[15] + _corrStack);
             _corrStack = 0;
         }
@@ -169,6 +173,87 @@ namespace Besm6.Core
         public uint GetRau() => _rau;
         public Word48 GetAcc() => _acc;
         public Word48 GetRmr() => _rmr;
+
+        internal sealed class DebugWatchAbortException : Exception
+        {
+        }
+
+        internal void ArmDebugWatch(uint xfer, bool printInfo, uint mode, uint watch, uint cont)
+        {
+            xfer &= 0x7FFF;
+            watch &= 0x7FFF;
+            cont &= 0x7FFF;
+            if (xfer == 0)
+                xfer = _debugPrevAbort != 0 ? _debugPrevAbort : cont;
+
+            switch (mode)
+            {
+                case 0:
+                    _debugFetchArmed = true;
+                    _debugFetchAddr = watch;
+                    _debugFetchCont = cont;
+                    _debugFetchPrintInfo = printInfo;
+                    break;
+                case 1:
+                case 2:
+                    _debugMemoryArmed = true;
+                    _debugMemoryAddr = watch;
+                    _debugMemoryCont = cont;
+                    _debugMemoryPrintInfo = printInfo;
+                    _debugMemoryMode = mode;
+                    break;
+                default:
+                    throw new ProcessorException("Bad debug watchpoint mode");
+            }
+
+            _pc = xfer;
+            _rightInstrFlag = false;
+        }
+
+        internal bool DebugCheckFetch(uint addr, uint opcode)
+        {
+            if (_debugWatchSuppressed || !_debugFetchArmed || _debugFetchAddr != (addr & 0x7FFF))
+                return false;
+
+            uint cont = _debugFetchCont;
+            bool printInfo = _debugFetchPrintInfo;
+            _debugFetchArmed = false;
+            DebugFire(cont, printInfo, opcode);
+            return true;
+        }
+
+        private bool DebugCheckMemory(uint addr, uint mode)
+        {
+            if (_debugWatchSuppressed || !_debugMemoryArmed ||
+                _debugMemoryMode != mode || _debugMemoryAddr != (addr & 0x7FFF))
+                return false;
+
+            uint cont = _debugMemoryCont;
+            bool printInfo = _debugMemoryPrintInfo;
+            _debugMemoryArmed = false;
+            DebugFire(cont, printInfo, 0);
+            return true;
+        }
+
+        private void DebugFire(uint cont, bool printInfo, uint opcode)
+        {
+            _debugWatchSuppressed = true;
+            try
+            {
+                if (printInfo)
+                    TraceInstruction?.Invoke(_pc, _rightInstrFlag, _rk, opcode);
+
+                _debugPrevAbort = cont;
+                _pc = cont & 0x7FFF;
+                _rightInstrFlag = false;
+                _applyModReg = false;
+                _mod = 0;
+            }
+            finally
+            {
+                _debugWatchSuppressed = false;
+            }
+        }
 
         #endregion
 
@@ -263,19 +348,21 @@ namespace Besm6.Core
 
         #endregion
 
-        #region Память (с семантикой адреса 0, как в C++ Machine)
+        #region Память
 
         internal ulong MemFetch(ulong addr)
         {
             addr &= 0x7FFF;
             if (addr == 0)
-                return 0;
+                throw new ProcessorException("Jump to zero");
             return _memory.Read((uint)addr).Value;
         }
 
         internal ulong MemLoad(uint addr)
         {
             addr &= 0x7FFF;
+            if (DebugCheckMemory(addr, 2))
+                throw new DebugWatchAbortException();
             if (addr == 0)
                 return 0;
             return _memory.Read(addr).Value;
@@ -284,6 +371,8 @@ namespace Besm6.Core
         internal void MemStore(uint addr, ulong val)
         {
             addr &= 0x7FFF;
+            if (DebugCheckMemory(addr, 1))
+                throw new DebugWatchAbortException();
             if (addr == 0)
                 return;
             _memory.Write(addr, new Word48(val));
@@ -297,13 +386,12 @@ namespace Besm6.Core
         /// </summary>
         public bool Step() => _executor.Execute();
 
-        #region Canonical TSV trace (дифференциальное сравнение с C++ dubna)
+        #region Canonical TSV trace
 
         /// <summary>
         /// Канонический машинно-сравнимый трасс (TSV). Включается env-переменной
         /// BESM6_CANON_TRACE=путь. Одна строка = одна реально выполненная инструкция:
         /// PRE-снимок состояния (ДО advance PC/half и ДО исполнения) + POST-снимок.
-        /// Схема колонок идентична instrumented C++ (ref/processor.cpp canon_pre/canon_post).
         /// half = исполняемая половина (L: старшие 24 бита слова, R: младшие).
         /// Все адреса — unsigned decimal; ACC/RMR/raw48/rk24 — hex.
         /// </summary>

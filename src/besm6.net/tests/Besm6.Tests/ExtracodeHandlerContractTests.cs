@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Besm6.Core;
 using Besm6.Loader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -29,6 +29,7 @@ namespace Besm6.Tests
         private const int E60 = 48;  // 060 oct
         private const int E62 = 50;  // 062 oct
         private const int E66 = 54;  // 066 oct
+        private const int E72 = 58;  // 072 oct
         private const int E73 = 59;  // 073 oct
         private const int E74 = 60;  // 074 oct
         private const int E77 = 63;  // 077 oct
@@ -77,7 +78,7 @@ namespace Besm6.Tests
         [DataTestMethod]
         [DataRow(E73)] // 073 — «Unknown, for ITM/ASS» (ref L107-108: break)
         [DataRow(E20)] // 200 — reserved/no-op
-        [DataRow(E21)] // 210 — lock/release semaphores, TODO в C++ → no-op
+        [DataRow(E21)]
         public void NoopExtracodes_ReturnTrue_DoNotTouchState(int code)
         {
             var machine = new MachineCore();
@@ -91,6 +92,16 @@ namespace Besm6.Tests
             Assert.IsTrue(handled, $"э{Convert.ToString(code, 8)} обязан обработываться как no-op");
             Assert.AreEqual(accBefore, machine.Cpu.GetAcc().Value, "no-op не меняет ACC");
             Assert.AreEqual(0x2001u, machine.Cpu.GetM(15), "no-op не меняет M[15]");
+        }
+
+        [TestMethod]
+        public void HangDetection_IsDisabledByDefaultLikeCpp()
+        {
+            var machine = new MachineCore();
+            var handler = MakeHandler(machine);
+
+            for (int i = 0; i < 502; i++)
+                Assert.IsTrue(handler.Handle(E73, 0));
         }
 
         // ─── E60 / E62 / E66 / E77: unsupported → false (P1-9) ──────────────
@@ -112,6 +123,42 @@ namespace Besm6.Tests
             bool handled = handler.Handle(code, 0);
 
             Assert.IsFalse(handled, $"э{Convert.ToString(code, 8)} не реализован и обязан вернуть false");
+        }
+
+        [DataTestMethod]
+        [DataRow(4)]
+        [DataRow(8)]
+        [DataRow(0x7FFF)]
+        public void E72_OnlyDocumentedRequestsAreNoop(int addr)
+        {
+            var machine = new MachineCore();
+            var handler = MakeHandler(machine);
+            machine.Cpu.SetM(14, (uint)addr);
+
+            Assert.IsTrue(handler.Handle(E72, 0));
+        }
+
+        [DataTestMethod]
+        [DataRow(0)]
+        [DataRow(1)]
+        [DataRow(7)]
+        public void E72_UnsupportedRequestsThrow(int addr)
+        {
+            var machine = new MachineCore();
+            var handler = MakeHandler(machine);
+            machine.Cpu.SetM(14, (uint)addr);
+
+            try
+            {
+                handler.Handle(E72, 0);
+            }
+            catch (ProcessorException ex)
+            {
+                Assert.AreEqual($"Unimplemented extracode *72 {Convert.ToString(addr, 8)}", ex.Message);
+                return;
+            }
+
+            Assert.Fail("Недопустимый запрос E72 обязан бросать ProcessorException");
         }
 
         // ─── E51-E56: success-path wiring (P1-8) ────────────────────────────

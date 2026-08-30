@@ -26,7 +26,6 @@ namespace Besm6.Core
 
         /// <summary>
         /// Создаёт puncher. <paramref name="outputDir"/> — каталог для punch.out /
-        /// stdarray.out / cosy.out (по умолчанию — текущий каталог, как в C++).
         /// </summary>
         public Puncher(IMemory memory, string? outputDir = null)
         {

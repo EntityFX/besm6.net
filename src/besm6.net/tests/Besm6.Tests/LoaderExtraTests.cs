@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using Besm6.Core;
 using Besm6.Loader;
@@ -222,7 +222,6 @@ namespace Besm6.Tests
         [TestMethod]
         public void GostToUnicode_UnmappedCode_ReturnsZeroChar()
         {
-            // Коды 140-255 не заданы в C++ оригинале → 0.
             Assert.AreEqual('\0', CosyCodec.GostToUnicode(0xFF));
             Assert.AreEqual(' ', CosyCodec.GostToUnicode(0x0F));
         }
@@ -284,7 +283,6 @@ namespace Besm6.Tests
             //   decisec b0-3, sec_lo b4-7, sec_hi b8-11, min_lo b12-15, min_hi b16-19,
             //   hour_lo b20-23, hour_hi b24-25, year_lo b26-29, year_hi b30-33,
             //   month_lo b34-37, month_hi b38-41, day_lo b42-45, day_hi b46-47.
-            // Фиксированное значение C++: 04/07/24 23:45:56 = 0'101C'9234'5560 hex.
             machine.Cpu.SetM(14, 55);
             handler.Handle(40, 0); // *50
             Assert.AreEqual(0x101C92345560UL, machine.Cpu.GetAcc().Value);
@@ -327,13 +325,13 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
-        public void E72_AllVariants_NoOp()
+        public void E72_DayfileRequest_NoOp()
         {
             var machine = new MachineCore();
             var handler = MakeHandler(machine);
 
             machine.Cpu.SetAcc(12345);
-            machine.Cpu.SetM(14, 5);
+            machine.Cpu.SetM(14, 4);
             handler.Handle(58, 0); // 072 oct
             Assert.AreEqual(12345UL, machine.Cpu.GetAcc().Value, "E72 — no-op, ACC не меняется");
         }
@@ -544,7 +542,6 @@ namespace Besm6.Tests
             handler.MapDrumToDisk(2, 30, disk);
 
             // unit=2 (thisDrum=2 >= _mappedDrum=2), phys_io бит 38, tract=1.
-            // ВАЖНО (соответствие C++, ref/machine.cpp:688-691 + disk_io:326-331):
             // phys-io пишет/читает КЛОН диска (mapped_disk), чтобы не повредить
             // оригинал (MONSYS). Оригинальный диск при этом НЕ меняется.
             // Поэтому проверяем не оригинал, а round-trip: запись → чтение.

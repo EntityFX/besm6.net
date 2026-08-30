@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Besm6.Core;
 
 namespace Besm6.Loader
@@ -19,14 +19,17 @@ namespace Besm6.Loader
 
         // E57: колбэки для монтажа/поиска/отзыва лент.
         private readonly Func<long, int, bool> _mountTape;
+        private readonly Func<long, int, bool, bool>? _mountTapeWithMode;
         private readonly Func<long, int> _findTape;
         private readonly Action<long> _releaseTapes;
+        private readonly Func<ulong, ulong, bool, uint> _fileSearch;
+        private readonly Func<int, uint, bool, uint, int> _fileMount;
+        private readonly Action<int, int> _scratchMount;
 
         private const int M16 = 14; // индекс-регистр 16 = M[14] в нумерации БЭСМ-6
 
         /// <summary>
         /// E50 067 (DATE*): реальное системное время или фиксированная дата (04/07/2024 23:45:56).
-        /// По умолчанию — фиксированная дата (entropy OFF), как в C++ <c>Machine</c>
         /// (ref/machine.h:77 <c>entropy_flag{}</c> = false) и в gtest-фикстурах — это
         /// детерминированное значение для тестов. CLI (ref/main.cpp:103) явно включает
         /// wall clock (<c>session.enable_entropy()</c>), флаг <c>-r</c> отключает;
@@ -36,13 +39,10 @@ namespace Besm6.Loader
 
         /// <summary>
         /// Эвристика обнаружения зависания: 500+ вызовов экстракодов без вывода (E64)
-        /// или останова (E74). В C++-референсе (dubna/) такого детектора НЕТ — он
         /// исполняет, пока программа не завершится естественно, опираясь только на
         /// предел инструкций (-l). Поэтому детектор можно отключить (--no-hang-detect /
-        /// <c>HangDetect=false</c>) для точного соответствия C++ и отладки.
-        /// По умолчанию ВКЛЮЧЁН, чтобы давал диагностический сигнал о зависании MONSYS.
         /// </summary>
-        public bool HangDetect { get; set; } = true;
+        public bool HangDetect { get; set; } = false;
 
         // Phys_io remap (drum → disk redirection, set via MapDrumToDisk).
         private int _mappedDrum = -1;
@@ -57,7 +57,6 @@ namespace Besm6.Loader
         {
             _mappedDrum = drum;
             _physIoDiskUnit = diskUnit;
-            // Порт C++ map_drum_to_disk (ref/machine.cpp:685-694): КЛОНИруем диск,
             // чтобы phys-io записи шли в копию, а оригинал (MONSYS) остался нетронутым.
             // Иначе MONSYS читает уже изменённые данные и зацикливается в I/O-wait/abort.
             _physIoDisk = new TapeImage(disk.VolumeId, (byte[])disk.Data.Clone(), readOnly: false);
@@ -72,7 +71,11 @@ namespace Besm6.Loader
             Func<string, string>? input = null,
             Func<long, int, bool>? mountTape = null,
             Func<long, int>? findTape = null,
-            Action<long>? releaseTapes = null)
+            Action<long>? releaseTapes = null,
+            Func<long, int, bool, bool>? mountTapeWithMode = null,
+            Func<ulong, ulong, bool, uint>? fileSearch = null,
+            Func<int, uint, bool, uint, int>? fileMount = null,
+            Action<int, int>? scratchMount = null)
         {
             _machine = machine;
             _diskByTapeId = diskByTapeId;
@@ -81,19 +84,20 @@ namespace Besm6.Loader
             _output = output ?? (s => Console.Write(s));
             _input = input ?? (p => { Console.Write(p); return Console.ReadLine() ?? ""; });
             _mountTape = mountTape ?? ((id, u) => false);
+            _mountTapeWithMode = mountTapeWithMode;
             _findTape = findTape ?? ((id) => 0);
             _releaseTapes = releaseTapes ?? ((mask) => { });
+            _fileSearch = fileSearch ?? ((disc, file, write) => 0);
+            _fileMount = fileMount ?? ((unit, offset, write, fileOffset) => 8);
+            _scratchMount = scratchMount ?? ((unit, zones) => { });
         }
 
         /// <summary>
         /// Точка входа из Processor.ExtracodeHandler.
         /// </summary>
         // Hang detection: no output (E64) or halt (E74) for too many extracode calls.
-        private long _lastPc = -1;
-        private int _repeatCount = 0;
         private int _noOutputCount = 0;       // extracode calls since last E64/E74
         private const int NoOutputLimit = 500; // 500 extracode calls without output = hang
-        private int _noOutputTotalInstr = 0;  // total instructions since last output (approx)
 
         private readonly bool _traceExtracodes = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BESM6_TRACE"));
         private System.IO.StreamWriter? _traceWriter = null;
@@ -110,21 +114,9 @@ namespace Besm6.Loader
         public bool Handle(int opcode, uint aex)
         {
             long pc = _machine.Cpu.GetPc();
-            if (pc == _lastPc) _repeatCount++;
-            else { _repeatCount = 0; _lastPc = pc; }
-            if (_repeatCount > 20)
-            {
-                var cpu = _machine.Cpu;
-                long m16val = cpu.GetM(M16) & 0x7FFF;
-                long acc = (long)cpu.GetAcc().Value;
-                Console.Error.WriteLine(
-                    $"[TRACE] extracode={opcode} aex=0{aex:X} PC=0{pc:X} repeat={_repeatCount} " +
-                    $"M16=0{m16val:X}({Convert.ToString(m16val, 8)}) ACC=0{acc:X}");
-            }
 
             Extracode code = (Extracode)opcode;
 
-            // Детальная трассировка — формат идентичен C++ (ref/trace.cpp print_instruction +
             // print_executive_address + besm6_print_instruction_octal/mnemonics), чтобы можно
             // было напрямую diff'ить с трассой dubna_ref.exe -t.
             //   <PC:5oct> <L|R>: <reg:2> <opcode:3> <addr:4> <mnemonic> [= exec-addr]
@@ -164,7 +156,6 @@ namespace Besm6.Loader
             }
 
             // Hang detection: too many extracode calls without any output.
-            // Отключается свойством HangDetect (по умолчанию включён).
             if (HangDetect)
             {
                 _noOutputCount++;
@@ -207,8 +198,8 @@ namespace Besm6.Loader
                 case Extracode.E74: throw new ProcessorException("");
                 case Extracode.E75: E75(); return true;
                 case Extracode.E76: E76(); return true;
-                case Extracode.E20: return true;  // 0200 oct — no-op (C++: reserved)
-                case Extracode.E21: return true;  // 0210 oct — lock/release semaphores (C++: TODO/no-op)
+                case Extracode.E20: return true;
+                case Extracode.E21: return true;
                 default: return false;
             }
         }
@@ -230,7 +221,6 @@ namespace Besm6.Loader
         // в dubna, доходит до Э63(0) в C# — это доказательство РАНЕЕ возникшего
         // архитектурного расхождения (ранее исполненной инструкции или её состояния),
         // а не повод додумывать поведение «наугад»: любое поведение э63(0) здесь —
-        // отклонение от C++-референса.
 
         private void E63()
         {
@@ -280,13 +270,13 @@ namespace Besm6.Loader
                 case 372: cpu.SetAcc(512L); return;
                 case 381: cpu.SetAcc(4608L); return;
                 case 382: cpu.SetAcc(3584L); return;
-                case 496: cpu.SetAcc(0x800000600L); return;  // 0760 oct — адреса СТАТУС и ИПД (C++ e65)
+                case 496: cpu.SetAcc(0x800000600L); return;
                 case 497: cpu.SetAcc(2048L); return;
                 case 498: cpu.SetAcc(4096L); return;
                 case 500: //0764 Get version of Dubna OS.
                     cpu.SetAcc(0x82828F5C28F6L); return; //0'4050'1217'2702'4366
                 case 502: //0766
-                    cpu.SetAcc(0x4F4320645962L); return;  // 0766 oct — 'OC ДYБ' (C++ e65)
+                    cpu.SetAcc(0x4F4320645962L); return;
                 case 514: cpu.SetAcc(233475L); return;
                 case 1024: cpu.SetAcc(0); return;
                 case 1536: cpu.SetAcc(0); return;
@@ -320,14 +310,25 @@ namespace Besm6.Loader
         {
             var cpu = _machine.Cpu;
             ulong word = (ulong)_machine.Memory.Read((uint)(cpu.GetM(M16) & 0x7FFF)).Value;
-            cpu.SetPc((uint)(word >> 24) & 0x7FFF);
+            uint xfer = (uint)(word >> 24) & 0x7FFF;
+            bool printInfo = ((word >> 23) & 1) != 0;
+            uint mode = (uint)(word >> 20) & 3;
+            uint watch = (uint)word & 0x7FFF;
+            uint cont = cpu.GetPc();
+
+            cpu.ArmDebugWatch(xfer, printInfo, mode, watch, cont);
         }
 
         // ─── E72: ОС Дубна (страницы памяти) ─────────────────────────────────
 
         private void E72()
         {
-            // All E72 variants are OK for our purposes.
+            uint addr = _machine.Cpu.GetM(M16) & 0x7FFF;
+            if (addr == 4 || addr >= 8)
+                return;
+
+            throw new ProcessorException(
+                $"Unimplemented extracode *72 {Convert.ToString(addr, 8)}");
         }
 
         // ─── E75: запись аккумулятора в память ───────────────────────────────
@@ -336,7 +337,6 @@ namespace Besm6.Loader
         {
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16) & 0x7FFF;
-            // Exact port of C++ e75(): if (addr > 0) mem_store + intercept check.
             if (addr > 0)
             {
                 _machine.Memory.Write((uint)addr, new Word48(cpu.GetAcc().Value));
@@ -390,10 +390,8 @@ namespace Besm6.Loader
 
                 case 55:  // 067 oct — DATE*, ОС Дубна.
                 {
-                    // Порт C++ (ref/e50.cpp:437-474):
                     //   если machine.is_entropy_enabled() — реальное текущее местное
                     //   время (localtime), иначе фиксированная дата для тестов.
-                    // В C++ entropy включена по умолчанию (ref/main.cpp:101-103),
                     // только -r отключает её (ref/main.cpp:193-196).
                     // Раскладка union E50_Date_Time (ref/extracode.h):
                     //   decisec  b0-3,  sec_lo  b4-7,  sec_hi  b8-11, min_lo  b12-15,
@@ -403,12 +401,12 @@ namespace Besm6.Loader
                     ulong word;
                     if (UseWallClock)
                     {
-                        var now = DateTime.Now; // C++: localtime
+                        var now = DateTime.Now;
                         word = (ulong)((now.Day / 10) & 0x3) << 46
                             | (ulong)(now.Day % 10) << 42
                             | (ulong)((now.Month / 10) & 0xF) << 38
                             | (ulong)(now.Month % 10) << 34
-                            | (ulong)(((now.Year % 100) / 10) & 0xF) << 30   // C++: tm_year = year-1900, берут 2 последних цифры
+                            | (ulong)(((now.Year % 100) / 10) & 0xF) << 30
                             | (ulong)((now.Year % 100) % 10) << 26
                             | (ulong)((now.Hour / 10) & 0x3) << 24
                             | (ulong)(now.Hour % 10) << 20
@@ -416,11 +414,9 @@ namespace Besm6.Loader
                             | (ulong)(now.Minute % 10) << 12
                             | (ulong)((now.Second / 10) & 0xF) << 8
                             | (ulong)(now.Second % 10) << 4;
-                        // decisec (b0-3) = 0 (C++: result.field.decisec = 0).
                     }
                     else
                     {
-                        // Фиксированное значение C++ (entropy отключена, ref/e50.cpp:456-470):
                         //   day_hi=0, day_lo=4   → 04
                         //   month_hi=0, month_lo=7 → July (ИЮЛ)
                         //   year_hi=2, year_lo=4  → 2024
@@ -467,11 +463,11 @@ namespace Besm6.Loader
                 case 31872: // 076200 oct
                     break;
 
-                case 137:   // 0211 oct — C++: throw Exception("Task paused waiting for tape")
+                case 137:
                     throw new ProcessorException("Task paused waiting for tape");
 
                 case 28735: cpu.SetAcc(0); break;         // 070077 oct
-                case 28800: cpu.SetAcc(4096L); break;     // 070200 oct — C++: ACC = 0'0010'0000 (бит 12)
+                case 28800: cpu.SetAcc(4096L); break;
                 case 28808: cpu.SetAcc(0); break;         // 070210 oct
                 case 28812: cpu.SetAcc(System.Convert.ToUInt64("1234567012345670", 8)); break; // 070214 oct
 
@@ -552,7 +548,6 @@ namespace Besm6.Loader
                     $"[E57] addr=0{Convert.ToString(addr, 8)} ACC=0{acc:X} M[13]=0{m13:X}");
             }
 
-            // Специальные адреса (C++ switch).
             switch (addr)
             {
                 case 0:
@@ -578,18 +573,14 @@ namespace Besm6.Loader
 
             if (addr == 32767) // 077777 octal
             {
-                // E57 file ops (VOLUME_OPEN / FILE_SEARCH / FILE_OPEN / SCRATCH).
-                // Для bemsh.dub достаточно tape ops; file ops пока no-op.
-                // MONSYS не вызывает этот путь.
+                E57File();
                 return;
             }
 
             if (addr >= 8) // 010 octal
             {
                 // E57 tape ops: ASSIGN / RELEASE / FIND (порт e57_tape).
-                // C++ octal → decimal: 0100=64, 0200=128, 040=32, 02000=1024, 04000=2048
                 const long E57_WRITE   = 64;
-                const long E57_READ    = 128;
                 const long E57_READY   = 32;
                 const long E57_ASSIGN  = 1024;
                 const long E57_RELEASE = 2048;
@@ -599,7 +590,10 @@ namespace Besm6.Loader
                     // Mount tape: tapeId in ACC, disk unit in M[15 octal] = M[13 decimal].
                     long tapeIdAssign = (long)cpu.GetAcc().Value;
                     int diskUnit = (int)(cpu.GetM(13) & 0x7F);
-                    bool ok = _mountTape(tapeIdAssign, diskUnit);
+                    bool writePermit = (addr & E57_WRITE) != 0;
+                    bool ok = _mountTapeWithMode != null
+                        ? _mountTapeWithMode(tapeIdAssign, diskUnit, writePermit)
+                        : _mountTape(tapeIdAssign, diskUnit);
                     if (!ok)
                         throw new ProcessorException($"E57 ASSIGN: cannot mount tape 0x{tapeIdAssign:X} on unit {diskUnit}");
                     if (_traceExtracodes)
@@ -616,7 +610,8 @@ namespace Besm6.Loader
                 if ((addr & E57_RELEASE) != 0)
                 {
                     // Release tapes according to bitmask on accumulator.
-                    _releaseTapes((long)cpu.GetAcc().Value);
+                    if ((addr & E57_READY) == 0)
+                        _releaseTapes((long)cpu.GetAcc().Value);
                     cpu.SetAcc(0);
                     return;
                 }
@@ -631,6 +626,109 @@ namespace Besm6.Loader
             {
                 // addr == 1 or 4: tape control by Gusev — unsupported.
                 throw new ProcessorException($"E57: unimplemented extracode *57 {Convert.ToString((int)addr, 8)}");
+            }
+        }
+
+        private void E57File()
+        {
+            const ulong keyValue = 0xD38EA0800000UL;
+            const ulong keyMask = 0xFFFFE0F00000UL;
+            const ulong discLocal = 0xB2F8E1B00000UL;
+            const ulong discHome = 0xA2FB65000000UL;
+            const ulong discTmp = 0xD2DC00000000UL;
+            const ulong bit48 = 1UL << 47;
+            const int noAccess = 8;
+            const int notFound = 16;
+
+            var cpu = _machine.Cpu;
+            ulong request = cpu.GetAcc().Value;
+            if ((request & keyMask) != keyValue)
+                throw new ProcessorException("Wrong access key in *57 77777");
+
+            int infoAddr = (int)(request & 0x7FFF);
+            int operation = (int)((request >> 15) & 0x1F);
+            ulong Read(int address) => _machine.Memory.Read((uint)(address & 0x7FFF)).Value;
+            void Write(int address, ulong value) =>
+                _machine.Memory.Write((uint)(address & 0x7FFF), new Word48(value));
+
+            switch (operation)
+            {
+                case 0: // VOLUME_OPEN
+                {
+                    ulong disc = Read(infoAddr + 1) & 0xFFFFFFFFF000UL;
+                    if (disc != discLocal && disc != discHome && disc != discTmp)
+                        throw new ProcessorException($"Unsupported disc name: 0x{disc:X12}");
+                    cpu.SetAcc(0);
+                    return;
+                }
+                case 1:
+                    throw new ProcessorException(
+                        "Extracode *57 77777: operation 'Release Volume' not supported yet");
+                case 2: // FILE_SEARCH
+                {
+                    ulong disc = Read(infoAddr);
+                    for (int address = infoAddr + 1; ; address += 4)
+                    {
+                        if (Read(address) == bit48)
+                            break;
+
+                        ulong fileName = Read(address + 1);
+                        ulong reply = Read(address + 2);
+                        bool writeMode = ((reply >> 29) & 1) != 0;
+                        uint offset = _fileSearch(disc, fileName, writeMode);
+                        int error = offset == 0 ? (writeMode ? noAccess : notFound) : 0;
+                        reply &= ~((1UL << 29) - 1);
+                        reply &= ~(0x3FUL << 42);
+                        reply |= offset & ((1U << 29) - 1U);
+                        reply |= (ulong)error << 42;
+                        Write(address + 2, reply);
+                    }
+                    cpu.SetAcc(0);
+                    return;
+                }
+                case 3: // FILE_OPEN
+                {
+                    for (int address = infoAddr + 1; ; address++)
+                    {
+                        ulong item = Read(address);
+                        if (item == 0)
+                            break;
+                        uint offset = (uint)(item & ((1UL << 29) - 1));
+                        bool writeMode = ((item >> 29) & 1) != 0;
+                        int unit = (int)((item >> 36) & 0x3F);
+                        int error = _fileMount(unit, offset, writeMode, 0);
+                        item = (item & ~(0x3FUL << 42)) | ((ulong)(error & 0x3F) << 42);
+                        Write(address, item);
+                    }
+                    cpu.SetAcc(0);
+                    return;
+                }
+                case 4: // SCRATCH_OPEN
+                {
+                    for (int address = infoAddr; ; address++)
+                    {
+                        ulong item = Read(address);
+                        if (item == 0)
+                            break;
+                        int size = (int)(item & 0x1F);
+                        int unit = (int)((item >> 36) & 0x3F);
+                        _scratchMount(unit, size * 32);
+                    }
+                    cpu.SetAcc(0);
+                    return;
+                }
+                case 5:
+                    throw new ProcessorException(
+                        "Extracode *57 77777: operation 'Release File' not supported yet");
+                case 6:
+                    throw new ProcessorException(
+                        "Extracode *57 77777: operation 'Release All' not supported yet");
+                case 31:
+                    throw new ProcessorException(
+                        "Extracode *57 77777: operation 'Change File Status' not supported yet");
+                default:
+                    throw new ProcessorException(
+                        $"Extracode *57 77777: unknown operation {Convert.ToString(operation, 8)}");
             }
         }
 
@@ -744,7 +842,6 @@ namespace Besm6.Loader
                 TapeImage? disk = _diskByUnit(unit);
                 if (disk == null)
                 {
-                    // Порт C++ disk_mount: если диск не смонтирован — создаём пустой.
                     // MONSYS при загрузке может обращаться к дискам, которые ещё
                     // не были смонтированы через E57 ASSIGN.
                     _mountTape(0, unit);
@@ -876,7 +973,7 @@ namespace Besm6.Loader
                 }
 
                 default:
-                    return; // в C++ неизвестный флаг — бездействие
+                    return;
             }
         }
     }
