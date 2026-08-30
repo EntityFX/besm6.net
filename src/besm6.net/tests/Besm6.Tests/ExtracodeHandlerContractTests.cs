@@ -20,6 +20,7 @@ namespace Besm6.Tests
         // Значения opcode — десятичные (см. src/besm6.net/Core/Extracode.cs).
         private const int E20 = 128; // 200 oct
         private const int E21 = 136; // 210 oct
+        private const int E50 = 40;  // 050 oct
         private const int E51 = 41;  // 051 oct
         private const int E52 = 42;  // 052 oct
         private const int E53 = 43;  // 053 oct
@@ -102,6 +103,18 @@ namespace Besm6.Tests
 
             for (int i = 0; i < 502; i++)
                 Assert.IsTrue(handler.Handle(E73, 0));
+        }
+
+        [TestMethod]
+        public void E50_070200_ReturnsCppCapabilityMask()
+        {
+            var machine = new MachineCore();
+            var handler = MakeHandler(machine);
+            machine.Cpu.SetM(14, 28800); // 070200 oct
+
+            Assert.IsTrue(handler.Handle(E50, 0));
+            Assert.AreEqual(0x8000UL, machine.Cpu.GetAcc().Value,
+                "E50 070200 must return the capability mask used by the C++ reference");
         }
 
         // ─── E60 / E62 / E66 / E77: unsupported → false (P1-9) ──────────────
