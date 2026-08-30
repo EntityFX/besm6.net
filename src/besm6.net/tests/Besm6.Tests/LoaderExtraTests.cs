@@ -538,22 +538,34 @@ namespace Besm6.Tests
             var handler = new ExtracodeHandler(
                 machine, id => null,
                 diskByUnit: u => null,
+                // барабан НЕ должен трогаться: phys-io должен редиректить на диск.
                 drumByUnit: u => { throw new InvalidOperationException("барабан не должен трогаться"); },
                 output: s => { });
             handler.MapDrumToDisk(2, 30, disk);
 
+            // unit=2 (thisDrum=2 >= _mappedDrum=2), phys_io бит 38, tract=1.
+            // ВАЖНО (соответствие C++, ref/machine.cpp:688-691 + disk_io:326-331):
+            // phys-io пишет/читает КЛОН диска (mapped_disk), чтобы не повредить
+            // оригинал (MONSYS). Оригинальный диск при этом НЕ меняется.
+            // Поэтому проверяем не оригинал, а round-trip: запись → чтение.
+            // diskZone = tract + (2-2)*32 = 1.
             for (int i = 0; i < 1024; i++)
                 machine.Memory.Write((uint)i, new Word48((ulong)i * 5UL));
-
-            // unit=2 (thisDrum=2 >= _mappedDrum=2), phys_io бит 38, tract=1, запись.
-            ulong ctrl = (2UL << 12) | 1UL | (1UL << 38);
+            ulong ctrlWrite = (2UL << 12) | 1UL | (1UL << 38); // запись (бит 39 = 0)
             machine.Cpu.SetM(14, 0);
-            machine.Cpu.SetAcc(ctrl);
+            machine.Cpu.SetAcc(ctrlWrite);
+            handler.Handle(56, 0); // 070 oct
+
+            // Стираем память и читаем обратно с phys-io диска (клон).
+            for (int i = 0; i < 1024; i++)
+                machine.Memory.Write((uint)i, new Word48(0));
+            ulong ctrlRead = (2UL << 12) | 1UL | (1UL << 38) | (1UL << 39); // чтение (бит 39 = 1)
+            machine.Cpu.SetAcc(ctrlRead);
             handler.Handle(56, 0);
 
-            // diskZone = tract + (2 - 2) * 32 = 1 → слово[1024 + 5] = memory[5] = 25.
-            Assert.AreEqual(25L, disk.ReadWord(1 * 1024 + 5));
-            Assert.AreEqual(0L, disk.ReadWord(5), "зона 0 диска не должна затронуться");
+            // diskZone=1, word 5 → memory[5] должно вернуть 25 (i*5 при i=5).
+            Assert.AreEqual(25L, (long)machine.Memory.Read(5).Value, "phys-io round-trip: данные вернулись из клона диска");
+            Assert.AreEqual(0L, (long)machine.Memory.Read(0).Value, "phys-io round-trip: memory[0] = 0 (i*5 при i=0)");
         }
     }
 }

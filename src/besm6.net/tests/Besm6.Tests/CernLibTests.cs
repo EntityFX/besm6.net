@@ -9,10 +9,10 @@ namespace Besm6.Tests
     ///  z005 (lib2): DATE*/DATEZB/IDATZA (детерминизм даты) — самый простой тест.
     /// w303 (lib2) в C++ закомментирован (вечный цикл) — здесь тоже [Ignore].
     ///
-    /// Known limitation (a400/z005): MONSYS-ядро неполное — сбой на э63(0) [M[16]=0]
-    /// при настройке сессии. Это НЕ баг C#: C++ dubna/ ТАКЖЕ падает (e63 default→throw),
-    /// и C++ cernlib_test.cpp cernlib_a400/z005 тоже фейлят. Подробности в комментарии
-    /// к ExtracodeHandler.E63 и в plans/monsys-kernel-support.md.
+    /// Статус a400/z005: это НЕ "известное ограничение MONSYS/C++" — а400 в C++
+    /// dubna/ проходит, расхождение C#/C++ локализовано и разбирается точечными
+    /// regression-тестами (extracode, RAU, MOD, stack correction) и canonical-трейсом
+    /// (BESM6_CANON_TRACE). Смотри plans/divergence-report.md.
     /// </summary>
     [TestClass]
     [DoNotParallelize]

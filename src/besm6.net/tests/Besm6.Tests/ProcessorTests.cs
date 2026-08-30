@@ -1255,7 +1255,9 @@ namespace Besm6.Tests
         [TestMethod]
         public void StackCorrection_NoOp()
         {
-            // C# StackCorrection — нет-оп (C++ corr_stack отсутствует в порте).
+            // StackCorrection() без ожидающей поправки (corr_stack == 0) не меняет состояние.
+            // Семантика corr_stack при исключении покрыта
+            // ProcessorStateRegressionTests.StackCorrection_RestoresPreparedStackAfterArithmeticException.
             long pcBefore = _cpu.GetPc();
             _cpu.StackCorrection();
             Assert.AreEqual(pcBefore, _cpu.GetPc());
