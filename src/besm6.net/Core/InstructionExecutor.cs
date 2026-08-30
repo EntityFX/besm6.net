@@ -534,6 +534,7 @@ namespace Besm6.Core
                 case Opcode.Stop:
                     _p._acc = Word48.FromInt48(acc);
                     _p._rmr = Word48.FromInt48(rmr);
+                    _p.CanonPost(pc, rightFlag);
                     return true;
 
                 case Opcode.Pio:
@@ -581,7 +582,23 @@ namespace Besm6.Core
                         _p.ExtracodeReg = reg;
                         _p.ExtracodeRawAddr = addr;
                         _p.ExtracodeRightFlag = tRight;
-                        if (_p.ExtracodeHandler != null && _p.ExtracodeHandler((int)opcode, aex))
+                        bool handled;
+                        try
+                        {
+                            handled = _p.ExtracodeHandler != null
+                                && _p.ExtracodeHandler((int)opcode, aex);
+                        }
+                        catch (ProcessorException exception)
+                        {
+                            // E74's empty exception is a complete terminal instruction
+                            // even when Processor is used without DubnaLoader.  Other
+                            // processor exceptions stay pending: the loader must first
+                            // apply stack correction/interception, then finalize POST.
+                            if (string.IsNullOrEmpty(exception.Message))
+                                _p.CanonPost(pc, rightFlag);
+                            throw;
+                        }
+                        if (handled)
                         {
                             // Обработчик экстракода может изменить ACC/RMR напрямую
                             // (например E63: cpu.SetAcc(...)). Локальные копии acc/rmr

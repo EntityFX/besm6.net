@@ -36,7 +36,10 @@ namespace Besm6.Tests
             };
             try { loader.RunScript(path); }
             catch (Exception ex) { if (ex.Message != "dumpdone") throw; }
-            File.WriteAllText(@"E:\Projects\besm6.net\tests-run\namedub_main_dump.txt", dump);
+            string repositoryRoot = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(path)!, ".."));
+            string outputDirectory = Path.Combine(repositoryRoot, "tests-run");
+            Directory.CreateDirectory(outputDirectory);
+            File.WriteAllText(Path.Combine(outputDirectory, "namedub_main_dump.txt"), dump);
             Assert.Inconclusive("dump saved");
         }
 

@@ -130,17 +130,7 @@ namespace Besm6.Loader
                     }
                     return 0;
                 },
-                    releaseTapes: mask => {
-                    // Release tapes by bitmask.
-                    for (int i = 0; i < 16; i++)
-                    {
-                        if ((mask & (1L << i)) != 0)
-                        {
-                            int unit = 24 + i;
-                            _disksByUnit.Remove(unit);
-                        }
-                    }
-                });
+                releaseTapes: ReleaseTapes);
 
             // Барабан #1 — для COSY-скрипта.
             _drumsByUnit[1] = new TapeImage(0, new byte[TapeImage.DrumNWords * 6], readOnly: false);
@@ -156,8 +146,12 @@ namespace Besm6.Loader
         /// </summary>
         public bool MountTape(int unit, long tapeId, bool writePermit = false)
         {
-            if (_disksByUnit.ContainsKey(unit))
-                return true;
+            if (unit < 24 || unit >= 56) // 030..067 octal, as in Machine::disk_mount
+                throw new ProcessorException(
+                    $"Invalid disk unit {Convert.ToString(unit, 8)} in disk mount");
+
+            if (_disksByUnit.TryGetValue(unit, out TapeImage? mounted))
+                return mounted.VolumeId == tapeId;
 
             var path = TapeImage.FindImagePath(tapeId, _tapesDir);
             if (path == null)
@@ -178,6 +172,29 @@ namespace Besm6.Loader
             _disksByTapeId[tapeId] = image;
             if (Verbose) Console.WriteLine($"Mounted {path} as disk 0{unit:X}");
             return true;
+        }
+
+        public void ReleaseTapes(long mask)
+        {
+            ulong bitmask = (ulong)mask;
+            for (int diskIndex = 0; diskIndex < 32; diskIndex++)
+            {
+                if (((bitmask >> (47 - diskIndex)) & 1UL) == 0)
+                    continue;
+
+                int unit = 24 + diskIndex;
+                if (_disksByUnit.Remove(unit, out TapeImage? released) &&
+                    _disksByTapeId.TryGetValue(released.VolumeId, out TapeImage? indexed) &&
+                    ReferenceEquals(released, indexed))
+                {
+                    TapeImage? replacement = _disksByUnit.Values.FirstOrDefault(
+                        disk => disk.VolumeId == released.VolumeId);
+                    if (replacement == null)
+                        _disksByTapeId.Remove(released.VolumeId);
+                    else
+                        _disksByTapeId[released.VolumeId] = replacement;
+                }
+            }
         }
 
         private uint FileSearch(ulong discId, ulong fileName, bool writeMode)
@@ -593,6 +610,9 @@ namespace Besm6.Loader
             }
             finally
             {
+                // C++ Machine::run invokes Processor::finish() on every terminal
+                // path, not after each E64 call.  Preserve that buffering model.
+                _extracode.FinishOutput();
                 // Canonical TSV trace: гарантированный flush при любом выходе.
                 _machine.Cpu.CanonFlush();
             }
@@ -686,9 +706,13 @@ namespace Besm6.Loader
                     // 3) intercept() → goto again (продолжить)
                     // 4) иначе → fail
                     _machine.Cpu.StackCorrection();
+                    // C++ flushes E64 before deciding whether the exception is a
+                    // legal E74 halt, interceptable, or fatal.
+                    _extracode.FinishOutput();
 
                     if (string.IsNullOrEmpty(ex.Message))
                     {
+                        _machine.Cpu.CanonPost(_machine.Cpu.GetPc(), _machine.Cpu._rightInstrFlag);
                         HaltedByStop = true;
                         return LoadResult.Halt(_machine.Cpu.GetPc(), InstructionsExecuted);
                     }
@@ -704,6 +728,7 @@ namespace Besm6.Loader
                     }
 
                     // Not intercepted — fatal error.
+                    _machine.Cpu.CanonPost(_machine.Cpu.GetPc(), _machine.Cpu._rightInstrFlag);
                     if (Verbose) Console.WriteLine();
                     return LoadResult.Failed(ex.Message, _machine.Cpu.GetPc(), InstructionsExecuted);
                 }

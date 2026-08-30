@@ -180,7 +180,9 @@ namespace Besm6.Loader
         private int _e64Position;
         private bool _e64LineDirty;
         private bool _e64Overprint;
-        private int _e64SkipLines = 1;
+        // C++ Processor::e64_skip_lines starts at zero.  Subsequent flushes set
+        // it to one so that the separator belongs before the next physical line.
+        private int _e64SkipLines;
         private int _e64LineCount;
 
         private long MemRead(int addr)
@@ -230,16 +232,8 @@ namespace Besm6.Loader
             if ((flags & 8) != 0)
             {
                 E64PrintDubna(startAddr, endAddr);
-                E64Finish();
                 return;
             }
-
-            // Initialize line buffer
-            Array.Fill(_e64Line, G_SPACE);
-            _e64Position = 0;
-            _e64LineDirty = false;
-            _e64Overprint = false;
-            _e64SkipLines = 1;
 
             for (;;)
             {
@@ -327,7 +321,6 @@ again:
                 }
             }
 
-            E64Finish();
         }
 
         // --- Line buffer ---
@@ -406,6 +399,12 @@ again:
                 _e64LineCount = 0;
             }
         }
+
+        /// <summary>
+        /// Flush pending E64 output at the same lifecycle boundaries as
+        /// Processor::finish() in the C++ reference.
+        /// </summary>
+        public void FinishOutput() => E64Finish();
 
         // --- GOST text ---
 
