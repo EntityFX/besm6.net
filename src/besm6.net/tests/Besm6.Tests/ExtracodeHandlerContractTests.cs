@@ -55,7 +55,7 @@ namespace Besm6.Tests
         {
             var machine = new MachineCore();
             var handler = MakeHandler(machine);
-            ulong accBefore = 0x1000200030004UL; // 44 бита (48-битное слово)
+            ulong accBefore = 0x200030004UL; // 48-bit word, safe 9-digit literal
             machine.Cpu.SetAcc(accBefore);
 
             try
@@ -82,7 +82,7 @@ namespace Besm6.Tests
         {
             var machine = new MachineCore();
             var handler = MakeHandler(machine);
-            ulong accBefore = 0x1000200030004UL; // 44 бита (48-битное слово)
+            ulong accBefore = 0x200030004UL;
             machine.Cpu.SetAcc(accBefore);
             machine.Cpu.SetM(15, 0x2001);
 
