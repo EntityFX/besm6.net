@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Besm6.Loader;
 
 namespace Besm6
 {
@@ -45,11 +46,15 @@ namespace Besm6
         [JsonPropertyName("useWallClock")]
         public bool UseWallClock { get; set; } = true;
 
+        [JsonIgnore]
+        private string? SourceDirectory { get; set; }
+
         /// <summary>
         /// Загрузить конфигурацию из файла. Если файл не найден — дефолтные значения.
         /// </summary>
         public static Config Load(string? path = null)
         {
+            bool explicitPath = path != null;
             if (path == null)
             {
                 // Ищем besm6.json рядом с exe или в текущей директории.
@@ -59,11 +64,18 @@ namespace Besm6
             }
 
             if (!File.Exists(path))
+            {
+                if (explicitPath)
+                    throw new FileNotFoundException("Configuration file not found", path);
                 return new Config();
+            }
 
-            string json = File.ReadAllText(path);
+            string fullPath = Path.GetFullPath(path);
+            string json = File.ReadAllText(fullPath);
             var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            return JsonSerializer.Deserialize<Config>(json, opts) ?? new Config();
+            Config config = JsonSerializer.Deserialize<Config>(json, opts) ?? new Config();
+            config.SourceDirectory = Path.GetDirectoryName(fullPath);
+            return config;
         }
 
         /// <summary>
@@ -71,15 +83,30 @@ namespace Besm6
         /// </summary>
         public string ResolvePath(string relative)
         {
-            // Пробуем относительно текущей директории, затем относительно AppContext.
+            if (Path.IsPathRooted(relative) && (File.Exists(relative) || Directory.Exists(relative)))
+                return Path.GetFullPath(relative);
+
+            if (SourceDirectory != null)
+            {
+                string fromConfig = Path.Combine(SourceDirectory, relative);
+                if (File.Exists(fromConfig) || Directory.Exists(fromConfig))
+                    return Path.GetFullPath(fromConfig);
+            }
+
             if (File.Exists(relative) || Directory.Exists(relative))
                 return Path.GetFullPath(relative);
 
-            string appDir = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", relative);
-            if (File.Exists(appDir) || Directory.Exists(appDir))
-                return Path.GetFullPath(appDir);
+            string fromApp = Path.Combine(AppContext.BaseDirectory, relative);
+            if (File.Exists(fromApp) || Directory.Exists(fromApp))
+                return Path.GetFullPath(fromApp);
 
-            return Path.GetFullPath(relative);
+            if (string.Equals(relative.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                              "tapes", StringComparison.OrdinalIgnoreCase))
+                return Path.GetFullPath(TapeImage.DefaultTapesDir());
+
+            return Path.GetFullPath(SourceDirectory == null
+                ? relative
+                : Path.Combine(SourceDirectory, relative));
         }
     }
 }
