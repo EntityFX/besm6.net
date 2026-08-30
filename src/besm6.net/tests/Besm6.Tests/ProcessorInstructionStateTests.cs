@@ -47,7 +47,7 @@ namespace Besm6.Tests
         [TestMethod]
         public void Ntzh_PreservesOldAccInRmr()
         {
-            ulong oldAcc = 0x1000200030004UL; // 44 бита (48-битное слово)
+            ulong oldAcc = 0x200030004UL; // 48-bit word, safe 9-digit literal
             ulong operand = 0x0000FFFF0000FFFFUL;
 
             StoreWord("10", "нтж 2000, стоп");
@@ -72,8 +72,8 @@ namespace Besm6.Tests
         {
             StoreWord("10", instruction + ", стоп");
             StoreData("2000", 1UL);
-            _cpu.SetAcc(0x123456789ABCDEUL);
-            _cpu.SetRmr(0xFEDCBA98765431UL);
+            _cpu.SetAcc(0x200030004UL);
+            _cpu.SetRmr(0x400050006UL);
             _cpu.SetPc(Pc);
 
             _cpu.Step();
@@ -89,7 +89,7 @@ namespace Besm6.Tests
 
             StoreWord("10", "счмр 2000, стоп");
             StoreData("2000", 1UL);
-            _cpu.SetAcc(0x99999999999999UL);
+            _cpu.SetAcc(0x600070008UL);
             _cpu.SetRmr(rmrValue);
             _cpu.SetRau((ulong)RauFlags.Log);
             _cpu.SetPc(Pc);
