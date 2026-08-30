@@ -379,6 +379,7 @@ namespace Besm6.Tests
                 input: p => "");
 
             handler.Handle(52, 0); // 064 oct = 52 dec
+            handler.FinishOutput();
             Assert.IsTrue(captured, "E64 должен вывести текст");
         }
 
@@ -450,11 +451,12 @@ namespace Besm6.Tests
                 machine, id => null, u => null, d => null,
                 output: s => captured += s, input: p => "");
             handler.Handle(52, 0); // *64
-            StringAssert.Contains(captured, "HI");
+            handler.FinishOutput();
+            Assert.AreEqual("HI\n", captured);
         }
 
         [TestMethod]
-        public void E64_GostOutput_MatchesCppSeparatorsAndNullSubstitution()
+        public void E64_GostOutput_MatchesCppInitialSeparatorAndNullSubstitution()
         {
             var machine = new MachineCore();
             byte[] bytes = { 0x20, 0x60, 0x20, 0x7A, 0, 0 }; // A, unmapped, A, end
@@ -462,7 +464,10 @@ namespace Besm6.Tests
             foreach (byte b in bytes) word = (word << 8) | b;
             machine.Memory.Write(512, new Word48(word));
             machine.Memory.Write(500, new Word48((512UL << 24) | 512UL));
-            machine.Memory.Write(501, new Word48(1UL << 23));
+            // finish=1, skip=1 forces this call to emit the buffered line.
+            // C++ starts with e64_skip_lines=0, therefore the first line has no
+            // leading LF and e64() itself does not append a final LF.
+            machine.Memory.Write(501, new Word48((1UL << 23) | (1UL << 20)));
             machine.Cpu.SetM(14, 500);
 
             string captured = "";
@@ -472,7 +477,7 @@ namespace Besm6.Tests
 
             handler.Handle(52, 0);
 
-            Assert.AreEqual("\nA A\n", captured);
+            Assert.AreEqual("A A", captured);
         }
 
         [TestMethod]
@@ -504,6 +509,68 @@ namespace Besm6.Tests
             Assert.AreEqual(24, mountedUnit);
             // ACC = disk unit.
             Assert.AreEqual(24UL, machine.Cpu.GetAcc().Value);
+        }
+
+        [TestMethod]
+        public void MountTape_DifferentTapeOnOccupiedUnitReturnsFalse()
+        {
+            var loader = new DubnaLoader(
+                new MachineCore(),
+                Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+
+            Assert.IsTrue(loader.MountTape(24, TapeImage.TapeMonsys));
+            Assert.IsFalse(loader.MountTape(24, TapeImage.TapeLibrar12),
+                "A different tape cannot be reported as mounted while unit 030 still contains MONSYS");
+        }
+
+        [TestMethod]
+        public void ReleaseTapes_UsesHighOrderAccumulatorBitForUnit030()
+        {
+            var loader = new DubnaLoader(
+                new MachineCore(),
+                Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+
+            Assert.IsTrue(loader.MountTape(24, TapeImage.TapeMonsys));
+
+            loader.ReleaseTapes(1L << 47);
+
+            Assert.IsTrue(loader.MountTape(24, TapeImage.TapeLibrar12),
+                "BESM-6 accumulator bit 47 must release disk unit 030 for the next assignment");
+        }
+
+        [TestMethod]
+        public void MountTape_RejectsUnitsOutsideCppDiskRange()
+        {
+            var loader = new DubnaLoader(
+                new MachineCore(),
+                Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+
+            Assert.Throws<ProcessorException>(() => loader.MountTape(23, TapeImage.TapeMonsys));
+            Assert.Throws<ProcessorException>(() => loader.MountTape(56, TapeImage.TapeMonsys));
+        }
+
+        [TestMethod]
+        public void ReleaseTapes_KeepsDuplicateTapeVisibleToE57Find()
+        {
+            var machine = new MachineCore();
+            var loader = new DubnaLoader(
+                machine,
+                Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+
+            Assert.IsTrue(loader.MountTape(24, TapeImage.TapeMonsys));
+            Assert.IsTrue(loader.MountTape(25, TapeImage.TapeMonsys));
+            loader.ReleaseTapes(1L << 46); // disk index 1 = unit 031
+
+            var handler = (ExtracodeHandler)typeof(DubnaLoader)
+                .GetField("_extracode", System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic)!
+                .GetValue(loader)!;
+            machine.Cpu.SetM(14, 8); // E57 FIND
+            machine.Cpu.SetAcc((ulong)TapeImage.TapeMonsys);
+            Assert.IsTrue(handler.Handle(47, 0));
+
+            Assert.AreEqual(24UL, machine.Cpu.GetAcc().Value,
+                "Releasing one duplicate mount must leave the other unit discoverable.");
         }
 
         [TestMethod]
