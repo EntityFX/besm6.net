@@ -14,7 +14,7 @@ namespace Besm6.Cli
     {
         public string Name => "run";
         public string Description => "Load and execute a .dub job script";
-        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--no-loop-detect] [--config path]";
+        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--config path]";
 
         public int Execute(string[] args)
         {
@@ -32,6 +32,8 @@ namespace Besm6.Cli
             string? regsFile = null;
             bool loopDetect = false;
             bool noLoopDetect = false;
+            bool hangDetect = true;   // детектор зависания включён по умолчанию (диагностика MONSYS)
+            bool noHangDetect = false;
 
             for (int i = 1; i < args.Length; i++)
             {
@@ -64,6 +66,17 @@ namespace Besm6.Cli
                         loopDetect = false;
                         noLoopDetect = true;
                         break;
+                    case "--hang-detect":
+                        // Включить эвристику зависания (по умолчанию и так включена).
+                        hangDetect = true;
+                        noHangDetect = false;
+                        break;
+                    case "--no-hang-detect":
+                        // Отключить эвристику зависания (500+ экстракодов без вывода) —
+                        // точное соответствие C++-референсу, где такого детектора нет.
+                        hangDetect = false;
+                        noHangDetect = true;
+                        break;
                 }
             }
 
@@ -77,6 +90,7 @@ namespace Besm6.Cli
                 loader.InstructionLimit = limit;
                 loader.Verbose = verbose;
                 loader.LoopDetect = loopDetect && !noLoopDetect;
+                loader.HangDetect = hangDetect && !noHangDetect;
 
                 if (trace)
                 {

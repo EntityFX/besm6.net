@@ -44,6 +44,19 @@ namespace Besm6.Loader
             set => _extracode.UseWallClock = value;
         }
 
+        /// <summary>
+        /// Эвристика обнаружения зависания (500+ экстракодов без вывода/останова).
+        /// Проксирует <see cref="ExtracodeHandler.HangDetect"/>.
+        /// В C++-референсе такого детектора нет, поэтому для точного соответствия
+        /// C++ и для отладки реальных зависаний его можно отключить
+        /// (CLI: <c>--no-hang-detect</c> / в тестах: <c>loader.HangDetect = false</c>).
+        /// </summary>
+        public bool HangDetect
+        {
+            get => _extracode.HangDetect;
+            set => _extracode.HangDetect = value;
+        }
+
         /// <summary>Выводить диагностику загрузки.</summary>
         public bool Verbose { get; set; }
 

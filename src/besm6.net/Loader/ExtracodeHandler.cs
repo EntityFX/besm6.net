@@ -34,6 +34,16 @@ namespace Besm6.Loader
         /// </summary>
         public bool UseWallClock { get; set; } = false;
 
+        /// <summary>
+        /// Эвристика обнаружения зависания: 500+ вызовов экстракодов без вывода (E64)
+        /// или останова (E74). В C++-референсе (dubna/) такого детектора НЕТ — он
+        /// исполняет, пока программа не завершится естественно, опираясь только на
+        /// предел инструкций (-l). Поэтому детектор можно отключить (--no-hang-detect /
+        /// <c>HangDetect=false</c>) для точного соответствия C++ и отладки.
+        /// По умолчанию ВКЛЮЧЁН, чтобы давал диагностический сигнал о зависании MONSYS.
+        /// </summary>
+        public bool HangDetect { get; set; } = true;
+
         // Phys_io remap (drum → disk redirection, set via MapDrumToDisk).
         private int _mappedDrum = -1;
         private int _physIoDiskUnit = -1;
@@ -154,21 +164,25 @@ namespace Besm6.Loader
             }
 
             // Hang detection: too many extracode calls without any output.
-            _noOutputCount++;
-            if (code == Extracode.E64 || code == Extracode.E74)
+            // Отключается свойством HangDetect (по умолчанию включён).
+            if (HangDetect)
             {
-                _noOutputCount = 0; // got output or halt
-            }
-            else if (_noOutputCount > NoOutputLimit)
-            {
-                throw new ProcessorException(
-                    $"Hang detected: MONSYS executing {NoOutputLimit}+ extracode calls without producing output. " +
-                    $"Last PC=0{Convert.ToString(pc, 8)}, opcode=0{Convert.ToString(opcode, 8)}. " +
-                    "This means MONSYS is in an I/O wait state expecting a compiler " +
-                    "(BEMSH/EXFOR/B) or resource that never completes. " +
-                    "This is a known limitation: the C++ reference (dubna/) also cannot " +
-                    "run ALGOL/FORTRAN/B jobs because the OS kernel is incomplete. " +
-                    "See plans/monsys-kernel-support.md for details.");
+                _noOutputCount++;
+                if (code == Extracode.E64 || code == Extracode.E74)
+                {
+                    _noOutputCount = 0; // got output or halt
+                }
+                else if (_noOutputCount > NoOutputLimit)
+                {
+                    throw new ProcessorException(
+                        $"Hang detected: MONSYS executing {NoOutputLimit}+ extracode calls without producing output. " +
+                        $"Last PC=0{Convert.ToString(pc, 8)}, opcode=0{Convert.ToString(opcode, 8)}. " +
+                        "This means MONSYS is in an I/O wait state expecting a compiler " +
+                        "(BEMSH/EXFOR/B) or resource that never completes. " +
+                        "This is a known limitation: the C++ reference (dubna/) also cannot " +
+                        "run ALGOL/FORTRAN/B jobs because the OS kernel is incomplete. " +
+                        "See plans/monsys-kernel-support.md for details.");
+                }
             }
 
             switch (code)

@@ -9,26 +9,6 @@ namespace Besm6.Tests
     [TestClass]
     public class DiagShiftTest
     {
-        private sealed class Mem : IMemory
-        {
-            private readonly Word48[] _w = new Word48[32768];
-            public Word48 Read(uint address) => _w[address & 0x7FFF];
-            public void Write(uint address, Word48 word) => _w[address & 0x7FFF] = word;
-            public int Size => 32768;
-        }
-
-        [TestMethod]
-        // ДИАГНОСТИЧЕСКИЙ тест (не реальный тест): намеренно бросает исключение,
-        // чтобы вывести состояние ACC/RMR после ArithShift(9). Не связан с э63(0) —
-        // это оставшийся debug-хелпер. Ожидается, что он «падает» (см. сообщение).
-        public void Shift9()
-        {
-            var cpu = new Processor(new Mem());
-            cpu.SetAcc(0x201);
-            cpu.ArithShift(9);
-            throw new Exception($"acc=0x{cpu.GetAcc().Value:X} rmr=0x{cpu.GetRmr().Value:X}");
-        }
-
         [TestMethod]
         public void DumpAtDivergence()
         {
