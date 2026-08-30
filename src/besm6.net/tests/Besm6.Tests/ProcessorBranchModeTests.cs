@@ -86,6 +86,11 @@ namespace Besm6.Tests
             // RMR = ACC — всегда, до решения о переходе (ref L750/L768).
             Assert.AreEqual(acc, _cpu.GetRmr().Value, "RMR обязан получить ACC до ветвления");
 
+            // Ветвление только читает состояние: ACC и RAU-режим обязаны не измениться (ref L748-783).
+            Assert.AreEqual(acc, _cpu.GetAcc().Value, "по/пе не меняют ACC");
+            Assert.AreEqual((uint)mode & (uint)RauFlags.Mode, _cpu.GetRau() & (uint)RauFlags.Mode,
+                "по/пе не меняют RAU-режим");
+
             if (expectBranch)
             {
                 Assert.AreEqual(target, _cpu.GetPc(), "переход должен попасть в Aex");
