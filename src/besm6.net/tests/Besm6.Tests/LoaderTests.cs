@@ -1,4 +1,4 @@
-﻿using Besm6.Core;
+using Besm6.Core;
 using Besm6.Loader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -363,7 +363,6 @@ namespace Besm6.Tests
             machine.Memory.Write(512, new Word48(word));
 
             // E64: адрес из M[14]. E64_Pointer в 500, E64_Info в 501.
-            // Pointer (C++ union E64_Pointer, LSB-first): start_addr биты 38..24,
             // end_addr биты 14..0. => 512<<24 | 512.
             machine.Memory.Write(500, new Word48((512UL << 24) | 512UL));
             // Info: format=0(GOST), finish=1 (бит 23).
@@ -455,6 +454,28 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
+        public void E64_GostOutput_MatchesCppSeparatorsAndNullSubstitution()
+        {
+            var machine = new MachineCore();
+            byte[] bytes = { 0x20, 0x60, 0x20, 0x7A, 0, 0 }; // A, unmapped, A, end
+            ulong word = 0;
+            foreach (byte b in bytes) word = (word << 8) | b;
+            machine.Memory.Write(512, new Word48(word));
+            machine.Memory.Write(500, new Word48((512UL << 24) | 512UL));
+            machine.Memory.Write(501, new Word48(1UL << 23));
+            machine.Cpu.SetM(14, 500);
+
+            string captured = "";
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null,
+                output: s => captured += s, input: p => "");
+
+            handler.Handle(52, 0);
+
+            Assert.AreEqual("\nA A\n", captured);
+        }
+
+        [TestMethod]
         public void E57_Assign_MountsTape()
         {
             var machine = new MachineCore();
@@ -506,6 +527,30 @@ namespace Besm6.Tests
             Assert.IsTrue(threw, "E57 ASSIGN с несуществующей лентой должен бросить исключение");
         }
 
+        [DataTestMethod]
+        [DataRow(1024, false)]
+        [DataRow(1088, true)]
+        public void E57_Assign_PassesWritePermit(int addr, bool expectedWritePermit)
+        {
+            var machine = new MachineCore();
+            bool? writePermit = null;
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null,
+                output: s => { },
+                mountTapeWithMode: (tapeId, unit, writable) =>
+                {
+                    writePermit = writable;
+                    return true;
+                });
+            machine.Cpu.SetM(14, (uint)addr);
+            machine.Cpu.SetM(13, 24);
+            machine.Cpu.SetAcc(TapeImage.TapeMonsys);
+
+            handler.Handle(47, 0);
+
+            Assert.AreEqual(expectedWritePermit, writePermit);
+        }
+
         [TestMethod]
         public void E57_Release_CallsReleaseTapes()
         {
@@ -528,6 +573,24 @@ namespace Besm6.Tests
 
             Assert.AreEqual(bitmask, releasedMask);
             Assert.AreEqual(0UL, machine.Cpu.GetAcc().Value, "After RELEASE, ACC should be 0");
+        }
+
+        [TestMethod]
+        public void E57_ReleaseReady_DoesNotReleaseTapes()
+        {
+            var machine = new MachineCore();
+            bool released = false;
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null,
+                output: s => { },
+                releaseTapes: mask => released = true);
+            machine.Cpu.SetM(14, 2048 + 32); // RELEASE | READY
+            machine.Cpu.SetAcc(1);
+
+            handler.Handle(47, 0);
+
+            Assert.IsFalse(released);
+            Assert.AreEqual(0UL, machine.Cpu.GetAcc().Value);
         }
 
         [TestMethod]
@@ -569,6 +632,45 @@ namespace Besm6.Tests
 
             handler.Handle(47, 0);
             Assert.AreEqual(0UL, machine.Cpu.GetAcc().Value);
+        }
+
+        [TestMethod]
+        public void E57_FileVolumeOpen_AcceptsLocalDisc()
+        {
+            const ulong key = 0xD38EA0800000UL;
+            const ulong discLocal = 0xB2F8E1B00000UL;
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null, output: s => { });
+            machine.Memory.Write(101, new Word48(discLocal));
+            machine.Cpu.SetM(14, 0x7FFF);
+            machine.Cpu.SetAcc(key | 100UL); // VOLUME_OPEN, info address 100
+
+            handler.Handle(47, 0);
+
+            Assert.AreEqual(0UL, machine.Cpu.GetAcc().Value);
+        }
+
+        [TestMethod]
+        public void E57_FileRequest_WithWrongAccessKeyThrows()
+        {
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null, output: s => { });
+            machine.Cpu.SetM(14, 0x7FFF);
+            machine.Cpu.SetAcc(100);
+
+            try
+            {
+                handler.Handle(47, 0);
+            }
+            catch (ProcessorException ex)
+            {
+                Assert.AreEqual("Wrong access key in *57 77777", ex.Message);
+                return;
+            }
+
+            Assert.Fail("E57 77777 обязан проверять ключ доступа");
         }
 
         [TestMethod]
@@ -630,6 +732,93 @@ namespace Besm6.Tests
 
             handler.Handle(55, 0); // E67 = 55 dec
             Assert.AreEqual(targetAddr, (int)machine.Cpu.GetPc());
+        }
+
+        [TestMethod]
+        public void E67_FetchWatch_ReturnsToContinuationBeforeExecutingWord()
+        {
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null, output: s => { });
+
+            const uint controlAddress = 200;
+            const uint transferAddress = 300;
+            const uint watchAddress = 64; // 0100 octal
+            const uint continuation = 77;
+            ulong control = ((ulong)transferAddress << 24) | watchAddress;
+            machine.Memory.Write(controlAddress, new Word48(control));
+            machine.Memory.Write(transferAddress,
+                new Word48(Besm6.Asm.Assembler.Asm("пб 100, сч 0")));
+            machine.Memory.Write(watchAddress,
+                new Word48(Besm6.Asm.Assembler.Asm("стоп 12345(6), сч 0")));
+            machine.Cpu.SetM(14, controlAddress);
+            machine.Cpu.SetPc(continuation);
+
+            handler.Handle(55, 0);
+            Assert.AreEqual(transferAddress, machine.Cpu.GetPc());
+            Assert.IsFalse(machine.Cpu.Step());
+            Assert.AreEqual(watchAddress, machine.Cpu.GetPc());
+
+            Assert.IsFalse(machine.Cpu.Step(), "watchpoint должен прервать выборку до STOP");
+            Assert.AreEqual(continuation, machine.Cpu.GetPc());
+            Assert.IsFalse(machine.Cpu.RightInstruction);
+        }
+
+        [DataTestMethod]
+        [DataRow(1, "зп 500, сч 0")]
+        [DataRow(2, "сч 500, сч 0")]
+        public void E67_MemoryWatch_ReturnsBeforeAccess(int mode, string instruction)
+        {
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null, output: s => { });
+
+            const uint controlAddress = 200;
+            const uint transferAddress = 300;
+            const uint watchAddress = 320; // 0500 octal
+            const uint continuation = 77;
+            const ulong initialMemory = 0x123456789ABCUL;
+            const ulong initialAcc = 0xABCDEF012345UL;
+            ulong control = ((ulong)transferAddress << 24) | ((ulong)mode << 20) | watchAddress;
+            machine.Memory.Write(controlAddress, new Word48(control));
+            machine.Memory.Write(transferAddress,
+                new Word48(Besm6.Asm.Assembler.Asm(instruction)));
+            machine.Memory.Write(watchAddress, new Word48(initialMemory));
+            machine.Cpu.SetAcc(initialAcc);
+            machine.Cpu.SetM(14, controlAddress);
+            machine.Cpu.SetPc(continuation);
+
+            handler.Handle(55, 0);
+            Assert.IsFalse(machine.Cpu.Step());
+
+            Assert.AreEqual(continuation, machine.Cpu.GetPc());
+            Assert.AreEqual(initialMemory, machine.Memory.Read(watchAddress).Value,
+                "перехват записи должен происходить до изменения памяти");
+            Assert.AreEqual(initialAcc, machine.Cpu.GetAcc().Value,
+                "перехват чтения должен происходить до изменения ACC");
+            Assert.IsFalse(machine.Cpu.RightInstruction);
+        }
+
+        [TestMethod]
+        public void E67_BadWatchMode_Throws()
+        {
+            var machine = new MachineCore();
+            var handler = new ExtracodeHandler(
+                machine, id => null, u => null, d => null, output: s => { });
+            machine.Memory.Write(200, new Word48(((ulong)300 << 24) | ((ulong)3 << 20) | 100));
+            machine.Cpu.SetM(14, 200);
+
+            try
+            {
+                handler.Handle(55, 0);
+            }
+            catch (ProcessorException ex)
+            {
+                Assert.AreEqual("Bad debug watchpoint mode", ex.Message);
+                return;
+            }
+
+            Assert.Fail("Режим E67=3 обязан бросать ProcessorException");
         }
 
         [TestMethod]

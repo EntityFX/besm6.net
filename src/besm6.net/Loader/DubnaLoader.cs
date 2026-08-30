@@ -27,6 +27,7 @@ namespace Besm6.Loader
         private readonly Dictionary<long, TapeImage> _disksByTapeId = new();
         // Барабаны (unit 0..31). Барабан #1 — COSY-скрипт.
         private readonly Dictionary<int, TapeImage> _drumsByUnit = new();
+        private readonly List<string> _filePaths = new();
 
         private readonly string? _tapesDir;
 
@@ -34,8 +35,6 @@ namespace Besm6.Loader
         public long InstructionLimit { get; set; } = 1_000_000_000;
 
         /// <summary>
-        /// E50 067 (DATE*): реальное системное время (C++: entropy включена по
-        /// умолчанию) или фиксированная дата (C++: -r). Проксирует
         /// <see cref="ExtracodeHandler.UseWallClock"/>.
         /// </summary>
         public bool UseWallClock
@@ -47,8 +46,6 @@ namespace Besm6.Loader
         /// <summary>
         /// Эвристика обнаружения зависания (500+ экстракодов без вывода/останова).
         /// Проксирует <see cref="ExtracodeHandler.HangDetect"/>.
-        /// В C++-референсе такого детектора нет, поэтому для точного соответствия
-        /// C++ и для отладки реальных зависаний его можно отключить
         /// (CLI: <c>--no-hang-detect</c> / в тестах: <c>loader.HangDetect = false</c>).
         /// </summary>
         public bool HangDetect
@@ -62,12 +59,9 @@ namespace Besm6.Loader
 
         /// <summary>
         /// Эвристика обнаружения spin-loop (PC в узком диапазоне долго).
-        /// В C++-референсе такого детектора НЕТ — он исполняет цикл, пока тот не
         /// завершится естественно, и опирается только на предел инструкций (-l).
-        /// Поэтому детектор по умолчанию ВЫКЛЮЧЕН, чтобы точно соответствовать C++.
         /// Его можно включить флагом --loop-detect для отладки реальных зависаний:
         /// но эвристика (PC в узком диапазоне) не отличает легитимный цикл MONSYS
-        /// (например, 42K итераций в a400, который C++ завершает) от бесконечного.
         /// </summary>
         public bool LoopDetect { get; set; } = false;
 
@@ -78,7 +72,6 @@ namespace Besm6.Loader
         public Action<int, ulong>? InstructionTrace { get; set; }
 
         /// <summary>
-        /// Трассировка в формате C++ (аналог ref/processor.cpp:151 → Processor::print_instruction,
         /// ref/trace.cpp:240). Срабатывает в НАЧАЛЕ инструкции (после fetch RK и decode, ДО advance PC)
         /// с (pc, rightFlag, rk, opcode). null = выключена.
         /// </summary>
@@ -123,6 +116,10 @@ namespace Besm6.Loader
                 output: s => (Output ?? (x => Console.Write(x)))(s),
                 input: p => { if (Input != null) return Input(p); Console.Write(p); return Console.ReadLine() ?? ""; },
                 mountTape: (tapeId, unit) => MountTape(unit, tapeId),
+                mountTapeWithMode: (tapeId, unit, writePermit) => MountTape(unit, tapeId, writePermit),
+                fileSearch: FileSearch,
+                fileMount: FileMount,
+                scratchMount: ScratchMount,
                 findTape: tapeId => {
                     if (_disksByTapeId.TryGetValue(tapeId, out var disk))
                     {
@@ -157,7 +154,7 @@ namespace Besm6.Loader
         /// Смонтировать ленту по tape-id на заданный канал (unit).
         /// Пытается загрузить образ из dubna/tapes.
         /// </summary>
-        public bool MountTape(int unit, long tapeId)
+        public bool MountTape(int unit, long tapeId, bool writePermit = false)
         {
             if (_disksByUnit.ContainsKey(unit))
                 return true;
@@ -165,21 +162,138 @@ namespace Besm6.Loader
             var path = TapeImage.FindImagePath(tapeId, _tapesDir);
             if (path == null)
             {
-                // Порт C++ disk_mount: ВСЕГДА создаёт Disk.
                 // Если файл не найден — создаём пустой диск (нули).
                 if (Verbose) Console.WriteLine($"Tape image for id 0x{tapeId:X12} not found, creating empty disk");
-                // C++ disk_mount: встроенный диск = 288 зон (PAGE_NWORDS × 288).
-                var empty = new TapeImage(tapeId, new byte[TapeImage.PageNWords * 6 * 288], readOnly: true);
+                var empty = new TapeImage(
+                    tapeId,
+                    new byte[TapeImage.PageNWords * 6 * 288],
+                    readOnly: !writePermit);
                 _disksByUnit[unit] = empty;
                 _disksByTapeId[tapeId] = empty;
                 return true;
             }
 
-            var image = TapeImage.LoadFromFile(tapeId, path);
+            var image = TapeImage.LoadFromFile(tapeId, path, readOnly: !writePermit);
             _disksByUnit[unit] = image;
             _disksByTapeId[tapeId] = image;
             if (Verbose) Console.WriteLine($"Mounted {path} as disk 0{unit:X}");
             return true;
+        }
+
+        private uint FileSearch(ulong discId, ulong fileName, bool writeMode)
+        {
+            const ulong discLocal = 0xB2F8E1B00000UL;
+            const ulong discHome = 0xA2FB65000000UL;
+            const ulong discTmp = 0xD2DC00000000UL;
+            string? directory = (discId & 0xFFFFFFFFF000UL) switch
+            {
+                discLocal => Directory.GetCurrentDirectory(),
+                discHome => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                discTmp => Path.GetTempPath(),
+                _ => null
+            };
+            if (string.IsNullOrEmpty(directory))
+                return 0;
+
+            string filename = IsoFilename(fileName);
+            if (filename.Length == 0 || filename != Path.GetFileName(filename))
+                return 0;
+
+            string path = Path.Combine(directory, filename + ".bin");
+            bool exists = File.Exists(path) || File.Exists(Path.ChangeExtension(path, ".txt")) ||
+                File.Exists(Path.ChangeExtension(path, ".utxt"));
+            if (!writeMode && !exists)
+                return 0;
+            if (writeMode && !Directory.Exists(directory))
+                return 0;
+
+            _filePaths.Add(path);
+            return (uint)_filePaths.Count;
+        }
+
+        private int FileMount(int unit, uint fileIndex, bool writeMode, uint fileOffset)
+        {
+            const int diskBusy = 16;
+            const int noAccess = 8;
+            if (unit < 24 || unit >= 56)
+                throw new ProcessorException($"Invalid disk unit {Convert.ToString(unit, 8)} in file mount");
+            if (_disksByUnit.ContainsKey(unit))
+                return diskBusy;
+            if (fileIndex == 0 || fileIndex > _filePaths.Count)
+                return noAccess;
+
+            string path = _filePaths[(int)fileIndex - 1];
+            try
+            {
+                byte[] data;
+                if (File.Exists(path))
+                {
+                    data = File.ReadAllBytes(path);
+                }
+                else
+                {
+                    string textPath = Path.ChangeExtension(path, ".txt");
+                    string unicodePath = Path.ChangeExtension(path, ".utxt");
+                    if (File.Exists(textPath))
+                    {
+                        var bytes = new List<byte>();
+                        foreach (string line in File.ReadLines(textPath))
+                            bytes.AddRange(CosyCodec.EncodeCosy(CosyCodec.Utf8ToKoi7(line)));
+                        data = bytes.ToArray();
+                    }
+                    else if (File.Exists(unicodePath))
+                    {
+                        data = System.Text.Encoding.ASCII.GetBytes(
+                            CosyCodec.Utf8ToKoi7(File.ReadAllText(unicodePath)));
+                    }
+                    else if (writeMode)
+                    {
+                        data = Array.Empty<byte>();
+                    }
+                    else
+                    {
+                        return noAccess;
+                    }
+                }
+
+                int minimum = TapeImage.PageNbytes;
+                int length = Math.Max(minimum, ((data.Length + 5) / 6) * 6);
+                Array.Resize(ref data, length);
+                _disksByUnit[unit] = new TapeImage(0, data, readOnly: !writeMode);
+                return 0;
+            }
+            catch (IOException)
+            {
+                return noAccess;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return noAccess;
+            }
+        }
+
+        private void ScratchMount(int unit, int zones)
+        {
+            if (unit < 24 || unit >= 56)
+                throw new ProcessorException($"Invalid disk unit {Convert.ToString(unit, 8)} in scratch mount");
+            if (_disksByUnit.ContainsKey(unit))
+                throw new ProcessorException($"Disk unit {Convert.ToString(unit, 8)} is already mounted");
+            _disksByUnit[unit] = new TapeImage(
+                0,
+                new byte[Math.Max(1, zones) * TapeImage.PageNbytes],
+                readOnly: false);
+        }
+
+        private static string IsoFilename(ulong word)
+        {
+            Span<char> chars = stackalloc char[6];
+            int length = 0;
+            for (int shift = 40; shift >= 0; shift -= 8)
+            {
+                char ch = (char)((word >> shift) & 0x7F);
+                chars[length++] = ch == '\0' ? ' ' : char.ToLowerInvariant(ch);
+            }
+            return new string(chars[..length]).TrimEnd();
         }
 
         /// <summary>
@@ -509,14 +623,12 @@ namespace Besm6.Loader
                 };
             }
 
-            // Трассировка в формате C++ (аналог machine.trace_instruction → cpu.print_instruction):
             // фиксирует pc/rightFlag/rk/opcode ДО advance PC.
             if (CppInstructionTrace != null)
             {
                 _machine.Cpu.TraceInstruction = (pc, rf, rk, op) => CppInstructionTrace(pc, rf, rk, op);
             }
 
-            // Трассировка изменений регистров (аналог C++ print_registers после cpu.step()).
             if (RegisterTrace != null)
             {
                 _machine.BeginRegisterTrace();
@@ -569,7 +681,6 @@ namespace Besm6.Loader
                 }
                 catch (ProcessorException ex)
                 {
-                    // Точный порт C++ machine.cpp run() catch (lines 131-149):
                     // 1) stack_correction()
                     // 2) пустое сообщение → чистый halt (E74)
                     // 3) intercept() → goto again (продолжить)
@@ -578,7 +689,6 @@ namespace Besm6.Loader
 
                     if (string.IsNullOrEmpty(ex.Message))
                     {
-                        // E74: clean halt (equivalent to C++ empty message check).
                         HaltedByStop = true;
                         return LoadResult.Halt(_machine.Cpu.GetPc(), InstructionsExecuted);
                     }
@@ -586,7 +696,6 @@ namespace Besm6.Loader
                     if (_machine.Cpu.Intercept(ex.Message))
                     {
                         // Canonical TSV trace: POST-снимок для перехваченной инструкции —
-                        // состояние ПОСЛЕ StackCorrection()+Intercept() (как в C++ machine.cpp).
                         _machine.Cpu.CanonPost(_machine.Cpu.GetPc(), _machine.Cpu._rightInstrFlag);
                         // Intercept applied — resume from intercept address.
                         if (Verbose)

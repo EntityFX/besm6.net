@@ -17,7 +17,6 @@ namespace Besm6.Tests
         [TestMethod]
         public void TapeIds_MatchCanonicalTextEncodingConstants()
         {
-            // Канонические значения выведены из C++ machine.h (восьмеричные литералы
             // в TEXT-кодировке + номер). Проверяем, что константы не искажены.
             Assert.AreEqual(0xB6FBB3E73009L, TapeImage.TapeMonsys, "TapeMonsys");
             Assert.AreEqual(0xB298B2872012L, TapeImage.TapeLibrar12, "TapeLibrar12");

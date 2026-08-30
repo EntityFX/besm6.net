@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -191,9 +191,7 @@ namespace Besm6.Loader
         // Используется для TEXT-кодировки имён лент и вывода ГОСТ.
         //
         // ГОСТ-10859 (latin) -> Unicode, таблица gost_to_unicode_lat из dubna/encoding.cpp.
-        // Полная таблица 256 элементов. Элементы, не указанные в C++ оригинале, равны 0.
         //
-        // C++ оригинал:
         // static const unsigned short gost_to_unicode_lat[256] = {
         //     000-007: 0x30,0x31,0x32,0x33,0x34,0x35,0x36,0x37,
         //     010-017: 0x38,0x39,0x2b,0x2d,0x2f,0x2c,0x2e,0x20,
@@ -250,7 +248,6 @@ namespace Besm6.Loader
             // 130-137
             table[0x58] = 0x007c; table[0x59] = 0x2015; table[0x5A] = 0x005f; table[0x5B] = 0x0021;
             table[0x5C] = 0x0022; table[0x5D] = 0x042a; table[0x5E] = 0x00b0; table[0x5F] = 0x2032;
-            // 140-255: остальные 0 (как в C++ оригинале)
             // Остальные уже инициализированы 0 по умолчанию
             
             return table;
@@ -343,7 +340,6 @@ namespace Besm6.Loader
         public static char TextToUnicode(byte ch)
         {
             if (ch >= TextToGost.Length) return '?';
-            // C++ `text_to_gost[ch & 077]`: 077 — ВОСЬМЕРИЧНОЕ (== 0x3F).
             // В C# нет octal-литералов, поэтому пишем hex-маску 6 бит.
             return GostToUnicode(TextToGost[ch & 0x3F]);
         }
@@ -439,7 +435,6 @@ namespace Besm6.Loader
 
         private static byte CyrillicToKoi7(byte b)
         {
-            // Возвращает KOI-7 для кириллических символов (аналог case 0x04 в C++).
             switch (b)
             {
                 case 0x01: return (byte)'E'; // Ё
