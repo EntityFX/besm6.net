@@ -35,6 +35,7 @@ namespace Besm6.Core
         internal uint _interceptAddr = 16; // адрес перехвата; по умолчанию 020 (oct) = 16 (dec), как C++ intercept_addr{020}
         internal bool _rightInstrFlag;  // выполнять правую половину слова
         internal bool _applyModReg;     // модифицировать адрес через MOD
+        internal int _corrStack;        // C++ int corr_stack{} (processor.h:93) — поправка M[017] при прерывании инструкции
 
         internal uint _rk;              // регистр команд
         internal uint _aex;             // исполнительный адрес
@@ -86,6 +87,7 @@ namespace Besm6.Core
             _interceptCount = 0;
             _rightInstrFlag = false;
             _applyModReg = false;
+            _corrStack = 0;
         }
 
         #region Доступ к регистрам (для тестов)
@@ -140,14 +142,20 @@ namespace Besm6.Core
         }
 
         /// <summary>
-        /// Корректировка стека при перехвате. Порт C++ Processor::stack_correction
-        /// (dubna/processor.cpp:57-61): core.M[017] += corr_stack; corr_stack = 0.
-        /// В C#-порте счётчик corr_stack отсутствует, поэтому это нет-оп.
+        /// Корректировка стека при перехвате. Точный порт C++ Processor::stack_correction
+        /// (dubna/processor.cpp:127-131): core.M[017] += corr_stack; corr_stack = 0.
+        /// corr_stack выставляется инструкциями, предварительно изменившими M[017]
+        /// (сл/вч/.../стx: +1, счм: -1, уим/мод(стек): +1) и сбрасывается в начале
+        /// каждой инструкции (C++ processor.cpp:184). Вызывается при арифметическом
+        /// исключении ПЕРЕД Intercept — как в C++ machine.cpp:131-134 — чтобы откатить
+        /// недоисполненное изменение стека.
         /// </summary>
         public void StackCorrection()
         {
             // C++: core.M[017] += corr_stack; corr_stack = 0;
-            // C#-порт не реализует corr_stack — метод-заглушка для совместимости с machine.cpp.
+            // Без ADDR-маски — ровно как в C++ (беззнаковое сложение по модулю слова).
+            _m[15] = (uint)(_m[15] + _corrStack);
+            _corrStack = 0;
         }
 
         public void SetPc(uint val) => _pc = val;

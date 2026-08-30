@@ -42,6 +42,11 @@ namespace Besm6.Core
             ref bool rightFlag = ref _p._rightInstrFlag;
             ref bool applyMod = ref _p._applyModReg;
 
+            // Точный порт C++ processor.cpp:184: corr_stack сбрасывается в начале
+            // КАЖДОЙ инструкции — поправка стека действует только для текущей инструкции
+            // и потребляется StackCorrection() при её прерывании исключением.
+            _p._corrStack = 0;
+
             pc &= 0x7FFFu;
 
             ulong word = _p.MemFetch(pc);
@@ -121,7 +126,9 @@ namespace Besm6.Core
                 case Opcode.Zpm:
                     aex = Addr(addr + m[reg]);
                     _p.MemStore(aex, acc);
+                    // C++ processor.cpp:257-259: M[017]--; corr_stack=1;
                     m[15] = Addr(m[15] - 1);
+                    _p._corrStack = 1;
                     acc = _p.MemLoad(m[15]);
                     _p.SetLogical();
                     break;
@@ -133,7 +140,9 @@ namespace Besm6.Core
 
                 case Opcode.Schm:
                     _p.MemStore(m[15], acc);
+                    // C++ processor.cpp:271-272: M[017]++; corr_stack=-1;
                     m[15] = Addr(m[15] + 1);
+                    _p._corrStack = -1;
                     aex = Addr(addr + m[reg]);
                     acc = _p.MemLoad(aex);
                     _p.SetLogical();
@@ -388,7 +397,12 @@ namespace Besm6.Core
                     aex = Addr(addr + m[reg]);
                     uint rg = aex & 0xFu;
                     uint ad = Addr((uint)acc);
-                    if (rg != 15) m[15] = Addr(m[15] - 1);
+                    if (rg != 15)
+                    {
+                        // C++ processor.cpp:635-636: M[017]--; corr_stack=1; (только при rg != 017)
+                        m[15] = Addr(m[15] - 1);
+                        _p._corrStack = 1;
+                    }
                     acc = _p.MemLoad(rg != 15 ? m[15] : ad);
                     m[rg] = ad;
                     m[0] = 0;
@@ -431,7 +445,12 @@ namespace Besm6.Core
                     break;
 
                 case Opcode.Mod:
-                    if (addr == 0 && reg == 15) m[15] = Addr(m[15] - 1);
+                    if (addr == 0 && reg == 15)
+                    {
+                        // C++ processor.cpp:718-724: M[017]--; corr_stack=1;
+                        m[15] = Addr(m[15] - 1);
+                        _p._corrStack = 1;
+                    }
                     aex = Addr(addr + m[reg]);
                     nextMod = Addr((uint)_p.MemLoad(aex));
                     break;
@@ -555,9 +574,13 @@ namespace Besm6.Core
                             rightFlag = false;
                         }
                         // Сохраняем поля инструкции для трассировки в формате C++ (print_instruction).
+                        // half — это ИСПОЛНЯЕМАЯ половина (до advance), как в C++ trace
+                        // (trace_instruction вызывается ДО advance в step()):
+                        // здесь rightFlag уже значение ПОСЛЕ advance («правая половина ещё
+                        // должна выполниться»), что инвертировано; до advance это tRight.
                         _p.ExtracodeReg = reg;
                         _p.ExtracodeRawAddr = addr;
-                        _p.ExtracodeRightFlag = rightFlag;
+                        _p.ExtracodeRightFlag = tRight;
                         if (_p.ExtracodeHandler != null && _p.ExtracodeHandler((int)opcode, aex))
                         {
                             // Обработчик экстракода может изменить ACC/RMR напрямую
@@ -602,10 +625,17 @@ namespace Besm6.Core
             return false;
         }
 
-        private static void PrepareStack(ref uint addr, int reg, uint[] m)
+        private void PrepareStack(ref uint addr, int reg, uint[] m)
         {
             if (addr == 0 && reg == 15)
+            {
+                // Точный порт C++ (processor.cpp:282-285 и все prepare-stack случаи
+                // 004-027): M[017] = ADDR(M[017] - 1); corr_stack = 1.
+                // corr_stack позволяет StackCorrection() откатить декремент, если
+                // инструкция прервана арифметическим исключением (C++ machine.cpp).
                 m[15] = Addr(m[15] - 1);
+                _p._corrStack = 1;
+            }
         }
 
         private static bool IsExtracode(uint opcode)
