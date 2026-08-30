@@ -82,7 +82,7 @@ namespace Besm6.Tests
         public void PrepareStack_NonZeroAddress_StackUntouched(string mnemonic)
         {
             StoreWord("10", mnemonic + " 2000(17), стоп");
-            StoreData("2000", Besm6Math.DoubleToBesm6(1.0)); // валидный делитель для дел
+            StoreData("4001", Besm6Math.DoubleToBesm6(1.0)); // 4001 oct = 2000 oct + M[15](2001 oct) = aex
             _cpu.SetM(15, StackTop);
             _cpu.SetAcc(0UL);
             _cpu.SetPc(Pc);
@@ -101,7 +101,7 @@ namespace Besm6.Tests
         [TestMethod]
         public void Zp_StackForm_StoresAtTop_AndIncrements()
         {
-            ulong acc = 0x1000200030004UL; // 44 бита (48-битное слово)
+            ulong acc = 0x200030004UL; // 48-bit word, safe 9-digit literal
 
             StoreWord("10", "зп (17), стоп");
             _cpu.SetM(15, OperandAddr); // стек-указатель = 2000 oct
@@ -118,8 +118,8 @@ namespace Besm6.Tests
         [TestMethod]
         public void Zpm_StoresAcc_PopsStack_SetsLogical()
         {
-            ulong acc = 0x11111111111111UL;
-            ulong operand = 0x22222222222222UL;
+            ulong acc = 0x200030004UL;
+            ulong operand = 0x400050006UL;
 
             StoreWord("10", "зпм 3000, стоп");
             StoreData("2000", operand);
@@ -130,7 +130,7 @@ namespace Besm6.Tests
 
             _cpu.Step();
 
-            Assert.AreEqual(acc, _memory.Read(0x0780).Value, "зпм пишет ACC по Aex"); // 3000 oct = 0x780
+            Assert.AreEqual(acc, _memory.Read(0x0600).Value, "zpm writes ACC at Aex"); // 3000 oct = 1536 dec = 0x0600
             Assert.AreEqual(OperandAddr, _cpu.GetM(15), "зпм делает pre-decrement M[17 oct]");
             Assert.AreEqual(operand, _cpu.GetAcc().Value, "зпм загружает ACC со стека");
             Assert.AreEqual((uint)RauFlags.Log, _cpu.GetRau() & (uint)RauFlags.Mode);
@@ -143,7 +143,7 @@ namespace Besm6.Tests
             // уим 17(0): aex = 15 dec → rg == 15 → pop ПРопускается;
             // ad := (ACC) = 0100 oct; ACC := MemLoad(ad); M[15] := ad (адрес возврата).
             ulong acc = 64UL; // 0100 oct — «адрес возврата»
-            ulong memory = 0x44444444444444UL;
+            ulong memory = 0x400050006UL;
 
             StoreWord("10", "уим 17(0), стоп");
             StoreData("100", memory); // 0100 oct = 64 dec = ad
@@ -164,7 +164,7 @@ namespace Besm6.Tests
             // уим 14(0): aex = 12 dec → rg == 12 → pre-decrement M[15],
             // ACC := MemLoad(new M[15]), M[12] := ad (= старое ACC).
             ulong acc = 64UL; // 0100 oct
-            ulong operand = 0x33333333333333UL;
+            ulong operand = 0x600070008UL;
 
             StoreWord("10", "уим 14(0), стоп");
             StoreData("2000", operand);
