@@ -14,7 +14,7 @@ namespace Besm6.Cli
     {
         public string Name => "run";
         public string Description => "Load and execute a .dub job script";
-        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--config path]";
+        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--config path]";
 
         public int Execute(string[] args)
         {
@@ -32,6 +32,7 @@ namespace Besm6.Cli
             string? regsFile = null;
             bool loopDetect = false;
             bool noLoopDetect = false;
+            bool noWallClock = false;
             bool hangDetect = true;   // детектор зависания включён по умолчанию (диагностика MONSYS)
             bool noHangDetect = false;
 
@@ -56,6 +57,13 @@ namespace Besm6.Cli
                         break;
                     case "--config" when i + 1 < args.Length:
                         configPath = args[++i];
+                        break;
+                    case "--no-wall-clock":
+                        // Фиксированная дата для E50(067)/DATE* (аналог C++ -r, entropy off).
+                        // Обязательно для детерминированного сравнения с C++, запущенным с -r:
+                        // workload-и (CERNLIB a400/z005, MONSYS-задачи) используют значение
+                        // DATE* в потоке управления, и реальные часы ломают воспроизводимость.
+                        noWallClock = true;
                         break;
                     case "--loop-detect":
                         // Включить эвристику spin-loop (отладка реальных зависаний).
@@ -91,6 +99,7 @@ namespace Besm6.Cli
                 loader.Verbose = verbose;
                 loader.LoopDetect = loopDetect && !noLoopDetect;
                 loader.HangDetect = hangDetect && !noHangDetect;
+                if (noWallClock) loader.UseWallClock = false;
 
                 if (trace)
                 {

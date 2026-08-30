@@ -1,6 +1,7 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Besm6.Core;
+using Besm6.Loader;
 
 namespace Besm6.Tests
 {
@@ -35,20 +36,54 @@ namespace Besm6.Tests
         private void StoreWord(string address, string source) => _memory.Write(O(address), new Word48(Asm(source)));
         private void StoreData(string address, ulong value) => _memory.Write(O(address), new Word48(value));
 
+        /// <summary>
+        /// Полная таблица «инструкция → итоговый RAU-режим» для ВСЕХ
+        /// mode-changing инструкций (референс: set_logical/set_additive/set_multiplicative
+        /// в ref/processor.cpp). Старт в режиме, ОТЛИЧНОМ от ожидаемого: итог обязан
+        /// измениться именно инструкцией. счмр (031) исключён — её режим условный
+        /// (зависит от входящего режима).
+        /// </summary>
         [DataTestMethod]
+        // ── Logical (set_logical) ──
+        [DataRow("зпм 2000", (int)RauFlags.Log)]
+        [DataRow("счм 2000", (int)RauFlags.Log)]
         [DataRow("сч 2000", (int)RauFlags.Log)]
         [DataRow("и 2000", (int)RauFlags.Log)]
         [DataRow("нтж 2000", (int)RauFlags.Log)]
         [DataRow("или 2000", (int)RauFlags.Log)]
+        [DataRow("сбр 2000", (int)RauFlags.Log)]
+        [DataRow("рзб 2000", (int)RauFlags.Log)]
+        [DataRow("чед 2000", (int)RauFlags.Log)]
+        [DataRow("нед 2000", (int)RauFlags.Log)]
+        [DataRow("сд 2000", (int)RauFlags.Log)]
         [DataRow("счрж 7", (int)RauFlags.Log)]
+        [DataRow("сда 2000", (int)RauFlags.Log)]
+        [DataRow("уим 2000", (int)RauFlags.Log)]
+        [DataRow("счи 2000", (int)RauFlags.Log)]
+        // ── Additive (set_additive) ──
+        [DataRow("сл 2000", (int)RauFlags.Add)]
+        [DataRow("вч 2000", (int)RauFlags.Add)]
+        [DataRow("вчоб 2000", (int)RauFlags.Add)]
+        [DataRow("вчаб 2000", (int)RauFlags.Add)]
         [DataRow("знак 2000", (int)RauFlags.Add)]
+        // ── Multiplicative (set_multiplicative) ──
         [DataRow("слц 2000", (int)RauFlags.Mult)]
+        [DataRow("дел 2000", (int)RauFlags.Mult)]
+        [DataRow("умн 2000", (int)RauFlags.Mult)]
+        [DataRow("слп 2000", (int)RauFlags.Mult)]
+        [DataRow("вчп 2000", (int)RauFlags.Mult)]
+        [DataRow("слпа 2000", (int)RauFlags.Mult)]
+        [DataRow("вчпа 2000", (int)RauFlags.Mult)]
         public void Instruction_SetsExpectedRauMode(string instruction, int expectedMode)
         {
             StoreWord("10", instruction + ", stop");
-            StoreData("2000", 1UL);
+            // Каноническое плавающее 1.0: валидный делитель для дел (сырое 1 = «ноль»
+            // по определению нуля БЭСМ-6) и нейтральный операнд для остальных.
+            StoreData("2000", Besm6Math.DoubleToBesm6(1.0));
             _cpu.SetAcc(0);
-            _cpu.SetRau((ulong)(RauFlags.OvfDisable | RauFlags.RoundDisable | RauFlags.Add));
+            // Старт в режиме, отличном от ожидаемого: итог обязан измениться инструкцией.
+            uint start = expectedMode == (int)RauFlags.Log ? (uint)RauFlags.Add : (uint)RauFlags.Log;
+            _cpu.SetRau((ulong)(RauFlags.OvfDisable | RauFlags.RoundDisable | (RauFlags)start));
             _cpu.SetPc(O("10"));
 
             _cpu.Step();
