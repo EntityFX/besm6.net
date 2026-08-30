@@ -245,6 +245,9 @@ namespace Besm6.Loader
                 string refCandidate = Path.Combine(dir, "ref", "tapes");
                 if (Directory.Exists(refCandidate))
                     return refCandidate;
+                string dubnaRefCandidate = Path.Combine(dir, "ref", "dubna", "tapes");
+                if (Directory.Exists(dubnaRefCandidate))
+                    return dubnaRefCandidate;
                 dir = Path.GetDirectoryName(dir);
                 depth++;
             }

@@ -45,7 +45,16 @@ namespace Besm6.Tests
                 Console.SetOut(_savedOut);
         }
 
-        public string RefTestsDir => Path.Combine(_root, "ref", "tests");
+        public string RefTestsDir
+        {
+            get
+            {
+                string direct = Path.Combine(_root, "ref", "tests");
+                return Directory.Exists(direct)
+                    ? direct
+                    : Path.Combine(_root, "ref", "dubna", "tests");
+            }
+        }
         public string ArtifactsDir => Path.Combine(_root, "tests-run", "cernlib");
 
         /// <summary>
@@ -190,11 +199,12 @@ namespace Besm6.Tests
             string dir = Directory.GetCurrentDirectory();
             while (dir != null)
             {
-                if (Directory.Exists(Path.Combine(dir, "ref", "tests")))
+                if (Directory.Exists(Path.Combine(dir, "ref", "tests")) ||
+                    Directory.Exists(Path.Combine(dir, "ref", "dubna", "tests")))
                     return dir;
                 dir = Directory.GetParent(dir)?.FullName;
             }
-            throw new DirectoryNotFoundException("ref/tests не найден (CWD: " +
+            throw new DirectoryNotFoundException("ref/tests или ref/dubna/tests не найден (CWD: " +
                 Directory.GetCurrentDirectory() + ")");
         }
 
