@@ -4,56 +4,44 @@ namespace Besm6.Core
 {
     /// <summary>
     /// Системная шина БЭСМ-6.
-    /// Маршрутизирует запросы чтения/записи между основной памятью и периферийными устройствами.
+    ///
+    /// ВАЖНО (соответствие C++-референсу, ref/machine.cpp mem_load/mem_store):
+    /// в БЭСМ-6 нет memory-mapped I/O — память является простым массивом 32K слов,
+    /// а ввод-вывод выполняется экстракодами (E70/E71 и т.п.) через ту же основную
+    /// память. Поэтому шина НЕ маршрутизирует ни один адрес в периферийные
+    /// устройства: ВСЕ обращения читают/пишут основную память.
+    ///
+    /// Истории (регрессии):
+    /// 1) Раньше весь диапазон [0x1000..0x1FFF] (4096..8191) маршрутизировался в
+    ///    DeviceManager, где запись по незанятому адресу тихо сбрасывалась, а чтение
+    ///    возвращало 0. Это ломало всю память в этом диапазоне (a400: mem[4646]).
+    /// 2) После частичной починки (только точные адреса устройств) адрес
+    ///    0x1000 = 0o10000 = 4096 всё ещё перехватывался ConsoleDevice:
+    ///    a400 (seq ~2.79M, xta 1(14)) читал mem[0o10000] и получал 0, тогда как
+    ///    в C++ там 7777 0000 7770 0000 (записано циклом заполнения 34605-34607).
+    ///    Теперь и точные адреса устройств не перехватываются: память плоская, как в C++.
     /// </summary>
     public class SystemBus : IMemory
     {
         private readonly IMemory _coreMemory;
-        private readonly DeviceManager _deviceManager;
-        private readonly uint _deviceStartAddr;
-        private readonly uint _deviceEndAddr;
 
         public int Size => _coreMemory.Size;
 
-        public SystemBus(IMemory coreMemory, DeviceManager deviceManager, uint deviceStartAddr = 0x1000, uint deviceEndAddr = 0x1FFF)
+        public SystemBus(IMemory coreMemory, DeviceManager? deviceManager = null)
         {
+            // deviceManager принимается ради совместимости фабрик, но для
+            // маршрутизации памяти НЕ используется (см. комментарий выше).
             _coreMemory = coreMemory;
-            _deviceManager = deviceManager;
-            _deviceStartAddr = deviceStartAddr;
-            _deviceEndAddr = deviceEndAddr;
         }
-
-        // ВАЖНО (соответствие C++-референсу, ref/machine.cpp mem_load/mem_store):
-        // в БЭСМ-6 нет memory-mapped I/O — память является простым массивом, а ввод-вывод
-        // выполняется экстракодами (E70/E71 и т.п.) через ту же основную память.
-        // Раньше весь диапазон [_deviceStartAddr.._deviceEndAddr] маршрутизировался в
-        // DeviceManager, где запись по незанятому адресу ТИХО СБРАСЫВАЛАСЬ, а чтение
-        // возвращало 0. Это ломало ВСЮ память в этом диапазоне (например, a400:
-        // mem[4646] должен был хранить 0x202020202020, но возвращал 0).
-        // Теперь устройство используется ТОЛЬКО если по точному адресу зарегистрировано,
-        // иначе — обычная основная память (как в C++).
-        private bool IsDeviceAddress(uint address) =>
-            address >= _deviceStartAddr && address <= _deviceEndAddr && _deviceManager.HasDevice(address);
 
         public Word48 Read(uint address)
         {
-            if (IsDeviceAddress(address))
-            {
-                return _deviceManager.Read(address);
-            }
             return _coreMemory.Read(address);
         }
 
         public void Write(uint address, Word48 value)
         {
-            if (IsDeviceAddress(address))
-            {
-                _deviceManager.Write(address, value);
-            }
-            else
-            {
-                _coreMemory.Write(address, value);
-            }
+            _coreMemory.Write(address, value);
         }
     }
 }
