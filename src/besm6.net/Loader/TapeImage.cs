@@ -19,7 +19,6 @@ namespace Besm6.Loader
         public const int DrumNWords = 32 * 1024;      // 040 oct = 32 барабана * 1024
 
         // Заранее определённые ленты (порт machine.h).
-        // В C++ константы заданы восьмеричными литералами в TEXT-кодировке:
         //   TAPE_MONSYS    = 055'57'56'63'71'63'00'11  -> 0xB6FBB3E73009
         //   TAPE_LIBRAR_12 = 054'51'42'62'41'62'00'22  -> 0xB298B2872012
         //   TAPE_LIBRAR_37 = 054'51'42'62'41'62'00'67  -> 0xB298B2872037
@@ -73,7 +72,6 @@ namespace Besm6.Loader
         /// </summary>
         public void ReadToMemory(IMemory memory, uint zone, uint sector, int addr, int nwords)
         {
-            // C++ disk_io не проверяет границы — читает нули при OOB.
             // Dense layout (embedded_to_memory / file_to_memory): word_idx = 1024*zone + 256*sector.
             uint offsetWords = (uint)PageNWords * zone + (uint)(256 * sector);
             int offsetBytes = (int)offsetWords * 6;
@@ -97,7 +95,6 @@ namespace Besm6.Loader
         public void WriteFromMemory(IMemory memory, uint zone, uint sector, int addr, int nwords)
         {
             if (ReadOnly) return;
-            // C++ disk_io не проверяет границы — запись в OOB молча игнорируется.
             // Dense layout (memory_to_file): word_idx = 1024*zone + 256*sector.
             uint offsetWords = (uint)PageNWords * zone + (uint)(256 * sector);
             int offsetBytes = (int)offsetWords * 6;

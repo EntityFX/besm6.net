@@ -14,7 +14,6 @@ namespace Besm6.Asm
 
     /// <summary>
     /// Хост-ассемблер БЭСМ-6 для MADLEN и BEMSH форматов.
-    /// Каждый рядок → одно 48-битное слово (как в C++ besm6_asm).
     /// Поддерживает: лейблы, мнемоники, окт. данные, GOST-текст.
     /// </summary>
     public static class ProgramAssembler

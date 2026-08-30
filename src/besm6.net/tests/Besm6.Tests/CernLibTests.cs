@@ -4,13 +4,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Besm6.Tests
 {
     /// <summary>
-    /// Порт cernlib_test.cpp (397 активных тестов C++). Фаза 0 — маяки:
     ///  a400 (lib1): арифметика слов, форматирование вывода, CERN-линковка;
     ///  z005 (lib2): DATE*/DATEZB/IDATZA (детерминизм даты) — самый простой тест.
-    /// w303 (lib2) в C++ закомментирован (вечный цикл) — здесь тоже [Ignore].
     ///
-    /// Статус a400/z005: это НЕ "известное ограничение MONSYS/C++" — а400 в C++
-    /// dubna/ проходит, расхождение C#/C++ локализовано и разбирается точечными
     /// regression-тестами (extracode, RAU, MOD, stack correction) и canonical-трейсом
     /// (BESM6_CANON_TRACE). Смотри plans/divergence-report.md.
     /// </summary>

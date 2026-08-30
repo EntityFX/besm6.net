@@ -7,15 +7,12 @@ namespace Besm6.Tests
 {
     /// <summary>
     /// Bootstrap validation (PHASE C): после BootMsDubna() raw-память
-    /// 02010..02023 oct (1032..1043 dec) должна БИТ-в-бит совпадать с C++
     /// референсом (Machine::boot_ms_dubna, ref/machine.cpp:930-976,
     /// system_load_list_flag = 0). Ожидаемые значения сгенерированы С ПОМОЩЬЮ
-    /// C++ ground-truth ассемблера (tools/bootstrap_words.cpp, besm6_asm из
     /// ref/assembler.cpp) — это независимый от C# Asm эталон.
     ///
     /// Дополнительно: начальное CPU state ДО первой инструкции:
     /// PC = 02010 oct (1032 dec), half = LEFT, ACC = RMR = 0, RAU = 0, MOD = 0,
-    /// M[0..15] = 0 (C++: Processor-конструктор + cpu.set_pc(02010)).
     /// </summary>
     [TestClass]
     public class BootstrapDubnaTests
@@ -33,7 +30,6 @@ namespace Besm6.Tests
         [TestMethod]
         public void BootMsDubna_WordsMatchCppGroundTruth()
         {
-            // Адрес, ожидаемое 48-битное слово (C++ besm6_asm), источник (для людей).
             var expected = new (uint addr, ulong word, string src)[]
             {
                 (1032, 0x1A7FFB038602UL, "vtm -5(1),     *70 3002"),
@@ -88,7 +84,6 @@ namespace Besm6.Tests
             _loader.BootMsDubna();
 
             var cpu = _machine.Cpu;
-            // C++: cpu.set_pc(02010); right_instr_flag = false (reset state).
             Assert.AreEqual(1032u, cpu.GetPc(), "PC должен быть 02010 oct = 1032 dec");
             Assert.IsFalse(cpu.OnRightInstruction, "half = LEFT (правая половина ещё не исполнялась)");
             Assert.AreEqual(0UL, cpu.GetAcc().Value & 0xFFFF_FFFF_FFFFUL, "ACC = 0");

@@ -37,7 +37,6 @@ namespace Besm6.Tests
 
         [TestMethod]
         // Known limitation: MONSYS-ядро неполное — сбой на э63(0) [M[16]=0] при настройке
-        // сессии (см. комментарий к ExtracodeHandler.E63). C++ dubna/ тоже падает;
         // это аспирационный тест, требующий полного ядра MONSYS.
         public void NameDub_ProducesMonsysBanner()
         {
@@ -69,7 +68,6 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
-        //[Ignore("Blocked by incomplete MONSYS kernel — both C# and C++ reference fail. See plans/hang-diagnosis.md")]
         public void ForexDub_ProducesHelloWorld()
         {
             // forex.dub — это пример FORTRAN, который выводит "Hello, World!"

@@ -132,7 +132,6 @@ namespace Besm6.Tests
         [TestMethod]
         public void StackCorrection_RestoresPreparedStackAfterArithmeticException()
         {
-            // C++ PrepareStack для addr=0, reg=017:
             //   --M[017]; corr_stack = 1;
             // При исключении Machine вызывает stack_correction(), которое возвращает M[017]
             // (M[017] += corr_stack; corr_stack = 0 — Processor.StackCorrection()).

@@ -285,7 +285,6 @@ public sealed class ProcessorExtracodeTests
     {
         //
         // Metadata (reg/rawAddr/half) must describe the EXECUTED instruction,
-        // exactly like the C++ trace hook (trace_instruction is called BEFORE
         // the PC/half advance in step()).
         //
         var cpu = CreateProcessor();
@@ -324,7 +323,6 @@ public sealed class ProcessorExtracodeTests
         // REGRESSION: ExtracodeRightFlag used to be stored AFTER the extracode
         // advance (pc += 1; rightFlag = false), so a RIGHT-half extracode was
         // reported as LEFT.  The stored half must be the one that EXECUTED
-        // (captured before the advance), matching the C++ trace semantics.
         //
         var cpu = CreateProcessor();
 
@@ -422,7 +420,6 @@ public sealed class ProcessorExtracodeTests
     {
         // Реальный ассемблер проекта (порт dubna/assembler.cpp) — второго
         // энкодера в тестах нет. Мнемоника берётся из OpcodeTable (Bemsh):
-        // цифры мнемоники = восьмеричные цифры опкода (как в C++ case 050..077).
         string mnemonic = Besm6.Asm.OpcodeTable.GetOpNameBemsh(opcode);
         string oct = Convert.ToString(address, 8);
         ulong word = Besm6.Asm.Assembler.Asm($"{mnemonic} {oct}({register})");

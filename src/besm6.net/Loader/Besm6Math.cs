@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Besm6.Core;
 
 namespace Besm6.Loader
@@ -35,7 +35,6 @@ namespace Besm6.Loader
             if (double.IsNaN(input) || double.IsInfinity(input))
                 return 0;
 
-            // Переполнение/особы точки: C++ oct-константы как 48-битные значения.
             const long OVERFLOW_POS = 0xFEFFFFFFFFFFL; // 07757 7777 7777 7777
             const long SMALLEST_NEG = 0x0BFFFFFFFFFFL; // 0027 7777 7777 7777
             const long OVERFLOW_NEG = 0xFF0000000000L; // 07760 0000 0000 0000

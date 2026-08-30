@@ -6,7 +6,6 @@ namespace Besm6.Loader
 {
     public sealed partial class ExtracodeHandler
     {
-        // ─── E50 014: stateful tokenizer (static in C++, fields in C#) ───────
         private int _e50ParseIndex;
         private int _e50ParseLastWordAddr;
         private int _e50ParseLastByteIndex;

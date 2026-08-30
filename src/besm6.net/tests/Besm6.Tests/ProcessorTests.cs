@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Besm6.Core;
 
@@ -31,7 +31,6 @@ namespace Besm6.Tests
         // Восьмеричный литерал.
         private static ulong O(string s) => Convert.ToUInt64(s.Trim(), 8);
 
-        // Принимает восьмеричный литерал C++ буквально (с "'" разделителями,
         // "ul" суффиксом и ведущим "0" префиксом восьмеричной записи),
         // маскирует до 48 бит, как слово БЭСМ-6.
         private static ulong Cw(string cpp)
@@ -81,6 +80,24 @@ namespace Besm6.Tests
                 return;
             }
             Assert.Fail($"{op}: ожидалось исключение ProcessorException, но оно не выброшено");
+        }
+
+        [TestMethod]
+        public void Step_WhenProgramCounterIsZero_ThrowsJumpToZero()
+        {
+            _cpu.SetPc(0);
+
+            try
+            {
+                _cpu.Step();
+            }
+            catch (ProcessorException ex)
+            {
+                Assert.AreEqual("Jump to zero", ex.Message);
+                return;
+            }
+
+            Assert.Fail("Ожидалось исключение ProcessorException при выборке команды по адресу 0");
         }
 
         [TestMethod]
@@ -1171,7 +1188,6 @@ namespace Besm6.Tests
         }
 
         // ─── Intercept (перехват арифметической ошибки) ────────────────────
-        // Точный порт C++ Processor::intercept (dubna/processor.cpp:68-85).
 
         [TestMethod]
         public void Intercept_DefaultDisabled_ReturnsFalse()
@@ -1241,7 +1257,6 @@ namespace Besm6.Tests
             _cpu.SetPc(0x6000);
             _cpu.SetRau(0x0F);
 
-            // В C++ intercept: right_instr_flag=false, apply_mod_reg=false, MOD=0.
             // В C# нет прямого доступа к _rightInstrFlag/_applyModReg — проверяем
             // через OnRightInstruction (public property).
             bool wasRight = _cpu.OnRightInstruction;
@@ -1263,7 +1278,6 @@ namespace Besm6.Tests
             Assert.AreEqual(pcBefore, _cpu.GetPc());
         }
 
-        // ─── Стек (точный порт C++ cpu_test.cpp: stack) ────────────────────
         // Проверяет стек (M[15]) в связке с зп/сч/счм/уим/уи/сда/мод/переходами.
 
         [TestMethod]
@@ -1430,7 +1444,6 @@ namespace Besm6.Tests
         [TestMethod]
         public void Test_Vypr_Illegal_Throws()
         {
-            // 0320 выпр/iret — нелегальная инструкция (как в C++ референсе).
             ExpectIllegal("0320 выпр/iret", Asm("выпр, сч 0"));
         }
 

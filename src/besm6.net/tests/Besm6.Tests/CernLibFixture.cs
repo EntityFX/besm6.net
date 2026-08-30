@@ -13,7 +13,6 @@ namespace Besm6.Tests
     /// + *end file», грузит на барабан #1, бутит MONSYS, компилирует FORTRAN,
     /// линкует CERN-библиотеку с ленты 012 (librar.12), исполняет и строго
     /// сравнивает stdout с ref/tests/libN/expect_{name}.txt.
-    /// Отличия от C++: при несоответствии НЕ перезаписывает expect-файл —
     /// артефакты actual_/diff_ пишутся в tests-run/cernlib/.
     /// </summary>
     public sealed class CernLibFixture
@@ -93,11 +92,7 @@ namespace Besm6.Tests
         }
 
         /// <summary>
-        /// Исполнить тест с трассировкой ТОЛЬКО экстракодов (как C++ debug_extracodes) в
-        /// формате C++ Processor::print_instruction (ref/trace.cpp:240): каждая строка
         /// «{PC:5oct} {R|L}: {octal(RK)}». Срабатывает в НАЧАЛЕ инструкции (после fetch RK,
-        /// ДО advance PC), поэтому строка N C#-трейса = строка N C++-трейса (1:1, без смещения
-        /// и без преобразования hex↔oct). Для diff берутся префиксы инструкций из C++-трейса
         /// (без мнемоники/«= result»/«Drum …») — см. tests-run/_difftrace.ps1.
         /// </summary>
         public LoadResult GenerateTrace(int lib, string name, string tracePath)
@@ -128,9 +123,7 @@ namespace Besm6.Tests
             return result;
         }
 
-        // --- Формат трассировки: точный порт C++ (ref/besm6_arch.cpp, ref/trace.cpp) ---
 
-        /// <summary>is_extracode() (ref/besm6_arch.cpp:102) минус E75 (C++ trace_instruction: opcode != 075).</summary>
         private static bool IsExtracodeTraced(uint opcode)
         {
             if (opcode == 0x3D) return false;                  // 0o75: E75 не трассируется
@@ -164,7 +157,6 @@ namespace Besm6.Tests
         }
 
         // ---------------------------------------------------------------
-        // job-файл: пролог + исходник + '*end file' (как в C++ fixture).
         // ---------------------------------------------------------------
         private string WriteJobFile(int lib, string name, string srcPath)
 
@@ -206,7 +198,6 @@ namespace Besm6.Tests
                 Directory.GetCurrentDirectory() + ")");
         }
 
-        /// <summary>\r\n и \r → \n (нормализация только при сравнении, как в C++).</summary>
         internal static string NormalizeLineEndings(string s)
         {
             if (string.IsNullOrEmpty(s)) return s;
