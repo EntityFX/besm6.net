@@ -1,3 +1,12 @@
+# План портирования CERN-тестов
+
+> **Актуализация 30.08.2026.** В проекте 430 обнаруженных MSTest-тестов: 422 passed,
+> 5 failed и 3 skipped. Три падения CERN вызваны тем, что fixture ищет `ref/tests`,
+> тогда как тесты находятся в `ref/dubna/tests`; массовый CERN-набор ещё не запущен.
+> После исправления пути нужно получить реальную матрицу 420 активных тестов, а не
+> считать их пройденными. Общий статус и порядок работ:
+> [simulator-readiness-report.md](simulator-readiness-report.md).
+
 Собрал полный контекст. Кратко, что я выяснил до плана:
 
 - **C++ источник**: `ref/tests/cernlib_test.cpp` — 421 тестов (188 × `test_cernlib(1, …)` из `ref/tests/lib1/*.f`, 233 × `test_cernlib(2, …)` из `ref/tests/lib2/*.f`), фикстура `dubna_machine::test_cernlib` в `ref/tests/fixture_machine.h`. Тесты собираются только с флагом CMake `TEST_ALL` (сейчас в репо не прогоняются).
