@@ -31,6 +31,18 @@ namespace Besm6.Core
         /// </summary>
         public bool Execute()
         {
+            try
+            {
+                return ExecuteCore();
+            }
+            catch (Processor.DebugWatchAbortException)
+            {
+                return false;
+            }
+        }
+
+        private bool ExecuteCore()
+        {
             ref uint pc = ref _p._pc;
             ulong acc = _p._acc.Value;
             ulong rmr = _p._rmr.Value;
@@ -42,7 +54,6 @@ namespace Besm6.Core
             ref bool rightFlag = ref _p._rightInstrFlag;
             ref bool applyMod = ref _p._applyModReg;
 
-            // Точный порт C++ processor.cpp:184: corr_stack сбрасывается в начале
             // КАЖДОЙ инструкции — поправка стека действует только для текущей инструкции
             // и потребляется StackCorrection() при её прерывании исключением.
             _p._corrStack = 0;
@@ -74,8 +85,9 @@ namespace Besm6.Core
                 opcode = (rk >> 12) & 0x3Fu;
             }
 
-            // Трассировка в формате C++ (аналог ref/processor.cpp:151 → Processor::print_instruction):
-            // фиксируем pc/rightFlag/rk/opcode ДО advance PC, поэтому строка C# = строке C++
+            if (!rightFlag && _p.DebugCheckFetch(pc, opcode))
+                return false;
+
             // по PC/L-R/RK (без смещения и без преобразования hex↔oct). Фильтрация по экстракодам — в хуке.
             _p.TraceInstruction?.Invoke(pc, rightFlag, rk, opcode);
 
@@ -126,7 +138,6 @@ namespace Besm6.Core
                 case Opcode.Zpm:
                     aex = Addr(addr + m[reg]);
                     _p.MemStore(aex, acc);
-                    // C++ processor.cpp:257-259: M[017]--; corr_stack=1;
                     m[15] = Addr(m[15] - 1);
                     _p._corrStack = 1;
                     acc = _p.MemLoad(m[15]);
@@ -135,12 +146,10 @@ namespace Besm6.Core
 
                 case Opcode.Reg:
                     // 002 рег/mod — привилегированная инструкция.
-                    // C++ (processor.cpp:194-195): throw Exception("Illegal instruction 002 рег/mod");
                     throw new ProcessorException("Illegal instruction 002 рег/mod");
 
                 case Opcode.Schm:
                     _p.MemStore(m[15], acc);
-                    // C++ processor.cpp:271-272: M[017]++; corr_stack=-1;
                     m[15] = Addr(m[15] + 1);
                     _p._corrStack = -1;
                     aex = Addr(addr + m[reg]);
@@ -399,7 +408,6 @@ namespace Besm6.Core
                     uint ad = Addr((uint)acc);
                     if (rg != 15)
                     {
-                        // C++ processor.cpp:635-636: M[017]--; corr_stack=1; (только при rg != 017)
                         m[15] = Addr(m[15] - 1);
                         _p._corrStack = 1;
                     }
@@ -447,7 +455,6 @@ namespace Besm6.Core
                 case Opcode.Mod:
                     if (addr == 0 && reg == 15)
                     {
-                        // C++ processor.cpp:718-724: M[017]--; corr_stack=1;
                         m[15] = Addr(m[15] - 1);
                         _p._corrStack = 1;
                     }
@@ -522,7 +529,6 @@ namespace Besm6.Core
                     break;
 
                 case Opcode.Vypr:
-                    // C++ (processor.cpp:734-735): throw Exception("Illegal instruction 32 выпр/iret");
                     throw new ProcessorException("Illegal instruction 320 выпр/iret");
 
                 case Opcode.Stop:
@@ -546,8 +552,6 @@ namespace Besm6.Core
                     break;
 
                 case Opcode.Tsikl:
-                    // 0370 цикл / vlm — точный порт C++ processor.cpp:762-769.
-                    // C++ ИНКРЕМЕНТИРУЕТ M[reg] при каждом выполнении.
                     aex = addr;
                     if (m[reg] == 0) break;
                     m[reg] = Addr(m[reg] + 1);
@@ -560,21 +564,17 @@ namespace Besm6.Core
                     {
                         aex = Addr(addr + m[reg]);
                         m[14] = aex;
-                        // Точный порт C++ Processor::extracode() (dubna/extracode.cpp:30-36):
                         // «Return from extracode to the next machine word» — экстракод
                         // потребляет всё 48-битное слово (левую и правую половины),
                         // поэтому если правая половина ещё не выполнена, пропускаем её
                         // и продолжаем с левой половины следующего слова.
                         // Без этой логики C# выполняет инструкцию из правой половины
-                        // (например 02567 R после «*63 502» в a400), чего C++ не делает,
                         // и состояние (ACC/M[14]) расходится.
                         if (rightFlag)
                         {
                             pc += 1;
                             rightFlag = false;
                         }
-                        // Сохраняем поля инструкции для трассировки в формате C++ (print_instruction).
-                        // half — это ИСПОЛНЯЕМАЯ половина (до advance), как в C++ trace
                         // (trace_instruction вызывается ДО advance в step()):
                         // здесь rightFlag уже значение ПОСЛЕ advance («правая половина ещё
                         // должна выполниться»), что инвертировано; до advance это tRight.
@@ -588,15 +588,12 @@ namespace Besm6.Core
                             // захвачены в начале Execute() и «просрочены» — если их не
                             // обновить, финальная запись `_p._acc = Word48.FromInt48(acc)`
                             // внизу перезапишет изменения обработчика старым значением.
-                            // (В C++ такой проблемы нет: там core.ACC используется
                             // напрямую, без локальной копии.)
                             acc = _p._acc.Value;
                             rmr = _p._rmr.Value;
-                            // Точный порт C++ processor.cpp:639-640: после каждого
                             // экстракода вызывается core.set_logical() — RAU-режим
                             // приводится к ЛОГИЧЕСКОМУ. Влияет на условные переходы
                             // по/пе (Po/Pe) и весь дальнейший поток; без этого C#
-                            // расходится с C++ по RAU-режиму и улетает в MONSYS-цикл.
                             _p.SetLogical();
                             break;
                         }
@@ -629,10 +626,8 @@ namespace Besm6.Core
         {
             if (addr == 0 && reg == 15)
             {
-                // Точный порт C++ (processor.cpp:282-285 и все prepare-stack случаи
                 // 004-027): M[017] = ADDR(M[017] - 1); corr_stack = 1.
                 // corr_stack позволяет StackCorrection() откатить декремент, если
-                // инструкция прервана арифметическим исключением (C++ machine.cpp).
                 m[15] = Addr(m[15] - 1);
                 _p._corrStack = 1;
             }

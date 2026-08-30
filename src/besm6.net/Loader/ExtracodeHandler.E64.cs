@@ -202,7 +202,6 @@ namespace Besm6.Loader
 
             int ctlAddr = aex;
 
-            // Read E64_Pointer (C++ union E64_Pointer, битовые поля LSB-first):
             //   end_addr  : биты 14..0  (Разряды 15-1)
             //   _1        : биты 19..15
             //   end_reg   : биты 23..20 (Разряды 24-21)
@@ -228,7 +227,6 @@ namespace Besm6.Loader
 
             // Special mode for Dubna OS (flags & 010 oct, т.е. бит 3 = 8): данные
             // печатаются напрямую (GOST, 0x7E=конец, >=0x80=упакованные пробелы).
-            // Порт C++ e64(): if (ptr.field.flags & 010) e64_print_dubna(...).
             if ((flags & 8) != 0)
             {
                 E64PrintDubna(startAddr, endAddr);
@@ -243,14 +241,12 @@ namespace Besm6.Loader
             _e64Overprint = false;
             _e64SkipLines = 1;
 
-            // Execute every format word in order (direct port of C++ for(;;) + goto again)
             for (;;)
             {
                 ctlAddr++;
                 if (ctlAddr >= MemoryNWords)
                     throw new ProcessorException("Unterminated info list in extracode e64");
 again:
-                // E64_Info (C++ union E64_Info, битовые поля LSB-first):
                 //   repeat1 : биты 6..0  (Разряды 7-1)
                 //   width   : биты 18..12 (Разряды 19-13)
                 //   skip    : биты 22..20 (Разряды 23-21)
@@ -304,7 +300,6 @@ again:
                 {
                     if (endAddr != 0 && startAddr <= endAddr)
                     {
-                        // Repeat printing task until all data expired (C++ "goto again")
                         goto again;
                     }
 
@@ -373,16 +368,12 @@ again:
         {
             if (_e64SkipLines < 0)
             {
-                if (_e64LineCount > 0) _output("\n");
-                _e64LineCount++;
+                _output("\f");
             }
             else
             {
                 for (int i = 0; i < _e64SkipLines; i++)
-                {
-                    if (_e64LineCount > 0 || i > 0) _output("\n");
-                    _e64LineCount++;
-                }
+                    _output("\n");
             }
             _e64SkipLines = 1;
 
@@ -395,9 +386,11 @@ again:
                 var sb = new StringBuilder(limit);
                 for (int i = 0; i < limit; i++)
                 {
-                    sb.Append(CosyCodec.GostToUnicode(_e64Line[i]));
+                    char ch = CosyCodec.GostToUnicode(_e64Line[i]);
+                    sb.Append(ch == '\0' ? ' ' : ch);
                 }
                 _output(sb.ToString());
+                _e64LineCount++;
             }
 
             Array.Fill(_e64Line, G_SPACE);
@@ -525,7 +518,6 @@ again:
             => ch == G_EOF || ch == G_END_OF_INFO || ch == 0x99; // 0231
 
         // --- Dubna mode (flags & 010 oct): raw byte stream ---
-        // Порт C++ e64_print_dubna (ref/e64.cpp).
 
         private void E64PrintDubna(int startAddr, int endAddr)
         {

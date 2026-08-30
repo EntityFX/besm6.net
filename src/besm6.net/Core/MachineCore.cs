@@ -30,10 +30,8 @@ namespace Besm6.Core
 
         /// <summary>
         /// Хук трассировки ИЗМЕНЕНИЙ регистров после каждого шага — точный аналог
-        /// C++ Processor::print_registers (ref/trace.cpp:319). Вызывается с именем
         /// регистра ("ACC", "RMR", "M0".."M15", "RAU", "MOD" или "CLEARMOD") и его
         /// значением. Печатает только изменённые регистры (сравнение с prev-состоянием),
-        /// как C++. null = выключена. Базовое состояние задаётся BeginRegisterTrace().
         /// </summary>
         public Action<string, ulong>? RegisterTrace { get; set; }
 

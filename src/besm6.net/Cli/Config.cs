@@ -40,7 +40,6 @@ namespace Besm6
 
         /// <summary>
         /// E50 067 (DATE*): использовать реальное системное время (localtime).
-        /// В C++ (ref/main.cpp:101-103) «entropy» включена по умолчанию,
         /// флаг -r отключает её и возвращает фиксированную дату.
         /// </summary>
         [JsonPropertyName("useWallClock")]
