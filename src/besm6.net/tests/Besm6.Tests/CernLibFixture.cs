@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using Besm6.Core;
 using Besm6.Loader;
 
@@ -13,18 +14,35 @@ namespace Besm6.Tests
     /// + *end file», грузит на барабан #1, бутит MONSYS, компилирует FORTRAN,
     /// линкует CERN-библиотеку с ленты 012 (librar.12), исполняет и строго
     /// сравнивает stdout с ref/tests/libN/expect_{name}.txt.
-    /// артефакты actual_/diff_ пишутся в tests-run/cernlib/.
+    /// Артефакты случая (Task A2): tests-run/cernlib/lib{N}/{name}/{actual.txt,diff.txt,run.json}.
+    /// Консольная редирекция всегда восстанавливается (finally в Run / Cleanup).
     /// </summary>
     public sealed class CernLibFixture
     {
         private readonly StringBuilder _output = new();
-        private TextWriter _savedOut;
+        private TextWriter? _savedOut;
         private MachineCore _machine;
         private DubnaLoader _loader;
-        private string _root; // каталог с ref/ и tests-run/
+        private string? _root; // каталог с ref/ и tests-run/
+        private readonly string? _rootOverride;
+
+        /// <summary>
+        /// Создаёт фикстуру. <paramref name="rootOverride"/> — корневой каталог с
+        /// ref/tests (изолированные тесты используют синтетический корень); null — автопоиск.
+        /// </summary>
+        public CernLibFixture(string? rootOverride = null) => _rootOverride = rootOverride;
 
         public string Output => _output.ToString();
         public long Instructions => _loader?.InstructionsExecuted ?? 0;
+
+        /// <summary>Лимит инструкций (по умолчанию 1e9, как в DubnaLoader). Превышение → LimitExceeded.</summary>
+        public long InstructionLimit { get; set; } = 1_000_000_000L;
+
+        /// <summary>Лимит wall-clock времени на случай в мс (по умолчанию 120 c). Превышение → LimitExceeded.</summary>
+        public long WallClockLimitMs { get; set; } = 120_000L;
+
+        /// <summary>Тест-хук: вызывается между записью job-файла и RunScript (в продакшене null).</summary>
+        internal Action? TestHookBeforeRunScript { get; set; }
 
         public void Setup()
         {
@@ -36,68 +54,200 @@ namespace Besm6.Tests
             _loader.Output = s => _output.Append(s);
             // EOF: не ждать консольного ввода (E71 case 6 — защита от зависания).
             _loader.Input = _ => "";
-            _root = FindRoot();
+            _root = _rootOverride ?? FindRoot();
         }
 
+        /// <summary>Восстанавливает консоль (идемпотентно — безопасно вызывать многократно).</summary>
         public void Cleanup()
         {
             if (_savedOut != null)
+            {
                 Console.SetOut(_savedOut);
+                _savedOut = null;
+            }
         }
+
+        /// <summary>Корневой каталог (ленивое разрешение: работает и до Setup).</summary>
+        private string Root => _root ??= _rootOverride ?? FindRoot();
 
         public string RefTestsDir
         {
             get
             {
-                string direct = Path.Combine(_root, "ref", "tests");
+                string direct = Path.Combine(Root, "ref", "tests");
                 return Directory.Exists(direct)
                     ? direct
-                    : Path.Combine(_root, "ref", "dubna", "tests");
+                    : Path.Combine(Root, "ref", "dubna", "tests");
             }
         }
-        public string ArtifactsDir => Path.Combine(_root, "tests-run", "cernlib");
+        public string ArtifactsDir => Path.Combine(Root, "tests-run", "cernlib");
 
         /// <summary>
-        /// Исполнить один CERNlib-тест. Возвращает true, если вывод совпал с expect.
+        /// Каталог артефактов одного случая (Task A2): tests-run/cernlib/lib{lib}/{name}.
+        /// lib1/x и lib2/x — разные каталоги: одинаковые имена в разных библиотеках
+        /// не перезаписывают друг друга.
         /// </summary>
-        public bool RunAndCompare(int lib, string name, out string actual, out string expect, out string diagnostics)
-        {
-            diagnostics = null;
-            actual = null;
-            expect = null;
+        public string ArtifactDir(int lib, string name) => Path.Combine(ArtifactsDir, "lib" + lib, name);
 
+        /// <summary>
+        /// Исполнить один CERNlib-случай и вернуть структурированный результат (Task A2).
+        /// Классификации: Pass / OutputMismatch / LimitExceeded / LoaderError / MissingSource.
+        /// При любом исходе консольная редирекция восстанавливается (finally).
+        /// При любом неудачном исходе пишутся артефакты: actual.txt, diff.txt, run.json.
+        /// </summary>
+        public CernLibRunResult Run(CernLibCase c) => Run(c.Library, c.Name);
+
+        public CernLibRunResult Run(int lib, string name)
+        {
             string libDir = Path.Combine(RefTestsDir, "lib" + lib);
             string src = Path.Combine(libDir, name + ".f");
-            if (!File.Exists(src))
-            {
-                diagnostics = "нет исходника: " + src;
-                return false;
-            }
             string expectPath = Path.Combine(libDir, "expect_" + name + ".txt");
-            if (!File.Exists(expectPath))
+            if (!File.Exists(src) || !File.Exists(expectPath))
             {
-                diagnostics = "нет expect-файла: " + expectPath;
-                return false;
+                return new CernLibRunResult
+                {
+                    Library = lib,
+                    Name = name,
+                    Classification = CernLibClassification.MissingSource,
+                    LoaderMessage = "нет исходника/expect: " + libDir,
+                };
             }
 
-            string jobPath = WriteJobFile(lib, name, src);
-            LoadResult result = _loader.RunScript(jobPath);
-            actual = NormalizeLineEndings(_output.ToString());
-            expect = NormalizeLineEndings(File.ReadAllText(expectPath));
-
-            if (actual == expect)
+            _output.Clear(); // защита от накопления вывода при повторных Run без Setup
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            LoadResult result;
+            try
             {
-                diagnostics = "OK (instructions: " + result.Instructions + ")";
-                return true;
+                _loader.InstructionLimit = InstructionLimit;
+                string jobPath = WriteJobFile(lib, name, src);
+                TestHookBeforeRunScript?.Invoke();
+                result = _loader.RunScript(jobPath);
+            }
+            catch (Exception ex)
+            {
+                watch.Stop();
+                return new CernLibRunResult
+                {
+                    Library = lib,
+                    Name = name,
+                    Classification = CernLibClassification.LoaderError,
+                    ElapsedMs = watch.ElapsedMilliseconds,
+                    LoaderMessage = ex.ToString(),
+                };
+            }
+            finally
+            {
+                Cleanup(); // редирекция консоли всегда восстанавливается (A2)
+            }
+            watch.Stop();
+
+            string actual = NormalizeLineEndings(_output.ToString());
+            string expect = NormalizeLineEndings(File.ReadAllText(expectPath));
+
+            bool instrExceeded = result.LimitExceeded;
+            bool wallExceeded = watch.ElapsedMilliseconds > WallClockLimitMs;
+            CernLibClassification cls;
+            if (instrExceeded || wallExceeded)
+                cls = CernLibClassification.LimitExceeded;
+            else if (!result.Success)
+                cls = CernLibClassification.LoaderError;
+            else if (actual == expect)
+                cls = CernLibClassification.Pass;
+            else
+                cls = CernLibClassification.OutputMismatch;
+
+            int? firstDiff = null;
+            string? ctxExpect = null;
+            string? ctxActual = null;
+            if (actual != expect)
+            {
+                // Первая точка расхождения + контекст 60/160 символов.
+                int p = 0;
+                int lim = Math.Min(actual.Length, expect.Length);
+                while (p < lim && actual[p] == expect[p]) p++;
+                int from = Math.Max(0, p - 60);
+                int show = 160;
+                firstDiff = p;
+                ctxExpect = expect.Substring(from, Math.Min(show, expect.Length - from));
+                ctxActual = actual.Substring(from, Math.Min(show, actual.Length - from));
             }
 
-            // Артефакты: полный actual и diff для диагностики.
-            Directory.CreateDirectory(ArtifactsDir);
-            File.WriteAllText(Path.Combine(ArtifactsDir, "actual_" + name + ".txt"), actual);
-            string diff = UnifiedDiff("expect_" + name + ".txt", "actual_" + name + ".txt", expect, actual);
-            File.WriteAllText(Path.Combine(ArtifactsDir, "diff_" + name + ".txt"), diff);
-            diagnostics = "result: " + result + "; instructions: " + result.Instructions;
-            return false;
+            string? actualPath = null;
+            string? diffPath = null;
+            string? runInfoPath = null;
+            if (cls != CernLibClassification.Pass)
+            {
+                string dir = ArtifactDir(lib, name);
+                Directory.CreateDirectory(dir);
+                actualPath = Path.Combine(dir, "actual.txt");
+                File.WriteAllText(actualPath, actual, new UTF8Encoding(false));
+                diffPath = Path.Combine(dir, "diff.txt");
+                File.WriteAllText(diffPath,
+                    UnifiedDiff("expect_" + name + ".txt", "actual_" + name + ".txt", expect, actual),
+                    new UTF8Encoding(false));
+                runInfoPath = Path.Combine(dir, "run.json");
+                File.WriteAllText(runInfoPath, RunInfoJson(lib, name, cls, result,
+                    watch.ElapsedMilliseconds, actual.Length, expect.Length, firstDiff, ctxExpect, ctxActual),
+                    new UTF8Encoding(false));
+            }
+
+            return new CernLibRunResult
+            {
+                Library = lib,
+                Name = name,
+                Classification = cls,
+                Instructions = result.Instructions,
+                ElapsedMs = watch.ElapsedMilliseconds,
+                InstructionLimitExceeded = instrExceeded,
+                WallClockLimitExceeded = wallExceeded,
+                LoaderMessage = result.Success ? null : result.ToString(),
+                ActualText = actual,
+                ExpectText = expect,
+                FirstDiffPosition = firstDiff,
+                FirstDiffExpected = ctxExpect,
+                FirstDiffActual = ctxActual,
+                ActualPath = actualPath,
+                DiffPath = diffPath,
+                RunInfoPath = runInfoPath,
+            };
+        }
+
+        /// <summary>Старая сигнатура (совместимость: W303 и пр.): делегирует в Run.</summary>
+        public bool RunAndCompare(int lib, string name, out string actual, out string expect, out string diagnostics)
+        {
+            CernLibRunResult r = Run(lib, name);
+            actual = r.ActualText;
+            expect = r.ExpectText;
+            diagnostics = r.Success
+                ? "OK (instructions: " + r.Instructions + ")"
+                : r.Classification + ": " + r.LoaderMessage;
+            return r.Success;
+        }
+
+        /// <summary>run.json: параметры запуска, счётчик инструкций, stop-reason, точка дивергенции.</summary>
+        private string RunInfoJson(int lib, string name, CernLibClassification cls, LoadResult result,
+            long elapsedMs, int actualChars, int expectChars, int? firstDiff, string? ctxExpect, string? ctxActual)
+        {
+            var info = new Dictionary<string, object?>
+            {
+                ["case"] = "lib" + lib + "/" + name,
+                ["classification"] = cls.ToString(),
+                ["instructions"] = result.Instructions,
+                ["elapsedMs"] = elapsedMs,
+                ["instructionLimit"] = InstructionLimit,
+                ["wallClockLimitMs"] = WallClockLimitMs,
+                ["instructionLimitExceeded"] = result.LimitExceeded,
+                ["wallClockLimitExceeded"] = elapsedMs > WallClockLimitMs,
+                ["loader"] = result.ToString(),
+                ["actualChars"] = actualChars,
+                ["expectChars"] = expectChars,
+                ["firstDiffPosition"] = firstDiff,
+                ["firstDiffExpected"] = ctxExpect,
+                ["firstDiffActual"] = ctxActual,
+                ["dotnet"] = Environment.Version.ToString(),
+                ["os"] = Environment.OSVersion.ToString(),
+            };
+            return JsonSerializer.Serialize(info, new JsonSerializerOptions { WriteIndented = true });
         }
 
         /// <summary>
@@ -277,5 +427,45 @@ namespace Besm6.Tests
                     return true;
             return false;
         }
+    }
+
+    /// <summary>
+    /// Классификация результата исполнения случая (SuperPlan Task A2):
+    /// превышение лимитов — отдельный класс, а не «общий output mismatch».
+    /// </summary>
+    public enum CernLibClassification
+    {
+        Pass,            // вывод совпал с expect
+        OutputMismatch,  // вывод отличается от expect
+        LimitExceeded,   // превышен instruction- или wall-clock лимит
+        LoaderError,     // ошибка/исключение лоадера
+        MissingSource,   // нет .f / expect_*.txt
+    }
+
+    /// <summary>Структурированный результат одного CERNlib-случая (SuperPlan Task A2).</summary>
+    public sealed class CernLibRunResult
+    {
+        public int Library { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public CernLibClassification Classification { get; init; }
+        public long Instructions { get; init; }
+        public long ElapsedMs { get; init; }
+        public bool InstructionLimitExceeded { get; init; }
+        public bool WallClockLimitExceeded { get; init; }
+        public string? LoaderMessage { get; init; }
+        public string? ActualText { get; init; }
+        public string? ExpectText { get; init; }
+        public int? FirstDiffPosition { get; init; }
+        public string? FirstDiffExpected { get; init; }
+        public string? FirstDiffActual { get; init; }
+        public string? ActualPath { get; init; }
+        public string? DiffPath { get; init; }
+        public string? RunInfoPath { get; init; }
+
+        public bool Success => Classification == CernLibClassification.Pass;
+        public string Case => "lib" + Library + "/" + Name;
+
+        public override string ToString() =>
+            Case + " [" + Classification + "] instr=" + Instructions + " ms=" + ElapsedMs;
     }
 }
