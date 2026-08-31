@@ -34,5 +34,17 @@ namespace Besm6
                 UseWallClock = cfg.UseWallClock,
             };
         }
+
+        /// <summary>
+        /// Проверить runtime-ресурсы ДО запуска процессора (SuperPlan Task A4).
+        /// Возвращает разрешённые пути; при отсутствии/несоответствии checksum бросает
+        /// <see cref="RuntimeAssetsException"/> со списком всех проблемных ресурсов и каталогов.
+        /// </summary>
+        public static ResolvedRuntimeAssets ValidateRuntimeAssets(Config? cfg = null,
+            IReadOnlyList<RuntimeAsset>? required = null)
+        {
+            cfg ??= Config.Load();
+            return RuntimeAssets.Resolve(cfg, required);
+        }
     }
 }
