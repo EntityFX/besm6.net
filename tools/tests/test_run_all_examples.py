@@ -187,5 +187,25 @@ class ApplyGoldenTests(unittest.TestCase):
             self.assertEqual("ERROR", rae.apply_golden(make_result("ERROR"), d)["status"])
 
 
+class GoldenFilesTests(unittest.TestCase):
+    GOLDEN_DIR = ROOT / "tests" / "golden" / "examples"
+
+    def test_fast_goldens_exist_and_are_nonempty(self):
+        for name in rae.FAST_EXAMPLES:
+            gp = self.GOLDEN_DIR / (name + ".txt")
+            self.assertTrue(gp.exists(), f"нет golden {gp}")
+            self.assertGreater(len(gp.read_text(encoding="utf-8")), 50)
+
+    def test_goldens_contain_controlled_stop(self):
+        for name in rae.FAST_EXAMPLES:
+            text = (self.GOLDEN_DIR / (name + ".txt")).read_text(encoding="utf-8")
+            self.assertIn("Halted by STOP", text)
+
+    def test_golden_is_stable_under_normalization(self):
+        text = (self.GOLDEN_DIR / "name.txt").read_text(encoding="utf-8")
+        self.assertTrue(rae.compare_golden(text, text))
+        self.assertTrue(rae.compare_golden(text, text.replace("\n", "\r\n")))
+
+
 if __name__ == "__main__":
     unittest.main()
