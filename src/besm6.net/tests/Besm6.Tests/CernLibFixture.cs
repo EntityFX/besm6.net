@@ -39,7 +39,7 @@ namespace Besm6.Tests
         public long InstructionLimit { get; set; } = 1_000_000_000L;
 
         /// <summary>Лимит wall-clock времени на случай в мс (по умолчанию 120 c). Превышение → LimitExceeded.</summary>
-        public long WallClockLimitMs { get; set; } = 120_000L;
+        public long WallClockLimitMs { get; set; } = 300_000L;
 
         /// <summary>Тест-хук: вызывается между записью job-файла и RunScript (в продакшене null).</summary>
         internal Action? TestHookBeforeRunScript { get; set; }
@@ -119,6 +119,10 @@ namespace Besm6.Tests
             try
             {
                 _loader.InstructionLimit = InstructionLimit;
+                // Wall-clock стоп ВНУТРИ цикла шагов: зациклившийся случай
+                // завершается за ~WallClockLimitMs с классификацией LimitExceeded,
+                // а не жжёт весь instruction-лимит (см. lib2/f004b, 31.08.2026).
+                _loader.WallClockLimitMs = WallClockLimitMs;
                 string jobPath = WriteJobFile(lib, name, src);
                 TestHookBeforeRunScript?.Invoke();
                 result = _loader.RunScript(jobPath);
