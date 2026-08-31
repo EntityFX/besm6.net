@@ -21,8 +21,8 @@ namespace Besm6.Tests
     {
         private readonly StringBuilder _output = new();
         private TextWriter? _savedOut;
-        private MachineCore _machine;
-        private DubnaLoader _loader;
+        private MachineCore _machine = null!;
+        private DubnaLoader _loader = null!;
         private string? _root; // каталог с ref/ и tests-run/
         private readonly string? _rootOverride;
 
@@ -104,13 +104,14 @@ namespace Besm6.Tests
             string expectPath = Path.Combine(libDir, "expect_" + name + ".txt");
             if (!File.Exists(src) || !File.Exists(expectPath))
             {
-                return new CernLibRunResult
-                {
-                    Library = lib,
-                    Name = name,
-                    Classification = CernLibClassification.MissingSource,
-                    LoaderMessage = "нет исходника/expect: " + libDir,
-                };
+                string message = "нет исходника/expect: " + libDir;
+                string missingExpect = File.Exists(expectPath)
+                    ? NormalizeLineEndings(File.ReadAllText(expectPath))
+                    : string.Empty;
+                Cleanup();
+                return CompleteRun(lib, name, CernLibClassification.MissingSource,
+                    LoadResult.Failed(message, 0, 0), 0, string.Empty, missingExpect,
+                    message, instructionLimitExceeded: false, wallClockLimitExceeded: false);
             }
 
             _output.Clear(); // защита от накопления вывода при повторных Run без Setup
@@ -130,14 +131,12 @@ namespace Besm6.Tests
             catch (Exception ex)
             {
                 watch.Stop();
-                return new CernLibRunResult
-                {
-                    Library = lib,
-                    Name = name,
-                    Classification = CernLibClassification.LoaderError,
-                    ElapsedMs = watch.ElapsedMilliseconds,
-                    LoaderMessage = ex.ToString(),
-                };
+                string message = ex.ToString();
+                return CompleteRun(lib, name, CernLibClassification.LoaderError,
+                    LoadResult.Failed(message, 0, _loader.InstructionsExecuted),
+                    watch.ElapsedMilliseconds, NormalizeLineEndings(_output.ToString()),
+                    NormalizeLineEndings(File.ReadAllText(expectPath)), message,
+                    instructionLimitExceeded: false, wallClockLimitExceeded: false);
             }
             finally
             {
@@ -160,6 +159,14 @@ namespace Besm6.Tests
             else
                 cls = CernLibClassification.OutputMismatch;
 
+            return CompleteRun(lib, name, cls, result, watch.ElapsedMilliseconds, actual, expect,
+                result.Success ? null : result.ToString(), instrExceeded, wallExceeded);
+        }
+
+        private CernLibRunResult CompleteRun(int lib, string name, CernLibClassification cls,
+            LoadResult result, long elapsedMs, string actual, string expect, string? loaderMessage,
+            bool instructionLimitExceeded, bool wallClockLimitExceeded)
+        {
             int? firstDiff = null;
             string? ctxExpect = null;
             string? ctxActual = null;
@@ -191,7 +198,7 @@ namespace Besm6.Tests
                     new UTF8Encoding(false));
                 runInfoPath = Path.Combine(dir, "run.json");
                 File.WriteAllText(runInfoPath, RunInfoJson(lib, name, cls, result,
-                    watch.ElapsedMilliseconds, actual.Length, expect.Length, firstDiff, ctxExpect, ctxActual),
+                    elapsedMs, actual.Length, expect.Length, firstDiff, ctxExpect, ctxActual),
                     new UTF8Encoding(false));
             }
 
@@ -201,10 +208,10 @@ namespace Besm6.Tests
                 Name = name,
                 Classification = cls,
                 Instructions = result.Instructions,
-                ElapsedMs = watch.ElapsedMilliseconds,
-                InstructionLimitExceeded = instrExceeded,
-                WallClockLimitExceeded = wallExceeded,
-                LoaderMessage = result.Success ? null : result.ToString(),
+                ElapsedMs = elapsedMs,
+                InstructionLimitExceeded = instructionLimitExceeded,
+                WallClockLimitExceeded = wallClockLimitExceeded,
+                LoaderMessage = loaderMessage,
                 ActualText = actual,
                 ExpectText = expect,
                 FirstDiffPosition = firstDiff,
@@ -220,8 +227,8 @@ namespace Besm6.Tests
         public bool RunAndCompare(int lib, string name, out string actual, out string expect, out string diagnostics)
         {
             CernLibRunResult r = Run(lib, name);
-            actual = r.ActualText;
-            expect = r.ExpectText;
+            actual = r.ActualText ?? string.Empty;
+            expect = r.ExpectText ?? string.Empty;
             diagnostics = r.Success
                 ? "OK (instructions: " + r.Instructions + ")"
                 : r.Classification + ": " + r.LoaderMessage;
@@ -350,7 +357,7 @@ namespace Besm6.Tests
         // ---------------------------------------------------------------
         private static string FindRoot()
         {
-            string dir = Directory.GetCurrentDirectory();
+            string? dir = Directory.GetCurrentDirectory();
             while (dir != null)
             {
                 if (Directory.Exists(Path.Combine(dir, "ref", "tests")) ||

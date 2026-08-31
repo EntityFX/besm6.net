@@ -11,7 +11,7 @@ namespace Besm6.Core
     public class MagneticDrumDevice : IDevice
     {
         private readonly string _filePath;
-        private byte[] _data;
+        private byte[] _data = Array.Empty<byte>();
         private const int SectorSize = 32768; // 32K слов по умолчанию
         private int _currentAddress = 0;
 

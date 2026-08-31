@@ -48,9 +48,9 @@ namespace Besm6.Tests
                 Assert.IsFalse(string.IsNullOrWhiteSpace(a.Sha256), "sha missing for " + a.Name);
                 Assert.AreEqual(64, a.Sha256!.Length);
                 Assert.IsFalse(string.IsNullOrWhiteSpace(a.Provenance), "provenance missing for " + a.Name);
-                // SuperPlan A4: исторические образы Дубны/CERN в репозитории git-ignored и
-                // не распространяются — каждый помечен как user-provided со способом получения.
-                Assert.AreEqual(RuntimeAssetLicense.UserProvided, a.License, "license for " + a.Name);
+                // SuperPlan Gate A: эталонный dubna распространяется под MIT, поэтому
+                // обязательные образы входят в репозиторий и publish-пакет.
+                Assert.AreEqual(RuntimeAssetLicense.Bundled, a.License, "license for " + a.Name);
                 Assert.IsFalse(string.IsNullOrWhiteSpace(a.ObtainHint), "obtain hint missing for " + a.Name);
             }
             Assert.AreEqual(5, RuntimeAssets.Catalog.Select(a => a.Name).Distinct().Count());
@@ -84,6 +84,61 @@ namespace Besm6.Tests
                 var asset = new RuntimeAsset { Name = "monsys.9", TapeId = 1, Sha256 = null, Required = true };
                 var res = RuntimeAssets.ResolveInDirs(new[] { dirA, dirB }, new[] { asset });
                 Assert.AreEqual(Path.GetFullPath(Path.Combine(dirB, "monsys.9")), res.PathsByAsset["monsys.9"]);
+            }
+            finally { Directory.Delete(root, true); }
+        }
+
+        [TestMethod]
+        public void ResolveInDirs_DoesNotCombineAssetsAcrossDirectories()
+        {
+            string root = Temp();
+            try
+            {
+                string dirA = Path.Combine(root, "a");
+                string dirB = Path.Combine(root, "b");
+                Directory.CreateDirectory(dirA);
+                Directory.CreateDirectory(dirB);
+                File.WriteAllText(Path.Combine(dirA, "first.tap"), "first");
+                File.WriteAllText(Path.Combine(dirB, "second.tap"), "second");
+                var required = new[]
+                {
+                    new RuntimeAsset { Name = "first.tap", TapeId = 1, Required = true },
+                    new RuntimeAsset { Name = "second.tap", TapeId = 2, Required = true },
+                };
+
+                RuntimeAssetsException ex = Assert.Throws<RuntimeAssetsException>(
+                    () => RuntimeAssets.ResolveInDirs(new[] { dirA, dirB }, required));
+                StringAssert.Contains(ex.Message, "single directory");
+            }
+            finally { Directory.Delete(root, true); }
+        }
+
+        [TestMethod]
+        public void ResolveInDirs_SkipsPartialDirectoryForLaterCompleteDirectory()
+        {
+            string root = Temp();
+            try
+            {
+                string partial = Path.Combine(root, "partial");
+                string complete = Path.Combine(root, "complete");
+                Directory.CreateDirectory(partial);
+                Directory.CreateDirectory(complete);
+                File.WriteAllText(Path.Combine(partial, "first.tap"), "first");
+                File.WriteAllText(Path.Combine(complete, "first.tap"), "first");
+                File.WriteAllText(Path.Combine(complete, "second.tap"), "second");
+                var required = new[]
+                {
+                    new RuntimeAsset { Name = "first.tap", TapeId = 1, Required = true },
+                    new RuntimeAsset { Name = "second.tap", TapeId = 2, Required = true },
+                };
+
+                ResolvedRuntimeAssets resolved = RuntimeAssets.ResolveInDirs(
+                    new[] { partial, complete }, required);
+
+                Assert.AreEqual(Path.GetFullPath(complete), resolved.TapesDir);
+                Assert.IsTrue(resolved.PathsByAsset.Values.All(path =>
+                    string.Equals(Path.GetDirectoryName(path), Path.GetFullPath(complete),
+                        StringComparison.OrdinalIgnoreCase)));
             }
             finally { Directory.Delete(root, true); }
         }

@@ -20,8 +20,8 @@ namespace Besm6.Tests
     ///
     /// Manifest генерируется из эталона ref/tests/cernlib_test.cpp скриптом
     /// plans/_count_cernlib.ps1 и обновляется только при изменении эталона.
-    /// Тесты НЕ зависят от каталога ref/ (он git-ignored и на чистом checkout
-    /// отсутствует) — источник данных для тестов всегда доступен.
+    /// Состав тестов берётся из коммиченного manifest; импортированный ref/tests
+    /// дополнительно проверяет соответствие C++-эталону и наличие .f/expect-файлов.
     /// </summary>
     public static class CernLibManifest
     {

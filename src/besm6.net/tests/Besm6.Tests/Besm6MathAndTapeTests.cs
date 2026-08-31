@@ -18,11 +18,18 @@ namespace Besm6.Tests
         public void TapeIds_MatchCanonicalTextEncodingConstants()
         {
             // в TEXT-кодировке + номер). Проверяем, что константы не искажены.
-            Assert.AreEqual(0xB6FBB3E73009L, TapeImage.TapeMonsys, "TapeMonsys");
-            Assert.AreEqual(0xB298B2872012L, TapeImage.TapeLibrar12, "TapeLibrar12");
-            Assert.AreEqual(0xB298B2872037L, TapeImage.TapeLibrar37, "TapeLibrar37");
-            Assert.AreEqual(0x929CF08636D9L, TapeImage.TapeBemsh, "TapeBemsh");
-            Assert.AreEqual(0x880000000007L, TapeImage.TapeB, "TapeB");
+            AssertTapeId("TapeMonsys", 0xB6FBB3E73009L);
+            AssertTapeId("TapeLibrar12", 0xB298B2872012L);
+            AssertTapeId("TapeLibrar37", 0xB298B2872037L);
+            AssertTapeId("TapeBemsh", 0x929CF08636D9L);
+            AssertTapeId("TapeB", 0x880000000007L);
+        }
+
+        private static void AssertTapeId(string fieldName, long expected)
+        {
+            object? raw = typeof(TapeImage).GetField(fieldName)?.GetRawConstantValue();
+            Assert.IsNotNull(raw, fieldName + " constant is missing");
+            Assert.AreEqual(expected, Convert.ToInt64(raw), fieldName);
         }
 
         [TestMethod]

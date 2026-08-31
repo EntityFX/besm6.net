@@ -11,8 +11,8 @@ namespace Besm6.Tests
     [TestClass]
     public class AluTests
     {
-        private LinearMemory _memory;
-        private Processor _cpu;
+        private LinearMemory _memory = null!;
+        private Processor _cpu = null!;
 
         [TestInitialize]
         public void Setup()
@@ -202,7 +202,7 @@ namespace Besm6.Tests
         {
             ulong val = 0;
             foreach (char c in oct)
-                val = (val << 3) | (ulong)(c - '0');
+                val = (val << 3) | (uint)(c - '0');
             return new Word48(val);
         }
 

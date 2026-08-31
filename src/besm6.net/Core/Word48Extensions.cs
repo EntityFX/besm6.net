@@ -7,7 +7,7 @@ public static class Word48Extensions
         ulong val = 0;
         for (int i = 0; i < oct.Length; i++)
         {
-            val = (val << 3) | (ulong)(oct[i] - '0');
+            val = (val << 3) | (uint)(oct[i] - '0');
         }
         return new Word48(val);
     }

@@ -1,0 +1,129 @@
+name: Level A compatibility
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  release:
+    types: [published]
+  schedule:
+    - cron: "17 2 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  fast-gate:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build with zero warnings
+        run: dotnet build src/besm6.net/besm6.net.sln --configuration Release --no-incremental
+
+      - name: Unit, integration, and CLI contracts
+        run: >-
+          dotnet test src/besm6.net/tests/Besm6.Tests/Besm6.Tests.csproj
+          --configuration Release --no-build
+          --filter "FullyQualifiedName!~Besm6.Tests.CernLibTests"
+          --logger "trx;LogFileName=fast-tests.trx"
+
+      - name: Python trace and acceptance-runner tests
+        run: python -m unittest discover -s tools/tests -p "test_*.py"
+
+      - name: Publish self-contained workload directory
+        run: dotnet publish src/besm6.net/besm6.csproj --configuration Release --no-build --output tests-run/publish
+
+      - name: Published CLI examples
+        run: >-
+          python tools/run_all_examples.py --suite fast
+          --dll tests-run/publish/besm6.dll
+          --output tests-run/examples
+
+      - name: CERN beacon cases
+        env:
+          BESM6_CERN_BATCH: names:a400,z005
+        run: >-
+          dotnet test src/besm6.net/tests/Besm6.Tests/Besm6.Tests.csproj
+          --configuration Release --no-build
+          --filter "FullyQualifiedName~Besm6.Tests.CernLibTests.Case_MatchesExpectFile"
+          --logger "trx;LogFileName=cern-beacons.trx"
+
+      - name: Validate CERN beacon performance matrix
+        shell: pwsh
+        run: |
+          $rows = @(Import-Csv tests-run/cernlib/matrix.csv)
+          if ($rows.Count -ne 2 -or @($rows | Where-Object success -ne 'true').Count -ne 0) {
+            throw "Expected 2 successful CERN matrix rows, got $($rows.Count)"
+          }
+
+      - name: Generate canonical trace for first CERN failure
+        if: failure()
+        continue-on-error: true
+        run: pwsh tools/generate_cern_failure_trace.ps1 -Configuration Release
+
+      - name: Upload acceptance and failure artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: level-a-fast-${{ github.run_id }}
+          path: |
+            tests-run/examples
+            tests-run/cernlib
+            src/besm6.net/tests/Besm6.Tests/TestResults
+          if-no-files-found: ignore
+
+  full-cern:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'release'
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build with zero warnings
+        run: dotnet build src/besm6.net/besm6.net.sln --configuration Release --no-incremental
+
+      - name: Run all 397 active CERN cases
+        env:
+          BESM6_CERN_BATCH: all
+        run: >-
+          dotnet test src/besm6.net/tests/Besm6.Tests/Besm6.Tests.csproj
+          --configuration Release --no-build
+          --filter "FullyQualifiedName~Besm6.Tests.CernLibTests.Case_MatchesExpectFile"
+          --logger "trx;LogFileName=cern-full.trx"
+
+      - name: Validate full CERN performance matrix
+        shell: pwsh
+        run: |
+          $rows = @(Import-Csv tests-run/cernlib/matrix.csv)
+          if ($rows.Count -ne 397 -or @($rows | Where-Object success -ne 'true').Count -ne 0) {
+            throw "Expected 397 successful CERN matrix rows, got $($rows.Count)"
+          }
+
+      - name: Generate canonical trace for first CERN failure
+        if: failure()
+        continue-on-error: true
+        run: pwsh tools/generate_cern_failure_trace.ps1 -Configuration Release
+
+      - name: Upload CERN results, diff, and trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: level-a-cern-full-${{ github.run_id }}
+          path: |
+            tests-run/cernlib
+            src/besm6.net/tests/Besm6.Tests/TestResults
+          if-no-files-found: ignore
