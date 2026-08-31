@@ -199,7 +199,7 @@ namespace Besm6.Loader
         public static string? FindImagePath(long tapeId, string? tapesDir = null)
         {
             string dir = tapesDir ?? DefaultTapesDir();
-            string fileName = tapeId switch
+            string? fileName = tapeId switch
             {
                 TapeMonsys => "monsys.9",
                 TapeLibrar12 => "librar.12",

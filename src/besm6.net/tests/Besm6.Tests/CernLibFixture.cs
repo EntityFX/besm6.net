@@ -21,8 +21,8 @@ namespace Besm6.Tests
     {
         private readonly StringBuilder _output = new();
         private TextWriter? _savedOut;
-        private MachineCore _machine;
-        private DubnaLoader _loader;
+        private MachineCore _machine = null!;
+        private DubnaLoader _loader = null!;
         private string? _root; // каталог с ref/ и tests-run/
         private readonly string? _rootOverride;
 
@@ -217,7 +217,7 @@ namespace Besm6.Tests
         }
 
         /// <summary>Старая сигнатура (совместимость: W303 и пр.): делегирует в Run.</summary>
-        public bool RunAndCompare(int lib, string name, out string actual, out string expect, out string diagnostics)
+        public bool RunAndCompare(int lib, string name, out string? actual, out string? expect, out string diagnostics)
         {
             CernLibRunResult r = Run(lib, name);
             actual = r.ActualText;
@@ -350,7 +350,7 @@ namespace Besm6.Tests
         // ---------------------------------------------------------------
         private static string FindRoot()
         {
-            string dir = Directory.GetCurrentDirectory();
+            string? dir = Directory.GetCurrentDirectory();
             while (dir != null)
             {
                 if (Directory.Exists(Path.Combine(dir, "ref", "tests")) ||

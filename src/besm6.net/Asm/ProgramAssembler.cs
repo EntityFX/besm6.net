@@ -262,7 +262,7 @@ namespace Besm6.Asm
             s = s.Trim();
             long r = 0;
             foreach (char c in s)
-                if (c >= '0' && c <= '7') r = (r << 3) | (c - '0');
+                if (c >= '0' && c <= '7') r = (r << 3) | (uint)(c - '0');
             return r;
         }
 

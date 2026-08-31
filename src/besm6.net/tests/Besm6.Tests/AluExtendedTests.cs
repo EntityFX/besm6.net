@@ -21,7 +21,7 @@ namespace Besm6.Tests
         private const long B40 = 1L << 40;
         private const ulong MASK48 = 0xFFFFFFFFFFFFUL;
 
-        private Processor _cpu;
+        private Processor _cpu = null!;
 
         [TestInitialize]
         public void Setup()

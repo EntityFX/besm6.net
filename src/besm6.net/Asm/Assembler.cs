@@ -128,7 +128,7 @@ namespace Besm6.Asm
                 }
             }
 
-            result = (ulong)reg << 20 | (ulong)opcode << 12 | (ulong)addr;
+            result = (uint)reg << 20 | (uint)opcode << 12 | (uint)addr;
             return src;
         }
 

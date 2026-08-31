@@ -15,10 +15,10 @@ namespace Besm6.Tests
             var machine = new MachineCore();
             var loader = new DubnaLoader(machine) { Verbose = false };
             loader.Output = s => { };
-            string path = FindFile("examples", "name.dub");
+            string? path = FindFile("examples", "name.dub");
             if (path == null) Assert.Inconclusive("name.dub not found");
             int count = 0;
-            string dump = null;
+            string? dump = null;
             machine.StepTrace = (pc, word) =>
             {
                 if (count == 70754)
@@ -39,13 +39,13 @@ namespace Besm6.Tests
             string repositoryRoot = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(path)!, ".."));
             string outputDirectory = Path.Combine(repositoryRoot, "tests-run");
             Directory.CreateDirectory(outputDirectory);
-            File.WriteAllText(Path.Combine(outputDirectory, "namedub_main_dump.txt"), dump);
+            File.WriteAllText(Path.Combine(outputDirectory, "namedub_main_dump.txt"), dump ?? string.Empty);
             Assert.Inconclusive("dump saved");
         }
 
-        private static string FindFile(string relativePath, string fileName)
+        private static string? FindFile(string relativePath, string fileName)
         {
-            string dir = Directory.GetCurrentDirectory();
+            string? dir = Directory.GetCurrentDirectory();
             while (dir != null)
             {
                 string p = Path.Combine(dir, relativePath, fileName);
