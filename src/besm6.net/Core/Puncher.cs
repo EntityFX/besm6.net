@@ -89,9 +89,9 @@ namespace Besm6.Core
             {
                 for (int col = 0; col < 40; col++)
                     _braille!.Write((char)(0x2800 + bytes[line, col]));
-                _braille.Write('\n');
+                _braille!.Write('\n');
             }
-            _braille.Write('\n'); // карточки разделяются пустой строкой
+            _braille!.Write('\n'); // карточки разделяются пустой строкой
         }
 
         /// <summary>Транспонирует образ карточки в колонки (12 бит на колонку).</summary>
@@ -178,7 +178,7 @@ namespace Besm6.Core
                                     _cosyString.Remove(_cosyString.Length - 1, 1);
                                 for (int p = 0; p < _cosyString.Length; p++)
                                     _cosy!.Write(CosyCodec.Koi7ToUnicode((byte)_cosyString[p]));
-                                _cosy.Write('\n');
+                                _cosy!.Write('\n');
                                 _cosyString.Clear();
                                 break; // выравнивание по слову
                             }
@@ -196,7 +196,7 @@ namespace Besm6.Core
             }
         }
 
-        private bool TryOpen(ref StreamWriter stream, string fileName)
+        private bool TryOpen(ref StreamWriter? stream, string fileName)
         {
             try
             {

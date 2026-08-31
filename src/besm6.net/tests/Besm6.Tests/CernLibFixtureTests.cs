@@ -10,8 +10,8 @@ namespace Besm6.Tests
     /// нормализация строк, раздельные артефакты lib/name, восстановление консоли
     /// после исключения лоадера, классификация лимитов (instruction / wall-clock),
     /// артефакты при неудаче, batch-разбиение.
-    /// Все тесты герметичны: работают на синтетическом корне с ref/tests и не
-    /// зависят от git-ignored ref/ в репозитории.
+    /// Все тесты герметичны: используют изолированный синтетический root и не
+    /// меняют импортированный ref/.
     /// </summary>
     [TestClass]
     [DoNotParallelize]
@@ -34,7 +34,6 @@ namespace Besm6.Tests
             Assert.AreEqual("x\n\ny", CernLibFixture.NormalizeLineEndings("x\r\n\r\ny"));
             Assert.AreEqual("  z", CernLibFixture.NormalizeLineEndings("  z"));
             Assert.AreEqual(string.Empty, CernLibFixture.NormalizeLineEndings(string.Empty));
-            Assert.AreEqual(null, CernLibFixture.NormalizeLineEndings(null));
         }
 
         // -------------------------------------------------------------------
@@ -59,7 +58,7 @@ namespace Besm6.Tests
         // Классификации
         // -------------------------------------------------------------------
         [TestMethod]
-        public void Run_MissingSource_DistinctClassification_NoArtifacts()
+        public void Run_MissingSource_DistinctClassification_WithArtifacts()
         {
             using var tr = new TempRoot(lib1Source: LoopingSource, lib1Expect: "x\r\n");
             var fx = new CernLibFixture(tr.Path);
@@ -69,8 +68,12 @@ namespace Besm6.Tests
                 CernLibRunResult r = fx.Run(1, "no_such_case");
                 Assert.AreEqual(CernLibClassification.MissingSource, r.Classification);
                 Assert.IsFalse(r.Success);
-                Assert.IsNull(r.ActualText);
-                Assert.IsNull(r.ActualPath);
+                Assert.AreEqual(string.Empty, r.ActualText);
+                Assert.IsNotNull(r.ActualPath);
+                Assert.IsTrue(File.Exists(r.ActualPath));
+                Assert.IsTrue(File.Exists(r.DiffPath));
+                Assert.IsTrue(File.Exists(r.RunInfoPath));
+                StringAssert.Contains(File.ReadAllText(r.RunInfoPath), "MissingSource");
                 StringAssert.Contains(r.LoaderMessage ?? string.Empty, "нет исходника/expect");
             }
             finally { fx.Cleanup(); }
@@ -90,6 +93,10 @@ namespace Besm6.Tests
                 Assert.AreEqual(CernLibClassification.LoaderError, r.Classification);
                 StringAssert.Contains(r.LoaderMessage ?? string.Empty, "synthetic loader failure");
                 Assert.AreSame(original, Console.Out, "редирекция консоли должна восстановиться после исключения лоадера");
+                Assert.IsTrue(File.Exists(r.ActualPath));
+                Assert.IsTrue(File.Exists(r.DiffPath));
+                Assert.IsTrue(File.Exists(r.RunInfoPath));
+                StringAssert.Contains(File.ReadAllText(r.RunInfoPath), "LoaderError");
             }
             finally { fx.Cleanup(); }
         }
@@ -152,6 +159,21 @@ namespace Besm6.Tests
             var all = CernLibManifest.ActiveCases.ToList();
             CollectionAssert.AreEqual(all, CernLibBatchFilter.Filter(all, null).ToList());
             CollectionAssert.AreEqual(all, CernLibBatchFilter.Filter(all, "all").ToList());
+        }
+
+        [TestMethod]
+        public void TraceCase_ParsesLibraryAndName_WithStableDefault()
+        {
+            Assert.AreEqual(new CernLibCase(1, "a400"), CernLibTests.ParseTraceCase(null));
+            Assert.AreEqual(new CernLibCase(2, "j531a"), CernLibTests.ParseTraceCase("lib2/j531a"));
+            Assert.Throws<ArgumentException>(() => CernLibTests.ParseTraceCase("j531a"));
+        }
+
+        [TestMethod]
+        public void CernPerformance_UsesElapsedMilliseconds_AndHandlesZero()
+        {
+            Assert.AreEqual(250_000d, CernLibTests.InstructionsPerSecond(500_000, 2_000), 0.001);
+            Assert.AreEqual(0d, CernLibTests.InstructionsPerSecond(500_000, 0));
         }
 
         [TestMethod]

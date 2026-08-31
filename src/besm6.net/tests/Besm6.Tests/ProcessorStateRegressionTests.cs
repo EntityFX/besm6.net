@@ -43,7 +43,7 @@ namespace Besm6.Tests
         /// измениться именно инструкцией. счмр (031) исключён — её режим условный
         /// (зависит от входящего режима).
         /// </summary>
-        [DataTestMethod]
+        [TestMethod]
         // ── Logical (set_logical) ──
         [DataRow("зпм 2000", (int)RauFlags.Log)]
         [DataRow("счм 2000", (int)RauFlags.Log)]

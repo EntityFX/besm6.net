@@ -90,11 +90,11 @@ namespace Besm6.Cli
             try
             {
                 // SuperPlan Task A4: fail-fast ДО запуска процессора — чётко перечислить отсутствующие
-                // user-provided runtime-образы (monsys.9/librar.12/...) и способ их установки
+                // bundled runtime-образы (monsys.9/librar.12/...) и способ восстановления
                 // (docs/runtime-assets.md), а не молча упираться в junction ref/dubna.
-                MachineFactory.ValidateRuntimeAssets(cfg);
+                ResolvedRuntimeAssets runtimeAssets = MachineFactory.ValidateRuntimeAssets(cfg);
 
-                var loader = MachineFactory.CreateLoader(cfg);
+                var loader = MachineFactory.CreateLoader(cfg, runtimeAssets: runtimeAssets);
                 loader.InstructionLimit = limit;
                 loader.Verbose = verbose;
                 loader.LoopDetect = loopDetect && !noLoopDetect;

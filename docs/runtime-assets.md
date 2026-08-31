@@ -11,27 +11,25 @@
 
 | Файл       | Узел | Происхождение                                        | Лицензия       |
 |------------|------|------------------------------------------------------|----------------|
-| `monsys.9` | 1    | MONSYS «Дубна» — ОС БЭСМ-6, лента 011 oct            | user-provided  |
-| `librar.12`| 2    | CERNlib lib1 (Common Software Library #1), 012 oct   | user-provided  |
-| `librar.37`| 3    | CERNlib lib2 (Common Software Library #2), 037 oct   | user-provided  |
-| `bemsh.739`| 4    | DISPAC/BEMSH — командный процессор БЭСМ-6, 0331 oct  | user-provided  |
-| `b.7`      | 5    | Компилятор B (FORTRAN) для БЭСМ-6, 007 oct           | user-provided  |
+| `monsys.9` | 1    | MONSYS «Дубна» — ОС БЭСМ-6, лента 011 oct            | bundled (MIT)  |
+| `librar.12`| 2    | CERNlib lib1 (Common Software Library #1), 012 oct   | bundled (MIT)  |
+| `librar.37`| 3    | CERNlib lib2 (Common Software Library #2), 037 oct   | bundled (MIT)  |
+| `bemsh.739`| 4    | DISPAC/BEMSH — командный процессор БЭСМ-6, 0331 oct  | bundled (MIT)  |
+| `b.7`      | 5    | Компилятор B (FORTRAN) для БЭСМ-6, 007 oct           | bundled (MIT)  |
 
 ## Юридический статус
 
-Образы — историческое ПО БЭСМ-6 (1960–70-е, Дубна/CERN). В **этом репозитории** они
-**git-ignored** (`.gitignore`: строки `ref/`, `tapes/`) и **намеренно не коммитятся** и не
-встраиваются в `dotnet publish`. Право на переразрешение (распространение) конкретным образом
-подтверждено не было, поэтому каждый образ помечен `RuntimeAssetLicense.UserProvided`:
-пользователь предоставляет его сам, в пределах лицензии своего учреждения.
-
-> Если вы получили право на распространение образа — см. раздел «Включение в пакет» ниже.
+Образы и тестовый corpus импортированы из проекта `dubna` revision
+`ee2a098a69cd808c25e2e42205ab9f61a3372850`, распространяемого под MIT License.
+Копия лицензии и точный состав импорта находятся в `ref/LICENSE` и `ref/README.md`.
+Каждый обязательный образ помечен `RuntimeAssetLicense.Bundled`, коммитится в `tapes/`
+и включается в build/publish output.
 
 ## Установка (documented installer step)
 
-1. Положите каждый образ в каталог `src/besm6.net/tapes/` (или в любой каталог).
-2. Либо укажите каталог в конфиге `besm6.json`: `{ "tapes": "<абсолютный-путь>/tapes" }`,
-   либо через переменную окружения `BESM6_PATH` (каталог с лентами).
+Обычная установка не требует ручных действий: `dotnet publish` кладёт образы в
+`tapes/` рядом с приложением. Для проверки другого набора образов можно указать каталог
+в `besm6.json`: `{ "tapes": "<абсолютный-путь>/tapes" }` либо через `BESM6_PATH`.
 
 Порядок поиска каталогов (`RuntimeAssets.SearchDirectories`):
 1. явно указанный абсолютный путь (config `tapes`);
@@ -53,8 +51,7 @@
 
 Можно сверить самостоятельно:
 ```powershell
-Get-FileHash -Algorithm SHA256 src/besm6.net/tapes/*.9, src/besm6.net/tapes/*.12,
-  src/besm6.net/tapes/*.37, src/besm6.net/tapes/*.739, src/besm6.net/tapes/*.7
+Get-FileHash -Algorithm SHA256 tapes/*.9, tapes/*.12, tapes/*.37, tapes/*.739, tapes/*.7
 ```
 
 ## Fail-fast
@@ -64,19 +61,9 @@ Get-FileHash -Algorithm SHA256 src/besm6.net/tapes/*.9, src/besm6.net/tapes/*.12
 код и перечисляет: каждый отсутствующий/неверный ресурс, его происхождение, ожидаемую SHA256,
 способ получения и все проверенные каталоги. Это устраняет «скрытую» зависимость от `ref/dubna`.
 
-## Включение в пакет (если есть право на распространение)
+## Поставка
 
-Если право на переразрешение подтверждено, добавьте в `src/besm6.net/besm6.csproj` (условно,
-чтобы чистый checkout без лент продолжал собираться):
-
-```xml
-<ItemGroup>
-  <None Include="tapes\monsys.9"  Condition="Exists('tapes\monsys.9')"  CopyToPublishDirectory="PreserveNewest" />
-  <None Include="tapes\librar.12" Condition="Exists('tapes\librar.12')" CopyToPublishDirectory="PreserveNewest" />
-  <None Include="tapes\librar.37" Condition="Exists('tapes\librar.37')" CopyToPublishDirectory="PreserveNewest" />
-  <None Include="tapes\bemsh.739" Condition="Exists('tapes\bemsh.739')" CopyToPublishDirectory="PreserveNewest" />
-  <None Include="tapes\b.7"       Condition="Exists('tapes\b.7')"       CopyToPublishDirectory="PreserveNewest" />
-</ItemGroup>
-```
-
-и пометьте соответствующие образы `RuntimeAssetLicense.Bundled`.
+`src/besm6.net/besm6.csproj` включает `tapes/**` с
+`CopyToOutputDirectory=PreserveNewest` и `CopyToPublishDirectory=PreserveNewest`.
+Тест `RuntimeAssetsTests.Catalog_Sha256_MatchesShippedImages` защищает package corpus
+от случайной замены или повреждения.

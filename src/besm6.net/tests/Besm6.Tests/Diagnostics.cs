@@ -11,7 +11,7 @@ namespace Besm6.Tests
         public void TraceAlgol_Last30Instructions()
         {
             // Walk up to find the repo root that has BOTH tapes/ and examples/
-            string repoRoot = System.IO.Directory.GetCurrentDirectory();
+            string? repoRoot = System.IO.Directory.GetCurrentDirectory();
             while (repoRoot != null)
             {
                 if (System.IO.Directory.Exists(System.IO.Path.Combine(repoRoot, "tapes"))
@@ -20,7 +20,10 @@ namespace Besm6.Tests
                 repoRoot = System.IO.Directory.GetParent(repoRoot)?.FullName;
             }
             if (repoRoot == null)
+            {
                 Assert.Inconclusive("Cannot find repo root with tapes/ and examples/ directories");
+                return;
+            }
             
             string tapesDir = System.IO.Path.Combine(repoRoot, "tapes");
             string dubPath = System.IO.Path.Combine(repoRoot, "examples", "algol.dub");

@@ -43,7 +43,7 @@ namespace Besm6.Tests
         //   мультипликативный — BIT48 УСТАНОВЛЕН;
         //   логический      — ACC == 0;
         //   режим неизвестен — НЕ переход (break).
-        [DataTestMethod]
+        [TestMethod]
         [DataRow((int)RauFlags.Add, (long)1, true)]                 // ADD: BIT41 clear → jump
         [DataRow((int)RauFlags.Add, 1L << 40, false)]               // ADD: BIT41 set → no jump
         [DataRow((int)RauFlags.Mult, 1L << 47, true)]               // MUL: BIT48 set → jump
@@ -60,7 +60,7 @@ namespace Besm6.Tests
         //   мультипликативный — BIT48 СБРОШЕН;
         //   логический      — ACC != 0;
         //   режим неизвестен — переход (fall-thru).
-        [DataTestMethod]
+        [TestMethod]
         [DataRow((int)RauFlags.Add, 1L << 40, true)]                // ADD: BIT41 set → jump
         [DataRow((int)RauFlags.Add, 1L, false)]                     // ADD: BIT41 clear → no jump
         [DataRow((int)RauFlags.Mult, 1L << 40, true)]               // MUL: BIT48 clear → jump
@@ -106,7 +106,7 @@ namespace Besm6.Tests
         // ─── пио (0340/vzm) и пино (0350/v1m) ───────────────────────────────
         // ref/processor.cpp L811-822: переход на ADDR (raw, без M[reg]) при
         // M[reg]==0 (пио) / M[reg]!=0 (пино); цель — LEFT-половина.
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("пио", 0u, true)]
         [DataRow("пио", 5u, false)]
         [DataRow("пино", 0u, false)]

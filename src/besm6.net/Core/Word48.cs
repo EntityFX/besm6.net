@@ -145,7 +145,7 @@ namespace Besm6.Core
         #region Операции и сравнение
 
         public bool Equals(Word48 other) => _value == other._value;
-        public override bool Equals(object obj) => obj is Word48 other && Equals(other);
+        public override bool Equals(object? obj) => obj is Word48 other && Equals(other);
         public override int GetHashCode() => _value.GetHashCode();
         public int CompareTo(Word48 other) => _value.CompareTo(other._value);
         public override string ToString() => $"0x{_value:X12}";
@@ -177,7 +177,7 @@ namespace Besm6.Core
             ulong val = 0;
             foreach (char c in oct)
             {
-                val = (val << 3) | (ulong)(c - '0');
+                val = (val << 3) | (uint)(c - '0');
             }
             return new Word48(val);
         }
