@@ -89,6 +89,11 @@ namespace Besm6.Cli
             StreamWriter? regsWriter = null;
             try
             {
+                // SuperPlan Task A4: fail-fast ДО запуска процессора — чётко перечислить отсутствующие
+                // user-provided runtime-образы (monsys.9/librar.12/...) и способ их установки
+                // (docs/runtime-assets.md), а не молча упираться в junction ref/dubna.
+                MachineFactory.ValidateRuntimeAssets(cfg);
+
                 var loader = MachineFactory.CreateLoader(cfg);
                 loader.InstructionLimit = limit;
                 loader.Verbose = verbose;
