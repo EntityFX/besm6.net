@@ -450,11 +450,11 @@ namespace Besm6.Loader
             var job = JobParser.ParseFile(path);
             var rawLines = File.ReadAllLines(path);
             _machine.Reset();
-            MountScriptTapes(job);
             InstallExtracodeHook();
 
             if (job.RawWords.Count > 0)
             {
+                MountRequestedTapes(job);
                 int baseAddr = job.TransMain ?? DefaultLoadBase;
                 for (int i = 0; i < job.RawWords.Count; i++)
                 {
@@ -470,6 +470,7 @@ namespace Besm6.Loader
 
             if (job.AssemProgram.Count > 0)
             {
+                MountRequestedTapes(job);
                 int baseAddr = job.TransMain ?? DefaultLoadBase;
 
                 // Ассемблируем через ProgramAssembler.
@@ -522,27 +523,13 @@ namespace Besm6.Loader
         public LoadResult RunJob(DubJob job, IEnumerable<string> rawLines)
         {
             _machine.Reset();
-            MountScriptTapes(job);
 
-            // Путь MONSYS: компиляция через ОС (MADLEN, BEMSH, ALGOL, FORTRAN, B).
-            // Если есть *execute — ОС компилирует и исполняет программу.
-            // Также: если секция *assem содержит MADLEN-формат (program:, данные) — нужен MONSYS.
-            bool needsOs = job.Execute != null;
-
-            if (!needsOs && job.RawWords.Count > 0)
-            {
-                // Минимальный путь: raw-слова прямо в память.
+            if (job.RawWords.Count > 0)
                 return RunRawWords(job);
-            }
 
-            if (!needsOs && job.AssemProgram.Count > 0)
-            {
-                // Путь *assem без *execute: локальная ассемблерная сборка.
-                // Работает для простых мнемоник (не для MADLEN/BEMSH исходников).
+            if (job.Execute == null && job.AssemProgram.Count > 0)
                 return RunAssem(job);
-            }
 
-            // Основной путь: пишем скрипт на барабан #1, MONSYS компилирует/запускает.
             WriteScriptToDrum(job, rawLines);
             return BootAndRun(job);
         }
@@ -552,6 +539,7 @@ namespace Besm6.Loader
         /// </summary>
         public LoadResult RunRawWords(DubJob job)
         {
+            MountRequestedTapes(job);
             int baseAddr = job.TransMain ?? DefaultLoadBase;
             for (int i = 0; i < job.RawWords.Count; i++)
             {
@@ -572,6 +560,7 @@ namespace Besm6.Loader
         /// </summary>
         public LoadResult RunAssem(DubJob job)
         {
+            MountRequestedTapes(job);
             int baseAddr = job.TransMain ?? DefaultLoadBase;
 
             // Разделить на сырые слова и мнемонические строки.
