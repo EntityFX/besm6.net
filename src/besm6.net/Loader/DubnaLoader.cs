@@ -25,6 +25,8 @@ namespace Besm6.Loader
         private readonly Dictionary<int, TapeImage> _disksByUnit = new();
         // Смонтированные диски по tape-id.
         private readonly Dictionary<long, TapeImage> _disksByTapeId = new();
+        // Диски, загруженные из реального образа (а не созданные fallback-веткой).
+        private readonly HashSet<TapeImage> _fileBackedTapes = new();
         // Барабаны (unit 0..31). Барабан #1 — COSY-скрипт.
         private readonly Dictionary<int, TapeImage> _drumsByUnit = new();
         private readonly List<string> _filePaths = new();
@@ -168,6 +170,7 @@ namespace Besm6.Loader
             }
 
             var image = TapeImage.LoadFromFile(tapeId, path, readOnly: !writePermit);
+            _fileBackedTapes.Add(image);
             _disksByUnit[unit] = image;
             _disksByTapeId[tapeId] = image;
             if (Verbose) Console.WriteLine($"Mounted {path} as disk 0{unit:X}");
@@ -321,7 +324,7 @@ namespace Besm6.Loader
         private bool MountRequiredTape(int unit, long tapeId)
         {
             if (_disksByUnit.TryGetValue(unit, out TapeImage? mounted))
-                return mounted.VolumeId == tapeId;
+                return mounted.VolumeId == tapeId && _fileBackedTapes.Contains(mounted);
 
             if (TapeImage.FindImagePath(tapeId, _tapesDir) == null)
                 return false;
@@ -347,7 +350,8 @@ namespace Besm6.Loader
         private void EnsureMonsysTape()
         {
             if (_disksByUnit.TryGetValue(24, out TapeImage? mounted) &&
-                mounted.VolumeId == TapeImage.TapeMonsys)
+                mounted.VolumeId == TapeImage.TapeMonsys &&
+                _fileBackedTapes.Contains(mounted))
                 return;
 
             if (!MountRequiredTape(24, TapeImage.TapeMonsys))
