@@ -315,6 +315,42 @@ namespace Besm6.Tests
             ulong mem1234 = machine.Memory.Read(668).Value;
             Assert.AreEqual(0UL, mem1234, "atx 1234 хранит ACC(0) в памяти[1234]");
         }
+
+        [TestMethod]
+        public void MountScriptTapes_MissingMonsys_ThrowsBeforeExecution()
+        {
+            string empty = Path.Combine(Path.GetTempPath(), "besm6_empty_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(empty);
+            try
+            {
+                var loader = new DubnaLoader(new MachineCore(), empty);
+                ProcessorException ex = Assert.Throws<ProcessorException>(
+                    () => loader.MountScriptTapes(new DubJob()));
+                StringAssert.Contains(ex.Message, "MONSYS");
+            }
+            finally
+            {
+                Directory.Delete(empty, recursive: true);
+            }
+        }
+
+        [TestMethod]
+        public void MountScriptTapes_UnknownRequestedTape_Throws()
+        {
+            string empty = Path.Combine(Path.GetTempPath(), "besm6_empty_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(empty);
+            try
+            {
+                DubJob job = JobParser.Parse(new[] { "*tape:5/no-such-volume" });
+                var loader = new DubnaLoader(new MachineCore(), empty);
+                ProcessorException ex = Assert.Throws<ProcessorException>(() => loader.MountScriptTapes(job));
+                StringAssert.Contains(ex.Message, "no-such-volume");
+            }
+            finally
+            {
+                Directory.Delete(empty, recursive: true);
+            }
+        }
     }
 
     [TestClass]
