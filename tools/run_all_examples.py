@@ -188,9 +188,13 @@ def _decode(b):
 
 
 def run_one(dll, path, root, limit, timeout):
-    """Запустить один сценарий; вернуть результат со stdout/stderr для отчёта и golden."""
+    """Запустить один сценарий; вернуть результат со stdout/stderr для отчёта и golden.
+
+    `--no-wall-clock` обязателен: детерминированность (глобальное ограничение плана —
+    тесты не используют реальные часы; иначе баннер MONSYS со временем ломает golden).
+    """
     rel = os.path.relpath(path, root)
-    cmd = ["dotnet", str(dll), "run", str(path), "--limit", str(limit)]
+    cmd = ["dotnet", str(dll), "run", str(path), "--limit", str(limit), "--no-wall-clock"]
     start = time.time()
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=str(root))
@@ -241,13 +245,20 @@ def main(argv=None):
     p.add_argument("--suite", choices=["fast", "full"], default="full",
                    help="fast = name/algol/bemsh; full = все .dub (по умолчанию full).")
     p.add_argument("--only", default=None, help="Явный список имён без .dub через запятую; переопределяет --suite.")
-    p.add_argument("--golden-dir", default=None, help="Каталог golden-выводов (по одному на сценарий).")
+    p.add_argument("--golden-dir", default=None, help="Каталог golden-выводов (по умолчанию tests/golden/examples).")
+    p.add_argument("--no-golden", action="store_true", help="Отключить сравнение с golden-выводами.")
     args = p.parse_args(argv)
 
     root = Path(args.root).resolve() if args.root else default_root()
     dll = Path(args.dll).resolve() if args.dll else (root / DEFAULT_DLL_REL)
     out_dir = Path(args.output).resolve() if args.output else (root / "tests-run" / "examples")
     examples_dir = root / "examples"
+    if args.no_golden:
+        golden_dir = None
+    elif args.golden_dir:
+        golden_dir = Path(args.golden_dir).resolve()
+    else:
+        golden_dir = root / "tests" / "golden" / "examples"
 
     if not dll.exists():
         print(f"ОШИБКА: не найден {dll}.\n"
@@ -274,7 +285,7 @@ def main(argv=None):
         name = Path(f).stem
         print(f"[{i}/{len(files)}] {os.path.relpath(f, root)} ... ", end="", flush=True)
         r = run_one(dll, f, root, args.limit, args.timeout)
-        r = apply_golden(r, args.golden_dir)
+        r = apply_golden(r, golden_dir)
         (scen_dir / (name + ".out")).write_text(r["stdout"], encoding="utf-8")
         (scen_dir / (name + ".err")).write_text(r["stderr"], encoding="utf-8")
         print(r["status"], f"(instrs={r['instrs'] or 'n/a'}, {r['secs']}s)")
