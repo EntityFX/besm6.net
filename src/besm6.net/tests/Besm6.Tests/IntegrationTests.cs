@@ -82,20 +82,14 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
-        [Ignore("tests/raw/hello.dub does not exist in repository")]
-        public void RawHelloDub_ProducesHelloWorld()
+        public void RawHelloDub_ProducesHi()
         {
-            // tests/raw/hello.dub — это простой пример, который выводит "Hello, World!"
-            string path = FindFileInParentDirs("tests/raw", "hello.dub");
-            if (path == null)
-                path = FindFileInParentDirs("src/besm6.net/tests/raw", "hello.dub");
-            if (path == null)
-                Assert.Inconclusive("File tests/raw/hello.dub not found");
-            
-            var result = _loader.RunScript(path);
-            string output = _output.ToString();
-            
-            StringAssert.Contains(output, "Hello, World!", "Raw hello пример должен выводить Hello, World!");
+            string? path = FindFileInParentDirs("src/besm6.net/tests/raw", "hello.dub");
+            Assert.IsNotNull(path, "File src/besm6.net/tests/raw/hello.dub not found");
+
+            LoadResult result = _loader.RunScript(path);
+            Assert.IsTrue(result.Success, result.ToString());
+            StringAssert.Contains(_output.ToString(), "HI");
         }
 
         private static string FindFileInParentDirs(string relativePath, string fileName)
