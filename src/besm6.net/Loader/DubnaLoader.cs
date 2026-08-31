@@ -169,10 +169,15 @@ namespace Besm6.Loader
                 return true;
             }
 
+            return MountFileBackedTape(unit, tapeId, path, writePermit);
+        }
+
+        private bool MountFileBackedTape(int unit, long tapeId, string path, bool writePermit)
+        {
             var image = TapeImage.LoadFromFile(tapeId, path, readOnly: !writePermit);
-            _fileBackedTapes.Add(image);
             _disksByUnit[unit] = image;
             _disksByTapeId[tapeId] = image;
+            _fileBackedTapes.Add(image);
             if (Verbose) Console.WriteLine($"Mounted {path} as disk 0{unit:X}");
             return true;
         }
@@ -331,10 +336,18 @@ namespace Besm6.Loader
             if (_disksByUnit.TryGetValue(unit, out TapeImage? mounted))
                 return mounted.VolumeId == tapeId && _fileBackedTapes.Contains(mounted);
 
-            if (TapeImage.FindImagePath(tapeId, _tapesDir) == null)
+            string? path = TapeImage.FindImagePath(tapeId, _tapesDir);
+            if (path == null)
                 return false;
 
-            return MountTape(unit, tapeId);
+            try
+            {
+                return MountFileBackedTape(unit, tapeId, path, writePermit: false);
+            }
+            catch (FileNotFoundException)
+            {
+                return false;
+            }
         }
 
         private void MountRequestedTapes(DubJob job)
