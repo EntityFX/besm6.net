@@ -22,6 +22,24 @@ namespace Besm6.Core
         public Puncher Puncher { get; }
         public Plotter Plotter { get; }
 
+        // ── Уровень B (SuperPlan Task B1): дискретное модельное время ──
+        // Часы и планировщик привязаны к одному источнику модельного времени.
+        // Шаг инструкции стоит TicksPerInstruction тиков. Это НЕ изменяет наблюдаемую
+        // семантику уровня A (CPU-путь не трогается) — изолированный эксперимент
+        // по правилу SuperPlan: «до закрытия Gate A задачи уровня B — только
+        // изолированные эксперименты и не заменяют текущий исполнительный путь».
+        /// <summary>Документированная стоимость одной CPU-инструкции в модельных тиках.</summary>
+        public const ulong TicksPerInstruction = 1;
+
+        private readonly SimulationClock _clock = new();
+        private readonly EventScheduler _scheduler;
+
+        /// <summary>Модельные часы (read-only вид уровня B).</summary>
+        public ISimulationClock Clock => _clock;
+
+        /// <summary>Планировщик событий модельного времени (уровень B).</summary>
+        public IEventScheduler Scheduler => _scheduler;
+
         // Свойство-мост для совместимости с существующим Debugger.
         public Processor Processor => Cpu;
 
@@ -94,6 +112,9 @@ namespace Besm6.Core
             Cpu = new Processor(Memory);
             Puncher = new Puncher(Memory, puncherOutputDir);
             Plotter = new Plotter();
+
+            // B1: планировщик событий привязан к тем же модельным часам машины.
+            _scheduler = new EventScheduler(_clock);
         }
 
         /// <summary>
@@ -144,6 +165,9 @@ namespace Besm6.Core
         public bool Step()
         {
             bool stopped = Cpu.Step();
+            // B1: одна выполненная инструкция = TicksPerInstruction тиков модельного времени.
+            // Не влияет на наблюдаемую семантику уровня A (только учёт модельного времени).
+            _clock.Advance(TicksPerInstruction);
             if (StepTrace != null)
             {
                 int pc = (int)Cpu.GetPc();
