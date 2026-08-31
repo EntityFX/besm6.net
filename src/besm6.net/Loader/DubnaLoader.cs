@@ -468,7 +468,7 @@ namespace Besm6.Loader
                 return baseAddr;
             }
 
-            if (job.AssemProgram.Count > 0)
+            if (job.Execute == null && job.AssemProgram.Count > 0)
             {
                 MountRequestedTapes(job);
                 int baseAddr = job.TransMain ?? DefaultLoadBase;

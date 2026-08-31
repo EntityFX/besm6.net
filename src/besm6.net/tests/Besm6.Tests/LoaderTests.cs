@@ -342,6 +342,27 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
+        public void LoadScript_AssemWithExecute_RequiresMonsys()
+        {
+            string empty = Path.Combine(Path.GetTempPath(), "besm6_empty_" + Guid.NewGuid().ToString("N"));
+            string script = Path.Combine(empty, "assem-execute.dub");
+            Directory.CreateDirectory(empty);
+            try
+            {
+                File.WriteAllLines(script, new[] { "*assem", "stop", "*execute", "*end file" });
+                var loader = new DubnaLoader(new MachineCore(), empty);
+
+                ProcessorException ex = Assert.Throws<ProcessorException>(() => loader.LoadScript(script));
+
+                StringAssert.Contains(ex.Message, "MONSYS");
+            }
+            finally
+            {
+                Directory.Delete(empty, recursive: true);
+            }
+        }
+
+        [TestMethod]
         public void MountScriptTapes_MissingMonsys_ThrowsBeforeExecution()
         {
             string empty = Path.Combine(Path.GetTempPath(), "besm6_empty_" + Guid.NewGuid().ToString("N"));
