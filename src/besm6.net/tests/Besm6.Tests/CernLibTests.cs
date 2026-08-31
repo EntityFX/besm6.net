@@ -28,11 +28,12 @@ namespace Besm6.Tests
         public void Cleanup() => _fx.Cleanup();
 
         [TestMethod]
-        [Timeout(600000)]
+        [Timeout(420000)] // wall-clock лимит фикстуры 300 с (CernLibFixture.WallClockLimitMs) + 120 с на boot/артефакты/нагрузку
         [DynamicData(nameof(CernLibData))]
         public void Case_MatchesExpectFile(CernLibCase c)
         {
             CernLibRunResult r = _fx.Run(c);
+            EmitProgress(c, r);
             if (r.Success) return;
 
             var msg = new System.Text.StringBuilder();
@@ -83,6 +84,67 @@ namespace Besm6.Tests
 
         {
             _fx.RunAndCompare(2, "w303", out _, out _, out _);
+        }
+
+        // ─────────── Прогресс/Elapsed долгой матрицы (31.08.2026) ───────────
+        // Пер-кейс строка в stdout (попадает в лог dotnet test) + heartbeat-файл
+        // tests-run/cernlib/progress.txt для живого мониторинга: [bar] done/total,
+        // elapsed сессии, ETA. Пишется ПОСЛЕ fx.Run — консоль к этому моменту уже
+        // восстановлена фикстурой, так что строка не загрязняет захваченный вывод машины.
+        private static readonly object ProgressLock = new object();
+        private static int _caseNo;
+        private static int? _totalCases;
+        private static long _caseMsTotal;
+        private static readonly System.Diagnostics.Stopwatch SessionSw = System.Diagnostics.Stopwatch.StartNew();
+
+        private static string ProgressBar(int done, int total)
+        {
+            const int width = 20;
+            int filled = total <= 0 ? width : (int)Math.Round(width * (double)done / total);
+            if (filled > width) filled = width;
+            if (filled < 0) filled = 0;
+            return new string('#', filled) + new string('.', width - filled);
+        }
+
+        private static string FormatHms(long ms)
+        {
+            var t = TimeSpan.FromMilliseconds(Math.Max(0, ms));
+            return t.TotalHours >= 1
+                ? $"{(int)t.TotalHours:D2}:{t.Minutes:D2}:{t.Seconds:D2}"
+                : $"{t.Minutes:D2}:{t.Seconds:D2}.{t.Milliseconds / 100}";
+        }
+
+        private void EmitProgress(CernLibCase c, CernLibRunResult r)
+        {
+            lock (ProgressLock)
+            {
+                int idx = System.Threading.Interlocked.Increment(ref _caseNo);
+                if (_totalCases == null)
+                {
+                    string? filter = Environment.GetEnvironmentVariable(CernLibBatchFilter.EnvVarName);
+                    _totalCases = CernLibBatchFilter.Filter(CernLibManifest.ActiveCases, filter).Count();
+                }
+                int total = _totalCases.Value;
+                long msTotal = System.Threading.Interlocked.Add(ref _caseMsTotal, r.ElapsedMs);
+                double avg = (double)msTotal / idx;
+                string line =
+                    $"[{ProgressBar(idx, total)}] {idx}/{total} ({100 * idx / total}%) {c} " +
+                    $"-> {r.Classification} [{r.ElapsedMs} ms, {r.Instructions.ToString(System.Globalization.CultureInfo.InvariantCulture)} ins] " +
+                    $"| elapsed={FormatHms((long)SessionSw.Elapsed.TotalMilliseconds)} eta={FormatHms((long)(avg * (total - idx)))}";
+
+                Console.WriteLine(line);
+
+                try
+                {
+                    string path = System.IO.Path.Combine(_fx.ArtifactsDir, "progress.txt");
+                    System.IO.File.WriteAllText(path,
+                        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) + "  " + line + Environment.NewLine);
+                }
+                catch
+                {
+                    // Прогресс не критичен для результата теста.
+                }
+            }
         }
     }
 }
