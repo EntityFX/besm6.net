@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Besm6.Core;
 using Besm6.Loader;
@@ -62,7 +62,7 @@ namespace Besm6.Tests
             Assert.AreEqual((uint)RauFlags.Log, _cpu.GetRau() & (uint)RauFlags.Mode);
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("и 2000")]   // 011 aax
         [DataRow("или 2000")] // 015 aox
         [DataRow("сбр 2000")] // 020 apx
@@ -124,7 +124,7 @@ namespace Besm6.Tests
         }
 
         /// <summary>нед (023/anx): ACC==0 → RMR=0, ACC:=операнд; ACC!=0 → RMR=высшедшие биты.</summary>
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(0UL, true)]      // ACC==0  → RMR обязан быть 0
         [DataRow(0x1234UL, false)] // ACC!=0 → RMR ≠ 0 (вытесненные биты сдвига)
         public void Ned_BranchDependentRmr(ulong acc, bool expectZeroRmr)
@@ -146,7 +146,7 @@ namespace Besm6.Tests
         // Дополнение таблицы Instruction_SetsExpectedRauMode (там уже есть
         // сч/и/нтж/или/счрж/знак/слц): здесь оставшиеся явные SetLogical/
         // SetAdditive/SetMultiplicative-вызовы в InstructionExecutor.
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("сл 2000", (int)RauFlags.Add)]
         [DataRow("вч 2000", (int)RauFlags.Add)]
         [DataRow("вчоб 2000", (int)RauFlags.Add)]

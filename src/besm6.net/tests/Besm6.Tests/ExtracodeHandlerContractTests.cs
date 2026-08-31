@@ -76,7 +76,7 @@ namespace Besm6.Tests
         }
 
         // ─── E73 / E20 / E21: no-op контракты (P1-9) ───────────────────────
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(E73)] // 073 — «Unknown, for ITM/ASS» (ref L107-108: break)
         [DataRow(E20)] // 200 — reserved/no-op
         [DataRow(E21)]
@@ -123,7 +123,7 @@ namespace Besm6.Tests
         /// В C# контрактом является false от хендлера — CPU-исполнитель
         /// превращает его в ProcessorException("Extracode N not implemented").
         /// </summary>
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(E60)]
         [DataRow(E62)]
         [DataRow(E66)]
@@ -138,7 +138,7 @@ namespace Besm6.Tests
             Assert.IsFalse(handled, $"э{Convert.ToString(code, 8)} не реализован и обязан вернуть false");
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(4)]
         [DataRow(8)]
         [DataRow(0x7FFF)]
@@ -151,7 +151,7 @@ namespace Besm6.Tests
             Assert.IsTrue(handler.Handle(E72, 0));
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(0)]
         [DataRow(1)]
         [DataRow(7)]
@@ -195,7 +195,7 @@ namespace Besm6.Tests
             CheckMathWiring(E51, 1, Besm6Math.Cos, 0.5);
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(2)]
         [DataRow(3)]
         public void E51_InvalidAddr_Throws(int addr)
@@ -224,7 +224,7 @@ namespace Besm6.Tests
         [TestMethod]
         public void E56_Addr0_IsExp() => CheckMathWiring(E56, 0, Besm6Math.Exp, 1.0); // e
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(E52)]
         [DataRow(E53)]
         [DataRow(E54)]
