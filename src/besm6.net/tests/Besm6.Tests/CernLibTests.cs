@@ -12,7 +12,8 @@ namespace Besm6.Tests
     ///
     /// Beacon-случаи (lib1/a400, lib2/z005) входят в общую матрицу.
     /// w303 — отдельное эталонное исключение ([Ignore], вечный цикл в эталоне).
-    /// См. plans/SuperPlan.md, Task A1–A3.
+    /// Batch-разбиение: env BESM6_CERN_BATCH (CernLibBatchFilter).
+    /// Артефакты случаев: tests-run/cernlib/lib{N}/{name}/. См. plans/SuperPlan.md, Task A1–A3.
     /// </summary>
     [TestClass]
     [DoNotParallelize]
@@ -31,37 +32,36 @@ namespace Besm6.Tests
         [DynamicData(nameof(CernLibData))]
         public void Case_MatchesExpectFile(CernLibCase c)
         {
-            int lib = c.Library;
-            string name = c.Name;
-            bool ok = _fx.RunAndCompare(lib, name, out string actual, out string expect, out string diag);
-            if (ok) return;
+            CernLibRunResult r = _fx.Run(c);
+            if (r.Success) return;
 
             var msg = new System.Text.StringBuilder();
-            msg.Append("CERN lib").Append(lib).Append('/').Append(name).AppendLine(" FAILED. ");
-            if (diag != null) msg.Append(diag);
-
-            if (actual == null || expect == null)
+            msg.Append(c.ToString()).AppendLine(" FAILED [").Append(r.Classification).AppendLine("]");
+            if (r.LoaderMessage != null)
+                msg.AppendLine(r.LoaderMessage);
+            msg.Append("instructions: ").Append(r.Instructions).Append(", elapsed: ").Append(r.ElapsedMs).Append("ms");
+            if (r.InstructionLimitExceeded) msg.Append(" (превышен instruction-лимит)");
+            if (r.WallClockLimitExceeded) msg.Append(" (превышен wall-clock лимит)");
+            if (r.FirstDiffPosition.HasValue)
             {
-                Assert.Fail(msg.ToString());
+                msg.AppendLine();
+                msg.AppendLine("Расхождение в символе " + r.FirstDiffPosition.Value + ":");
+                msg.Append("  expected[...]: ").AppendLine(CernLibFixture.Quote(r.FirstDiffExpected!));
+                msg.Append("  actual  [...]: ").AppendLine(CernLibFixture.Quote(r.FirstDiffActual!));
             }
-
-            // Первая точка расхождения (для быстрого ориентирования).
-            int p = 0;
-            int lim = Math.Min(actual.Length, expect.Length);
-            while (p < lim && actual[p] == expect[p]) p++;
-            int from = Math.Max(0, p - 60);
-            int show = 160;
-            msg.AppendLine("Расхождение в символе " + p + " из " + actual.Length + " / " + expect.Length + ":");
-            msg.Append("  expected[...]: ").AppendLine(CernLibFixture.Quote(expect.Substring(from, Math.Min(show, expect.Length - from))));
-            msg.Append("  actual  [...]: ").AppendLine(CernLibFixture.Quote(actual.Substring(from, Math.Min(show, actual.Length - from))));
-            msg.Append("Артефакты: tests-run/cernlib/{actual,diff}_").Append(name).AppendLine(".txt");
+            if (r.DiffPath != null)
+                msg.Append("Артефакты: ").AppendLine(r.DiffPath).Append("run.json: ").AppendLine(r.RunInfoPath);
             Assert.Fail(msg.ToString());
         }
 
-        /// <summary>Данные теории: все 397 активных случаев из коммиченного manifest.</summary>
+        /// <summary>
+        /// Данные теории: активные случаи из коммиченного manifest, с опциональным
+        /// детерминированным batch-разбиением (env BESM6_CERN_BATCH, см. CernLibBatchFilter).
+        /// </summary>
         public static IEnumerable<object[]> CernLibData()
         {
-            foreach (var c in CernLibManifest.ActiveCases)
+            string? filter = Environment.GetEnvironmentVariable(CernLibBatchFilter.EnvVarName);
+            foreach (var c in CernLibBatchFilter.Filter(CernLibManifest.ActiveCases, filter))
                 yield return new object[] { c };
         }
 
