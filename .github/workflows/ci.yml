@@ -1,0 +1,96 @@
+# CI — Task A5 (инкремент 3).
+#
+# Два гейта:
+#   1. build-warning-gate  — ДЕТЕРМИНИРОВАН, не требует runtime-ассетов.
+#      `check_warnings.py` сама собирает sln (--no-incremental): build-fail -> exit 2,
+#      новые предупреждения (CS/MSTEST) -> exit 1, иначе exit 0.
+#      Baseline: tools/warnings_baseline.json (0 CS + 0 MSTEST; допущено только уменьшение).
+#   2. example-golden-gate — fast-примеры (name/algol/bemsh) по golden-выводам.
+#      ТРЕБУЕТ runtime-ассеты (tapes + disk + drum); они gitignored. Провижинятся
+#      из bundle по URL (repo secret BESM6_TAPES_BUNDLE_URL); без него — graceful skip
+#      (core-gate уже прошёл, CI зелёный). См. tools/make_tapes_bundle.py.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: "8.0.x"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ── Core gate: build + zero-new-warning (DETERMINISTIC, без ассетов) ──
+  build-warning-gate:
+    name: Build + zero-warning gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Zero-new-warning gate (build + CS/MSTEST warnings)
+        run: python tools/check_warnings.py
+      - name: Python tool unit tests (unittest)
+        run: |
+          python tools/tests/test_check_warnings.py -v
+          python tools/tests/test_run_all_examples.py -v
+          python tools/tests/test_diff_trace.py -v
+
+  # ── Example golden gate: name/algol/bemsh (нужны runtime-ассеты) ──
+  example-golden-gate:
+    name: Fast example golden gate
+    runs-on: ubuntu-latest
+    needs: build-warning-gate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Provision runtime assets (bundle по URL)
+        id: provision
+        env:
+          BUNDLE_URL: ${{ secrets.BESM6_TAPES_BUNDLE_URL }}
+        run: |
+          if [ -n "$BUNDLE_URL" ]; then
+            curl -fsSL "$BUNDLE_URL" -o /tmp/besm6_assets.tar.gz
+            mkdir -p tapes
+            tar -xzf /tmp/besm6_assets.tar.gz -C .
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "== tapes/ =="; ls -la tapes || true
+            echo "== disk/drum =="; ls -la besm6_disk.bin besm6_drum.bin 2>/dev/null || true
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "BESM6_TAPES_BUNDLE_URL не задан — example-gate будет пропущен."
+          fi
+      - name: Build (для DLL fast-примеров)
+        if: steps.provision.outputs.available == 'true'
+        run: dotnet build src/besm6.net/besm6.net.sln --nologo --no-incremental
+      - name: Run fast example golden gate (name/algol/bemsh)
+        if: steps.provision.outputs.available == 'true'
+        run: python tools/run_all_examples.py --suite fast
+      - name: Upload example report
+        if: steps.provision.outputs.available == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: examples-report
+          path: tests-run/examples/
+      - name: Note (example-gate пропущен)
+        if: steps.provision.outputs.available != 'true'
+        run: >
+          echo "SKIPPED example-gate: задайте repo secret BESM6_TAPES_BUNDLE_URL
+          (tar.gz: tapes/*, besm6_disk.bin, besm6_drum.bin — сборка:
+          python tools/make_tapes_bundle.py) либо коммитьте ассеты в Git LFS.
+          Core-gate (build + zero-warning) уже прошёл успешно."
