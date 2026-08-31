@@ -18,11 +18,14 @@ namespace Besm6.Tests
         public void TapeIds_MatchCanonicalTextEncodingConstants()
         {
             // в TEXT-кодировке + номер). Проверяем, что константы не искажены.
+            // Намеренно «always true»: пин-тесты фиксируют значение констант (защита от их смены).
+#pragma warning disable MSTEST0032 // намеренные const-guard'ы (осознанно тавтологичны)
             Assert.AreEqual(0xB6FBB3E73009L, TapeImage.TapeMonsys, "TapeMonsys");
             Assert.AreEqual(0xB298B2872012L, TapeImage.TapeLibrar12, "TapeLibrar12");
             Assert.AreEqual(0xB298B2872037L, TapeImage.TapeLibrar37, "TapeLibrar37");
             Assert.AreEqual(0x929CF08636D9L, TapeImage.TapeBemsh, "TapeBemsh");
             Assert.AreEqual(0x880000000007L, TapeImage.TapeB, "TapeB");
+#pragma warning restore MSTEST0032
         }
 
         [TestMethod]

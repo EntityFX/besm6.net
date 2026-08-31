@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Besm6.Core;
 using Besm6.Loader;
@@ -50,7 +50,7 @@ namespace Besm6.Tests
         /// обязана сделать M[17 oct] := M[17 oct] - 1 ДО чтения операнда.
         /// Операнд — единица: безопасен для всех (для дел — делитель ≠ 0).
         /// </summary>
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("сл")]   [DataRow("вч")]   [DataRow("вчоб")] [DataRow("вчаб")]
         [DataRow("сч")]   [DataRow("и")]    [DataRow("нтж")]  [DataRow("слц")]
         [DataRow("знак")] [DataRow("или")]  [DataRow("дел")]  [DataRow("умн")]
@@ -75,7 +75,7 @@ namespace Besm6.Tests
         /// <summary>
         /// Контра-пример: addr != 0 (регистр 17) — стека НЕ трогают.
         /// </summary>
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("сл")]
         [DataRow("дел")]
         [DataRow("сч")]
