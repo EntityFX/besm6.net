@@ -72,7 +72,8 @@ namespace Besm6.Core
         {
             if (_braille == null)
             {
-                if (!TryOpen(ref _braille, "punch.out")) return;
+                _braille = OpenWriter("punch.out");
+                if (_braille == null) return;
             }
             byte[,] bytes = new byte[3, 40];
             for (int line = 0; line < 12; line++)
@@ -116,7 +117,8 @@ namespace Besm6.Core
             if (columns[1] == 0) return; // титульная карточка
             if (_stdarray == null)
             {
-                if (!TryOpen(ref _stdarray, "stdarray.out")) return;
+                _stdarray = OpenWriter("stdarray.out");
+                if (_stdarray == null) return;
             }
             _stdarray!.Write("`77761 ");
             for (int col = 76; col < 80; col++)
@@ -144,7 +146,8 @@ namespace Besm6.Core
         {
             if (_cosy == null)
             {
-                if (!TryOpen(ref _cosy, "cosy.out")) return;
+                _cosy = OpenWriter("cosy.out");
+                if (_cosy == null) return;
             }
             if (columns[1] == 0)
             {
@@ -196,16 +199,15 @@ namespace Besm6.Core
             }
         }
 
-        private bool TryOpen(ref StreamWriter stream, string fileName)
+        private StreamWriter? OpenWriter(string fileName)
         {
             try
             {
-                stream = new StreamWriter(Path.Combine(_outputDir, fileName), false, new UTF8Encoding(false));
-                return true;
+                return new StreamWriter(Path.Combine(_outputDir, fileName), false, new UTF8Encoding(false));
             }
             catch
             {
-                return false;
+                return null;
             }
         }
     }

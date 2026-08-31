@@ -67,7 +67,7 @@ namespace Besm6.Tests
             // совпадать с активными вызовами test_cernlib в cernlib_test.cpp.
             // На чистом checkout ref/ отсутствует — manifest самодостаточен, тест проходит
             // по первому условию.
-            string root = FindRepoRoot();
+            string? root = FindRepoRoot();
             if (root == null)
                 return;
 

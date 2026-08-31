@@ -34,7 +34,7 @@ namespace Besm6.Tests
             Assert.AreEqual("x\n\ny", CernLibFixture.NormalizeLineEndings("x\r\n\r\ny"));
             Assert.AreEqual("  z", CernLibFixture.NormalizeLineEndings("  z"));
             Assert.AreEqual(string.Empty, CernLibFixture.NormalizeLineEndings(string.Empty));
-            Assert.AreEqual(null, CernLibFixture.NormalizeLineEndings(null));
+            Assert.AreEqual(null, CernLibFixture.NormalizeLineEndings(null!));
         }
 
         // -------------------------------------------------------------------
