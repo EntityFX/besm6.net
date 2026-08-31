@@ -351,6 +351,26 @@ namespace Besm6.Tests
                 Directory.Delete(empty, recursive: true);
             }
         }
+
+        [TestMethod]
+        public void MountScriptTapes_DoesNotAcceptLegacyFallbackAsMonsys()
+        {
+            string empty = Path.Combine(Path.GetTempPath(), "besm6_empty_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(empty);
+            try
+            {
+                var loader = new DubnaLoader(new MachineCore(), empty);
+                Assert.IsTrue(loader.MountTape(24, TapeImage.TapeMonsys));
+
+                ProcessorException ex = Assert.Throws<ProcessorException>(
+                    () => loader.MountScriptTapes(new DubJob()));
+                StringAssert.Contains(ex.Message, "MONSYS");
+            }
+            finally
+            {
+                Directory.Delete(empty, recursive: true);
+            }
+        }
     }
 
     [TestClass]
