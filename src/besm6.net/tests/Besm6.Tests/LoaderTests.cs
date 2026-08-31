@@ -718,7 +718,7 @@ namespace Besm6.Tests
             Assert.IsTrue(threw, "E57 ASSIGN с несуществующей лентой должен бросить исключение");
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(1024, false)]
         [DataRow(1088, true)]
         public void E57_Assign_PassesWritePermit(int addr, bool expectedWritePermit)
@@ -955,7 +955,7 @@ namespace Besm6.Tests
             Assert.IsFalse(machine.Cpu.RightInstruction);
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(1, "зп 500, сч 0")]
         [DataRow(2, "сч 500, сч 0")]
         public void E67_MemoryWatch_ReturnsBeforeAccess(int mode, string instruction)
@@ -1038,7 +1038,6 @@ namespace Besm6.Tests
             handler.Handle(62, 0); // should not throw
             machine.Cpu.SetM(14, 1);
             handler.Handle(62, 0); // should not throw
-            Assert.IsTrue(true); // reached = no exception
         }
 
         [TestMethod]
