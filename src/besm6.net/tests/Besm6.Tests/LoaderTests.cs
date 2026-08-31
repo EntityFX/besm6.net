@@ -317,6 +317,31 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
+        public void RunJob_RawWordsWithExecute_DoesNotBootMonsys()
+        {
+            string empty = Path.Combine(Path.GetTempPath(), "besm6_empty_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(empty);
+            try
+            {
+                const int baseAddr = 512;
+                ulong stop24 = (1UL << 20) | (0xD8UL << 12);
+                var job = new DubJob { TransMain = baseAddr, Execute = string.Empty };
+                job.RawWords.Add((long)((stop24 << 24) & 0xFFFFFFFFFFFFUL));
+                var loader = new DubnaLoader(new MachineCore(), empty) { InstructionLimit = 10 };
+
+                LoadResult result = loader.RunJob(job, Array.Empty<string>());
+
+                Assert.IsTrue(result.Success, result.ToString());
+                Assert.IsTrue(result.Stopped);
+                Assert.AreEqual(1L, result.Instructions);
+            }
+            finally
+            {
+                Directory.Delete(empty, recursive: true);
+            }
+        }
+
+        [TestMethod]
         public void MountScriptTapes_MissingMonsys_ThrowsBeforeExecution()
         {
             string empty = Path.Combine(Path.GetTempPath(), "besm6_empty_" + Guid.NewGuid().ToString("N"));
