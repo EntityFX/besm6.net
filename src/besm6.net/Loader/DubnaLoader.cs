@@ -417,11 +417,11 @@ namespace Besm6.Loader
                 }
                 else
                 {
-                    // MONSYS не знает директиву *assem — транслируем в *madlen.
-                    if (trimmed.StartsWith("*assem", StringComparison.OrdinalIgnoreCase))
-                        trimmed = "*madlen" + trimmed.Substring(6);
+                    // *assem — нативная карта MONSYS (эталон C++: expect_assem.txt —
+                    // эхо *ASSEM + автокод MADLEN); транслировать в *madlen нельзя —
+                    // меняет листинг (см. d302, 31.08.2026).
                     // MONSYS не знает директиву *forex (FORTRAN-диалект) — транслируем в *fortran.
-                    else if (trimmed.StartsWith("*forex", StringComparison.OrdinalIgnoreCase))
+                    if (trimmed.StartsWith("*forex", StringComparison.OrdinalIgnoreCase))
                         trimmed = "*fortran" + trimmed.Substring(6);
                     WriteCosyLine(drum, ref offset, trimmed);
                 }
