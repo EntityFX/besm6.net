@@ -374,7 +374,7 @@ public sealed class ProcessorExtracodeTests
     }
 
     // Память последнего созданного процессора (тесты класса исполняются последовательно).
-    private static IMemory _memory;
+    private static IMemory _memory = null!;
 
     private static Processor CreateProcessor()
     {

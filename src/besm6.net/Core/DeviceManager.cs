@@ -47,7 +47,7 @@ namespace Besm6.Core
 
         public IEnumerable<IDevice> GetDevices() => _devices.Values;
 
-        public IDevice GetDevice(uint address)
+        public IDevice? GetDevice(uint address)
         {
             if (_devices.TryGetValue(address, out var device))
                 return device;
