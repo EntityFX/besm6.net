@@ -209,14 +209,16 @@ dotnet test src/besm6.net/tests/Besm6.Tests/Besm6.Tests.csproj --filter "FullyQu
 
 **Интерфейс:** `RuntimeAssets.Resolve(Config)` возвращает проверенный набор путей и версий; исключение перечисляет каждый отсутствующий ресурс и все проверенные каталоги. Наличие ресурса проверяется до запуска процессора.
 
-- [ ] Составить checksum-manifest всех обязательных MONSYS/CERN tape images и указать их происхождение.
-- [ ] Разделить свободно поставляемые файлы и файлы, которые пользователь должен предоставить самостоятельно.
-- [ ] Тестом проверить поиск относительно config, application directory и явно указанного абсолютного пути.
-- [ ] Тестом проверить понятную fail-fast ошибку на отсутствующий или неверный checksum.
-- [ ] Добавить ресурсы/manifest в `dotnet publish` либо документированный installer step согласно результату лицензионной проверки.
-- [ ] Развернуть publish output в новый временный каталог без `ref/dubna` и выполнить acceptance smoke.
+- [x] Составить checksum-manifest всех обязательных MONSYS/CERN tape images и указать их происхождение.
+- [x] Разделить свободно поставляемые файлы и файлы, которые пользователь должен предоставить самостоятельно.
+- [x] Тестом проверить поиск относительно config, application directory и явно указанного абсолютного пути.
+- [x] Тестом проверить понятную fail-fast ошибку на отсутствующий или неверный checksum.
+- [x] Добавить ресурсы/manifest в `dotnet publish` либо документированный installer step согласно результату лицензионной проверки.
+- [x] Развернуть publish output в новый временный каталог без `ref/dubna` и выполнить acceptance smoke.
 
 **Критерий готовности:** опубликованный пакет на чистом каталоге либо сразу запускает workload, либо до исполнения сообщает точный список законно не включённых ресурсов и способ их установки; скрытой зависимости от junction нет.
+
+**Итог (закрыто 31.08.2026):** runtime-образы (monsys.9/librar.12/librar.37/bemsh.739/b.7) помечены `RuntimeAssetLicense.UserProvided` — в репозитории они git-ignored (`.gitignore`: `ref/`, `tapes/`), право на переразрешение не подтверждено, поэтому в `dotnet publish` не встраиваются (ветка 2 критерия). `Besm6.Loader.RuntimeAssets` — checksum-manifest (SHA256 + provenance + obtain-hint) и fail-fast `Resolve`/`ResolveInDirs`; `RunCommand` вызывает `MachineFactory.ValidateRuntimeAssets` до запуска и при отсутствии перечисляет каждый образ, ожидаемую SHA256, способ получения и проверенные каталоги. Проверено на publish-каталоге без лент (`besm6 run name.dub` → точный список всех 5 лент + hint, exit≠0) и в dev-checkout с лентами (`name.dub` → `Halted by STOP`, exit 0). Installer step задокументирован в `docs/runtime-assets.md` (в т.ч. условное включение в пакет при наличии права на распространение). Тесты: `RuntimeAssetsTests` (9) — каталог, поиск относительно config/app/абсолютного пути, fail-fast на absence/bad-checksum; быстрые suites 471/471, CERN batch `lib1:0-2` 3/3.
 
 ### Task A5: Унифицировать acceptance runner и CI
 
