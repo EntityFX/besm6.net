@@ -1,14 +1,18 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests
 {
     /// <summary>
-    ///  a400 (lib1): арифметика слов, форматирование вывода, CERN-линковка;
-    ///  z005 (lib2): DATE*/DATEZB/IDATZA (детерминизм даты) — самый простой тест.
+    /// CERNlib-совместимость: каждый активный случай из CernLibManifest (397:
+    /// 183 lib1 + 214 lib2) компилируется FORTRAN-компилятором MONSYS, линкуется
+    /// с CERN-библиотекой, исполняется, и stdout строго сравнивается с
+    /// ref/tests/lib{N}/expect_{name}.txt.
     ///
-    /// regression-тестами (extracode, RAU, MOD, stack correction) и canonical-трейсом
-    /// (BESM6_CANON_TRACE). Смотри plans/divergence-report.md.
+    /// Beacon-случаи (lib1/a400, lib2/z005) входят в общую матрицу.
+    /// w303 — отдельное эталонное исключение ([Ignore], вечный цикл в эталоне).
+    /// См. plans/SuperPlan.md, Task A1–A3.
     /// </summary>
     [TestClass]
     [DoNotParallelize]
@@ -24,10 +28,11 @@ namespace Besm6.Tests
 
         [TestMethod]
         [Timeout(300000)]
-        [DataRow(1, "a400")]
-        [DataRow(2, "z005")]
-        public void Beacon_MatchesExpectFile(int lib, string name)
+        [DynamicData(nameof(CernLibData))]
+        public void Case_MatchesExpectFile(CernLibCase c)
         {
+            int lib = c.Library;
+            string name = c.Name;
             bool ok = _fx.RunAndCompare(lib, name, out string actual, out string expect, out string diag);
             if (ok) return;
 
@@ -51,6 +56,13 @@ namespace Besm6.Tests
             msg.Append("  actual  [...]: ").AppendLine(CernLibFixture.Quote(actual.Substring(from, Math.Min(show, actual.Length - from))));
             msg.Append("Артефакты: tests-run/cernlib/{actual,diff}_").Append(name).AppendLine(".txt");
             Assert.Fail(msg.ToString());
+        }
+
+        /// <summary>Данные теории: все 397 активных случаев из коммиченного manifest.</summary>
+        public static IEnumerable<object[]> CernLibData()
+        {
+            foreach (var c in CernLibManifest.ActiveCases)
+                yield return new object[] { c };
         }
 
         [TestMethod]
