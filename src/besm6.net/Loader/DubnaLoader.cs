@@ -37,6 +37,13 @@ namespace Besm6.Loader
         public long InstructionLimit { get; set; } = 1_000_000_000;
 
         /// <summary>
+        /// Лимит wall-clock времени на исполнение в мс (проверяется ВНУТРИ цикла шагов).
+        /// 0 = выключено. Превышение → LoadResult.StoppedByLimit (быстрый отказ,
+        /// не даёт зациклившейся машине жечь весь instruction-лимит — до 1e9 шагов).
+        /// </summary>
+        public long WallClockLimitMs { get; set; } = 0;
+
+        /// <summary>
         /// <see cref="ExtracodeHandler.UseWallClock"/>.
         /// </summary>
         public bool UseWallClock
@@ -662,6 +669,8 @@ namespace Besm6.Loader
         private LoadResult RunBoundedCore()
         {
             long limit = InstructionLimit;
+            long wallLimitMs = WallClockLimitMs;
+            var wallStopwatch = System.Diagnostics.Stopwatch.StartNew();
             InstructionsExecuted = 0;
             HaltedByStop = false;
             long lastReport = 0;
@@ -706,6 +715,16 @@ namespace Besm6.Loader
                     {
                         HaltedByStop = true;
                         return LoadResult.Halt(_machine.Cpu.GetPc(), InstructionsExecuted);
+                    }
+
+                    // Wall-clock стоп внутри цикла: зациклившаяся машина не жжёт
+                    // весь instruction-лимит (до 1e9 шагов), а завершается быстро
+                    // с тем же классифицируемым исходом (StoppedByLimit).
+                    if (wallLimitMs > 0 && (InstructionsExecuted & 4095) == 0
+                        && wallStopwatch.ElapsedMilliseconds > wallLimitMs)
+                    {
+                        if (Verbose) Console.WriteLine();
+                        return LoadResult.StoppedByLimit(_machine.Cpu.GetPc(), InstructionsExecuted);
                     }
 
                     // Loop detection: track PC in a sliding window.

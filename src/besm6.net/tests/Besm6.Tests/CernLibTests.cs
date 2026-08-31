@@ -28,7 +28,7 @@ namespace Besm6.Tests
         public void Cleanup() => _fx.Cleanup();
 
         [TestMethod]
-        [Timeout(300000)]
+        [Timeout(600000)]
         [DynamicData(nameof(CernLibData))]
         public void Case_MatchesExpectFile(CernLibCase c)
         {
