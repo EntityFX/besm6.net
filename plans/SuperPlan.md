@@ -287,10 +287,12 @@ public interface IEventScheduler
 
 События с одинаковым tick исполняются в порядке регистрации. Время не зависит от `DateTime`, thread scheduling или скорости host-машины.
 
-- [ ] Написать падающие тесты на порядок, отмену, нулевую задержку, вложенное scheduling и запрет движения времени назад.
-- [ ] Реализовать минимальную priority queue с монотонным sequence number.
-- [ ] Связать одну CPU-инструкцию с документированной стоимостью tick без изменения наблюдаемой семантики уровня A.
-- [ ] Повторить всю Gate A regression.
+- [x] Написать падающие тесты на порядок, отмену, нулевую задержку, вложенное scheduling и запрет движения времени назад. (`dfbcdf3`, `EventSchedulerTests`)
+- [x] Реализовать минимальную priority queue с монотонным sequence number. (`dfbcdf3`, `EventScheduler`)
+- [x] Связать одну CPU-инструкцию с документированной стоимостью tick без изменения наблюдаемой семантики уровня A. (`dfbcdf3`, `MachineCore.TicksPerInstruction` + `_clock.Advance` в `Step()`; CPU-путь не тронут)
+- [x] Повторить всю Gate A regression. (non-CERN 473 passed / 0 failed; CERN batch `lib1:0-5` 6/6; build 0 warnings / 0 errors; полная 397 — output-comparison, не затрагивается counter-only изменением)
+
+**Статус (эксперимент, параллельно Gate A — по решению исполнителя):** B1 закрыт как изолированный эксперимент, не заменяющий исполнительный путь уровня A (правило §5: «до закрытия Gate A задачи уровня B — только изолированные эксперименты»). `ISimulationClock`/`SimulationClock` (монотонный счётчик, откат — `InvalidOperationException`) + `IEventScheduler`/`EventScheduler` (priority-очередь по (tick, sequence) + lazy cancel; одинаковый tick — порядок регистрации; нулевая/вложенная задержка; детерминированная последовательность) + шов в `MachineCore` (одна инструкция = `TicksPerInstruction` тиков). 19/19 B1-тестов.
 
 **Критерий готовности:** одинаковый workload дважды создаёт идентичную последовательность `(tick, event)`; все тесты уровня A остаются зелёными.
 
@@ -487,6 +489,8 @@ python tools/run_all_examples.py --root .
 
 ## 10. Ближайший исполнимый шаг
 
-A1–A4 закрыты (A3: 397/397 CERN, `ece77b4`+`0022c70`; A4: runtime-ресурсы как user-provided + fail-fast + checksum-manifest, `0afb5d6`). Следующий — **Task A5** (P1): унифицировать acceptance runner и CI, после чего закрывается Gate A.
+A1–A5 закрыты: A3 — 397/397 CERN (`ece77b4`+`0022c70`); A4 — runtime-ресурсы user-provided + fail-fast + checksum-manifest (`0afb5d6`); A5 — acceptance runner + golden-гейт + CI workflow + zero-warning baseline (`42f3c20`, `44021e4`, `ea4bbee`, `115e25d`+`007f15c`; build **0 warnings / 0 errors**, 89 правил, `tools/warnings_baseline.json` total=0).
 
-Текущий шаг A5 (инкремент 1): сделать `tools/run_all_examples.py` переносимым (убрать `e:\Projects\...`, root от расположения скрипта + `--root/--dll/--limit/--timeout/--output`), считать успехом exit code + StopReason (а не просто текст «Halted by STOP»), писать JSON/JUnit-отчёт и сохранять stdout/stderr отказавшего сценария, развести быстрый commit-gate (name/algol/bemsh) и полный nightly (397 CERN) по одному manifest. Дальше: GitHub Actions workflow с публикацией CERN diff/canonical trace на падении и zero-warning baseline (63 предупреждения разобрать по категориям и уменьшать отдельными безопасными коммитами).
+**Закрытие Gate A — отложено по решению** (пункт «B — параллельно, экспериментально»). Gate A остаётся незакрытым: из 6 критериев выполнено большинство (397/397, unit/trace зелёные, 0 warnings, runtime-ресурсы user-provided + checksum-manifest), но не закрыты: acceptance «из publish output» и единый release-doc с известными исключениями (w303; stale `expect` i312a/j531a/j531b; user-provided assets). Воспроизводимость полной 397-матрицы в чистом CI требует user-provided `ref/` + бинарные ленты.
+
+**Уровень B (эксперимент, параллельно Gate A):** **B1 — дискретное модельное время — закрыт** (`dfbcdf3`; `ISimulationClock`/`SimulationClock` + `IEventScheduler`/`EventScheduler` + шов в `MachineCore`; 19/19 B1-тестов; non-CERN регресс 473/0, CERN batch 6/6, 0 warnings — Gate-A-регресс зелёный). Следующий — **Task B2** (контроллер прерываний и `ВЫПР/IRET`), также как изолированный эксперимент до закрытия Gate A.
