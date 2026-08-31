@@ -186,7 +186,8 @@ namespace Besm6.Loader
                     continue;
 
                 int unit = 24 + diskIndex;
-                if (_disksByUnit.Remove(unit, out TapeImage? released) &&
+                TapeImage? released = null;
+                if (_disksByUnit.Remove(unit, out released) &&
                     _disksByTapeId.TryGetValue(released.VolumeId, out TapeImage? indexed) &&
                     ReferenceEquals(released, indexed))
                 {
@@ -197,6 +198,10 @@ namespace Besm6.Loader
                     else
                         _disksByTapeId[released.VolumeId] = replacement;
                 }
+
+                if (released != null && !_disksByUnit.Values.Any(
+                    disk => ReferenceEquals(disk, released)))
+                    _fileBackedTapes.Remove(released);
             }
         }
 
