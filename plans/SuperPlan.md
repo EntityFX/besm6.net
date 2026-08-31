@@ -233,12 +233,14 @@ dotnet test src/besm6.net/tests/Besm6.Tests/Besm6.Tests.csproj --filter "FullyQu
 
 **Обязательная матрица:** build; все MSTest; Python trace tests; CLI help/error contracts; `name`, `algol`, `bemsh`; CERN manifest validation; быстрые CERN batches на каждый commit; полные 397 nightly/release.
 
-- [ ] Удалить из `run_all_examples.py` абсолютный `e:\Projects\besm6.net`; вычислять root от расположения скрипта и принимать `--root`, `--dll`, `--limit`, `--timeout`, `--output`.
-- [ ] Считать успехом только ожидаемый exit code, `StopReason` и утверждённый golden output; наличие текста `Halted by STOP` само по себе недостаточно.
-- [ ] Сохранять JSON/JUnit-совместимый отчёт и stdout/stderr отказавшего сценария.
-- [ ] Разделить быстрый commit gate и долгий full-compatibility gate, используя один manifest.
+- [x] Удалить из `run_all_examples.py` абсолютный `e:\Projects\besm6.net`; вычислять root от расположения скрипта и принимать `--root`, `--dll`, `--limit`, `--timeout`, `--output`.
+- [x] Считать успехом только ожидаемый exit code, `StopReason` и утверждённый golden output; наличие текста `Halted by STOP` само по себе недостаточно.
+- [x] Сохранять JSON/JUnit-совместимый отчёт и stdout/stderr отказавшего сценария.
+- [x] Разделить быстрый commit gate и долгий full-compatibility gate, используя один manifest.
 - [ ] На CI-падении публиковать CERN diff и canonical trace как artifacts.
 - [ ] Зафиксировать нулевой baseline новых предупреждений; существующие 64 разобрать по категориям и уменьшать отдельными безопасными коммитами.
+
+**Статус A5 (инкремент 1):** `tools/run_all_examples.py` переносим (root от расположения файла, `--root/--dll/--limit/--timeout/--output/--suite/--only/--golden-dir`), успех = exit code 0 + StopReason (+ опц. golden), пишет JSON (`examples_report.json`) и JUnit (`junit-examples.xml`) + stdout/stderr каждого сценария в `tests-run/examples/scenarios/`. `fast` (name/algol/bemsh) и `full` — один runner/manifest. Верификация: 36 Python-тестов (`test_run_all_examples.py` 29 + `test_diff_trace.py` 7) зелёные; `--suite fast` в dev-checkout 3/3 OK (name 209174 / algol 787661 / bemsh 1042997, все `Halted by STOP`, лимит 20M). Осталось: golden-выводы fast-примеров (инкремент 2), GitHub Actions workflow + публикация артефактов (инкремент 3), zero-warning baseline (инкремент 4).
 
 **Критерий готовности:** чистый checkout одной документированной командой воспроизводит все проверки уровня A; CI не зависит от локальных дисков, junction и wall clock.
 
@@ -483,4 +485,6 @@ python tools/run_all_examples.py --root .
 
 ## 10. Ближайший исполнимый шаг
 
-Начать с Task A1: сделать `plans/_count_cernlib.ps1` переносимым, зафиксировать manifest 183 + 214 и превратить два beacon `DataRow` в полную автоматически проверяемую матрицу. Это даст честную численную базу, после которой все следующие исправления будут измеряться как прогресс к 397/397.
+A1–A4 закрыты (A3: 397/397 CERN, `ece77b4`+`0022c70`; A4: runtime-ресурсы как user-provided + fail-fast + checksum-manifest, `0afb5d6`). Следующий — **Task A5** (P1): унифицировать acceptance runner и CI, после чего закрывается Gate A.
+
+Текущий шаг A5 (инкремент 1): сделать `tools/run_all_examples.py` переносимым (убрать `e:\Projects\...`, root от расположения скрипта + `--root/--dll/--limit/--timeout/--output`), считать успехом exit code + StopReason (а не просто текст «Halted by STOP»), писать JSON/JUnit-отчёт и сохранять stdout/stderr отказавшего сценария, развести быстрый commit-gate (name/algol/bemsh) и полный nightly (397 CERN) по одному manifest. Дальше: GitHub Actions workflow с публикацией CERN diff/canonical trace на падении и zero-warning baseline (63 предупреждения разобрать по категориям и уменьшать отдельными безопасными коммитами).
