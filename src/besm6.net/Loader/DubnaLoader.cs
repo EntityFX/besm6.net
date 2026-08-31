@@ -316,19 +316,49 @@ namespace Besm6.Loader
         /// <summary>
         /// Смонтировать все ленты, упомянутые в *tape картах скрипта.
         /// </summary>
+        // Script cards require a real image, while direct E57 mounts retain the
+        // legacy empty-disk fallback in MountTape.
+        private bool MountRequiredTape(int unit, long tapeId)
+        {
+            if (_disksByUnit.TryGetValue(unit, out TapeImage? mounted))
+                return mounted.VolumeId == tapeId;
+
+            if (TapeImage.FindImagePath(tapeId, _tapesDir) == null)
+                return false;
+
+            return MountTape(unit, tapeId);
+        }
+
+        private void MountRequestedTapes(DubJob job)
+        {
+            foreach (TapeMount mount in job.TapeMounts)
+            {
+                long tapeId = TapeImage.TapeIdByName(mount.Name, mount.Channel);
+                if (tapeId == 0)
+                    throw new ProcessorException($"Unknown tape '{mount.Name}' on channel {Convert.ToString(mount.Channel, 8)}");
+
+                int unit = 24 + (mount.Channel & 0x1F);
+                if (!MountRequiredTape(unit, tapeId))
+                    throw new ProcessorException(
+                        $"Cannot mount tape '{mount.Name}' (0x{tapeId:X12}) on unit {Convert.ToString(unit, 8)} from '{_tapesDir ?? TapeImage.DefaultTapesDir()}'");
+            }
+        }
+
+        private void EnsureMonsysTape()
+        {
+            if (_disksByUnit.TryGetValue(24, out TapeImage? mounted) &&
+                mounted.VolumeId == TapeImage.TapeMonsys)
+                return;
+
+            if (!MountRequiredTape(24, TapeImage.TapeMonsys))
+                throw new ProcessorException(
+                    $"Cannot mount MONSYS tape (0x{TapeImage.TapeMonsys:X12}) on unit 30 from '{_tapesDir ?? TapeImage.DefaultTapesDir()}'");
+        }
+
         public void MountScriptTapes(DubJob job)
         {
-            foreach (var mount in job.TapeMounts)
-            {
-                // Выбор tape-id: приоритет — канал (восьмеричный номер из карты),
-                // имя — fallback. Иначе '*tape:12/librar,32' монтировал бы librar.37.
-                long tapeId = TapeImage.TapeIdByName(mount.Name, mount.Channel);
-                if (tapeId == 0) continue;
-                MountTape(24 + (mount.Channel & 0x1F), tapeId);
-            }
-            // MONSYS всегда на канале 030.
-            if (!_disksByUnit.ContainsKey(24))
-                MountTape(24, TapeImage.TapeMonsys);
+            MountRequestedTapes(job);
+            EnsureMonsysTape();
         }
 
         //
