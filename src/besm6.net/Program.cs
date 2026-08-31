@@ -10,16 +10,18 @@ namespace Besm6
         static int Main(string[] args)
         {
             // Build command registry.
-            var commands = new Dictionary<string, ICommand>(StringComparer.OrdinalIgnoreCase)
+            var commandList = new List<ICommand>
             {
-                { "run",    new RunCommand() },
-                { "asm",    new AsmCommand() },
-                { "disasm", new DisasmCommand() },
-                { "check",  new CheckCommand() },
-                { "tui",    new TuiCommand() },
-                { "help",   null! }, // filled below
+                new RunCommand(),
+                new AsmCommand(),
+                new DisasmCommand(),
+                new CheckCommand(),
+                new TuiCommand(),
             };
-            commands["help"] = new HelpCommand(new List<ICommand>(commands.Values));
+            commandList.Add(new HelpCommand(commandList));
+            var commands = new Dictionary<string, ICommand>(StringComparer.OrdinalIgnoreCase);
+            foreach (ICommand command in commandList)
+                commands.Add(command.Name, command);
 
             if (args.Length == 0)
             {
