@@ -371,6 +371,28 @@ namespace Besm6.Tests
                 Directory.Delete(empty, recursive: true);
             }
         }
+
+        [TestMethod]
+        public void ReleaseTapes_CleansFileBackedProvenanceAfterLastDuplicate()
+        {
+            var loader = new DubnaLoader(new MachineCore());
+            Assert.IsTrue(loader.MountTape(24, TapeImage.TapeMonsys));
+            Assert.IsTrue(loader.MountTape(25, TapeImage.TapeMonsys));
+
+            var provenance = (System.Collections.Generic.HashSet<TapeImage>)typeof(DubnaLoader)
+                .GetField("_fileBackedTapes", System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic)!
+                .GetValue(loader)!;
+            Assert.AreEqual(2, provenance.Count);
+
+            loader.ReleaseTapes(1L << 47);
+            Assert.AreEqual(1, provenance.Count,
+                "Releasing one duplicate must retain provenance for the remaining unit.");
+
+            loader.ReleaseTapes(1L << 46);
+            Assert.AreEqual(0, provenance.Count,
+                "Releasing the last duplicate must remove its provenance entry.");
+        }
     }
 
     [TestClass]
