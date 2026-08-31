@@ -54,29 +54,42 @@ namespace Besm6.Cli
                 string status;
                 try
                 {
-                    var job = JobParser.ParseFile(f);
-                    if (job.RawWords.Count > 0 || job.SourceLines.Any())
+                    DubJob job = JobParser.ParseFile(f);
+                    var loader = MachineFactory.CreateLoader(cfg);
+                    loader.InstructionLimit = limit;
+                    LoadResult result = loader.RunJob(job, File.ReadAllLines(f));
+                    if (result.LimitExceeded)
                     {
-                        var loader = MachineFactory.CreateLoader(cfg);
-                        loader.InstructionLimit = limit;
-                        var res = loader.RunJob(job, File.ReadAllLines(f));
-                        if (res.LimitExceeded) { status = $"LIMIT(pc=0{res.Pc:X})"; limitHit++; }
-                        else if (res.Success) { status = $"OK({res.Instructions} instr)"; passed++; }
-                        else { status = $"ERR:{res.ErrorMessage}"; runFailed++; }
+                        status = $"LIMIT(pc=0{result.Pc:X})";
+                        limitHit++;
                     }
-                    else { status = "NO-CONTENT"; passed++; }
+                    else if (result.Success)
+                    {
+                        status = $"HALT({result.Instructions} instr)";
+                        passed++;
+                    }
+                    else
+                    {
+                        status = $"ERR:{result.ErrorMessage}";
+                        runFailed++;
+                    }
                 }
-                catch (Exception ex)
+                catch (FormatException ex)
                 {
                     status = $"PARSE-ERR: {ex.Message}";
                     parseFailed++;
+                }
+                catch (Exception ex)
+                {
+                    status = $"RUN-ERR: {ex.Message}";
+                    runFailed++;
                 }
                 Console.WriteLine($"{status,-55}  {rel}");
             }
 
             Console.WriteLine();
             Console.WriteLine($"TOTAL: {files.Count}  OK: {passed}  LIMIT: {limitHit}  RUN-ERR: {runFailed}  PARSE-ERR: {parseFailed}");
-            return (parseFailed == 0 && runFailed == 0) ? 0 : 1;
+            return (parseFailed == 0 && runFailed == 0 && limitHit == 0) ? 0 : 1;
         }
     }
 }
