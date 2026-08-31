@@ -16,7 +16,7 @@ namespace Besm6.Core
 
         private readonly string _filePath;
         private long _currentPosition;
-        private byte[] _diskImage;
+        private byte[] _diskImage = Array.Empty<byte>();
 
         public DiskDevice(string filePath)
         {

@@ -13,9 +13,9 @@ namespace Besm6.Tests
     [TestClass]
     public class IntegrationTests
     {
-        private StringBuilder _output;
-        private MachineCore _machine;
-        private DubnaLoader _loader;
+        private StringBuilder _output = null!;
+        private MachineCore _machine = null!;
+        private DubnaLoader _loader = null!;
 
         [TestInitialize]
         public void Setup()
@@ -47,9 +47,12 @@ namespace Besm6.Tests
             // и логотип из символов "Ж".
 
             // Ищем файл name.dub, поднимаясь вверх по дереву каталогов
-            string path = FindFileInParentDirs("examples", "name.dub");
+            string? path = FindFileInParentDirs("examples", "name.dub");
             if (path == null)
+            {
                 Assert.Inconclusive("File examples/name.dub not found");
+                return;
+            }
 
             var result = _loader.RunScript(path);
             string output = _output.ToString();
@@ -71,9 +74,12 @@ namespace Besm6.Tests
         public void ForexDub_ProducesHelloWorld()
         {
             // forex.dub — это пример FORTRAN, который выводит "Hello, World!"
-            string path = FindFileInParentDirs("examples", "forex.dub");
+            string? path = FindFileInParentDirs("examples", "forex.dub");
             if (path == null)
+            {
                 Assert.Inconclusive("File examples/forex.dub not found");
+                return;
+            }
             
             var result = _loader.RunScript(path);
             string output = _output.ToString();
@@ -92,9 +98,9 @@ namespace Besm6.Tests
             StringAssert.Contains(_output.ToString(), "HI");
         }
 
-        private static string FindFileInParentDirs(string relativePath, string fileName)
+        private static string? FindFileInParentDirs(string relativePath, string fileName)
         {
-            string currentDir = Directory.GetCurrentDirectory();
+            string? currentDir = Directory.GetCurrentDirectory();
             while (currentDir != null)
             {
                 string testPath = Path.Combine(currentDir, relativePath, fileName);

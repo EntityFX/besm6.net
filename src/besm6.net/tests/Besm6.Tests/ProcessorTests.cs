@@ -15,8 +15,8 @@ namespace Besm6.Tests
             public int Size => 32768;
         }
 
-        private LinearMemory _memory;
-        private Processor _cpu;
+        private LinearMemory _memory = null!;
+        private Processor _cpu = null!;
 
         [TestInitialize]
         public void Setup()
@@ -48,7 +48,7 @@ namespace Besm6.Tests
                 int d = c - '0';
                 if (d < 0 || d > 7)
                     throw new ArgumentException($"bad octal literal: {cpp}");
-                v = (v << 3) | (ulong)d;
+                v = (v << 3) | (uint)d;
             }
             return v & 0xFFFFFFFFFFFFUL;
         }

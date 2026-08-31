@@ -3,6 +3,7 @@ import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -74,6 +75,11 @@ class FindDubFilesTests(unittest.TestCase):
         found = {p.name for p in rae.find_dub_files(self.dir, "c")}
         self.assertEqual({"c.dub"}, found)
 
+    def test_filter_prefers_root_example_over_same_named_nested_example(self):
+        (self.dir / "sub" / "algol.dub").write_text("nested", encoding="utf-8")
+        found = rae.find_dub_files(self.dir, "algol")
+        self.assertEqual([self.dir / "algol.dub"], found)
+
     def test_missing_dir_returns_empty(self):
         self.assertEqual([], rae.find_dub_files(self.dir / "nope"))
 
@@ -97,6 +103,16 @@ class ClassifyTests(unittest.TestCase):
 
     def test_timeout_overrides(self):
         self.assertEqual("HANG", rae.classify(0, "Halted by STOP", timed_out=True))
+
+
+class RunOneTests(unittest.TestCase):
+    @mock.patch.object(rae.subprocess, "run")
+    def test_subprocess_output_is_always_decoded_as_utf8(self, run):
+        run.return_value = mock.Mock(returncode=0, stdout="Halted by STOP", stderr="")
+        rae.run_one(Path("besm6.dll"), Path("examples/name.dub"), Path("."), 1, 1)
+        kwargs = run.call_args[1]
+        self.assertEqual("utf-8", kwargs["encoding"])
+        self.assertEqual("replace", kwargs["errors"])
 
 
 class ExtractInstrsTests(unittest.TestCase):

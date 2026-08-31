@@ -17,8 +17,8 @@ namespace Besm6.Tests
     [TestClass]
     public class BootstrapDubnaTests
     {
-        private MachineCore _machine;
-        private DubnaLoader _loader;
+        private MachineCore _machine = null!;
+        private DubnaLoader _loader = null!;
 
         [TestInitialize]
         public void Setup()
