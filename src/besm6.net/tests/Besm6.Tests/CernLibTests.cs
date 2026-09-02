@@ -71,11 +71,42 @@ namespace Besm6.Tests
         {
             if (System.Environment.GetEnvironmentVariable("BESM6_TRACE") == null)
                 return; // самм-оф: без env-переменной просто пропускаем
-            string dir = _fx.ArtifactsDir;
+            CernLibCase traceCase = ParseTraceCase(
+                System.Environment.GetEnvironmentVariable("BESM6_TRACE_CASE"));
+            string dir = _fx.ArtifactDir(traceCase.Library, traceCase.Name);
             System.IO.Directory.CreateDirectory(dir);
-            string tracePath = System.IO.Path.Combine(dir, "csh_a400_trace.txt");
-            var result = _fx.GenerateTrace(1, "a400", tracePath);
-            Console.WriteLine("Trace written: " + tracePath + " | result=" + result + " instr=" + result.Instructions);
+            string instructionTracePath = System.IO.Path.Combine(dir, "instruction-trace.txt");
+            string canonicalTracePath = System.IO.Path.Combine(dir, "canonical-trace.tsv");
+            string? savedCanonicalTrace = System.Environment.GetEnvironmentVariable("BESM6_CANON_TRACE");
+            try
+            {
+                System.Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", canonicalTracePath);
+                var result = _fx.GenerateTrace(traceCase.Library, traceCase.Name, instructionTracePath);
+                Console.WriteLine(
+                    "Traces written: " + canonicalTracePath + ", " + instructionTracePath +
+                    " | result=" + result + " instr=" + result.Instructions);
+            }
+            finally
+            {
+                System.Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", savedCanonicalTrace);
+            }
+        }
+
+        internal static CernLibCase ParseTraceCase(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return new CernLibCase(1, "a400");
+
+            string[] parts = value.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length != 2 || !parts[0].StartsWith("lib", StringComparison.OrdinalIgnoreCase) ||
+                !int.TryParse(parts[0].Substring(3), out int library) ||
+                (library != 1 && library != 2) || string.IsNullOrWhiteSpace(parts[1]))
+            {
+                throw new ArgumentException(
+                    "BESM6_TRACE_CASE must have form lib1/name or lib2/name.", nameof(value));
+            }
+
+            return new CernLibCase(library, parts[1]);
         }
 
         [TestMethod]
@@ -95,7 +126,12 @@ namespace Besm6.Tests
         private static int _caseNo;
         private static int? _totalCases;
         private static long _caseMsTotal;
+        private static long _instructionsTotal;
+        private static bool _matrixInitialized;
         private static readonly System.Diagnostics.Stopwatch SessionSw = System.Diagnostics.Stopwatch.StartNew();
+
+        internal static double InstructionsPerSecond(long instructions, long elapsedMs) =>
+            elapsedMs <= 0 ? 0d : instructions * 1000d / elapsedMs;
 
         private static string ProgressBar(int done, int total)
         {
@@ -126,10 +162,15 @@ namespace Besm6.Tests
                 }
                 int total = _totalCases.Value;
                 long msTotal = System.Threading.Interlocked.Add(ref _caseMsTotal, r.ElapsedMs);
+                long instructionsTotal = System.Threading.Interlocked.Add(ref _instructionsTotal, r.Instructions);
                 double avg = (double)msTotal / idx;
+                double caseRate = InstructionsPerSecond(r.Instructions, r.ElapsedMs);
+                double totalRate = InstructionsPerSecond(instructionsTotal, msTotal);
                 string line =
                     $"[{ProgressBar(idx, total)}] {idx}/{total} ({100 * idx / total}%) {c} " +
                     $"-> {r.Classification} [{r.ElapsedMs} ms, {r.Instructions.ToString(System.Globalization.CultureInfo.InvariantCulture)} ins] " +
+                    $"| {caseRate.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} instr/s " +
+                    $"(total {totalRate.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)}) " +
                     $"| elapsed={FormatHms((long)SessionSw.Elapsed.TotalMilliseconds)} eta={FormatHms((long)(avg * (total - idx)))}";
 
                 Console.WriteLine(line);
@@ -139,10 +180,35 @@ namespace Besm6.Tests
                     string path = System.IO.Path.Combine(_fx.ArtifactsDir, "progress.txt");
                     System.IO.File.WriteAllText(path,
                         DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) + "  " + line + Environment.NewLine);
+
+                    string matrixPath = System.IO.Path.Combine(_fx.ArtifactsDir, "matrix.csv");
+                    if (!_matrixInitialized)
+                    {
+                        System.IO.File.WriteAllText(matrixPath,
+                            "index,total,case,library,name,classification,success,instructions,elapsed_ms,instr_per_sec,instruction_limit_exceeded,wall_clock_limit_exceeded" + Environment.NewLine,
+                            new System.Text.UTF8Encoding(false));
+                        _matrixInitialized = true;
+                    }
+                    string csv = string.Join(",", new[]
+                    {
+                        idx.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        total.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        c.ToString(),
+                        c.Library.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        c.Name,
+                        r.Classification.ToString(),
+                        r.Success ? "true" : "false",
+                        r.Instructions.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        r.ElapsedMs.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        caseRate.ToString("F3", System.Globalization.CultureInfo.InvariantCulture),
+                        r.InstructionLimitExceeded ? "true" : "false",
+                        r.WallClockLimitExceeded ? "true" : "false",
+                    });
+                    System.IO.File.AppendAllText(matrixPath, csv + Environment.NewLine, new System.Text.UTF8Encoding(false));
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Прогресс не критичен для результата теста.
+                    Console.Error.WriteLine("CERN progress/matrix artifact write failed: " + ex.Message);
                 }
             }
         }

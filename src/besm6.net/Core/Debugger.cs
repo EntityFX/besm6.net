@@ -29,7 +29,7 @@ namespace Besm6.Core
             while (_isRunning)
             {
                 Console.Write($"[PC:{_machine.Cpu.PC:X5}] > ");
-                string? input = Console.ReadLine()?.Trim().ToLower();
+                string? input = Console.ReadLine()?.Trim().ToLowerInvariant();
                 if (string.IsNullOrEmpty(input)) continue;
 
                 string[] parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);

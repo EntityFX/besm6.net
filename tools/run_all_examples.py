@@ -71,6 +71,12 @@ def find_dub_files(examples_dir, only=None):
     files = []
     if not examples_dir.is_dir():
         return files
+    preferred_root_files = set()
+    if only is not None:
+        for item in only:
+            file_name = item if item.endswith(".dub") else item + ".dub"
+            if (examples_dir / file_name).is_file():
+                preferred_root_files.add(file_name)
     for root, _dirs, fnames in os.walk(examples_dir):
         rel_root = Path(root).relative_to(examples_dir)
         if any(part in SKIP_DIRS for part in rel_root.parts):
@@ -79,6 +85,8 @@ def find_dub_files(examples_dir, only=None):
             if not f.endswith(".dub"):
                 continue
             if only is not None and (Path(f).stem not in only and f not in only):
+                continue
+            if f in preferred_root_files and rel_root.parts:
                 continue
             files.append(Path(root) / f)
     return sorted(files)
@@ -197,7 +205,9 @@ def run_one(dll, path, root, limit, timeout):
     cmd = ["dotnet", str(dll), "run", str(path), "--limit", str(limit), "--no-wall-clock"]
     start = time.time()
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=str(root))
+        proc = subprocess.run(
+            cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=timeout, cwd=str(root))
         rc, out, err = proc.returncode, proc.stdout or "", proc.stderr or ""
         timed_out = False
     except subprocess.TimeoutExpired as e:

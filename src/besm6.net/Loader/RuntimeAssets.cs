@@ -12,7 +12,7 @@ namespace Besm6.Loader
     /// <summary>
     /// Класс лицензии runtime-ресурса (SuperPlan Task A4):
     /// <see cref="Bundled"/> — поставляется вместе с пакетом;
-    /// <see cref="UserProvided"/> — пользователь предоставляет сам (лицензия не позволяет встраивать).
+    /// <see cref="UserProvided"/> — пользователь предоставляет сам (для возможных внешних образов).
     /// </summary>
     public enum RuntimeAssetLicense
     {
@@ -115,9 +115,9 @@ namespace Besm6.Loader
                 TapeId = TapeImage.TapeMonsys,
                 Sha256 = "cc27c8d982231442e4d5b2bb6672945cbcd8caaf47ff3be1e578c5de621908ec",
                 Provenance = "MONSYS «Дубна» — операционная система БЭСМ-6, лента 011 oct",
-                License = RuntimeAssetLicense.UserProvided,
+                License = RuntimeAssetLicense.Bundled,
                 Required = true,
-                ObtainHint = "Положите monsys.9 в каталог tapes/ (или задайте ключ 'tapes' в конфиге). Исторический образ Дубны — получите по лицензии вашего учреждения. См. docs/runtime-assets.md.",
+                ObtainHint = "Восстановите bundled-файл tapes/monsys.9 из пакета либо задайте другой каталог ключом 'tapes'. См. docs/runtime-assets.md.",
             },
             new()
             {
@@ -125,9 +125,9 @@ namespace Besm6.Loader
                 TapeId = TapeImage.TapeLibrar12,
                 Sha256 = "4fbfb41bfac01949eafa084fb35fd915c211ed16f9417694b107bc0f23f0bb14",
                 Provenance = "CERN Common Software Library #1 (CERNlib lib1), лента 012 oct",
-                License = RuntimeAssetLicense.UserProvided,
+                License = RuntimeAssetLicense.Bundled,
                 Required = true,
-                ObtainHint = "Положите librar.12 в каталог tapes/ (или задайте ключ 'tapes' в конфиге). CERNlib lib1 (лента 012 oct) — получите по лицензии вашего учреждения. См. docs/runtime-assets.md.",
+                ObtainHint = "Восстановите bundled-файл tapes/librar.12 из пакета либо задайте другой каталог ключом 'tapes'. См. docs/runtime-assets.md.",
             },
             new()
             {
@@ -135,9 +135,9 @@ namespace Besm6.Loader
                 TapeId = TapeImage.TapeLibrar37,
                 Sha256 = "0575e9bba22a87a1d59de4a2586d698d6fbb0bc3cff0a6d1db7a63428c0f0bc7",
                 Provenance = "CERN Common Software Library #2 (CERNlib lib2), лента 037 oct",
-                License = RuntimeAssetLicense.UserProvided,
+                License = RuntimeAssetLicense.Bundled,
                 Required = true,
-                ObtainHint = "Положите librar.37 в каталог tapes/ (или задайте ключ 'tapes' в конфиге). CERNlib lib2 (лента 037 oct) — получите по лицензии вашего учреждения. См. docs/runtime-assets.md.",
+                ObtainHint = "Восстановите bundled-файл tapes/librar.37 из пакета либо задайте другой каталог ключом 'tapes'. См. docs/runtime-assets.md.",
             },
             new()
             {
@@ -145,9 +145,9 @@ namespace Besm6.Loader
                 TapeId = TapeImage.TapeBemsh,
                 Sha256 = "69458c72286e9fe8ed3bc1d448ed20754d59259bfb5d7a7484850446481d0850",
                 Provenance = "DISPAC/BEMSH — командный процессор БЭСМ-6, лента 0331 oct",
-                License = RuntimeAssetLicense.UserProvided,
+                License = RuntimeAssetLicense.Bundled,
                 Required = true,
-                ObtainHint = "Положите bemsh.739 в каталог tapes/ (или задайте ключ 'tapes' в конфиге). DISPAC/BEMSH (лента 0331 oct) — получите по лицензии вашего учреждения. См. docs/runtime-assets.md.",
+                ObtainHint = "Восстановите bundled-файл tapes/bemsh.739 из пакета либо задайте другой каталог ключом 'tapes'. См. docs/runtime-assets.md.",
             },
             new()
             {
@@ -155,9 +155,9 @@ namespace Besm6.Loader
                 TapeId = TapeImage.TapeB,
                 Sha256 = "7d6d864a103f309b5adca2a46abacffbc3d226aadd7c4a372c4fcea912c33f80",
                 Provenance = "Компилятор B (FORTRAN) для БЭСМ-6, лента 007 oct",
-                License = RuntimeAssetLicense.UserProvided,
+                License = RuntimeAssetLicense.Bundled,
                 Required = true,
-                ObtainHint = "Положите b.7 в каталог tapes/ (или задайте ключ 'tapes' в конфиге). Компилятор B/FORTRAN (лента 007 oct) — получите по лицензии вашего учреждения. См. docs/runtime-assets.md.",
+                ObtainHint = "Восстановите bundled-файл tapes/b.7 из пакета либо задайте другой каталог ключом 'tapes'. См. docs/runtime-assets.md.",
             },
         };
 
@@ -212,57 +212,65 @@ namespace Besm6.Loader
         {
             if (required == null) throw new ArgumentNullException(nameof(required));
 
-            var paths = new Dictionary<string, string>(StringComparer.Ordinal);
-            var sha = new Dictionary<string, string>(StringComparer.Ordinal);
-            var missing = new List<RuntimeAsset>();
-            var badSha = new List<RuntimeAsset>();
+            List<RuntimeAsset>? bestMissing = null;
+            List<RuntimeAsset>? bestBadSha = null;
+            int bestProblemCount = int.MaxValue;
 
-            foreach (var asset in required)
+            foreach (string rawDir in dirs)
             {
-                string? found = null;
-                foreach (var dir in dirs)
+                if (string.IsNullOrWhiteSpace(rawDir)) continue;
+                string dir = Path.GetFullPath(rawDir);
+                var paths = new Dictionary<string, string>(StringComparer.Ordinal);
+                var sha = new Dictionary<string, string>(StringComparer.Ordinal);
+                var missing = new List<RuntimeAsset>();
+                var badSha = new List<RuntimeAsset>();
+
+                foreach (var asset in required)
                 {
-                    if (string.IsNullOrWhiteSpace(dir)) continue;
                     string candidate = Path.Combine(dir, asset.Name);
-                    if (File.Exists(candidate))
+                    if (!File.Exists(candidate))
                     {
-                        found = Path.GetFullPath(candidate);
-                        break;
+                        missing.Add(asset);
+                        continue;
+                    }
+
+                    string found = Path.GetFullPath(candidate);
+                    paths[asset.Name] = found;
+                    if (!string.IsNullOrEmpty(asset.Sha256))
+                    {
+                        string actual = Sha256OfFile(found);
+                        sha[asset.Name] = actual;
+                        if (!string.Equals(actual, asset.Sha256, StringComparison.OrdinalIgnoreCase))
+                            badSha.Add(asset);
                     }
                 }
 
-                if (found == null)
+                if (missing.Count == 0 && badSha.Count == 0)
                 {
-                    missing.Add(asset);
-                    continue;
+                    return new ResolvedRuntimeAssets
+                    {
+                        TapesDir = dir,
+                        PathsByAsset = paths,
+                        Sha256ByAsset = sha,
+                    };
                 }
-                paths[asset.Name] = found;
 
-                if (!string.IsNullOrEmpty(asset.Sha256))
+                int problemCount = missing.Count + badSha.Count;
+                if (problemCount < bestProblemCount)
                 {
-                    string actual = Sha256OfFile(found);
-                    sha[asset.Name] = actual;
-                    if (!string.Equals(actual, asset.Sha256, StringComparison.OrdinalIgnoreCase))
-                        badSha.Add(asset);
+                    bestProblemCount = problemCount;
+                    bestMissing = missing;
+                    bestBadSha = badSha;
                 }
             }
 
-            if (missing.Count > 0 || badSha.Count > 0)
-                throw new RuntimeAssetsException(
-                    missing.Concat(badSha).ToList(),
-                    dirs,
-                    BuildDiagnostic(missing, badSha, dirs));
-
-            string primary = paths.Count > 0
-                ? Path.GetDirectoryName(paths.Values.First())!
-                : (dirs.FirstOrDefault() ?? string.Empty);
-
-            return new ResolvedRuntimeAssets
-            {
-                TapesDir = primary,
-                PathsByAsset = paths,
-                Sha256ByAsset = sha,
-            };
+            bestMissing ??= required.ToList();
+            bestBadSha ??= new List<RuntimeAsset>();
+            string diagnostic =
+                "No single directory contains the complete checksum-valid runtime resource set." +
+                Environment.NewLine + BuildDiagnostic(bestMissing, bestBadSha, dirs);
+            throw new RuntimeAssetsException(
+                bestMissing.Concat(bestBadSha).ToList(), dirs, diagnostic);
         }
 
         /// <summary>SHA256 файла (hex, нижний регистр).</summary>

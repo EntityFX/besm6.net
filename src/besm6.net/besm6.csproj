@@ -14,12 +14,14 @@
     <None Update="besm6.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <!-- SuperPlan Task A4: runtime-образы лент (monsys.9 / librar.12 / librar.37 / bemsh.739 / b.7)
-       в этом репозитории git-ignored (см. .gitignore:35 tapes/) и намеренно НЕ встраиваются в
-       dotnet publish: право на распространение подтверждено не было, пользователь предоставляет
-       их сам. Checksum-manifest, порядок проверки и установка: docs/runtime-assets.md + класс
-       Besm6.Loader.RuntimeAssets. Если право на переразрешение/распространение получено —
-       добавьте <None Include="tapes\..." CopyToPublishDirectory="PreserveNewest" />. -->
+  <!-- MIT-ресурсы dubna, необходимые MONSYS/CERN workloads. Исходный revision и
+       provenance: ref/README.md; integrity manifest: RuntimeAssets.cs. -->
+  <ItemGroup>
+    <None Include="..\..\tapes\**\*"
+          Link="tapes\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Spectre.Console" Version="0.57.2" />
