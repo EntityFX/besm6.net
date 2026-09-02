@@ -21,14 +21,15 @@ namespace Besm6
         /// <summary>
         /// Создать DubnaLoader из конфигурации.
         /// </summary>
-        public static DubnaLoader CreateLoader(Config? cfg = null, MachineCore? machine = null)
+        public static DubnaLoader CreateLoader(Config? cfg = null, MachineCore? machine = null,
+            ResolvedRuntimeAssets? runtimeAssets = null)
         {
             cfg ??= Config.Load();
             machine ??= CreateMachine(cfg);
 
-            string? tapesDir = cfg.Tapes != null ? cfg.ResolvePath(cfg.Tapes) : null;
+            runtimeAssets ??= ValidateRuntimeAssets(cfg);
 
-            return new DubnaLoader(machine, tapesDir)
+            return new DubnaLoader(machine, runtimeAssets.TapesDir)
             {
                 InstructionLimit = cfg.DefaultLimit,
                 UseWallClock = cfg.UseWallClock,

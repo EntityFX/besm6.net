@@ -16,9 +16,13 @@ namespace Besm6.Tests
             var loader = new DubnaLoader(machine) { Verbose = false };
             loader.Output = s => { };
             string? path = FindFile("examples", "name.dub");
-            if (path == null) Assert.Inconclusive("name.dub not found");
+            if (path == null)
+            {
+                Assert.Inconclusive("name.dub not found");
+                return;
+            }
             int count = 0;
-            string? dump = null;
+            string dump = string.Empty;
             machine.StepTrace = (pc, word) =>
             {
                 if (count == 70754)

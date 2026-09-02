@@ -36,21 +36,10 @@ public sealed class ConfigTests
     }
 
     [TestMethod]
-    public void ResolvePath_ConventionalTapes_UsesCheckoutDiscovery()
+    public void ResolvePath_DefaultTapes_UsesBundledApplicationDirectory()
     {
-        string root = Path.Combine(Path.GetTempPath(), "besm6_tapes_" + Guid.NewGuid().ToString("N"));
-        string tapes = Path.Combine(root, "ref", "dubna", "tapes");
-        Directory.CreateDirectory(tapes);
-        string previous = Environment.CurrentDirectory;
-        try
-        {
-            Environment.CurrentDirectory = root;
-            Assert.AreEqual(Path.GetFullPath(tapes), new Config().ResolvePath("tapes"));
-        }
-        finally
-        {
-            Environment.CurrentDirectory = previous;
-            Directory.Delete(root, recursive: true);
-        }
+        string tapes = Path.Combine(AppContext.BaseDirectory, "tapes");
+        Assert.IsTrue(Directory.Exists(tapes), "build output must contain bundled tapes");
+        Assert.AreEqual(Path.GetFullPath(tapes), new Config().ResolvePath("tapes"));
     }
 }
