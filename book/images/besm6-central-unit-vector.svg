@@ -1,164 +1,132 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     width="1800" height="1220" viewBox="0 0 1800 1220" role="img"
-     aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000"
+     role="img" aria-labelledby="title desc" data-theme="monochrome">
   <title id="title">Блок-схема центральной части машины БЭСМ-6</title>
-  <desc id="desc">Чистовая векторная реконструкция исторической схемы: восемь блоков МОЗУ, регистры, тракт команд, арифметическое устройство и связи с УВУ.</desc>
-
+  <desc id="desc">Чистовая монохромная реконструкция исторической схемы: восемь блоков оперативной памяти, регистры, счётчик адреса, сумматор адреса, буферные регистры и арифметическое устройство.</desc>
   <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L10,5 L0,10 Z" fill="#111"/>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10"
+            markerUnits="userSpaceOnUse" orient="auto-start-reverse" overflow="visible">
+      <path d="M0 0L10 5L0 10Z" fill="#111"/>
     </marker>
     <style>
-      .frame { fill: #fff; stroke: #111; stroke-width: 3; }
-      .block { fill: #fff; stroke: #111; stroke-width: 3; }
-      .thin  { fill: none; stroke: #111; stroke-width: 2; }
-      .wire  { fill: none; stroke: #111; stroke-width: 4; stroke-linejoin: round; stroke-linecap: square; }
-      .bus   { fill: none; stroke: #111; stroke-width: 7; stroke-linejoin: round; stroke-linecap: square; }
-      .arrow { marker-end: url(#arrow); }
-      .label { font-family: "Segoe UI", Arial, sans-serif; font-size: 28px; fill: #111; text-anchor: middle; dominant-baseline: middle; }
-      .small { font-family: "Segoe UI", Arial, sans-serif; font-size: 21px; fill: #111; text-anchor: middle; dominant-baseline: middle; }
-      .tiny  { font-family: "Segoe UI", Arial, sans-serif; font-size: 17px; fill: #111; text-anchor: middle; dominant-baseline: middle; }
-      .head  { font-family: "Segoe UI", Arial, sans-serif; font-size: 38px; font-weight: 600; letter-spacing: 8px; fill: #111; text-anchor: middle; }
-      .caption { font-family: "Segoe UI", Arial, sans-serif; font-size: 29px; font-weight: 600; font-style: italic; fill: #111; text-anchor: middle; }
-      .abbr { font-family: "Segoe UI", Arial, sans-serif; font-size: 34px; font-weight: 650; font-style: italic; fill: #111; text-anchor: middle; dominant-baseline: middle; }
+      .frame{fill:#fff;stroke:#111;stroke-width:3}
+      .block{fill:#fff;stroke:#111;stroke-width:3}
+      .sub{fill:#fafafa;stroke:#111;stroke-width:2}
+      .bus{fill:none;stroke:#111;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+      .wire{fill:none;stroke:#111;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+      .arrow{marker-end:url(#arrow)}
+      .junction{fill:#111}
+      .label{font-family:"Segoe UI",Arial,sans-serif;fill:#111;text-anchor:middle;dominant-baseline:middle}
+      .small{font-size:17px}
+      .medium{font-size:21px;font-weight:600}
+      .large{font-size:28px;font-weight:700}
+      .caption{font-family:"Segoe UI",Arial,sans-serif;font-size:22px;font-style:italic;fill:#111;text-anchor:middle}
     </style>
-
-    <g id="memory-bank">
-      <rect class="block" width="125" height="170"/>
-    </g>
   </defs>
 
-  <rect class="frame" x="28" y="22" width="1744" height="1132"/>
+  <rect class="frame" x="24" y="20" width="1552" height="925"/>
+  <text class="label large" x="800" y="70">МОЗУ</text>
 
-  <!-- Main memory -->
-  <text class="head" x="900" y="128">МОЗУ</text>
-  <path class="wire" d="M205 170 Q205 148 225 148 H1575 Q1595 148 1595 170"/>
-  <path class="bus" d="M215 183 H1585"/>
+  <!-- Control and data buses -->
+  <path class="bus" d="M165 115H1375"/>
+  <text class="label small" x="95" y="115">управление</text>
+  <path class="bus" d="M170 340H1400"/>
+  <text class="label small" x="105" y="340">чтение</text>
+  <path class="bus" d="M170 385H1400"/>
+  <text class="label small" x="105" y="385">запись</text>
 
-  <g transform="translate(260 215)">
-    <use xlink:href="#memory-bank"/>
-    <text class="label" x="62.5" y="30">0</text>
-    <text class="small" x="62.5" y="78">2 мкс</text>
-    <text class="tiny" x="62.5" y="137">48 + 2 к. разр.</text>
-  </g>
-  <g transform="translate(415 215)"><use xlink:href="#memory-bank"/><text class="label" x="62.5" y="30">1</text></g>
-  <g transform="translate(570 215)"><use xlink:href="#memory-bank"/><text class="label" x="62.5" y="30">2</text></g>
-  <g transform="translate(725 215)"><use xlink:href="#memory-bank"/><text class="label" x="62.5" y="30">3</text></g>
-  <g transform="translate(950 215)"><use xlink:href="#memory-bank"/><text class="label" x="62.5" y="30">4</text></g>
-  <g transform="translate(1105 215)"><use xlink:href="#memory-bank"/><text class="label" x="62.5" y="30">5</text></g>
-  <g transform="translate(1260 215)"><use xlink:href="#memory-bank"/><text class="label" x="62.5" y="30">6</text></g>
-  <g transform="translate(1415 215)"><use xlink:href="#memory-bank"/><text class="label" x="62.5" y="30">7</text></g>
-
-  <!-- Memory-bank control taps -->
-  <g class="wire">
-    <path class="arrow" d="M322 183 V215"/><path class="arrow" d="M477 183 V215"/>
-    <path class="arrow" d="M632 183 V215"/><path class="arrow" d="M787 183 V215"/>
-    <path class="arrow" d="M1012 183 V215"/><path class="arrow" d="M1167 183 V215"/>
-    <path class="arrow" d="M1322 183 V215"/><path class="arrow" d="M1477 183 V215"/>
+  <!-- Eight memory banks -->
+  <g>
+    <g transform="translate(170 160)"><rect class="block" width="135" height="130"/><text class="label large" x="67.5" y="35">0</text><text class="label small" x="67.5" y="70">2 мкс</text><text class="label small" x="67.5" y="101">48 + 2 разр.</text></g>
+    <g transform="translate(325 160)"><rect class="block" width="135" height="130"/><text class="label large" x="67.5" y="35">1</text></g>
+    <g transform="translate(480 160)"><rect class="block" width="135" height="130"/><text class="label large" x="67.5" y="35">2</text></g>
+    <g transform="translate(635 160)"><rect class="block" width="135" height="130"/><text class="label large" x="67.5" y="35">3</text></g>
+    <g transform="translate(790 160)"><rect class="block" width="135" height="130"/><text class="label large" x="67.5" y="35">4</text></g>
+    <g transform="translate(945 160)"><rect class="block" width="135" height="130"/><text class="label large" x="67.5" y="35">5</text></g>
+    <g transform="translate(1100 160)"><rect class="block" width="135" height="130"/><text class="label large" x="67.5" y="35">6</text></g>
+    <g transform="translate(1255 160)"><rect class="block" width="135" height="130"/><text class="label large" x="67.5" y="35">7</text></g>
   </g>
 
-  <!-- Read and write data buses -->
-  <path class="bus" d="M278 425 H1618"/>
-  <path class="bus" d="M278 466 H1618"/>
-  <g class="wire">
-    <path class="arrow" d="M300 385 V425"/><path class="arrow" d="M455 385 V425"/>
-    <path class="arrow" d="M610 385 V425"/><path class="arrow" d="M765 385 V425"/>
-    <path class="arrow" d="M990 385 V425"/><path class="arrow" d="M1145 385 V425"/>
-    <path class="arrow" d="M1300 385 V425"/><path class="arrow" d="M1455 385 V425"/>
-    <path class="arrow" d="M343 466 V385"/><path class="arrow" d="M498 466 V385"/>
-    <path class="arrow" d="M653 466 V385"/><path class="arrow" d="M808 466 V385"/>
-    <path class="arrow" d="M1033 466 V385"/><path class="arrow" d="M1188 466 V385"/>
-    <path class="arrow" d="M1343 466 V385"/><path class="arrow" d="M1498 466 V385"/>
+  <!-- Dedicated short arrows prevent shared-marker drift -->
+  <g class="wire arrow">
+    <path data-from="control-bus" data-to="mozu-0" d="M237.5 115V153"/><path data-from="control-bus" data-to="mozu-1" d="M392.5 115V153"/>
+    <path data-from="control-bus" data-to="mozu-2" d="M547.5 115V153"/><path data-from="control-bus" data-to="mozu-3" d="M702.5 115V153"/>
+    <path data-from="control-bus" data-to="mozu-4" d="M857.5 115V153"/><path data-from="control-bus" data-to="mozu-5" d="M1012.5 115V153"/>
+    <path data-from="control-bus" data-to="mozu-6" d="M1167.5 115V153"/><path data-from="control-bus" data-to="mozu-7" d="M1322.5 115V153"/>
+    <path data-from="mozu-0" data-to="read-bus" d="M220 290V333"/><path data-from="mozu-1" data-to="read-bus" d="M375 290V333"/>
+    <path data-from="mozu-2" data-to="read-bus" d="M530 290V333"/><path data-from="mozu-3" data-to="read-bus" d="M685 290V333"/>
+    <path data-from="mozu-4" data-to="read-bus" d="M840 290V333"/><path data-from="mozu-5" data-to="read-bus" d="M995 290V333"/>
+    <path data-from="mozu-6" data-to="read-bus" d="M1150 290V333"/><path data-from="mozu-7" data-to="read-bus" d="M1305 290V333"/>
+    <path data-from="write-bus" data-to="mozu-0" d="M270 378V297"/><path data-from="write-bus" data-to="mozu-1" d="M425 378V297"/>
+    <path data-from="write-bus" data-to="mozu-2" d="M580 378V297"/><path data-from="write-bus" data-to="mozu-3" d="M735 378V297"/>
+    <path data-from="write-bus" data-to="mozu-4" d="M890 378V297"/><path data-from="write-bus" data-to="mozu-5" d="M1045 378V297"/>
+    <path data-from="write-bus" data-to="mozu-6" d="M1200 378V297"/><path data-from="write-bus" data-to="mozu-7" d="M1355 378V297"/>
   </g>
 
-  <!-- External device controller -->
-  <path class="bus arrow" d="M1618 425 H1683"/>
-  <path class="bus arrow" d="M1683 466 H1618"/>
-  <rect class="block" x="1683" y="340" width="62" height="200" rx="3"/>
-  <text class="abbr" x="1714" y="440" transform="rotate(90 1714 440)">УВУ</text>
+  <!-- External input/output -->
+  <rect class="block" x="1460" y="275" width="72" height="150"/>
+  <text class="label large" x="1496" y="350" transform="rotate(-90 1496 350)">УВУ</text>
+  <path class="wire arrow" data-from="read-bus" data-to="uvu" d="M1400 340H1453"/>
+  <path class="wire arrow" data-from="uvu" data-to="write-bus" d="M1460 385H1407"/>
 
-  <!-- Command read buffer -->
-  <rect class="block" x="380" y="510" width="280" height="94"/>
-  <line class="thin" x1="475" y1="510" x2="475" y2="604"/>
-  <line class="thin" x1="380" y1="551" x2="660" y2="551"/>
-  <text class="small" x="427" y="531">ЛС</text>
-  <text class="abbr" x="566" y="531">БРС</text>
-  <text class="small" x="566" y="577">8 регистров</text>
-  <path class="wire arrow" d="M278 425 V558 H380"/>
-  <path class="wire arrow" d="M520 466 V510"/>
+  <!-- Instruction and address section -->
+  <g>
+    <rect class="block" x="250" y="445" width="300" height="95"/>
+    <line class="wire" x1="335" y1="445" x2="335" y2="540"/><line class="wire" x1="420" y1="445" x2="420" y2="540"/>
+    <text class="label medium" x="292" y="477">ЛС</text><text class="label large" x="442" y="477">БРС</text><text class="label small" x="442" y="515">8 регистров</text>
 
-  <!-- Instruction register -->
-  <text class="abbr" x="305" y="656">РК</text>
-  <rect class="block" x="360" y="628" width="435" height="52"/>
-  <line class="thin" x1="435" y1="628" x2="435" y2="680"/>
-  <line class="thin" x1="545" y1="628" x2="545" y2="680"/>
-  <text class="small" x="397" y="654">АМ</text>
-  <text class="small" x="490" y="654">Оп</text>
-  <text class="small" x="670" y="654">А</text>
-  <path class="wire arrow" d="M520 604 V628"/>
+    <rect class="block" x="205" y="580" width="480" height="62"/>
+    <line class="wire" x1="300" y1="580" x2="300" y2="642"/><line class="wire" x1="410" y1="580" x2="410" y2="642"/>
+    <text class="label large" x="175" y="611">РК</text><text class="label medium" x="252" y="611">АМ</text><text class="label medium" x="355" y="611">Оп</text><text class="label medium" x="548" y="611">А</text>
 
-  <!-- Modifier registers -->
-  <rect class="block" x="335" y="720" width="120" height="182"/>
-  <g class="thin">
-    <path d="M335 744 H455 M335 768 H455 M335 792 H455 M335 816 H455 M335 840 H455 M335 864 H455 M335 888 H455"/>
+    <rect class="sub" x="220" y="690" width="150" height="155"/>
+    <path class="wire" d="M235 710H355M235 730H355M235 750H355M235 770H355M235 790H355M235 810H355"/>
+    <text class="label large" x="295" y="780">M</text>
+
+    <rect class="block" x="55" y="790" width="125" height="75"/>
+    <text class="label medium" x="117" y="827">Сч. АС</text>
+
+    <rect class="block" x="450" y="700" width="235" height="125"/>
+    <text class="label large" x="568" y="750">СМА</text><text class="label small" x="568" y="786">сумматор адреса</text>
   </g>
-  <text class="abbr" x="395" y="812">М</text>
-  <path class="wire arrow" d="M397 680 V720"/>
 
-  <!-- Address adder and address counter -->
-  <rect class="block" x="545" y="748" width="205" height="105"/>
-  <text class="abbr" x="647" y="792">СМА</text>
-  <text class="tiny" x="647" y="827">сумматор адреса</text>
-  <path class="wire arrow" d="M670 680 V748"/>
-  <path class="wire arrow" d="M455 812 H545"/>
+  <!-- Arithmetic section -->
+  <g>
+    <rect class="block" x="840" y="445" width="180" height="95"/>
+    <text class="label large" x="930" y="477">БРЧ</text><text class="label small" x="930" y="515">4 числа</text>
 
-  <rect class="block" x="170" y="920" width="160" height="80"/>
-  <text class="abbr" x="250" y="960">Сч.АС</text>
-  <text class="small" x="347" y="943">+1</text>
-  <path class="wire arrow" d="M250 920 V183 H205 V558"/>
-  <path class="wire arrow" d="M250 1000 V1050 H647 V853"/>
-  <path class="wire arrow" d="M395 902 V1050"/>
+    <rect class="block" x="1110" y="430" width="245" height="145"/>
+    <line class="wire" x1="1170" y1="430" x2="1170" y2="575"/>
+    <text class="label medium" x="1140" y="462">АЗ</text><text class="label large" x="1260" y="462">БРЗ</text><text class="label small" x="1260" y="500">8 результатов</text>
 
-  <!-- Number and result buffers -->
-  <rect class="block" x="1005" y="500" width="170" height="92"/>
-  <line class="thin" x1="1005" y1="542" x2="1175" y2="542"/>
-  <text class="abbr" x="1090" y="521">БРЧ</text>
-  <text class="small" x="1090" y="568">4 числа</text>
-  <path class="wire arrow" d="M1090 466 V500"/>
+    <rect class="sub" x="790" y="735" width="185" height="105"/>
+    <path class="wire" d="M835 735V840M880 735V840M925 735V840"/>
+    <text class="label large" x="882" y="790">БАК</text>
 
-  <rect class="block" x="1260" y="500" width="270" height="170"/>
-  <line class="thin" x1="1330" y1="500" x2="1330" y2="670"/>
-  <line class="thin" x1="1260" y1="542" x2="1530" y2="542"/>
-  <g class="thin">
-    <path d="M1260 566 H1530 M1260 590 H1530 M1260 614 H1530 M1260 638 H1530"/>
+    <rect class="block" x="1100" y="675" width="300" height="190"/>
+    <text class="label large" x="1250" y="770">АУ</text>
   </g>
-  <text class="small" x="1295" y="521">АЗ</text>
-  <text class="abbr" x="1430" y="521">БРЗ</text>
-  <text class="small" x="1430" y="563">8 результатов</text>
-  <path class="wire arrow" d="M1400 466 V500"/>
-  <path class="wire arrow" d="M1490 500 V425"/>
 
-  <!-- Instruction and operand paths -->
-  <path class="wire arrow" d="M1175 546 H1260"/>
-  <path class="wire arrow" d="M900 183 V546 H1005"/>
-  <path class="wire arrow" d="M1530 617 H900"/>
-  <path class="wire arrow" d="M1410 670 V782"/>
-
-  <!-- Instruction buffer and ALU -->
-  <rect class="block" x="920" y="900" width="180" height="112"/>
-  <g class="thin">
-    <path d="M955 900 V1012 M990 900 V1012 M1025 900 V1012 M1060 900 V1012"/>
+  <!-- Lower-system interconnects: orthogonal routes with explicit endpoints -->
+  <g class="wire arrow">
+    <path data-from="read-bus" data-to="brs" d="M395 340V438"/>
+    <path data-from="brs" data-to="rk" d="M400 540V573"/>
+    <path data-from="rk-am" data-to="m" d="M252 642V683"/>
+    <path data-from="counter" data-to="m" d="M117 790V755H213"/>
+    <path data-from="m" data-to="counter" d="M220 820H187"/>
+    <path data-from="rk-op" data-to="bak" d="M355 642V875H780V795"/>
+    <path data-from="rk-a" data-to="sma" d="M548 642V693"/>
+    <path data-from="sma" data-to="control-bus" d="M568 700V660H780V122"/>
+    <path data-from="sma" data-to="bak" d="M685 780H783"/>
+    <path data-from="bak" data-to="au" d="M975 790H1093"/>
+    <path data-from="read-bus" data-to="brch" d="M930 340V438"/>
+    <path data-from="brch" data-to="au" d="M930 540V640H1160V668"/>
+    <path data-from="read-bus" data-to="brz" d="M1232 340V423"/>
+    <path data-from="brz" data-to="au" d="M1195 575V668"/>
+    <path data-from="au" data-to="brz" d="M1305 675V582"/>
+    <path data-from="brz" data-to="write-bus" d="M1355 500H1425V392"/>
   </g>
-  <text class="abbr" x="1010" y="956">БАК</text>
-  <path class="wire arrow" d="M750 800 H920"/>
-  <path class="wire arrow" d="M545 820 V970 H920"/>
 
-  <rect class="block" x="1220" y="748" width="300" height="300" rx="3"/>
-  <text class="abbr" x="1370" y="900">АУ</text>
-  <path class="wire arrow" d="M1100 956 H1220"/>
-  <path class="wire arrow" d="M1370 748 V670"/>
-  <path class="wire arrow" d="M1450 748 V670"/>
-
-  <text class="caption" x="900" y="1115">Рис. 5.1. Блок-схема центральной части машины БЭСМ-6</text>
+  <circle class="junction" cx="395" cy="340" r="6"/><circle class="junction" cx="930" cy="340" r="6"/><circle class="junction" cx="1232" cy="340" r="6"/>
+  <text class="caption" x="800" y="920">Рис. 5.1. Блок-схема центральной части машины БЭСМ-6</text>
 </svg>

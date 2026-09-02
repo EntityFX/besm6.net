@@ -1,30 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 130" width="800" height="130">
-  <style>
-    text { font-family: 'Courier New', monospace; font-size: 12px; fill: #333; text-anchor: middle; dominant-baseline: middle; }
-    .label { font-size: 10px; fill: #666; }
-    .title { font-size: 13px; font-weight: bold; fill: #222; }
-  </style>
-  <text x="400" y="18" class="title">Длинноадресный формат команды (бит 20 = "1")</text>
-  <!-- Bit numbers -->
-  <text x="380" y="40" class="label">24-21</text>
-  <text x="420" y="40" class="label">20</text>
-  <text x="455" y="40" class="label">19-16</text>
-  <text x="580" y="40" class="label">15-1</text>
-  <!-- Blocks -->
-  <rect x="340" y="45" width="80" height="30" rx="3" fill="#F5A623" stroke="#C47A10" stroke-width="1.5"/>
-  <rect x="420" y="45" width="25" height="30" rx="3" fill="#D0021B" stroke="#8B0010" stroke-width="1.5"/>
-  <rect x="445" y="45" width="100" height="30" rx="3" fill="#4A90D9" stroke="#2C5F8A" stroke-width="1.5"/>
-  <rect x="545" y="45" width="225" height="30" rx="3" fill="#7BC47F" stroke="#4A8C4E" stroke-width="1.5"/>
-  <!-- Labels -->
-  <text x="380" y="66" fill="white" font-weight="bold">i</text>
-  <text x="432" y="66" fill="white" font-weight="bold">1</text>
-  <text x="495" y="66" fill="white" font-weight="bold">КоП</text>
-  <text x="657" y="66" fill="white" font-weight="bold">Полный адрес</text>
-  <!-- Bottom labels -->
-  <text x="380" y="90" class="label">индекс-регистр</text>
-  <text x="432" y="90" class="label">признак</text>
-  <text x="495" y="90" class="label">код операции (4 бита)</text>
-  <text x="657" y="90" class="label">полный адрес (15 бит)</text>
-  <!-- Note -->
-  <text x="400" y="115" class="label" fill="#888">Адресует до 32768 ячеек памяти напрямую</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="250" viewBox="0 0 1000 250" data-theme="color" role="img" aria-labelledby="title desc">
+  <title id="title">Длинноадресный формат команды БЭСМ-6</title>
+  <desc id="desc">Поля 24-разрядной команды: четыре бита модификатора, единичный признак формата, четыре бита кода операции и полный пятнадцатибитный адрес.</desc>
+  <defs><style>
+    text{font-family:"Segoe UI",Arial,sans-serif;fill:#172033;text-anchor:middle}.title{font-size:24px;font-weight:700}.range{font-size:14px;font-weight:650}.main{font-size:19px;font-weight:700;fill:#fff}.sub{font-size:13px;fill:#44506a}.cell{stroke:#172033;stroke-width:2;vector-effect:non-scaling-stroke}
+  </style></defs>
+  <rect width="1000" height="250" fill="#fff"/><text class="title" x="500" y="34">Длинноадресный формат команды</text>
+  <text class="range" x="137" y="74">24–21</text><text class="range" x="240" y="74">20</text><text class="range" x="342" y="74">19–16</text><text class="range" x="670" y="74">15–1</text>
+  <rect class="cell" x="70" y="86" width="135" height="66" rx="5" fill="#d18b28"/><rect class="cell" x="205" y="86" width="70" height="66" fill="#b4494d"/><rect class="cell" x="275" y="86" width="135" height="66" fill="#4169a8"/><rect class="cell" x="410" y="86" width="520" height="66" rx="5" fill="#368873"/>
+  <text class="main" x="137" y="127">M</text><text class="main" x="240" y="127">1</text><text class="main" x="342" y="127">КОП</text><text class="main" x="670" y="127">ПОЛНЫЙ АДРЕС</text>
+  <text class="sub" x="137" y="178">модификатор, 4 бита</text><text class="sub" x="240" y="178">формат</text><text class="sub" x="342" y="178">4 бита</text><text class="sub" x="670" y="178">15 бит</text>
+  <rect x="70" y="205" width="860" height="30" rx="5" fill="#f3f5f8" stroke="#c8cfdb"/><text class="sub" x="500" y="225">Исполнительный адрес = (полный адрес + M) mod 2¹⁵</text>
 </svg>
