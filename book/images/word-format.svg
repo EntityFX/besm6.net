@@ -1,28 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 120" width="800" height="120">
-  <style>
-    text { font-family: 'Courier New', monospace; font-size: 13px; fill: #333; text-anchor: middle; dominant-baseline: middle; }
-    .label { font-size: 11px; fill: #666; }
-    .title { font-size: 14px; font-weight: bold; fill: #222; }
-  </style>
-  <!-- Title -->
-  <text x="400" y="20" class="title">Формат 48-битного слова БЭСМ-6 (число с плавающей точкой)</text>
-  <!-- Bit ranges -->
-  <text x="380" y="45" class="label">47</text>
-  <text x="340" y="45" class="label">42 41</text>
-  <text x="20" y="45" class="label">1</text>
-  <text x="5" y="45" class="label">0</text>
-  <!-- Blocks -->
-  <rect x="360" y="50" width="80" height="30" rx="3" fill="#4A90D9" stroke="#2C5F8A" stroke-width="1.5"/>
-  <rect x="40" y="50" width="320" height="30" rx="3" fill="#7BC47F" stroke="#4A8C4E" stroke-width="1.5"/>
-  <rect x="5" y="50" width="35" height="30" rx="3" fill="#E8E8E8" stroke="#999" stroke-width="1.5"/>
-  <!-- Labels -->
-  <text x="400" y="68" fill="white" font-weight="bold">ПОРЯДОК</text>
-  <text x="200" y="68" fill="white" font-weight="bold">МАНТИССА</text>
-  <text x="22" y="68" fill="#666">—</text>
-  <!-- Bottom labels -->
-  <text x="400" y="95" class="label">6 бит (41-46)</text>
-  <text x="200" y="95" class="label">41 бит (1-40)</text>
-  <text x="22" y="95" class="label">0</text>
-  <!-- Sign indicator -->
-  <text x="395" y="110" class="label">↑ разряд 47 — знак мантиссы</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="240" viewBox="0 0 1000 240" data-theme="color" role="img" aria-labelledby="title desc">
+  <title id="title">Формат 48-разрядного числа БЭСМ-6</title>
+  <desc id="desc">Семь старших разрядов образуют порядок со смещением 64; оставшийся 41 разряд содержит знаковую мантиссу в дополнительном коде.</desc>
+  <defs><style>
+    text{font-family:"Segoe UI",Arial,sans-serif;fill:#172033;text-anchor:middle}.title{font-size:24px;font-weight:700}.range{font-size:15px;font-weight:650}.main{font-size:22px;font-weight:700;fill:#fff}.sub{font-size:15px;fill:#44506a}.edge{stroke:#172033;stroke-width:2;vector-effect:non-scaling-stroke}
+  </style></defs>
+  <rect width="1000" height="240" fill="#fff"/>
+  <text class="title" x="500" y="34">Формат 48-разрядного числа БЭСМ-6</text>
+  <text class="range" x="162" y="76">48–42</text><text class="range" x="592" y="76">41–1</text>
+  <rect class="edge" x="70" y="88" width="184" height="70" rx="6" fill="#4169a8"/>
+  <rect class="edge" x="254" y="88" width="676" height="70" rx="6" fill="#368873"/>
+  <line class="edge" x1="270.5" y1="88" x2="270.5" y2="158"/>
+  <text class="main" x="162" y="130">ПОРЯДОК</text><text class="main" x="592" y="130">МАНТИССА</text>
+  <text class="sub" x="162" y="182">7 бит, смещение 64</text><text class="sub" x="592" y="182">41 бит в дополнительном коде; разряд 41 — знак</text>
+  <path d="M270.5 160V205" fill="none" stroke="#b4494d" stroke-width="2"/><text class="sub" x="270.5" y="226" fill="#b4494d">знак мантиссы</text>
+  <text class="sub" x="650" y="220">Значение: мантисса · 2<tspan baseline-shift="super" font-size="11">(порядок−64)</tspan></text>
 </svg>
