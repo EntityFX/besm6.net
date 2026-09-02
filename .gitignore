@@ -33,7 +33,6 @@ _ReSharper*/
 packages/
 ref/
 tapes/
-tapes_bundle.tar.gz
 tests-run/
 diagnostics-output.txt
 besm6img/.7
@@ -690,3 +689,8 @@ tests-run/full/w5-worker.err
 .worktrees/
 __pycache__/
 *.py[cod]
+
+# MIT reference fixtures imported under ref/tests must remain byte-exact even
+# when their extensions match generic build-output ignores above.
+!ref/tests/**/*.bin
+!ref/tests/**/*.exe

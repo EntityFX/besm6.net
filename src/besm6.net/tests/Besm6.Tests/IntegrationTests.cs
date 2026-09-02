@@ -49,7 +49,10 @@ namespace Besm6.Tests
             // Ищем файл name.dub, поднимаясь вверх по дереву каталогов
             string? path = FindFileInParentDirs("examples", "name.dub");
             if (path == null)
+            {
                 Assert.Inconclusive("File examples/name.dub not found");
+                return;
+            }
 
             var result = _loader.RunScript(path);
             string output = _output.ToString();
@@ -73,7 +76,10 @@ namespace Besm6.Tests
             // forex.dub — это пример FORTRAN, который выводит "Hello, World!"
             string? path = FindFileInParentDirs("examples", "forex.dub");
             if (path == null)
+            {
                 Assert.Inconclusive("File examples/forex.dub not found");
+                return;
+            }
             
             var result = _loader.RunScript(path);
             string output = _output.ToString();

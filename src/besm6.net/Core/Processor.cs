@@ -399,6 +399,7 @@ namespace Besm6.Core
         private bool _canonOn;
         private bool _canonChecked;
         private ulong _canonSeq;
+        private ulong _canonLimit = ulong.MaxValue;
         private StringBuilder? _canonPending;
 
         private void CanonCheck()
@@ -407,6 +408,9 @@ namespace Besm6.Core
             _canonChecked = true;
             string? path = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE");
             if (string.IsNullOrEmpty(path)) return;
+            string? limitText = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE_LIMIT");
+            if (!string.IsNullOrWhiteSpace(limitText) && ulong.TryParse(limitText, out ulong limit))
+                _canonLimit = limit;
             var w = new StreamWriter(path, false, new UTF8Encoding(false));
             var header = new StringBuilder(512);
             header.Append("seq\tpc\thalf\traw48\trk24\topcode\treg\taddr")
@@ -428,6 +432,11 @@ namespace Besm6.Core
         {
             CanonCheck();
             if (!_canonOn) return;
+            if (_canonSeq >= _canonLimit)
+            {
+                _canonPending = null;
+                return;
+            }
             ulong seq = _canonSeq++;
             var sb = new StringBuilder(512);
             sb.Append(seq)

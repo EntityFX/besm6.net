@@ -132,6 +132,43 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
+        public void CanonicalTrace_RespectsConfiguredRowLimit()
+        {
+            string path = Path.Combine(Path.GetTempPath(), $"besm6-canon-limit-{Guid.NewGuid():N}.tsv");
+            string? savedPath = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE");
+            string? savedLimit = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE_LIMIT");
+
+            try
+            {
+                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", path);
+                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE_LIMIT", "1");
+                _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), vtm 2(2)")));
+                _cpu.SetPc(O("10"));
+
+                _cpu.Step();
+                _cpu.Step();
+                typeof(Processor).GetMethod("CanonFlush", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .Invoke(_cpu, null);
+                ((IDisposable)typeof(Processor)
+                    .GetField("_canonTrace", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .GetValue(_cpu)!).Dispose();
+
+                Assert.AreEqual(2, File.ReadAllLines(path).Length,
+                    "A limit of one must retain the header and exactly one complete PRE/POST row.");
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", savedPath);
+                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE_LIMIT", savedLimit);
+                var writer = (IDisposable?)typeof(Processor)
+                    .GetField("_canonTrace", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .GetValue(_cpu);
+                writer?.Dispose();
+                if (File.Exists(path)) File.Delete(path);
+            }
+        }
+
+        [TestMethod]
         public void CanonicalTrace_IncludesStopInstructionPostState()
         {
             string path = Path.Combine(Path.GetTempPath(), $"besm6-canon-stop-{Guid.NewGuid():N}.tsv");

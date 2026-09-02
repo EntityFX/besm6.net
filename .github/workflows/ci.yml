@@ -1,96 +1,129 @@
-# CI — Task A5 (инкремент 3).
-#
-# Два гейта:
-#   1. build-warning-gate  — ДЕТЕРМИНИРОВАН, не требует runtime-ассетов.
-#      `check_warnings.py` сама собирает sln (--no-incremental): build-fail -> exit 2,
-#      новые предупреждения (CS/MSTEST) -> exit 1, иначе exit 0.
-#      Baseline: tools/warnings_baseline.json (0 CS + 0 MSTEST; допущено только уменьшение).
-#   2. example-golden-gate — fast-примеры (name/algol/bemsh) по golden-выводам.
-#      ТРЕБУЕТ runtime-ассеты (tapes + disk + drum); они gitignored. Провижинятся
-#      из bundle по URL (repo secret BESM6_TAPES_BUNDLE_URL); без него — graceful skip
-#      (core-gate уже прошёл, CI зелёный). См. tools/make_tapes_bundle.py.
-name: CI
+name: Level A compatibility
 
 on:
   push:
-    branches: [main]
   pull_request:
   workflow_dispatch:
+  release:
+    types: [published]
+  schedule:
+    - cron: "17 2 * * *"
 
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  DOTNET_VERSION: "8.0.x"
-  PYTHON_VERSION: "3.11"
+permissions:
+  contents: read
 
 jobs:
-  # ── Core gate: build + zero-new-warning (DETERMINISTIC, без ассетов) ──
-  build-warning-gate:
-    name: Build + zero-warning gate
-    runs-on: ubuntu-latest
+  fast-gate:
+    runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-      - name: Zero-new-warning gate (build + CS/MSTEST warnings)
-        run: python tools/check_warnings.py
-      - name: Python tool unit tests (unittest)
-        run: |
-          python tools/tests/test_check_warnings.py -v
-          python tools/tests/test_run_all_examples.py -v
-          python tools/tests/test_diff_trace.py -v
 
-  # ── Example golden gate: name/algol/bemsh (нужны runtime-ассеты) ──
-  example-golden-gate:
-    name: Fast example golden gate
-    runs-on: ubuntu-latest
-    needs: build-warning-gate
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-      - name: Provision runtime assets (bundle по URL)
-        id: provision
+          dotnet-version: 8.0.x
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build with zero warnings
+        run: dotnet build src/besm6.net/besm6.net.sln --configuration Release --no-incremental
+
+      - name: Unit, integration, and CLI contracts
+        run: >-
+          dotnet test src/besm6.net/tests/Besm6.Tests/Besm6.Tests.csproj
+          --configuration Release --no-build
+          --filter "FullyQualifiedName!~Besm6.Tests.CernLibTests"
+          --logger "trx;LogFileName=fast-tests.trx"
+
+      - name: Python trace and acceptance-runner tests
+        run: python -m unittest discover -s tools/tests -p "test_*.py"
+
+      - name: Publish self-contained workload directory
+        run: dotnet publish src/besm6.net/besm6.csproj --configuration Release --no-build --output tests-run/publish
+
+      - name: Published CLI examples
+        run: >-
+          python tools/run_all_examples.py --suite fast
+          --dll tests-run/publish/besm6.dll
+          --output tests-run/examples
+
+      - name: CERN beacon cases
         env:
-          BUNDLE_URL: ${{ secrets.BESM6_TAPES_BUNDLE_URL }}
+          BESM6_CERN_BATCH: names:a400,z005
+        run: >-
+          dotnet test src/besm6.net/tests/Besm6.Tests/Besm6.Tests.csproj
+          --configuration Release --no-build
+          --filter "FullyQualifiedName~Besm6.Tests.CernLibTests.Case_MatchesExpectFile"
+          --logger "trx;LogFileName=cern-beacons.trx"
+
+      - name: Validate CERN beacon performance matrix
+        shell: pwsh
         run: |
-          if [ -n "$BUNDLE_URL" ]; then
-            curl -fsSL "$BUNDLE_URL" -o /tmp/besm6_assets.tar.gz
-            mkdir -p tapes
-            tar -xzf /tmp/besm6_assets.tar.gz -C .
-            echo "available=true" >> "$GITHUB_OUTPUT"
-            echo "== tapes/ =="; ls -la tapes || true
-            echo "== disk/drum =="; ls -la besm6_disk.bin besm6_drum.bin 2>/dev/null || true
-          else
-            echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "BESM6_TAPES_BUNDLE_URL не задан — example-gate будет пропущен."
-          fi
-      - name: Build (для DLL fast-примеров)
-        if: steps.provision.outputs.available == 'true'
-        run: dotnet build src/besm6.net/besm6.net.sln --nologo --no-incremental
-      - name: Run fast example golden gate (name/algol/bemsh)
-        if: steps.provision.outputs.available == 'true'
-        run: python tools/run_all_examples.py --suite fast
-      - name: Upload example report
-        if: steps.provision.outputs.available == 'true'
+          $rows = @(Import-Csv tests-run/cernlib/matrix.csv)
+          if ($rows.Count -ne 2 -or @($rows | Where-Object success -ne 'true').Count -ne 0) {
+            throw "Expected 2 successful CERN matrix rows, got $($rows.Count)"
+          }
+
+      - name: Generate canonical trace for first CERN failure
+        if: failure()
+        continue-on-error: true
+        run: pwsh tools/generate_cern_failure_trace.ps1 -Configuration Release
+
+      - name: Upload acceptance and failure artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: examples-report
-          path: tests-run/examples/
-      - name: Note (example-gate пропущен)
-        if: steps.provision.outputs.available != 'true'
-        run: >
-          echo "SKIPPED example-gate: задайте repo secret BESM6_TAPES_BUNDLE_URL
-          (tar.gz: tapes/*, besm6_disk.bin, besm6_drum.bin — сборка:
-          python tools/make_tapes_bundle.py) либо коммитьте ассеты в Git LFS.
-          Core-gate (build + zero-warning) уже прошёл успешно."
+          name: level-a-fast-${{ github.run_id }}
+          path: |
+            tests-run/examples
+            tests-run/cernlib
+            src/besm6.net/tests/Besm6.Tests/TestResults
+          if-no-files-found: ignore
+
+  full-cern:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'release'
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build with zero warnings
+        run: dotnet build src/besm6.net/besm6.net.sln --configuration Release --no-incremental
+
+      - name: Run all 397 active CERN cases
+        env:
+          BESM6_CERN_BATCH: all
+        run: >-
+          dotnet test src/besm6.net/tests/Besm6.Tests/Besm6.Tests.csproj
+          --configuration Release --no-build
+          --filter "FullyQualifiedName~Besm6.Tests.CernLibTests.Case_MatchesExpectFile"
+          --logger "trx;LogFileName=cern-full.trx"
+
+      - name: Validate full CERN performance matrix
+        shell: pwsh
+        run: |
+          $rows = @(Import-Csv tests-run/cernlib/matrix.csv)
+          if ($rows.Count -ne 397 -or @($rows | Where-Object success -ne 'true').Count -ne 0) {
+            throw "Expected 397 successful CERN matrix rows, got $($rows.Count)"
+          }
+
+      - name: Generate canonical trace for first CERN failure
+        if: failure()
+        continue-on-error: true
+        run: pwsh tools/generate_cern_failure_trace.ps1 -Configuration Release
+
+      - name: Upload CERN results, diff, and trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: level-a-cern-full-${{ github.run_id }}
+          path: |
+            tests-run/cernlib
+            src/besm6.net/tests/Besm6.Tests/TestResults
+          if-no-files-found: ignore
