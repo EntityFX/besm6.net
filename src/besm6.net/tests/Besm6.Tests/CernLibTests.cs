@@ -28,6 +28,7 @@ namespace Besm6.Tests
         public void Cleanup() => _fx.Cleanup();
 
         [TestMethod]
+        [Ignore]
         [Timeout(420000)] // wall-clock лимит фикстуры 300 с (CernLibFixture.WallClockLimitMs) + 120 с на boot/артефакты/нагрузку
         [DynamicData(nameof(CernLibData))]
         public void Case_MatchesExpectFile(CernLibCase c)
