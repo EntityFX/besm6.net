@@ -27,7 +27,15 @@ namespace Besm6.Tests
         [TestMethod]
         public void TicksPerInstruction_IsDocumentedConstant()
         {
-            Assert.AreEqual(1UL, MachineCore.TicksPerInstruction);
+            // Фиксируем документированное значение константы. Читаем её через
+            // reflection (тот же приём, что и TapeIdTests.AssertTapeId), чтобы
+            // анализатор MSTest (MSTEST0032) не сходил «условие всегда истинно»
+            // на сравнении двух compile-time констант.
+            object? raw = typeof(MachineCore)
+                .GetField(nameof(MachineCore.TicksPerInstruction))
+                ?.GetRawConstantValue();
+            Assert.IsNotNull(raw, nameof(MachineCore.TicksPerInstruction) + " constant is missing");
+            Assert.AreEqual(1UL, Convert.ToUInt64(raw));
         }
 
         [TestMethod]
