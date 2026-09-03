@@ -60,7 +60,7 @@ public class CpuTests
             return 32767;
         });
 
-        cpu.Step(); // (0177777, L)
+        cpu.Step(); // (077777, L)
         Trace t2 = cpu.Step();
         AssertPos((32767, Half.Right), (t2.FromAddress, t2.FromHalf));
         AssertPos((0, Half.Left), (t2.NextAddress, t2.NextHalf));

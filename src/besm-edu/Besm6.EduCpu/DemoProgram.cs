@@ -37,12 +37,10 @@ public static class DemoProgram
         // Шаг 3: AEX сравнивает ACC с сохранённым (получаем 0); UZA идёт в успех.
         Put(mem, AexAddr, Half.Left, Instruction.EncodeShort(Op.Aex, 0, ResultAddr));
         Put(mem, AexAddr, Half.Right, Instruction.EncodeLong(Op.Uza, 0, OkAddr));
-
         // Недостижимая ветвь ошибки: UJ показывает безусловный переход в листинге.
         Put(mem, UjAddr, Half.Left, Instruction.EncodeLong(Op.Uj, 0, ErrAddr));
         Put(mem, ErrAddr, Half.Left, Instruction.EncodeShort(Op.Atx, 0, ErrorAddr));
         Put(mem, ErrAddr, Half.Right, Instruction.EncodeLong(Op.Uj, 0, ErrAddr));
-
         // Успешная ветвь: загружает результат и останавливается.
         Put(mem, OkAddr, Half.Left, Instruction.EncodeShort(Op.Xta, 0, ResultAddr));
         Put(mem, OkAddr, Half.Right, Instruction.EncodeLong(Op.Stop, 0, 0));

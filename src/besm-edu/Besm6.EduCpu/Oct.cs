@@ -35,4 +35,21 @@ public static class Oct
         string s = Of(value);
         return s.Length >= width ? s : new string('0', width - s.Length) + s;
     }
+
+    /// <summary>Парсинг восьмеричной строки; false — не восьмеричная или шире 15 разрядов (077777).</summary>
+    public static bool TryParse(string? s, out ushort value)
+    {
+        value = 0;
+        if (string.IsNullOrEmpty(s) || s.Any(c => c is < '0' or > '7'))
+        {
+            return false;
+        }
+        uint v = 0;
+        foreach (char c in s)
+        {
+            v = (v << 3) | (uint)(c - '0');
+        }
+        value = (ushort)(v <= 32767 ? v : 0);
+        return v <= 32767;
+    }
 }

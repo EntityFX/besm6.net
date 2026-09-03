@@ -2,15 +2,14 @@ namespace Besm6.EduCpu;
 
 /// <summary>
 /// Результат декодирования 24-разрядной команды — выход этапа DECODE пайплайна Step().
-/// Аппаратный аналог — работа разрядов команды в тракте выборки и декодирования.
-/// Encode* — обратное преобразование «поля → 24 бита» с проверкой round-trip через Decode.
+/// Encode* — обратное преобразование с проверкой round-trip через Decode.
 /// </summary>
 public readonly struct Instruction
 {
     public const ushort MaxShortOpcode = 63;    // 077 восьмерично, 6 бит
     public const ushort MaxLongOpcode = 248;    // 0370 восьмерично, 7 бит (включая бит формата)
     public const ushort MaxShortAddress = 4095; // 07777 восьмерично, 12 бит
-    public const ushort MaxLongAddress = 32767; // 0177777 восьмерично, 15 бит
+    public const ushort MaxLongAddress = 32767; // 077777 восьмерично, 15 бит
 
     private static readonly Dictionary<Op, (string En, string Ru)> Mnemonics = new()
     {
@@ -55,13 +54,12 @@ public readonly struct Instruction
         // Длинный формат: 7-битный код (включая признак формата), 15-разрядный адрес.
         // Короткий: 6-битный код, 12-разрядный адрес; признак X дополняет адрес 111 (070000).
         ushort op = isLong ? (ushort)((raw24 >> 12) & 248) : (ushort)((raw24 >> 12) & 63); // 0370 / 077
-        ushort ad = isLong ? (ushort)(raw24 & 32767) : (ushort)(raw24 & 4095); // 0177777 / 07777
+        ushort ad = isLong ? (ushort)(raw24 & 32767) : (ushort)(raw24 & 4095); // 077777 / 07777
         if (!isLong && (raw24 & (1u << 18)) != 0)
         {
             ad |= 28672; // 070000 восьмерично: старшие три бита адреса = 111
         }
 
-        // Код операции обязан быть из учебного набора Op — иначе диагностическая ошибка.
         if (!Enum.IsDefined(typeof(Op), op))
         {
             throw new UnsupportedOpcodeException($"Неподдерживаемый код операции: 0{Oct.Pad(op, 4)}.");
