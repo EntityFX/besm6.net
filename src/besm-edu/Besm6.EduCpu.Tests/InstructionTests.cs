@@ -16,7 +16,7 @@ public class InstructionTests
     {
         CheckLong(Op.Vtm, 1, 1);
         CheckLong(Op.Uza, 0, 16); // 020
-        CheckLong(Op.Uj, 2, 32767); // 0177777
+        CheckLong(Op.Uj, 2, 32767); // 077777
         CheckLong(Op.Stop, 0, 0);
     }
 

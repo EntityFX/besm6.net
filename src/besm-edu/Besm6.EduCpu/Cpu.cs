@@ -2,8 +2,7 @@ namespace Besm6.EduCpu;
 
 /// <summary>
 /// Учебная модель процессора БЭСМ-6.
-/// Аппаратный аналог — аккумулятор, индекс-регистры, командная позиция и цикл выборки/исполнения.
-/// Ядро модели — пайплайн Step(): выборка → декодирование → адресация → исполнение → коммит → трасса.
+/// Аппаратный аналог — аккумулятор, индекс-регистры, командная позиция и цикл выборки/исполнения (ядро — пайплайн Step()).
 /// Зависит только от <see cref="Memory"/> и не знает о консоли.
 /// </summary>
 public sealed class Cpu
@@ -43,43 +42,32 @@ public sealed class Cpu
     }
 
     /// <summary>
-    /// Один шаг процессора — один цикл мини-пайплайна:
-    ///   1. FETCH — прочитано слово, взята L/R-половина (24 бита команды);
-    ///   2. DECODE — Instruction.Decode: формат, код операции, регистр M, базовый адрес;
-    ///   3. ADDR — EffectiveAddress: базовый + M[регистр] по модулю 2^15;
-    ///   4. EXEC — Execute: эффект на ACC/память/M-регистры или следующую позицию;
-    ///   5. COMMIT — новая командная позиция и счётчик шагов;
-    ///   6. TRACE — неизменяемая запись шага для вывода и тестов.
-    /// До успешной проверки команда архитектурное состояние не изменяет:
-    /// диагностические ошибки не оставляют частичных изменений.
+    /// Один шаг процессора — цикл мини-пайплайна:
+    /// 1. FETCH (половина 24 бита) → 2. DECODE (Op, регистр M, адрес) → 3. ADDR (база + M[рег], mod 2^15)
+    /// → 4. EXEC (ACC/память/M/переход) → 5. COMMIT (позиция, шаг) → 6. TRACE (запись).
+    /// До успешной проверки состояние не изменяется: ошибки не оставляют частичных изменений.
     /// </summary>
     public Trace Step()
     {
-        // Врата пайплайна: после STOP повторный вход запрещён.
+        // пайплайн: после STOP повторный вход запрещён.
         if (_stopped)
         {
             throw new StepAfterStopException(_pc, _half);
         }
-
         // Снимок «до» — для трассы и гарантии «без изменений на ошибке».
         ushort fromAddr = _pc;
         Half fromHalf = _half;
         Word48 accBefore = _acc;
-
         // 1. FETCH: текущая позиция (адрес + половина) определяет 24-битную команду.
         Word48 word = _memory.Read(_pc);
         uint raw24 = fromHalf == Half.Left ? word.LeftHalf : word.RightHalf;
-
         // 2. DECODE: неизвестный код операции бросает исключение — состояние ещё не менялось.
         Instruction ins = Instruction.Decode(raw24);
-
         // 3. Следующая позиция по умолчанию (L→R, R→следующее слово); переход на этапе 4 может её перезаписать.
         (ushort nextAddr, Half nextHalf) = NextPosition(_pc, _half);
-
         // 4. ADDR + EXEC (у VTM адресное поле — назначение регистра, не адрес).
         ushort effective = EffectiveAddress(ins);
         string effect = Execute(ins, effective, ref nextAddr, ref nextHalf);
-
         // 5. COMMIT: фиксация позиции и шага — только после успешного исполнения.
         _pc = nextAddr;
         _half = nextHalf;
@@ -89,10 +77,7 @@ public sealed class Cpu
         return new Trace(_steps, fromAddr, fromHalf, raw24, ins, effective, accBefore, _acc, nextAddr, nextHalf, effect);
     }
 
-    /// <summary>
-    /// Цикл пайплайна: повторяет Step() до STOP, ошибки или лимита шагов
-    /// (проверка лимита — после каждого успешного шага).
-    /// </summary>
+    /// <summary>Цикл пайплайна: повторяет Step() до STOP, ошибки или лимита шагов (проверка лимита — после каждого успешного шага).</summary>
     public void Run(int maxSteps)
     {
         if (maxSteps <= 0)
@@ -133,7 +118,7 @@ public sealed class Cpu
             return 0;
         }
 
-        return (ushort)((ins.BaseAddress + ReadM(ins.Register)) & 32767); // 0177777
+        return (ushort)((ins.BaseAddress + ReadM(ins.Register)) & 32767); // 077777
     }
 
     /// <summary>Поток командной позиции: L→R внутри слова, R→следующее слово (адрес по модулю 2^15).</summary>
@@ -141,8 +126,7 @@ public sealed class Cpu
         => half == Half.Left ? (addr, Half.Right) : ((ushort)((addr + 1) & 32767), Half.Left);
 
     /// <summary>
-    /// Этап исполнения: диспетчеризация по коду операции. Команда либо меняет
-    /// ACC/память/M-регистры, либо перезаписывает следующую командную позицию (переходы).
+    /// Этап исполнения: диспетчеризация по коду операции; команда меняет ACC/память/M-регистры или перезаписывает следующую позицию (переходы).
     /// Возвращаемая строка — «эффект» в записи трассы.
     /// </summary>
     private string Execute(Instruction ins, ushort effective, ref ushort nextAddr, ref Half nextHalf)

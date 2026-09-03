@@ -7,11 +7,11 @@ namespace Besm6.EduCpu;
 public sealed class Memory
 {
     public const int WordCount = 1 << 15;
-    public const ushort MaxAddress = WordCount - 1; // 0177777
+    public const ushort MaxAddress = WordCount - 1; // 077777
 
     private readonly Word48[] _words = new Word48[WordCount];
 
-    /// <summary>Этап «выборка»: чтение слова по 15-разрядному адресу (вне 0..0177777 — ошибка).</summary>
+    /// <summary>Этап «выборка»: чтение слова по 15-разрядному адресу (вне 0..077777 — ошибка).</summary>
     public Word48 Read(ushort address)
     {
         CheckAddress(address);
@@ -29,7 +29,7 @@ public sealed class Memory
     {
         if (address > MaxAddress)
         {
-            throw new OutOfRangeAddressException($"Адрес 0{Oct.Pad(address, 5)} вне памяти (0..0177777).");
+            throw new OutOfRangeAddressException($"Адрес 0{Oct.Pad(address, 5)} вне памяти (0..077777).");
         }
     }
 }

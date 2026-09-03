@@ -2,9 +2,8 @@ namespace Besm6.EduCpu;
 
 /// <summary>
 /// Консольный фронт демонстратора — «внешний пайплайн»:
-/// разбор аргументов → DemoProgram.Load → new Cpu → листинг → исполнение → трасса → итог.
-/// Фронт не трогает ACC/память напрямую — всё через Cpu.
-/// Аргументы: --step, --max-steps N, --help.
+/// разбор аргументов → DemoProgram.Load → new Cpu → листинг → исполнение → трасса → дамп → итог (всё через Cpu).
+/// Аргументы: --step, --max-steps N, --dump START END, --help.
 /// </summary>
 public static class Program
 {
@@ -12,10 +11,11 @@ public static class Program
     {
         bool step = false;
         int? maxSteps = null;
+        ushort? dumpStart = null, dumpEnd = null;
 
         try
         {
-            ParseArgs(args, ref step, ref maxSteps);
+            ParseArgs(args, ref step, ref maxSteps, ref dumpStart, ref dumpEnd);
         }
         catch (ArgumentException ex)
         {
@@ -23,7 +23,6 @@ public static class Program
             return 1;
         }
 
-        // Этап 0: подготовка машины — заполнить память программой и создать процессор.
         Memory mem = new();
         (ushort entry, string expected) = DemoProgram.Load(mem);
         Cpu cpu = new(mem, entry);
@@ -72,6 +71,12 @@ public static class Program
         foreach (Trace t in traces)
         {
             Console.WriteLine(TraceFormatter.Format(t));
+        }
+
+        if (dumpStart is { } dStart && dumpEnd is { } dEnd)
+        {
+            Console.WriteLine();
+            Console.WriteLine(MemoryDump.Format(mem, dStart, dEnd));
         }
 
         // Итог: проверка результата в ячейке 0110 и печать сводки.
@@ -147,7 +152,7 @@ public static class Program
         }
     }
 
-    private static void ParseArgs(string[] args, ref bool step, ref int? maxSteps)
+    private static void ParseArgs(string[] args, ref bool step, ref int? maxSteps, ref ushort? dumpStart, ref ushort? dumpEnd)
     {
         for (int i = 0; i < args.Length; ++i)
         {
@@ -176,6 +181,15 @@ public static class Program
                     maxSteps = n;
                     break;
 
+                case "--dump":
+                    if (i + 2 >= args.Length || !Oct.TryParse(args[i + 1], out ushort d1) || !Oct.TryParse(args[i + 2], out ushort d2) || d2 < d1)
+                    {
+                        throw new ArgumentException("--dump START END: два восьмеричных адреса, END >= START (включительно).");
+                    }
+
+                    i += 2; (dumpStart, dumpEnd) = (d1, d2);
+                    break;
+
                 default:
                     throw new ArgumentException($"Неизвестный аргумент: {args[i]}. Используйте --help.");
             }
@@ -184,11 +198,12 @@ public static class Program
 
     private static void PrintHelp()
     {
-        Console.WriteLine("Использование: Besm6.EduCpu [--step] [--max-steps N] [--help]");
+        Console.WriteLine("Использование: Besm6.EduCpu [--step] [--max-steps N] [--dump START END] [--help]");
         Console.WriteLine();
         Console.WriteLine("  (без аргументов)  выполнить встроенную программу целиком;");
         Console.WriteLine("  --step            ждать Enter перед каждой командой;");
         Console.WriteLine("  --max-steps N     ограничить число шагов (N > 0);");
+        Console.WriteLine("  --dump START END  после выполнения показать дамп памяти по диапазону (восьмерично, включительно);");
         Console.WriteLine("  --help            эта справка (без запуска процессора).");
     }
 
