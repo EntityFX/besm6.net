@@ -151,7 +151,7 @@ public sealed class Cpu
 
             case Op.Arx:
                 _acc = _acc.CyclicAdd(_memory.Read(effective));
-                return $"СЛЦ: ACC += mem[0{Oct.Pad(effective, 5)}] (по модулю 2^48)";
+                return $"СЛЦ: ACC += mem[0{Oct.Pad(effective, 5)}] (циклический перенос)";
 
             case Op.Sub:
                 _acc = _acc.Subtract(_memory.Read(effective));
