@@ -49,25 +49,25 @@
 
   <!-- Dedicated short arrows prevent shared-marker drift -->
   <g class="wire arrow">
-    <path data-from="control-bus" data-to="mozu-0" d="M237.5 115V153"/><path data-from="control-bus" data-to="mozu-1" d="M392.5 115V153"/>
-    <path data-from="control-bus" data-to="mozu-2" d="M547.5 115V153"/><path data-from="control-bus" data-to="mozu-3" d="M702.5 115V153"/>
-    <path data-from="control-bus" data-to="mozu-4" d="M857.5 115V153"/><path data-from="control-bus" data-to="mozu-5" d="M1012.5 115V153"/>
-    <path data-from="control-bus" data-to="mozu-6" d="M1167.5 115V153"/><path data-from="control-bus" data-to="mozu-7" d="M1322.5 115V153"/>
-    <path data-from="mozu-0" data-to="read-bus" d="M220 290V333"/><path data-from="mozu-1" data-to="read-bus" d="M375 290V333"/>
-    <path data-from="mozu-2" data-to="read-bus" d="M530 290V333"/><path data-from="mozu-3" data-to="read-bus" d="M685 290V333"/>
-    <path data-from="mozu-4" data-to="read-bus" d="M840 290V333"/><path data-from="mozu-5" data-to="read-bus" d="M995 290V333"/>
-    <path data-from="mozu-6" data-to="read-bus" d="M1150 290V333"/><path data-from="mozu-7" data-to="read-bus" d="M1305 290V333"/>
-    <path data-from="write-bus" data-to="mozu-0" d="M270 378V297"/><path data-from="write-bus" data-to="mozu-1" d="M425 378V297"/>
-    <path data-from="write-bus" data-to="mozu-2" d="M580 378V297"/><path data-from="write-bus" data-to="mozu-3" d="M735 378V297"/>
-    <path data-from="write-bus" data-to="mozu-4" d="M890 378V297"/><path data-from="write-bus" data-to="mozu-5" d="M1045 378V297"/>
-    <path data-from="write-bus" data-to="mozu-6" d="M1200 378V297"/><path data-from="write-bus" data-to="mozu-7" d="M1355 378V297"/>
+    <path data-from="control-bus" data-to="mozu-0" data-contact="237.5,160" d="M237.5 115V160"/><path data-from="control-bus" data-to="mozu-1" data-contact="392.5,160" d="M392.5 115V160"/>
+    <path data-from="control-bus" data-to="mozu-2" data-contact="547.5,160" d="M547.5 115V160"/><path data-from="control-bus" data-to="mozu-3" data-contact="702.5,160" d="M702.5 115V160"/>
+    <path data-from="control-bus" data-to="mozu-4" data-contact="857.5,160" d="M857.5 115V160"/><path data-from="control-bus" data-to="mozu-5" data-contact="1012.5,160" d="M1012.5 115V160"/>
+    <path data-from="control-bus" data-to="mozu-6" data-contact="1167.5,160" d="M1167.5 115V160"/><path data-from="control-bus" data-to="mozu-7" data-contact="1322.5,160" d="M1322.5 115V160"/>
+    <path data-from="mozu-0" data-to="read-bus" data-contact="220,340" d="M220 290V340"/><path data-from="mozu-1" data-to="read-bus" data-contact="375,340" d="M375 290V340"/>
+    <path data-from="mozu-2" data-to="read-bus" data-contact="530,340" d="M530 290V340"/><path data-from="mozu-3" data-to="read-bus" data-contact="685,340" d="M685 290V340"/>
+    <path data-from="mozu-4" data-to="read-bus" data-contact="840,340" d="M840 290V340"/><path data-from="mozu-5" data-to="read-bus" data-contact="995,340" d="M995 290V340"/>
+    <path data-from="mozu-6" data-to="read-bus" data-contact="1150,340" d="M1150 290V340"/><path data-from="mozu-7" data-to="read-bus" data-contact="1305,340" d="M1305 290V340"/>
+    <path data-from="write-bus" data-to="mozu-0" data-contact="270,290" d="M270 385V290"/><path data-from="write-bus" data-to="mozu-1" data-contact="425,290" d="M425 385V290"/>
+    <path data-from="write-bus" data-to="mozu-2" data-contact="580,290" d="M580 385V290"/><path data-from="write-bus" data-to="mozu-3" data-contact="735,290" d="M735 385V290"/>
+    <path data-from="write-bus" data-to="mozu-4" data-contact="890,290" d="M890 385V290"/><path data-from="write-bus" data-to="mozu-5" data-contact="1045,290" d="M1045 385V290"/>
+    <path data-from="write-bus" data-to="mozu-6" data-contact="1200,290" d="M1200 385V290"/><path data-from="write-bus" data-to="mozu-7" data-contact="1355,290" d="M1355 385V290"/>
   </g>
 
   <!-- External input/output -->
   <rect class="block" x="1460" y="275" width="72" height="150"/>
   <text class="label large" x="1496" y="350" transform="rotate(-90 1496 350)">УВУ</text>
-  <path class="wire arrow" data-from="read-bus" data-to="uvu" d="M1400 340H1453"/>
-  <path class="wire arrow" data-from="uvu" data-to="write-bus" d="M1460 385H1407"/>
+  <path class="wire arrow" data-from="read-bus" data-to="uvu" data-contact="1460,340" d="M1400 340H1460"/>
+  <path class="wire arrow" data-from="uvu" data-to="write-bus" data-contact="1400,385" d="M1460 385H1400"/>
 
   <!-- Instruction and address section -->
   <g>
@@ -109,22 +109,22 @@
 
   <!-- Lower-system interconnects: orthogonal routes with explicit endpoints -->
   <g class="wire arrow">
-    <path data-from="read-bus" data-to="brs" d="M395 340V438"/>
-    <path data-from="brs" data-to="rk" d="M400 540V573"/>
-    <path data-from="rk-am" data-to="m" d="M252 642V683"/>
-    <path data-from="counter" data-to="m" d="M117 790V755H213"/>
-    <path data-from="m" data-to="counter" d="M220 820H187"/>
-    <path data-from="rk-op" data-to="bak" d="M355 642V875H780V795"/>
-    <path data-from="rk-a" data-to="sma" d="M548 642V693"/>
-    <path data-from="sma" data-to="control-bus" d="M568 700V660H780V122"/>
-    <path data-from="sma" data-to="bak" d="M685 780H783"/>
-    <path data-from="bak" data-to="au" d="M975 790H1093"/>
-    <path data-from="read-bus" data-to="brch" d="M930 340V438"/>
-    <path data-from="brch" data-to="au" d="M930 540V640H1160V668"/>
-    <path data-from="read-bus" data-to="brz" d="M1232 340V423"/>
-    <path data-from="brz" data-to="au" d="M1195 575V668"/>
-    <path data-from="au" data-to="brz" d="M1305 675V582"/>
-    <path data-from="brz" data-to="write-bus" d="M1355 500H1425V392"/>
+    <path data-from="read-bus" data-to="brs" data-contact="395,445" d="M395 340V445"/>
+    <path data-from="brs" data-to="rk" data-contact="400,580" d="M400 540V580"/>
+    <path data-from="rk-am" data-to="m" data-contact="252,690" d="M252 642V690"/>
+    <path data-from="counter" data-to="m" data-contact="220,755" d="M117 790V755H220"/>
+    <path data-from="m" data-to="counter" data-contact="180,820" d="M220 820H180"/>
+    <path data-from="rk-op" data-to="bak" data-contact="790,795" d="M355 642V875H760V795H790"/>
+    <path data-from="rk-a" data-to="sma" data-contact="548,700" d="M548 642V700"/>
+    <path data-from="sma" data-to="control-bus" data-contact="780,115" d="M568 700V660H780V115"/>
+    <path data-from="sma" data-to="bak" data-contact="790,780" d="M685 780H790"/>
+    <path data-from="bak" data-to="au" data-contact="1100,790" d="M975 790H1100"/>
+    <path data-from="read-bus" data-to="brch" data-contact="930,445" d="M930 340V445"/>
+    <path data-from="brch" data-to="au" data-contact="1160,675" d="M930 540V640H1160V675"/>
+    <path data-from="read-bus" data-to="brz" data-contact="1232,430" d="M1232 340V430"/>
+    <path data-from="brz" data-to="au" data-contact="1195,675" d="M1195 575V675"/>
+    <path data-from="au" data-to="brz" data-contact="1305,575" d="M1305 675V575"/>
+    <path data-from="brz" data-to="write-bus" data-contact="1425,385" d="M1355 500H1425V385"/>
   </g>
 
   <circle class="junction" cx="395" cy="340" r="6"/><circle class="junction" cx="930" cy="340" r="6"/><circle class="junction" cx="1232" cy="340" r="6"/>
