@@ -14,7 +14,6 @@ namespace Besm6.Core
         public string DeviceName { get; }
         private readonly Queue<char> _inputBuffer = new Queue<char>();
         private readonly StringBuilder _outputBuffer = new StringBuilder();
-        private bool _isReadyForInput = true;
 
         public TeletypeDevice(int id)
         {
@@ -67,7 +66,6 @@ namespace Besm6.Core
                 return new Word48(0);
 
             char c = _inputBuffer.Dequeue();
-            if (_inputBuffer.Count == 0) _isReadyForInput = true;
 
             // В БЭСМ-6 символы упаковывались в слова. 
             // Упрощенно возвращаем код символа в Word48.

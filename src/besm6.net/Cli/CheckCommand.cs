@@ -57,6 +57,11 @@ namespace Besm6.Cli
                     DubJob job = JobParser.ParseFile(f);
                     var loader = MachineFactory.CreateLoader(cfg);
                     loader.InstructionLimit = limit;
+                    // `check` — диагностическая (health-check) команда: включаем подробный
+                    // режим лоадера (паттерн из RunCommand: loader.Verbose после CreateLoader),
+                    // чтобы статус каждой задачи был информативным — в частности control-card-only
+                    // задания явно отражали MONSYS-путь (boot/mount) в выводе, а не молчаливый лимит.
+                    loader.Verbose = true;
                     LoadResult result = loader.RunJob(job, File.ReadAllLines(f));
                     if (result.LimitExceeded)
                     {
