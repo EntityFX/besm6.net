@@ -37,7 +37,6 @@ public readonly struct Word48 : IEquatable<Word48>
 
             value = (value << 3) | ((ulong)c - (ulong)'0');
         }
-
         return new Word48(value);
     }
 

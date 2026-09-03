@@ -23,16 +23,17 @@ src/besm-edu/
 │   ├── Trace.cs              неизменяемая запись одного шага
 │   ├── TraceFormatter.cs     печать трассы колонками
 │   ├── CpuException.cs       базовый тип диагностических ошибок
-│   ├── OutOfRangeAddressException.cs   адрес вне 0..0177777
+│   ├── OutOfRangeAddressException.cs   адрес вне 0..077777
 │   ├── InvalidInstructionException.cs  широта/состав полей команды
 │   ├── UnsupportedOpcodeException.cs   код операции вне учебного набора
 │   ├── StepAfterStopException.cs       Step() после STOP
 │   ├── StepLimitExceededException.cs   превышение лимита шагов
 │   ├── DemoProgram.cs        встроенная учебная программа (заполняет память)
+│   ├── MemoryDump.cs         форматирование дампа участка памяти (диапазон адресов)
 │   ├── Program.cs            консольный фронт: аргументы, листинг, трасса, итог
 │   ├── Besm6.EduCpu.csproj
 │   └── README.md             документация для студента
-└── Besm6.EduCpu.Tests/       тесты (MSTest, 45 шт.)
+└── Besm6.EduCpu.Tests/       тесты (MSTest, 49 шт.)
     ├── Word48Tests.cs        машинное слово, СЛЦ, вычитание, умножение
     ├── InstructionTests.cs   encode/decode, форматы, расширенный адрес, дизассемблер
     ├── MemoryTests.cs        граница памяти, ошибка адреса
@@ -154,7 +155,7 @@ Memory ─────────► Cpu ─────────┘
 Длинный формат (бит 19 = 1):
   23    20  19         12  14              0
  ┌─────────┬────────────┬───────────────────┐
- │ 017 рег.│ 007 код оп.│ 0177777 адрес (15)│
+ │ 017 рег.│ 007 код оп.│ 077777 адрес (15)│
  └─────────┴────────────┴───────────────────┘
    4 бита   7 бит      15 бит
 ```
@@ -184,7 +185,7 @@ Memory ─────────► Cpu ─────────┘
 
 ```text
 CpuException  (адрес + половина команды)
-├── OutOfRangeAddressException   адрес вне 0..0177777   (Memory.Read/Write)
+├── OutOfRangeAddressException   адрес вне 0..077777   (Memory.Read/Write)
 ├── InvalidInstructionException  широта/состав полей    (Instruction)
 ├── UnsupportedOpcodeException   код не в Op            (Instruction.Decode)
 ├── StepAfterStopException       Step() после STOP      (Cpu.Step)
@@ -201,7 +202,7 @@ CpuException  (адрес + половина команды)
 ```text
 разбор аргументов → DemoProgram.Load (заполнить память) → new Cpu(...)
 → листинг команд → исполнение (--step | до STOP | лимит)
-→ печать трассы → итог (причина, шаги, ячейка 0110)
+→ печать трассы → дамп памяти (если задан --dump) → итог (причина, шаги, ячейка 0110)
 ```
 
 | Режим | Что делает |
@@ -209,6 +210,7 @@ CpuException  (адрес + половина команды)
 | без аргументов | полный прогон до STOP, трасса + итог |
 | `--step` | один шаг, вывод только записи трассы |
 | `--max-steps N` | не более N шагов; лимит — `StepLimitExceeded` |
+| `--dump START END` | после выполнения печать «ДАМП ПАМЯТИ»: финальное содержимое диапазона адресов (восьмерично, включительно) |
 | `--help` / `-h` | справка, exit 0 |
 
 Коды выхода: `0` — STOP/успех; `1` — ошибка машины; `2` — некорректный
@@ -241,6 +243,7 @@ CpuException  (адрес + половина команды)
 | `MemoryTests` | граница 32768, `OutOfRangeAddress` |
 | `CpuTests` | L/R поток, перенос адреса, M0..M15, все 12 команд, STOP, лимит, «нет изменений на ошибке» |
 | `DemoAndTraceTests` | итог программы, детерминированность трассы |
+| `MemoryDumpTests` | формат дампа (заголовок, строки, одна ячейка), перевёрнутый диапазон, `Oct.TryParse` |
 | `LineBudgetTests` | ≤ 1000 строк в основном проекте |
 
 Тесты не зависят от консоли: `Cpu` и `Memory` — чистые типы, их можно
