@@ -1,0 +1,133 @@
+*name GRAYSCALE
+*ftn
+*no li
+*no lo
+      program graysc
+      dimension a(120,120)
+      common/outcom/i80132
+      data i80132/1/
+c Reading a 120x120 image array,
+c one value per line, typically from a .pgm file
+c after pnmnoraw < file.pgm | fmt -w 1 | tail +5 
+c     do 1 i=1,120
+c     do 1 j=1,120
+c  1  read 9,a(j,121-i)
+c  9  format(i4)
+c     do 3 i=1,120
+c     do 3 j=1,120
+c  3  a(j,i)=255-a(j,i)
+c -------------
+c Test image: diagonal stripes
+      do 1 i=1,120
+      do 1 j=1,120
+    1  a(i,j) = i + j - 1   
+c -------------
+      call array(a,120)
+      end
+      subroutine array(b,nxn)
+      common/outcom/i80132
+      dimension b(nxn,nxn),ln(125,7),den(21)
+      dimension rleg(11)
+      integer gray(21,7),nln(21)
+      data gray/ 1h , 1h:, 1h*, 1h+, 1h), 1h1, 1hz, 1hx, 1ha, 1hm,
+     1           1ho, 1ho, 1ho, 1ho, 1ho, 1ho, 1ho, 1ho, 1ho, 1ho, 1ho,
+     2           1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h ,
+     3           1h-, 1h=, 1h+, 1h+, 1h+, 1h+, 1hx, 1hx, 1hx, 1hx, 1hx,
+     4           1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h ,
+     5           1h , 1h , 1h , 1h., 1h=, 1h., 1h., 1h., 1h., 1h., 1h.,
+     6           1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h ,
+     7           1h , 1h , 1h , 1h , 1h , 1h=, 1h-, 1hh, 1hh, 1hh, 1hh,
+     8           1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h ,
+     9           1h , 1h , 1h , 1h , 1h , 1h , 1h , 1hc, 1hb, 1hb, 1hb,
+     a           1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h ,
+     b           1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1hv, 1hv,
+     c           1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h ,
+     d           1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1h , 1ha/
+      data den/  .0 , .15, .22, .25, .29, .33, .37, .40, .42, .45,
+     1           .53, .56, .60, .64, .67, .79, .85, .89, .93, .97, 1.0/
+      data nln/    1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+     1             2,   2,   2,   3,   3,   4,   4,   5,   5,   6,   7/
+      data char/0.6/
+      data istar/1h*/
+      print 72
+      iblank = 1h 
+      j80132=125
+      if (i80132.eq.0) j80132=78
+      xmin=b(1,1)
+      xmax=xmin
+      xsum=0.
+      do 16 i=1,nxn
+      do 16 j=1,nxn
+      xsum=xsum+b(i,j)
+      if (xmin-b(i,j)) 12,12,10
+  10  xmin=b(i,j)
+  12  if (xmax-b(i,j)) 14,16,16
+  14  xmax=b(i,j)
+  16  continue
+      n1=float(nxn)*char
+      xdist=float(nxn)/float(n1+1)
+      if (xmax-xmin.gt.1.e-10) go to 18
+      print 181
+      return
+  18  if (nxn+2.gt.j80132) print 181
+  181 format ('  *** too wide *** ')
+      frac=1./(xmax-xmin)
+      do 24 i=1,125
+      do 24 j=1,7
+      ln(i,j)=iblank
+  24  continue
+      imin=(j80132-nxn)/2.
+      imax=imin+nxn-1
+      ii1=imin-1
+      ii2=imax+1
+      do 26 i=ii1,ii2
+      ln(i,1)=istar
+  26  continue
+      write (51,74) (ln(i,1),i=1,j80132)
+      y=float(nxn)+0.5
+      do 46 k=1,n1
+      y=y-xdist
+      j1=y
+c     y1=float(j1)
+      j2=j1+1
+      i1=0
+      lmax=0
+      do 40 i=imin,imax
+      i1=i1+1
+      d=(b(i1,j1)+(b(i1,j2)-b(i1,j1))*(y-float(j1))-xmin)*frac
+      do 28 m=1,21
+      if (d-den(m)) 30,36,28
+  28  continue
+  30  m1=m-1
+      m2=m
+      t=(den(m2)+den(m1))/2.
+      if (d-t) 32,32,34
+  32  l=m1
+      go to 38
+  34  l=m2
+      go to 38
+  36  l=m
+  38  do 40 j=1,7
+      if (l.gt.lmax) lmax=l
+      ln(i,j)=gray(l,j)
+  40  continue
+      nj=nln(lmax)-1
+      write (51,78) (ln(i,nj+1),i=1,j80132)
+      if (nj.le.0) go to 46
+      do 42 j=1,nj
+      write (51,76) (ln(i,j),i=1,j80132)
+  42  continue
+  46  continue
+      do 48 i=ii1,ii2
+      ln(i,1)=istar
+  48  continue
+      write (51,74) (ln(i,1),i=1,j80132)
+      return
+  72  format(1h0)
+  74  format(2x, 125a1)
+  76  format(1h+,125a1)
+  78  format(2x ,125a1)
+      end
+*call notlis
+*execute
+*end file

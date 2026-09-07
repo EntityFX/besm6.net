@@ -1,0 +1,73 @@
+*name guess
+*no list
+*no load list
+*forex
+      program guess
+c     ******************************************************************
+c
+c     Originally written by Walt Koetke in Focal, and ported to Basic by
+c     David H. Ahl. Converted to Fortran by Philipp Engel.
+c     Ported from github.com/interkosmos/fortran-fun/src/guess/guess.f
+c     to BESM-6 by Serge Vakulenko.
+c
+c     ******************************************************************
+      integer iattem, iguess, imax, isecre, limit
+      write (54, 100)
+      call input(limit)
+      imax = alog(limit) / alog(2.0) + 1
+c
+      write (54, 200) limit
+      call rndm1(jextra(0, 40, 55))
+      isecre = 2 + rndm(-1) * (limit - 1)
+      iguess = 0
+      iattem = 0
+c
+   10 continue
+      iattem = iattem + 1
+      call input(iguess)
+      if (iguess .lt. isecre) write (54, 300)
+      if (iguess .gt. isecre) write (54, 400)
+      if (iguess .ne. isecre) goto 10
+c
+      write (54, 500) iattem
+c
+      if (iattem .lt. imax) then
+        write (54, 600)
+      else if (iattem .eq. imax) then
+        write (54, 700)
+      else
+        write (54, 800) imax
+      end if
+c
+  100 format (' This is a number guessing game. I will think',/,
+     &' of a number between 1 and any limit you want.',/,
+     &' Then you have to guess what it is.',/,/,
+     &' What limit do you want? ')
+  200 format (' I am thinking of a number between 1 and ',i6,' ...',/,
+     &' now you try to guess what it is: ')
+  300 format (' Too low. Try a bigger answer: ')
+  400 format (' Too high. Try a smaller answer: ')
+  500 format (' That'1h''s it! You got it in ',i6,' tries.')
+  600 format (' Very good.')
+  700 format (' Good.')
+  800 format (' You should have been able to get it in only ',i6,'.')
+      end
+c     ******************************************************************
+      subroutine input(ivalue)
+c
+c     Returns a positive integer greater than 1 from user input.
+c
+   10 continue
+      ivalue = -1
+      rewind 54
+      read (54, 100) ivalue
+  100 format (i8)
+      if (ivalue .le. 1) then
+        write (54, 200)
+        goto 10
+      end if
+  200 format (' Invalid input. Try again:')
+      end
+*library:1,23
+*execute
+*end file
