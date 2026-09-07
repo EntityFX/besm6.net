@@ -68,14 +68,14 @@ namespace Besm6.Tui
         {
             _machine = MachineFactory.CreateMachine(_config);
             _loader = MachineFactory.CreateLoader(_config, _machine);
-            Console.WriteLine($"Loaded machine. PC={_machine.Cpu.PC:X4}");
+            Console.WriteLine($"Loaded machine. K={_machine.Cpu.K:X4}");
         }
 
         private void PrintStatusBar()
         {
             if (_machine == null) return;
             var cpu = _machine.Cpu;
-            Console.Write($"[PC={cpu.PC:X4} ACC={cpu.Acc:X12}] ");
+            Console.Write($"[K={cpu.K:X4} A={cpu.A:X12}] ");
         }
 
         private void CmdLoad()
@@ -95,19 +95,19 @@ namespace Besm6.Tui
             if (_machine == null || _loader == null) { Console.WriteLine("No machine loaded."); return; }
             var result = _loader.RunScript(_jobFile ?? "");
             Console.WriteLine(result.Success ? "Execution finished (success)." : $"Execution stopped: {result.Message}");
-            Console.WriteLine($"PC={_machine.Cpu.PC:X4}");
+            Console.WriteLine($"K={_machine.Cpu.K:X4}");
         }
 
         private void CmdStep()
         {
             if (_machine == null) { Console.WriteLine("No machine."); return; }
             var cpu = _machine.Cpu;
-            long pc = cpu.PC;
-            var word = _machine.Memory.Read((int)pc);
+            long k = cpu.K;
+            var word = _machine.Memory.Read((int)k);
             var dis = Disassembler.DisasmWord(word.Value);
-            Console.WriteLine($"Step: {pc:X4} {dis}");
+            Console.WriteLine($"Step: {k:X4} {dis}");
             cpu.Step();
-            Console.WriteLine($"  PC={cpu.PC:X4} ACC={cpu.Acc:X12}");
+            Console.WriteLine($"  K={cpu.K:X4} A={cpu.A:X12}");
         }
 
         private void CmdRegs()
@@ -115,8 +115,8 @@ namespace Besm6.Tui
             if (_machine == null) return;
             var cpu = _machine.Cpu;
             Console.WriteLine("--- Registers ---");
-            Console.WriteLine($"  PC  = {cpu.PC:X8}");
-            Console.WriteLine($"  ACC = {cpu.Acc:X12} ({cpu.Acc})");
+            Console.WriteLine($"  K = {cpu.K:X8}");
+            Console.WriteLine($"  A = {cpu.A:X12} ({cpu.A})");
             for (int i = 0; i < 16; i++)
             {
                 Console.WriteLine($"  M{i,2}  = {cpu.GetM(i):X12}");

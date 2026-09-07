@@ -55,9 +55,9 @@ namespace Besm6.Tests
 
         private void StoreWord(string addr, ulong val) => _memory.Write((uint)(O(addr) & 0x7FFF), new Word48(val));
 
-        private void Run(string startPc = "10")
+        private void Run(string startK = "10")
         {
-            _cpu.SetPc((uint)O(startPc));
+            _cpu.SetK((uint)O(startK));
             for (int i = 0; i < 100000; i++)
             {
                 if (_cpu.Step())
@@ -70,7 +70,7 @@ namespace Besm6.Tests
         private void ExpectIllegal(string op, ulong word)
         {
             StoreWord("10", word);
-            _cpu.SetPc((uint)O("10"));
+            _cpu.SetK((uint)O("10"));
             try
             {
                 _cpu.Step();
@@ -85,7 +85,7 @@ namespace Besm6.Tests
         [TestMethod]
         public void Step_WhenProgramCounterIsZero_ThrowsJumpToZero()
         {
-            _cpu.SetPc(0);
+            _cpu.SetK(0);
 
             try
             {
@@ -109,7 +109,7 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("12"), _cpu.GetPc());
+            Assert.AreEqual(O("12"), _cpu.GetK());
         }
 
         [TestMethod]
@@ -125,7 +125,7 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("16"), _cpu.GetPc());
+            Assert.AreEqual(O("16"), _cpu.GetK());
             Assert.AreEqual(O("77777"), _cpu.GetM(2));
         }
 
@@ -141,7 +141,7 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("14"), _cpu.GetPc());
+            Assert.AreEqual(O("14"), _cpu.GetK());
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(2));
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(3));
         }
@@ -215,7 +215,7 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("104"), _cpu.GetPc());
+            Assert.AreEqual(O("104"), _cpu.GetK());
             for (int i = 1; i <= 15; i++)
                 Assert.AreEqual(0UL, (ulong)_cpu.GetM(i), $"M[{i}]");
         }
@@ -254,7 +254,7 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("37"), _cpu.GetPc());
+            Assert.AreEqual(O("37"), _cpu.GetK());
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(3));
             Assert.AreEqual(O("52525"), _cpu.GetM(4));
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(5));
@@ -278,7 +278,7 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("22"), _cpu.GetPc());
+            Assert.AreEqual(O("22"), _cpu.GetK());
             Assert.AreEqual(O("20"), _cpu.GetM(2));
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(3));
         }
@@ -302,7 +302,7 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("23"), _cpu.GetPc());
+            Assert.AreEqual(O("23"), _cpu.GetK());
             Assert.AreEqual(1UL, (ulong)_cpu.GetM(2));
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(3));
         }
@@ -322,9 +322,9 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("16"), _cpu.GetPc());
-            Assert.AreEqual(1UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(1UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("16"), _cpu.GetK());
+            Assert.AreEqual(1UL, _cpu.GetA().Value);
+            Assert.AreEqual(1UL, _cpu.GetY().Value);
         }
 
         [TestMethod]
@@ -351,9 +351,9 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("27"), _cpu.GetPc());
-            Assert.AreEqual(1UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(1UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("27"), _cpu.GetK());
+            Assert.AreEqual(1UL, _cpu.GetA().Value);
+            Assert.AreEqual(1UL, _cpu.GetY().Value);
         }
 
         [TestMethod]
@@ -372,8 +372,8 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("17"), _cpu.GetPc());
-            Assert.AreEqual((ulong)O("77777"), _cpu.GetAcc().Value);
+            Assert.AreEqual(O("17"), _cpu.GetK());
+            Assert.AreEqual((ulong)O("77777"), _cpu.GetA().Value);
             Assert.AreEqual(O("77777"), _cpu.GetM(2));
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(3));
         }
@@ -400,8 +400,8 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("26"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
+            Assert.AreEqual(O("26"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(2));
         }
 
@@ -425,9 +425,9 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("21"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("21"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
         }
 
         [TestMethod]
@@ -448,9 +448,9 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("16"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("16"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
         }
 
         [TestMethod]
@@ -477,9 +477,9 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("24"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("24"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
             Assert.AreEqual(O("11"), _cpu.GetM(1));
             Assert.AreEqual(O("22"), _cpu.GetM(2));
             Assert.AreEqual(O("33"), _cpu.GetM(3));
@@ -515,9 +515,9 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("30"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("30"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(1));
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(2));
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(3));
@@ -546,9 +546,9 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("22"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("22"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(15));
         }
 
@@ -578,9 +578,9 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("26"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("26"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(1));
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(2));
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(3));
@@ -670,9 +670,9 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("32"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("32"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
             Assert.AreEqual(O("77777"), _cpu.GetM(11));
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(12));
         }
@@ -713,9 +713,9 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("34"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("34"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
             Assert.AreEqual(O("77777"), _cpu.GetM(11));
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(12));
             Assert.AreEqual(O("1001"), _cpu.GetM(14));
@@ -743,9 +743,9 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("21"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("21"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
         }
 
         [TestMethod]
@@ -812,10 +812,10 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("66"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
-            Assert.AreEqual(4UL, (ulong)_cpu.GetRau());
+            Assert.AreEqual(O("66"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
+            Assert.AreEqual(4UL, (ulong)_cpu.GetR());
             Assert.AreEqual(O("77777"), _cpu.GetM(2));
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(3));
             Assert.AreEqual(O("2001"), _cpu.GetM(15));
@@ -883,9 +883,9 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("67"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("67"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
         }
 
         [TestMethod]
@@ -922,10 +922,10 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("33"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
-            Assert.AreEqual(4UL, (ulong)_cpu.GetRau());
+            Assert.AreEqual(O("33"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
+            Assert.AreEqual(4UL, (ulong)_cpu.GetR());
             Assert.AreEqual(O("77600"), _cpu.GetM(11));
             Assert.AreEqual(0UL, (ulong)_cpu.GetM(14));
         }
@@ -999,10 +999,10 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("56"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
-            Assert.AreEqual(4UL, (ulong)_cpu.GetRau());
+            Assert.AreEqual(O("56"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
+            Assert.AreEqual(4UL, (ulong)_cpu.GetR());
             Assert.AreEqual(O("2000"), _cpu.GetM(15));
         }
 
@@ -1053,10 +1053,10 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("35"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
-            Assert.AreEqual(4UL, (ulong)_cpu.GetRau());
+            Assert.AreEqual(O("35"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
+            Assert.AreEqual(4UL, (ulong)_cpu.GetR());
             Assert.AreEqual(O("2001"), _cpu.GetM(15));
         }
 
@@ -1109,10 +1109,10 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("44"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
-            Assert.AreEqual(4UL, (ulong)_cpu.GetRau());
+            Assert.AreEqual(O("44"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
+            Assert.AreEqual(4UL, (ulong)_cpu.GetR());
             Assert.AreEqual(O("2002"), _cpu.GetM(15));
         }
 
@@ -1159,10 +1159,10 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("36"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
-            Assert.AreEqual(6UL, (ulong)_cpu.GetRau());
+            Assert.AreEqual(O("36"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
+            Assert.AreEqual(6UL, (ulong)_cpu.GetR());
             Assert.AreEqual(O("2001"), _cpu.GetM(15));
         }
 
@@ -1180,10 +1180,10 @@ namespace Besm6.Tests
 
             Run();
 
-            Assert.AreEqual(O("13"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
-            Assert.AreEqual(7UL, (ulong)_cpu.GetRau());
+            Assert.AreEqual(O("13"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
+            Assert.AreEqual(7UL, (ulong)_cpu.GetR());
             Assert.AreEqual(O("2000"), _cpu.GetM(15));
         }
 
@@ -1198,24 +1198,24 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
-        public void Intercept_Overflow_CountDecremented_PcSetToAddr()
+        public void Intercept_Overflow_CountDecremented_KSetToAddr()
         {
             _cpu.InterceptCount = 1;
             _cpu.InterceptAddr = 0x1234; // произвольный адрес
 
-            // Перед вызовом — PC другой, flags не сброслены.
-            _cpu.SetPc(0x5555);
-            _cpu.SetRau(0x07);
+            // Перед вызовом — K другой, flags не сброслены.
+            _cpu.SetK(0x5555);
+            _cpu.SetR(0x07);
 
             bool result = _cpu.Intercept("Arithmetic overflow");
 
             Assert.IsTrue(result);
             Assert.AreEqual(0, _cpu.InterceptCount);  // count--
-            Assert.AreEqual(0x1234UL, (ulong)_cpu.GetPc());     // PC = intercept_addr
+            Assert.AreEqual(0x1234UL, (ulong)_cpu.GetK());     // K = intercept_addr
         }
 
         [TestMethod]
-        public void Intercept_DivZero_CountDecremented_PcSetToAddr()
+        public void Intercept_DivZero_CountDecremented_KSetToAddr()
         {
             _cpu.InterceptCount = 3;
             _cpu.InterceptAddr = 0x7FFF;
@@ -1224,7 +1224,7 @@ namespace Besm6.Tests
 
             Assert.IsTrue(result);
             Assert.AreEqual(2, _cpu.InterceptCount);  // 3 → 2
-            Assert.AreEqual(0x7FFFUL, (ulong)_cpu.GetPc());
+            Assert.AreEqual(0x7FFFUL, (ulong)_cpu.GetK());
         }
 
         [TestMethod]
@@ -1251,19 +1251,19 @@ namespace Besm6.Tests
         [TestMethod]
         public void Intercept_ResetsFlagsAndMod()
         {
-            // Настроим "грязные" флаги и MOD.
+            // Настроим "грязные" флаги и C.
             _cpu.InterceptCount = 1;
             _cpu.InterceptAddr = 0x3000;
-            _cpu.SetPc(0x6000);
-            _cpu.SetRau(0x0F);
+            _cpu.SetK(0x6000);
+            _cpu.SetR(0x0F);
 
-            // В C# нет прямого доступа к _rightInstrFlag/_applyModReg — проверяем
+            // В C# нет прямого доступа к _rightInstrFlag/_applyC — проверяем
             // через OnRightInstruction (public property).
             bool wasRight = _cpu.OnRightInstruction;
 
             _cpu.Intercept("Division by zero");
 
-            Assert.AreEqual(0x3000UL, (ulong)_cpu.GetPc());
+            Assert.AreEqual(0x3000UL, (ulong)_cpu.GetK());
             Assert.IsFalse(_cpu.OnRightInstruction); // right_instr_flag = false
         }
 
@@ -1273,9 +1273,9 @@ namespace Besm6.Tests
             // StackCorrection() без ожидающей поправки (corr_stack == 0) не меняет состояние.
             // Семантика corr_stack при исключении покрыта
             // ProcessorStateRegressionTests.StackCorrection_RestoresPreparedStackAfterArithmeticException.
-            long pcBefore = _cpu.GetPc();
+            long pcBefore = _cpu.GetK();
             _cpu.StackCorrection();
-            Assert.AreEqual(pcBefore, _cpu.GetPc());
+            Assert.AreEqual(pcBefore, _cpu.GetK());
         }
 
         // Проверяет стек (M[15]) в связке с зп/сч/счм/уим/уи/сда/мод/переходами.
@@ -1372,37 +1372,37 @@ namespace Besm6.Tests
 
             Run("10");
 
-            Assert.AreEqual(O("100"), _cpu.GetPc());
-            Assert.AreEqual(0UL, _cpu.GetAcc().Value);
-            Assert.AreEqual(0UL, _cpu.GetRmr().Value);
+            Assert.AreEqual(O("100"), _cpu.GetK());
+            Assert.AreEqual(0UL, _cpu.GetA().Value);
+            Assert.AreEqual(0UL, _cpu.GetY().Value);
             Assert.AreEqual(O("2010"), _cpu.GetM(15));
         }
 
         // ─── Нелегальные инструкции (порт исключений dubna/processor.cpp) ──
 
         [TestMethod]
-        public void Test_Illegal_Reg_Mod_Throws()
+        public void Test_Illegal_Mod_Throws()
         {
             // 002 рег/mod — привилегированная, не исполняется.
             ExpectIllegal("002 рег/mod", Asm("рег 0(0)"));
         }
 
         [TestMethod]
-        public void Test_Illegal_Zpp_Throws()
+        public void Test_Illegal_Ext_Throws()
         {
             // 032 зпп — нелегальная.
             ExpectIllegal("032 зпп", Asm("зпп 0(0)"));
         }
 
         [TestMethod]
-        public void Test_Illegal_Schp_Throws()
+        public void Test_Illegal_Op33_Throws()
         {
             // 033 счп — нелегальная.
             ExpectIllegal("033 счп", Asm("счп 0(0)"));
         }
 
         [TestMethod]
-        public void Test_Illegal_Sop_Throws()
+        public void Test_Illegal_Op46_Throws()
         {
             // 046 соп — нелегальная.
             ExpectIllegal("046 соп", Asm("соп 0(0)"));
@@ -1418,7 +1418,7 @@ namespace Besm6.Tests
         // ─── Остальные не покрытые коды инструкций ─────────────────────────
 
         [TestMethod]
-        public void Test_E36_BranchWhenMZero()
+        public void Test_Op36_BranchWhenMZero()
         {
             // э36 — переход при M[reg]==0 (семантика идентична ПИО).
             _cpu.SetM(2, 0);
@@ -1426,11 +1426,11 @@ namespace Besm6.Tests
             StoreWord("11", Asm("стоп 76543(2), сч 0"));
             StoreWord("12", Asm("стоп 12345(6), сч 0"));
             Run();
-            Assert.AreEqual(O("12"), _cpu.GetPc());
+            Assert.AreEqual(O("12"), _cpu.GetK());
         }
 
         [TestMethod]
-        public void Test_E36_NoBranchWhenMNonZero()
+        public void Test_Op36_NoBranchWhenMNonZero()
         {
             // э36 — при M[reg]!=0 переход не происходит, исполняется следующая.
             _cpu.SetM(2, 1);
@@ -1438,11 +1438,11 @@ namespace Besm6.Tests
             StoreWord("11", Asm("стоп 76543(2), сч 0"));
             StoreWord("12", Asm("стоп 12345(6), сч 0"));
             Run();
-            Assert.AreEqual(O("11"), _cpu.GetPc());
+            Assert.AreEqual(O("11"), _cpu.GetK());
         }
 
         [TestMethod]
-        public void Test_Vypr_Illegal_Throws()
+        public void Test_Ij_Illegal_Throws()
         {
             ExpectIllegal("0320 выпр/iret", Asm("выпр, сч 0"));
         }
@@ -1478,7 +1478,7 @@ namespace Besm6.Tests
             StoreWord("10", Asm("э50 100(2)"));
             StoreWord("11", Asm("стоп, сч 0"));
 
-            _cpu.SetPc((uint)O("10"));
+            _cpu.SetK((uint)O("10"));
             bool stopped = _cpu.Step();
 
             Assert.IsFalse(stopped, "extracode не является СТОП");
@@ -1496,7 +1496,7 @@ namespace Besm6.Tests
             _cpu.ExtracodeHandler = (int op, uint aex) => { seenOp = op; seenAex = aex; return true; };
             StoreWord("10", Asm("э20 200(3)"));
             _cpu.SetM(3, 0);
-            _cpu.SetPc((uint)O("10"));
+            _cpu.SetK((uint)O("10"));
             bool stopped = _cpu.Step();
 
             Assert.IsFalse(stopped);

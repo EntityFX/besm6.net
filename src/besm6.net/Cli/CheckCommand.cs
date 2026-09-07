@@ -65,7 +65,7 @@ namespace Besm6.Cli
                     LoadResult result = loader.RunJob(job, File.ReadAllLines(f));
                     if (result.LimitExceeded)
                     {
-                        status = $"LIMIT(pc=0{result.Pc:X})";
+                        status = $"LIMIT(k=0{result.K:X})";
                         limitHit++;
                     }
                     else if (result.Success)

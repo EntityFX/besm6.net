@@ -27,7 +27,7 @@ namespace Besm6.Core
         E72 = 58, // 072 oct — страницы памяти
         E73 = 59, // 073 oct — ITM/ASS
         E74 = 60, // 074 oct — finish job
-        E75 = 61, // 075 oct — write ACC to memory
+        E75 = 61, // 075 oct — write A to memory
         E76 = 62, // 076 oct — kernel routine
         // Long extracodes (opcode & 0o200)
         E20 = 128, // 200 oct — (reserved/no-op)

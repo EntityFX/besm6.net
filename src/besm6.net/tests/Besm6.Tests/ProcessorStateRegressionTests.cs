@@ -6,7 +6,7 @@ using Besm6.Loader;
 namespace Besm6.Tests
 {
     /// <summary>
-    /// Короткие state-machine тесты для RAU, MOD и stack correction.
+    /// Короткие state-machine тесты для R, C и stack correction.
     /// Они намеренно намного меньше полных cpu_test/CERNLIB сценариев.
     /// </summary>
     [TestClass]
@@ -37,7 +37,7 @@ namespace Besm6.Tests
         private void StoreData(string address, ulong value) => _memory.Write(O(address), new Word48(value));
 
         /// <summary>
-        /// Полная таблица «инструкция → итоговый RAU-режим» для ВСЕХ
+        /// Полная таблица «инструкция → итоговый R-режим» для ВСЕХ
         /// mode-changing инструкций (референс: set_logical/set_additive/set_multiplicative
         /// в ref/processor.cpp). Старт в режиме, ОТЛИЧНОМ от ожидаемого: итог обязан
         /// измениться именно инструкцией. счмр (031) исключён — её режим условный
@@ -45,73 +45,73 @@ namespace Besm6.Tests
         /// </summary>
         [TestMethod]
         // ── Logical (set_logical) ──
-        [DataRow("зпм 2000", (int)RauFlags.Log)]
-        [DataRow("счм 2000", (int)RauFlags.Log)]
-        [DataRow("сч 2000", (int)RauFlags.Log)]
-        [DataRow("и 2000", (int)RauFlags.Log)]
-        [DataRow("нтж 2000", (int)RauFlags.Log)]
-        [DataRow("или 2000", (int)RauFlags.Log)]
-        [DataRow("сбр 2000", (int)RauFlags.Log)]
-        [DataRow("рзб 2000", (int)RauFlags.Log)]
-        [DataRow("чед 2000", (int)RauFlags.Log)]
-        [DataRow("нед 2000", (int)RauFlags.Log)]
-        [DataRow("сд 2000", (int)RauFlags.Log)]
-        [DataRow("счрж 7", (int)RauFlags.Log)]
-        [DataRow("сда 2000", (int)RauFlags.Log)]
-        [DataRow("уим 2000", (int)RauFlags.Log)]
-        [DataRow("счи 2000", (int)RauFlags.Log)]
+        [DataRow("зпм 2000", (int)RFlags.Log)]
+        [DataRow("счм 2000", (int)RFlags.Log)]
+        [DataRow("сч 2000", (int)RFlags.Log)]
+        [DataRow("и 2000", (int)RFlags.Log)]
+        [DataRow("нтж 2000", (int)RFlags.Log)]
+        [DataRow("или 2000", (int)RFlags.Log)]
+        [DataRow("сбр 2000", (int)RFlags.Log)]
+        [DataRow("рзб 2000", (int)RFlags.Log)]
+        [DataRow("чед 2000", (int)RFlags.Log)]
+        [DataRow("нед 2000", (int)RFlags.Log)]
+        [DataRow("сд 2000", (int)RFlags.Log)]
+        [DataRow("счрж 7", (int)RFlags.Log)]
+        [DataRow("сда 2000", (int)RFlags.Log)]
+        [DataRow("уим 2000", (int)RFlags.Log)]
+        [DataRow("счи 2000", (int)RFlags.Log)]
         // ── Additive (set_additive) ──
-        [DataRow("сл 2000", (int)RauFlags.Add)]
-        [DataRow("вч 2000", (int)RauFlags.Add)]
-        [DataRow("вчоб 2000", (int)RauFlags.Add)]
-        [DataRow("вчаб 2000", (int)RauFlags.Add)]
-        [DataRow("знак 2000", (int)RauFlags.Add)]
+        [DataRow("сл 2000", (int)RFlags.Add)]
+        [DataRow("вч 2000", (int)RFlags.Add)]
+        [DataRow("вчоб 2000", (int)RFlags.Add)]
+        [DataRow("вчаб 2000", (int)RFlags.Add)]
+        [DataRow("знак 2000", (int)RFlags.Add)]
         // ── Multiplicative (set_multiplicative) ──
-        [DataRow("слц 2000", (int)RauFlags.Mult)]
-        [DataRow("дел 2000", (int)RauFlags.Mult)]
-        [DataRow("умн 2000", (int)RauFlags.Mult)]
-        [DataRow("слп 2000", (int)RauFlags.Mult)]
-        [DataRow("вчп 2000", (int)RauFlags.Mult)]
-        [DataRow("слпа 2000", (int)RauFlags.Mult)]
-        [DataRow("вчпа 2000", (int)RauFlags.Mult)]
-        public void Instruction_SetsExpectedRauMode(string instruction, int expectedMode)
+        [DataRow("слц 2000", (int)RFlags.Mult)]
+        [DataRow("дел 2000", (int)RFlags.Mult)]
+        [DataRow("умн 2000", (int)RFlags.Mult)]
+        [DataRow("слп 2000", (int)RFlags.Mult)]
+        [DataRow("вчп 2000", (int)RFlags.Mult)]
+        [DataRow("слпа 2000", (int)RFlags.Mult)]
+        [DataRow("вчпа 2000", (int)RFlags.Mult)]
+        public void Instruction_SetsExpectedRMode(string instruction, int expectedMode)
         {
             StoreWord("10", instruction + ", stop");
             // Каноническое плавающее 1.0: валидный делитель для дел (сырое 1 = «ноль»
             // по определению нуля БЭСМ-6) и нейтральный операнд для остальных.
             StoreData("2000", Besm6Math.DoubleToBesm6(1.0));
-            _cpu.SetAcc(0);
+            _cpu.SetA(0);
             // Старт в режиме, отличном от ожидаемого: итог обязан измениться инструкцией.
-            uint start = expectedMode == (int)RauFlags.Log ? (uint)RauFlags.Add : (uint)RauFlags.Log;
-            _cpu.SetRau((ulong)(RauFlags.OvfDisable | RauFlags.RoundDisable | (RauFlags)start));
-            _cpu.SetPc(O("10"));
+            uint start = expectedMode == (int)RFlags.Log ? (uint)RFlags.Add : (uint)RFlags.Log;
+            _cpu.SetR((ulong)(RFlags.OvfDisable | RFlags.RoundDisable | (RFlags)start));
+            _cpu.SetK(O("10"));
 
             _cpu.Step();
 
-            uint mode = _cpu.GetRau() & (uint)RauFlags.Mode;
+            uint mode = _cpu.GetR() & (uint)RFlags.Mode;
             Assert.AreEqual((uint)expectedMode, mode, instruction);
         }
 
         [TestMethod]
         public void Utc_ModifiesExactlyTheNextInstruction()
         {
-            // LEFT: UTC 1 устанавливает MOD для RIGHT.
+            // LEFT: UTC 1 устанавливает C для RIGHT.
             // RIGHT: VTM (1) получает effective address 1.
-            // Следующее слово: VTM (2) уже не должно видеть предыдущий MOD.
+            // Следующее слово: VTM (2) уже не должно видеть предыдущий C.
             StoreWord("10", "мода 1, уиа (1)");
             StoreWord("11", "уиа (2), стоп");
-            _cpu.SetPc(O("10"));
+            _cpu.SetK(O("10"));
 
             _cpu.Step(); // UTC
-            Assert.IsTrue(_cpu.ApplyModReg, "После UTC модификатор должен ждать следующую инструкцию.");
+            Assert.IsTrue(_cpu.ApplyC, "После UTC модификатор должен ждать следующую инструкцию.");
 
             _cpu.Step(); // VTM (1), адрес становится 1
             Assert.AreEqual(1u, _cpu.GetM(1));
-            Assert.IsFalse(_cpu.ApplyModReg, "После потребления MOD должен быть снят.");
+            Assert.IsFalse(_cpu.ApplyC, "После потребления C должен быть снят.");
 
             _cpu.Step(); // VTM (2), без модификатора
             Assert.AreEqual(0u, _cpu.GetM(2),
-                "MOD от UTC не должен протекать через одну инструкцию дальше.");
+                "C от UTC не должен протекать через одну инструкцию дальше.");
         }
 
         [TestMethod]
@@ -119,14 +119,14 @@ namespace Besm6.Tests
         {
             StoreWord("10", "мода 1, мода 2");
             StoreWord("11", "уиа (1), stop");
-            _cpu.SetPc(O("10"));
+            _cpu.SetK(O("10"));
 
-            _cpu.Step(); // MOD=1 for next instruction
-            _cpu.Step(); // second UTC sees previous MOD: its own addr becomes 3, then emits MOD=3
-            _cpu.Step(); // VTM (1) sees MOD=3
+            _cpu.Step(); // C=1 for next instruction
+            _cpu.Step(); // second UTC sees previous C: its own addr becomes 3, then emits C=3
+            _cpu.Step(); // VTM (1) sees C=3
 
             Assert.AreEqual(3u, _cpu.GetM(1),
-                "Цепочка UTC должна применять предыдущий MOD к следующему UTC, как к обычной инструкции.");
+                "Цепочка UTC должна применять предыдущий C к следующему UTC, как к обычной инструкции.");
         }
 
         [TestMethod]
@@ -138,10 +138,10 @@ namespace Besm6.Tests
             // Этот тест фиксирует reference-семантику: без корректной corr_stack
             // M[15] остался бы декрементированным.
             _cpu.SetM(15, O("2001"));
-            _cpu.SetAcc(0);
+            _cpu.SetA(0);
             StoreData("2000", 0); // divisor = 0
             StoreWord("10", "дел (17), stop");
-            _cpu.SetPc(O("10"));
+            _cpu.SetK(O("10"));
 
             ProcessorException? error = null;
             try

@@ -6,7 +6,7 @@ namespace Besm6.Tests
 {
     /// <summary>
     /// P0: истинностные таблицы условных переходов по/пе (0260/0270) для всех
-    /// RAU-режимов + малые control-flow тесты пио/пино/э36/цикл.
+    /// R-режимов + малые control-flow тесты пио/пино/э36/цикл.
     /// Референс: ref/processor.cpp L748-783 (по/пе), L811-840 (пио/пино/э36/цикл).
     /// ВАЖНО: в этом тулчейне C#-литералы с ведущим нулём НЕ октальны,
     /// поэтому все восьмиричные значения — через строковый O(...).
@@ -38,67 +38,67 @@ namespace Besm6.Tests
         private void StoreWord(string address, string source) => _memory.Write(O(address), new Word48(Asm(source)));
 
         // ─── по (0260/uza) ──────────────────────────────────────────────────
-        // ref/processor.cpp L748-764: RMR=ACC; переход, ЕСЛИ:
+        // ref/processor.cpp L748-764: Y=A; переход, ЕСЛИ:
         //   аддитивный      — BIT41 СБРОШЕН;
         //   мультипликативный — BIT48 УСТАНОВЛЕН;
-        //   логический      — ACC == 0;
+        //   логический      — A == 0;
         //   режим неизвестен — НЕ переход (break).
         [TestMethod]
-        [DataRow((int)RauFlags.Add, (long)1, true)]                 // ADD: BIT41 clear → jump
-        [DataRow((int)RauFlags.Add, 1L << 40, false)]               // ADD: BIT41 set → no jump
-        [DataRow((int)RauFlags.Mult, 1L << 47, true)]               // MUL: BIT48 set → jump
-        [DataRow((int)RauFlags.Mult, 1L << 40, false)]              // MUL: BIT48 clear → no jump
-        [DataRow((int)RauFlags.Log, 0L, true)]                      // LOG: ACC==0 → jump
-        [DataRow((int)RauFlags.Log, 12345L, false)]                 // LOG: ACC!=0 → no jump
+        [DataRow((int)RFlags.Add, (long)1, true)]                 // ADD: BIT41 clear → jump
+        [DataRow((int)RFlags.Add, 1L << 40, false)]               // ADD: BIT41 set → no jump
+        [DataRow((int)RFlags.Mult, 1L << 47, true)]               // MUL: BIT48 set → jump
+        [DataRow((int)RFlags.Mult, 1L << 40, false)]              // MUL: BIT48 clear → no jump
+        [DataRow((int)RFlags.Log, 0L, true)]                      // LOG: A==0 → jump
+        [DataRow((int)RFlags.Log, 12345L, false)]                 // LOG: A!=0 → no jump
         [DataRow(0, 1L << 47, false)]                               // no mode → no jump
-        public void Po_BranchTruthTable(int mode, long acc, bool expectBranch) =>
-            CheckBranch("по 3000", (RauFlags)mode, (ulong)acc, expectBranch);
+        public void Uza_BranchTruthTable(int mode, long a, bool expectBranch) =>
+            CheckBranch("по 3000", (RFlags)mode, (ulong)a, expectBranch);
 
         // ─── пе (0270/u1a) ──────────────────────────────────────────────────
-        // ref/processor.cpp L766-783: RMR=ACC; переход, ЕСЛИ:
+        // ref/processor.cpp L766-783: Y=A; переход, ЕСЛИ:
         //   аддитивный      — BIT41 УСТАНОВЛЕН;
         //   мультипликативный — BIT48 СБРОШЕН;
-        //   логический      — ACC != 0;
+        //   логический      — A != 0;
         //   режим неизвестен — переход (fall-thru).
         [TestMethod]
-        [DataRow((int)RauFlags.Add, 1L << 40, true)]                // ADD: BIT41 set → jump
-        [DataRow((int)RauFlags.Add, 1L, false)]                     // ADD: BIT41 clear → no jump
-        [DataRow((int)RauFlags.Mult, 1L << 40, true)]               // MUL: BIT48 clear → jump
-        [DataRow((int)RauFlags.Mult, 1L << 47, false)]              // MUL: BIT48 set → no jump
-        [DataRow((int)RauFlags.Log, 12345L, true)]                  // LOG: ACC!=0 → jump
-        [DataRow((int)RauFlags.Log, 0L, false)]                     // LOG: ACC==0 → no jump
+        [DataRow((int)RFlags.Add, 1L << 40, true)]                // ADD: BIT41 set → jump
+        [DataRow((int)RFlags.Add, 1L, false)]                     // ADD: BIT41 clear → no jump
+        [DataRow((int)RFlags.Mult, 1L << 40, true)]               // MUL: BIT48 clear → jump
+        [DataRow((int)RFlags.Mult, 1L << 47, false)]              // MUL: BIT48 set → no jump
+        [DataRow((int)RFlags.Log, 12345L, true)]                  // LOG: A!=0 → jump
+        [DataRow((int)RFlags.Log, 0L, false)]                     // LOG: A==0 → no jump
         [DataRow(0, 0L, true)]                                      // no mode → jump
-        public void Pe_BranchTruthTable(int mode, long acc, bool expectBranch) =>
-            CheckBranch("пе 3000", (RauFlags)mode, (ulong)acc, expectBranch);
+        public void U1a_BranchTruthTable(int mode, long a, bool expectBranch) =>
+            CheckBranch("пе 3000", (RFlags)mode, (ulong)a, expectBranch);
 
-        private void CheckBranch(string branchMnemonic, RauFlags mode, ulong acc, bool expectBranch)
+        private void CheckBranch(string branchMnemonic, RFlags mode, ulong a, bool expectBranch)
         {
             const uint pcStart = 0x0008; // 0010 oct = 8 dec
             uint target = O("3000");
 
             StoreWord("10", branchMnemonic + ", стоп");
-            _cpu.SetAcc(acc);
-            _cpu.SetRau((ulong)mode);
-            _cpu.SetPc(pcStart);
+            _cpu.SetA(a);
+            _cpu.SetR((ulong)mode);
+            _cpu.SetK(pcStart);
 
             _cpu.Step();
 
-            // RMR = ACC — всегда, до решения о переходе (ref L750/L768).
-            Assert.AreEqual(acc, _cpu.GetRmr().Value, "RMR обязан получить ACC до ветвления");
+            // Y = A — всегда, до решения о переходе (ref L750/L768).
+            Assert.AreEqual(a, _cpu.GetY().Value, "Y обязан получить A до ветвления");
 
-            // Ветвление только читает состояние: ACC и RAU-режим обязаны не измениться (ref L748-783).
-            Assert.AreEqual(acc, _cpu.GetAcc().Value, "по/пе не меняют ACC");
-            Assert.AreEqual((uint)mode & (uint)RauFlags.Mode, _cpu.GetRau() & (uint)RauFlags.Mode,
-                "по/пе не меняют RAU-режим");
+            // Ветвление только читает состояние: A и R-режим обязаны не измениться (ref L748-783).
+            Assert.AreEqual(a, _cpu.GetA().Value, "по/пе не меняют A");
+            Assert.AreEqual((uint)mode & (uint)RFlags.Mode, _cpu.GetR() & (uint)RFlags.Mode,
+                "по/пе не меняют R-режим");
 
             if (expectBranch)
             {
-                Assert.AreEqual(target, _cpu.GetPc(), "переход должен попасть в Aex");
+                Assert.AreEqual(target, _cpu.GetK(), "переход должен попасть в Aex");
                 Assert.IsFalse(_cpu.OnRightInstruction, "цель перехода — LEFT-половина");
             }
             else
             {
-                Assert.AreEqual(pcStart, _cpu.GetPc(), "без перехода PC не меняется");
+                Assert.AreEqual(pcStart, _cpu.GetK(), "без перехода K не меняется");
                 Assert.IsTrue(_cpu.OnRightInstruction, "без перехода продолжается RIGHT-половина того же слова");
             }
         }
@@ -111,43 +111,43 @@ namespace Besm6.Tests
         [DataRow("пио", 5u, false)]
         [DataRow("пино", 0u, false)]
         [DataRow("пино", 5u, true)]
-        public void PioPino_BranchOnRegisterZeroOrNonZero(string mnemonic, uint regValue, bool expectBranch)
+        public void VzmV1m_BranchOnRegisterZeroOrNonZero(string mnemonic, uint regValue, bool expectBranch)
         {
             const uint pcStart = 0x0008; // 0010 oct = 8 dec
             uint target = O("3000");
 
             StoreWord("10", mnemonic + " 3000(2)");
             _cpu.SetM(2, regValue);
-            _cpu.SetPc(pcStart);
+            _cpu.SetK(pcStart);
 
             _cpu.Step();
 
             if (expectBranch)
             {
-                Assert.AreEqual(target, _cpu.GetPc(), mnemonic);
+                Assert.AreEqual(target, _cpu.GetK(), mnemonic);
                 Assert.IsFalse(_cpu.OnRightInstruction, mnemonic);
             }
             else
             {
-                Assert.AreEqual(pcStart, _cpu.GetPc(), mnemonic);
+                Assert.AreEqual(pcStart, _cpu.GetK(), mnemonic);
                 Assert.IsTrue(_cpu.OnRightInstruction, mnemonic);
             }
         }
 
         // ─── э36 (0360) — «как пио, но с выталкиванием БРЗ» ────────────────
         [TestMethod]
-        public void E36_BranchWhenRegisterZero_SameAsPio()
+        public void Op36_BranchWhenRegisterZero_SameAsVzm()
         {
             const uint pcStart = 0x0008; // 0010 oct = 8 dec
             uint target = O("3000");
 
             StoreWord("10", "втбрз 3000(3)");
             _cpu.SetM(3, 0);
-            _cpu.SetPc(pcStart);
+            _cpu.SetK(pcStart);
 
             _cpu.Step();
 
-            Assert.AreEqual(target, _cpu.GetPc());
+            Assert.AreEqual(target, _cpu.GetK());
             Assert.IsFalse(_cpu.OnRightInstruction);
         }
 
@@ -161,11 +161,11 @@ namespace Besm6.Tests
 
             StoreWord("10", "цикл 3000(4)");
             _cpu.SetM(4, 0);
-            _cpu.SetPc(pcStart);
+            _cpu.SetK(pcStart);
 
             _cpu.Step();
 
-            Assert.AreEqual(pcStart, _cpu.GetPc());
+            Assert.AreEqual(pcStart, _cpu.GetK());
             Assert.IsTrue(_cpu.OnRightInstruction);
             Assert.AreEqual(0u, _cpu.GetM(4), "цикл при M[reg]==0 не трогает счётчик");
         }
@@ -178,12 +178,12 @@ namespace Besm6.Tests
 
             StoreWord("10", "цикл 3000(4)");
             _cpu.SetM(4, 5);
-            _cpu.SetPc(pcStart);
+            _cpu.SetK(pcStart);
 
             _cpu.Step();
 
             Assert.AreEqual(6u, _cpu.GetM(4));
-            Assert.AreEqual(target, _cpu.GetPc());
+            Assert.AreEqual(target, _cpu.GetK());
             Assert.IsFalse(_cpu.OnRightInstruction);
         }
     }

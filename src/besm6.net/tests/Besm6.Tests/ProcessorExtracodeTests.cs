@@ -21,8 +21,8 @@ namespace Besm6.Tests;
 public sealed class ProcessorExtracodeTests
 {
     // BESM-6 addresses are 15-bit.
-    private const int TestPc = 02000;
-    private const int NextPc = TestPc + 1;
+    private const int TestK = 02000;
+    private const int NextK = TestK + 1;
 
     // Pick a harmless extracode number handled by the test callback.
     // The handler short-circuits real system handling, so the exact service
@@ -50,12 +50,12 @@ public sealed class ProcessorExtracodeTests
         //
         WriteInstructionWord(
             cpu,
-            TestPc,
+            TestK,
             left: EncodeExtracode(TestExtracode),
             right: EncodeVtm(register: 1, address: 01234));
 
         SetM(cpu, 1, 0);
-        SetExecutionPoint(cpu, TestPc, rightHalf: false);
+        SetExecutionPoint(cpu, TestK, rightHalf: false);
 
         Step(cpu);
 
@@ -70,8 +70,8 @@ public sealed class ProcessorExtracodeTests
             "The RIGHT half of a word containing an extracode in LEFT must not execute.");
 
         Assert.AreEqual(
-            NextPc,
-            GetPc(cpu),
+            NextK,
+            GetK(cpu),
             "After an extracode in LEFT, execution must continue at the next 48-bit word.");
 
         Assert.IsFalse(
@@ -94,11 +94,11 @@ public sealed class ProcessorExtracodeTests
 
         WriteInstructionWord(
             cpu,
-            TestPc,
+            TestK,
             left: EncodeNopLikeInstruction(),
             right: EncodeExtracode(TestExtracode));
 
-        SetExecutionPoint(cpu, TestPc, rightHalf: true);
+        SetExecutionPoint(cpu, TestK, rightHalf: true);
 
         Step(cpu);
 
@@ -108,9 +108,9 @@ public sealed class ProcessorExtracodeTests
             "Extracode handler must be invoked exactly once.");
 
         Assert.AreEqual(
-            NextPc,
-            GetPc(cpu),
-            "After an extracode in RIGHT, PC must advance to the next word.");
+            NextK,
+            GetK(cpu),
+            "After an extracode in RIGHT, K must advance to the next word.");
 
         Assert.IsFalse(
             IsRightHalfNext(cpu),
@@ -124,88 +124,88 @@ public sealed class ProcessorExtracodeTests
 
         const ulong expected = 0x1234_5678_9ABCUL & 0xFFFF_FFFF_FFFFUL;
 
-        cpu.SetAcc(0x111UL);
+        cpu.SetA(0x111UL);
 
         cpu.ExtracodeHandler = (opcode, address) =>
         {
-            cpu.SetAcc(expected);
+            cpu.SetA(expected);
             return true;
         };
 
         WriteInstructionWord(
             cpu,
-            TestPc,
+            TestK,
             left: EncodeExtracode(TestExtracode),
             right: EncodeNopLikeInstruction());
 
-        SetExecutionPoint(cpu, TestPc, rightHalf: false);
+        SetExecutionPoint(cpu, TestK, rightHalf: false);
 
         Step(cpu);
 
         Assert.AreEqual(
             expected,
-            GetAcc(cpu),
-            "ACC written by ExtracodeHandler must not be overwritten by the cached pre-extracode ACC.");
+            GetA(cpu),
+            "A written by ExtracodeHandler must not be overwritten by the cached pre-extracode A.");
     }
 
     [TestMethod]
-    public void Extracode_HandlerRmrResult_IsPreserved()
+    public void Extracode_HandlerYResult_IsPreserved()
     {
         var cpu = CreateProcessor();
 
         const ulong expected = 0x0ABC_DEF0_1234UL & 0xFFFF_FFFF_FFFFUL;
 
-        SetRmr(cpu, 0x222UL);
+        SetY(cpu, 0x222UL);
 
         cpu.ExtracodeHandler = (opcode, address) =>
         {
-            SetRmr(cpu, expected);
+            SetY(cpu, expected);
             return true;
         };
 
         WriteInstructionWord(
             cpu,
-            TestPc,
+            TestK,
             left: EncodeExtracode(TestExtracode),
             right: EncodeNopLikeInstruction());
 
-        SetExecutionPoint(cpu, TestPc, rightHalf: false);
+        SetExecutionPoint(cpu, TestK, rightHalf: false);
 
         Step(cpu);
 
         Assert.AreEqual(
             expected,
-            GetRmr(cpu),
-            "RMR written by ExtracodeHandler must not be overwritten by the cached pre-extracode RMR.");
+            GetY(cpu),
+            "Y written by ExtracodeHandler must not be overwritten by the cached pre-extracode Y.");
     }
 
     [TestMethod]
-    public void Extracode_SetsRauToLogical()
+    public void Extracode_SetsRToLogical()
     {
         var cpu = CreateProcessor();
 
         //
-        // Put RAU into a definitely non-logical state first.
+        // Put R into a definitely non-logical state first.
         // The helper should use the same public/internal mechanism as the
         // existing arithmetic tests.
         //
-        SetRauAdditive(cpu);
+        SetRAdditive(cpu);
 
         cpu.ExtracodeHandler = (opcode, address) => true;
 
         WriteInstructionWord(
             cpu,
-            TestPc,
+            TestK,
             left: EncodeExtracode(TestExtracode),
             right: EncodeNopLikeInstruction());
 
-        SetExecutionPoint(cpu, TestPc, rightHalf: false);
+        SetExecutionPoint(cpu, TestK, rightHalf: false);
 
         Step(cpu);
 
         Assert.IsTrue(
-            IsRauLogical(cpu),
-            "Every successfully handled extracode must leave RAU in Logical mode, matching dubna core.set_logical().");
+            IsRLogical(cpu),
+            "Every successfully handled extracode must leave R in Logical mode, matching dubna core.set_logical().");
     }
 
     [TestMethod]
@@ -232,11 +232,11 @@ public sealed class ProcessorExtracodeTests
 
         WriteInstructionWord(
             cpu,
-            TestPc,
+            TestK,
             left: EncodeExtracode(TestExtracode, reg, baseAddress),
             right: EncodeNopLikeInstruction());
 
-        SetExecutionPoint(cpu, TestPc, rightHalf: false);
+        SetExecutionPoint(cpu, TestK, rightHalf: false);
 
         Step(cpu);
 
@@ -266,11 +266,11 @@ public sealed class ProcessorExtracodeTests
 
         WriteInstructionWord(
             cpu,
-            TestPc,
+            TestK,
             left: EncodeExtracode(TestExtracode),
             right: EncodeNopLikeInstruction());
 
-        SetExecutionPoint(cpu, TestPc, rightHalf: false);
+        SetExecutionPoint(cpu, TestK, rightHalf: false);
 
         Step(cpu);
 
@@ -285,7 +285,7 @@ public sealed class ProcessorExtracodeTests
     {
         //
         // Metadata (reg/rawAddr/half) must describe the EXECUTED instruction,
-        // the PC/half advance in step()).
+        // the K/half advance in step()).
         //
         var cpu = CreateProcessor();
 
@@ -293,11 +293,11 @@ public sealed class ProcessorExtracodeTests
 
         WriteInstructionWord(
             cpu,
-            TestPc,
+            TestK,
             left: EncodeExtracode(TestExtracode, register: 2, address: 01234),
             right: EncodeNopLikeInstruction());
 
-        SetExecutionPoint(cpu, TestPc, rightHalf: false);
+        SetExecutionPoint(cpu, TestK, rightHalf: false);
 
         Step(cpu);
 
@@ -321,7 +321,7 @@ public sealed class ProcessorExtracodeTests
     {
         //
         // REGRESSION: ExtracodeRightFlag used to be stored AFTER the extracode
-        // advance (pc += 1; rightFlag = false), so a RIGHT-half extracode was
+        // advance (k += 1; rightFlag = false), so a RIGHT-half extracode was
         // reported as LEFT.  The stored half must be the one that EXECUTED
         //
         var cpu = CreateProcessor();
@@ -330,11 +330,11 @@ public sealed class ProcessorExtracodeTests
 
         WriteInstructionWord(
             cpu,
-            TestPc,
+            TestK,
             left: EncodeNopLikeInstruction(),
             right: EncodeExtracode(TestExtracode));
 
-        SetExecutionPoint(cpu, TestPc, rightHalf: true);
+        SetExecutionPoint(cpu, TestK, rightHalf: true);
 
         Step(cpu);
 
@@ -360,7 +360,7 @@ public sealed class ProcessorExtracodeTests
     // Keep all coupling to the concrete besm6.net Processor API here.
     //
     // If your current branch exposes differently named helpers (Memory,
-    // SetPc, RightInstrFlag, Rmr, Rau, etc.), change ONLY this section.
+    // SetK, RightInstrFlag, Y, R, etc.), change ONLY this section.
     // The tests above describe the architectural contract and should stay
     // unchanged.
     // =====================================================================
@@ -407,13 +407,13 @@ public sealed class ProcessorExtracodeTests
 
     private static uint EncodeVtm(int register, int address)
     {
-        return EncodeInstruction((int)Opcode.Uia, register, address);
+        return EncodeInstruction((int)Opcode.Vtm, register, address);
     }
 
     private static uint EncodeNopLikeInstruction()
     {
-        // UTC 0 — архитектурно безвреден: next_mod = 0 → apply_mod_reg не ставится.
-        return EncodeInstruction((int)Opcode.Moda, 0, 0);
+        // UTC 0 — архитектурно безвреден: next_c = 0 → apply_c_reg не ставится.
+        return EncodeInstruction((int)Opcode.Utc, 0, 0);
     }
 
     private static uint EncodeInstruction(int opcode, int register, int address)
@@ -438,10 +438,10 @@ public sealed class ProcessorExtracodeTests
 
     private static void SetExecutionPoint(
         Processor cpu,
-        int pc,
+        int k,
         bool rightHalf)
     {
-        cpu.SetPc((uint)pc);
+        cpu.SetK((uint)k);
         if (!rightHalf)
             return;
 
@@ -449,15 +449,15 @@ public sealed class ProcessorExtracodeTests
         // RIGHT-половине слова, исполняем безвредную LEFT-половину (UTC 0)
         // ТОГО ЖЕ слова — машина сама делает переход L → R. Правая половина
         // слова при этом не изменяется.
-        ulong word = ReadMemoryWord(pc);
+        ulong word = ReadMemoryWord(k);
         ulong newWord = (((ulong)EncodeNopLikeInstruction()) << 24) | (word & 0xFF_FFFFUL);
-        _memory.Write((uint)pc, new Word48(newWord));
-        cpu.SetPc((uint)pc);
+        _memory.Write((uint)k, new Word48(newWord));
+        cpu.SetK((uint)k);
         cpu.Step();
-        // Теперь: PC = pc, right_instr_flag = true — следующая Step() возьмёт RIGHT.
+        // Теперь: K = k, right_instr_flag = true — следующая Step() возьмёт RIGHT.
     }
 
-    private static int GetPc(Processor cpu) => (int)cpu.GetPc();
+    private static int GetK(Processor cpu) => (int)cpu.GetK();
 
     private static bool IsRightHalfNext(Processor cpu) => cpu.OnRightInstruction;
 
@@ -465,20 +465,20 @@ public sealed class ProcessorExtracodeTests
 
     private static int GetM(Processor cpu, int register) => (int)cpu.GetM(register);
 
-    private static ulong GetAcc(Processor cpu) => cpu.GetAcc().Value;
+    private static ulong GetA(Processor cpu) => cpu.GetA().Value;
 
-    private static void SetRmr(Processor cpu, ulong value) => cpu.SetRmr(value);
+    private static void SetY(Processor cpu, ulong value) => cpu.SetY(value);
 
-    private static ulong GetRmr(Processor cpu) => cpu.GetRmr().Value;
+    private static ulong GetY(Processor cpu) => cpu.GetY().Value;
 
-    private static void SetRauAdditive(Processor cpu)
+    private static void SetRAdditive(Processor cpu)
     {
         // Аддитивный режим + сохранение non-mode флагов (как в арифметических тестах).
-        cpu.SetRau((ulong)(RauFlags.OvfDisable | RauFlags.RoundDisable | RauFlags.Add));
+        cpu.SetR((ulong)(RFlags.OvfDisable | RFlags.RoundDisable | RFlags.Add));
     }
 
-    private static bool IsRauLogical(Processor cpu)
+    private static bool IsRLogical(Processor cpu)
     {
-        return (cpu.GetRau() & (uint)RauFlags.Mode) == (uint)RauFlags.Log;
+        return (cpu.GetR() & (uint)RFlags.Mode) == (uint)RFlags.Log;
     }
 }

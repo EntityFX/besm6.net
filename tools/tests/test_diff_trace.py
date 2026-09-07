@@ -13,8 +13,8 @@ SPEC.loader.exec_module(diff_trace)
 
 HEADER = [
     "seq", "pc", "half", "raw48", "rk24", "opcode", "reg", "addr",
-    "acc_b", "rmr_b", "rau_b", "mod_b", "amod_b", "aex_b",
-    "acc_a", "rmr_a", "rau_a", "mod_a", "amod_a", "aex_a", "pc_a", "half_a",
+    "a_b", "y_b", "r_b", "c_b", "apply_c_b", "aex_b",
+    "a_a", "y_a", "r_a", "c_a", "apply_c_a", "aex_a", "pc_a", "half_a",
 ]
 
 
@@ -22,10 +22,10 @@ def row(**changes):
     values = {
         "seq": "0", "pc": "1032", "half": "L", "raw48": "1A7FFB038602",
         "rk24": "1A7FFB", "opcode": "160", "reg": "1", "addr": "32763",
-        "acc_b": "000000000000", "rmr_b": "000000000000", "rau_b": "0",
-        "mod_b": "0", "amod_b": "0", "aex_b": "0",
-        "acc_a": "000000000000", "rmr_a": "000000000000", "rau_a": "0",
-        "mod_a": "0", "amod_a": "0", "aex_a": "32763", "pc_a": "1032", "half_a": "R",
+        "a_b": "000000000000", "y_b": "000000000000", "r_b": "0",
+        "c_b": "0", "apply_c_b": "0", "aex_b": "0",
+        "a_a": "000000000000", "y_a": "000000000000", "r_a": "0",
+        "c_a": "0", "apply_c_a": "0", "aex_a": "32763", "pc_a": "1032", "half_a": "R",
     }
     values.update({key: str(value) for key, value in changes.items()})
     return "\t".join(values[column] for column in HEADER)
@@ -39,15 +39,15 @@ class TraceDiffTests(unittest.TestCase):
 
     def test_reports_first_post_state_divergence_with_matching_pre_state(self):
         with tempfile.TemporaryDirectory() as directory:
-            cpp = self.write_trace(directory, "cpp.tsv", [row(acc_a="000000000001")])
-            cs = self.write_trace(directory, "cs.tsv", [row(acc_a="000000000002")])
+            cpp = self.write_trace(directory, "cpp.tsv", [row(a_a="000000000001")])
+            cs = self.write_trace(directory, "cs.tsv", [row(a_a="000000000002")])
 
             result = diff_trace.compare_traces(cpp, cs)
 
-        self.assertEqual("ACC_RMR", result.classification)
+        self.assertEqual("A_Y", result.classification)
         self.assertEqual(0, result.sequence)
         self.assertTrue(result.pre_match)
-        self.assertEqual({"acc_a": ("000000000001", "000000000002")}, result.differences)
+        self.assertEqual({"a_a": ("000000000001", "000000000002")}, result.differences)
 
     def test_reports_fetch_divergence_at_first_different_raw_word(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -59,6 +59,27 @@ class TraceDiffTests(unittest.TestCase):
         self.assertEqual("FETCH", result.classification)
         self.assertEqual(0, result.sequence)
         self.assertIn("raw48", result.differences)
+
+    def test_normalizes_legacy_register_column_names(self):
+        legacy_names = {
+            "a_b": "acc_b", "y_b": "rmr_b", "r_b": "rau_b",
+            "c_b": "mod_b", "apply_c_b": "amod_b",
+            "a_a": "acc_a", "y_a": "rmr_a", "r_a": "rau_a",
+            "c_a": "mod_a", "apply_c_a": "amod_a",
+        }
+        legacy_header = [legacy_names.get(column, column) for column in HEADER]
+
+        with tempfile.TemporaryDirectory() as directory:
+            cpp = Path(directory) / "cpp-old-names.tsv"
+            cpp.write_text(
+                "\t".join(legacy_header) + "\n" + row() + "\n",
+                encoding="utf-8",
+            )
+            cs = self.write_trace(directory, "cs.tsv", [row()])
+
+            result = diff_trace.compare_traces(cpp, cs)
+
+        self.assertEqual("MATCH", result.classification)
 
     def test_sequence_is_part_of_alignment_identity(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -134,7 +155,7 @@ class TraceDiffTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             cpp_rows = [row(seq=i, pc=100 + i) for i in range(4)]
             cs_rows = [row(seq=i, pc=100 + i) for i in range(4)]
-            cs_rows[2] = row(seq=2, pc=102, acc_a="000000000001")
+            cs_rows[2] = row(seq=2, pc=102, a_a="000000000001")
             cpp = self.write_trace(directory, "cpp.tsv", cpp_rows)
             cs = self.write_trace(directory, "cs.tsv", cs_rows)
 

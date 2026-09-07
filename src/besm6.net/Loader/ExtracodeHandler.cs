@@ -114,13 +114,13 @@ namespace Besm6.Loader
 
         public bool Handle(int opcode, uint aex)
         {
-            long pc = _machine.Cpu.GetPc();
+            long k = _machine.Cpu.GetK();
 
             Extracode code = (Extracode)opcode;
 
             // print_executive_address + besm6_print_instruction_octal/mnemonics), чтобы можно
             // было напрямую diff'ить с трассой dubna_ref.exe -t.
-            //   <PC:5oct> <L|R>: <reg:2> <opcode:3> <addr:4> <mnemonic> [= exec-addr]
+            //   <K:5oct> <L|R>: <reg:2> <opcode:3> <addr:4> <mnemonic> [= exec-addr]
             if (_traceExtracodes)
             {
                 var cpu2 = _machine.Cpu;
@@ -153,7 +153,7 @@ namespace Besm6.Loader
                 }
 
                 EnsureTraceWriter().WriteLine(
-                    $"{Oct(pc, 5)} {(rFlag ? 'R' : 'L')}: {Oct(reg, 2)} {Oct(opcode, 3)} {Oct(rawAddr, 4)} {mnem}{execAddr}");
+                    $"{Oct(k, 5)} {(rFlag ? 'R' : 'L')}: {Oct(reg, 2)} {Oct(opcode, 3)} {Oct(rawAddr, 4)} {mnem}{execAddr}");
             }
 
             // Hang detection: too many extracode calls without any output.
@@ -168,7 +168,7 @@ namespace Besm6.Loader
                 {
                     throw new ProcessorException(
                         $"Hang detected: MONSYS executing {NoOutputLimit}+ extracode calls without producing output. " +
-                        $"Last PC=0{Convert.ToString(pc, 8)}, opcode=0{Convert.ToString(opcode, 8)}. " +
+                        $"Last K=0{Convert.ToString(k, 8)}, opcode=0{Convert.ToString(opcode, 8)}. " +
                         "This means MONSYS is in an I/O wait state expecting a compiler " +
                         "(BEMSH/EXFOR/B) or resource that never completes. " +
                         "This is a known limitation: the C++ reference (dubna/) also cannot " +
@@ -212,10 +212,10 @@ namespace Besm6.Loader
         //
         // Диагностика (27.08.2026, tests-run + BESM6_TRACE): MONSYS при настройке сессии
         // вызывает серию э63, затем подкоманду 0:
-        //     [EC] 063 M16=0765  — имя организации (йоксел)      PC=02561
-        //     [EC] 063 M16=07    — номер машины                   PC=02563
-        //     [EC] 063 M16=0502  — адрес процессного дескриптора  PC=02567
-        //     [EC] 063 M16=00    — НЕ РЕАЛИЗОВАНО                 PC=02571  ← сбой
+        //     [EC] 063 M16=0765  — имя организации (йоксел)      K=02561
+        //     [EC] 063 M16=07    — номер машины                   K=02563
+        //     [EC] 063 M16=0502  — адрес процессного дескриптора  K=02567
+        //     [EC] 063 M16=00    — НЕ РЕАЛИЗОВАНО                 K=02571  ← сбой
         //
         // Э63(0) не реализован в референс-обработчике (dubna/extracode.cpp:
         // case default → throw) и в этом порте. Если workload, успешно завершающийся
@@ -229,26 +229,26 @@ namespace Besm6.Loader
             long addr = cpu.GetM(M16) & 0x7FFF;
             switch (addr)
             {
-                case 1: cpu.SetAcc(206L); return;
+                case 1: cpu.SetA(206L); return;
                 case 3: return;
-                case 4: cpu.SetAcc(206L); return;
-                case 7: cpu.SetAcc(5L << 33); return;
-                case 322: cpu.SetAcc(1024L); return;
-                case 324: cpu.SetAcc(0L); return;  // 504 oct — OS status/no-op
-                case 379: cpu.SetAcc(2048L); return;
-                case 381: cpu.SetAcc(2560L); return;
-                case 450: cpu.SetAcc(0); return;
-                case 452: cpu.SetAcc(1L << 43); return;
-                case 496: cpu.SetAcc(1536L); return;
-                case 497: cpu.SetAcc(1536L); return;
-                case 501: cpu.SetAcc(116888797660524L); return;
-                case 502: cpu.SetAcc(87149724850530L); return;
-                case 1024: cpu.SetAcc(342391L); return;
-                case 1536: cpu.SetAcc(0); return;
-                case 1537: cpu.SetAcc(0); return;
-                case 1544: cpu.SetAcc(0); return;
-                case 1545: cpu.SetAcc(0); return;
-                case 2048: cpu.SetAcc(0); return;
+                case 4: cpu.SetA(206L); return;
+                case 7: cpu.SetA(5L << 33); return;
+                case 322: cpu.SetA(1024L); return;
+                case 324: cpu.SetA(0L); return;  // 504 oct — OS status/no-op
+                case 379: cpu.SetA(2048L); return;
+                case 381: cpu.SetA(2560L); return;
+                case 450: cpu.SetA(0); return;
+                case 452: cpu.SetA(1L << 43); return;
+                case 496: cpu.SetA(1536L); return;
+                case 497: cpu.SetA(1536L); return;
+                case 501: cpu.SetA(116888797660524L); return;
+                case 502: cpu.SetA(87149724850530L); return;
+                case 1024: cpu.SetA(342391L); return;
+                case 1536: cpu.SetA(0); return;
+                case 1537: cpu.SetA(0); return;
+                case 1544: cpu.SetA(0); return;
+                case 1545: cpu.SetA(0); return;
+                case 2048: cpu.SetA(0); return;
                 case 12273: return;  // 27761 oct = 12273 dec (bemsh/madlen) — no-op
                 default:
                     throw new ProcessorException($"Unimplemented extracode *63 {Convert.ToString(addr, 8)}");
@@ -264,41 +264,41 @@ namespace Besm6.Loader
             switch (addr)
             {
                 case 1: case 2: case 3: case 4: case 5: case 6: case 7:
-                    cpu.SetAcc(0); return;
-                case 322: cpu.SetAcc(1024L); return;   // 0502
-                case 342: cpu.SetAcc(3072L); return;   // 0526 — адрес таблицы ALLTOISO
-                case 368: cpu.SetAcc(2560L); return;   // 0560
-                case 372: cpu.SetAcc(512L); return;
-                case 381: cpu.SetAcc(4608L); return;
-                case 382: cpu.SetAcc(3584L); return;
-                case 496: cpu.SetAcc(0x800000600L); return;
-                case 497: cpu.SetAcc(2048L); return;
-                case 498: cpu.SetAcc(4096L); return;
+                    cpu.SetA(0); return;
+                case 322: cpu.SetA(1024L); return;   // 0502
+                case 342: cpu.SetA(3072L); return;   // 0526 — адрес таблицы ALLTOISO
+                case 368: cpu.SetA(2560L); return;   // 0560
+                case 372: cpu.SetA(512L); return;
+                case 381: cpu.SetA(4608L); return;
+                case 382: cpu.SetA(3584L); return;
+                case 496: cpu.SetA(0x800000600L); return;
+                case 497: cpu.SetA(2048L); return;
+                case 498: cpu.SetA(4096L); return;
                 case 500: //0764 Get version of Dubna OS.
-                    cpu.SetAcc(0x82828F5C28F6L); return; //0'4050'1217'2702'4366
+                    cpu.SetA(0x82828F5C28F6L); return; //0'4050'1217'2702'4366
                 case 502: //0766
-                    cpu.SetAcc(0x4F4320645962L); return;
-                case 514: cpu.SetAcc(233475L); return;
-                case 1024: cpu.SetAcc(0); return;
-                case 1536: cpu.SetAcc(0); return;
-                case 1537: cpu.SetAcc(0); return;
-                case 1541: cpu.SetAcc(0); return;
-                case 2048: cpu.SetAcc(0); return;
-                case 2561: cpu.SetAcc(0); return;
+                    cpu.SetA(0x4F4320645962L); return;
+                case 514: cpu.SetA(233475L); return;
+                case 1024: cpu.SetA(0); return;
+                case 1536: cpu.SetA(0); return;
+                case 1537: cpu.SetA(0); return;
+                case 1541: cpu.SetA(0); return;
+                case 2048: cpu.SetA(0); return;
+                case 2561: cpu.SetA(0); return;
                 case 4608: case 4609: case 4610: case 4611:
                 case 4612: case 4613: case 4614: case 4615:
                 case 4616: case 4617: case 4618: case 4619:
                 case 4620: case 4621: case 4622: case 4623:
-                    cpu.SetAcc(0); return;
+                    cpu.SetA(0); return;
                 default:
                     if (addr >= 448 && addr < 496) // 0700..0757 oct — выключатели пульта
                     {
-                        cpu.SetAcc((ulong)(1L << ((int)(495 - addr))));
+                        cpu.SetA((ulong)(1L << ((int)(495 - addr))));
                         return;
                     }
                     if (addr >= 3072 && addr < 3072 + 128) // 06000..06000+127 oct — таблица ALLTOISO
                     {
-                        cpu.SetAcc((ulong)CosyCodec.AllToIso[(int)(addr - 3072)]);
+                        cpu.SetA((ulong)CosyCodec.AllToIso[(int)(addr - 3072)]);
                         return;
                     }
                     throw new ProcessorException($"Unimplemented extracode *65 {Convert.ToString(addr, 8)}");
@@ -315,7 +315,7 @@ namespace Besm6.Loader
             bool printInfo = ((word >> 23) & 1) != 0;
             uint mode = (uint)(word >> 20) & 3;
             uint watch = (uint)word & 0x7FFF;
-            uint cont = cpu.GetPc();
+            uint cont = cpu.GetK();
 
             cpu.ArmDebugWatch(xfer, printInfo, mode, watch, cont);
         }
@@ -340,7 +340,7 @@ namespace Besm6.Loader
             long addr = cpu.GetM(M16) & 0x7FFF;
             if (addr > 0)
             {
-                _machine.Memory.Write((uint)addr, new Word48(cpu.GetAcc().Value));
+                _machine.Memory.Write((uint)addr, new Word48(cpu.GetA().Value));
 
                 // addr == 020 oct (16 dec) → enable intercept for overflow/div-zero.
                 if (addr == 16)
@@ -361,32 +361,32 @@ namespace Besm6.Loader
 
         // ─── E50: математика + сервисы (fn из M[16]) ─────────────────────────
         // Точный порт Processor::e50 из dubna/e50.cpp.
-        // case 0-7 — математика (ACC = input = output).
-        // case 014/017 — parse/format (требуют записи RMR + байтовый I/O, не в C# API).
+        // case 0-7 — математика (A = input = output).
+        // case 014/017 — parse/format (требуют записи Y + байтовый I/O, не в C# API).
         // Остальные case — сервисы ОС Дубна (no-op / DATE* / фиксированные ответы).
 
         private void E50()
         {
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16) & 0x7FFF;
-            ulong arg = cpu.GetAcc().Value;
+            ulong arg = cpu.GetA().Value;
             switch (addr)
             {
-                case 0: cpu.SetAcc(Besm6Math.Sqrt(arg)); break;
-                case 1: cpu.SetAcc(Besm6Math.Sin(arg)); break;
-                case 2: cpu.SetAcc(Besm6Math.Cos(arg)); break;
-                case 3: cpu.SetAcc(Besm6Math.Atan(arg)); break;
-                case 4: cpu.SetAcc(Besm6Math.Asin(arg)); break;
-                case 5: cpu.SetAcc(Besm6Math.Log(arg)); break;
-                case 6: cpu.SetAcc(Besm6Math.Exp(arg)); break;
-                case 7: cpu.SetAcc(Besm6Math.Floor(arg)); break;
+                case 0: cpu.SetA(Besm6Math.Sqrt(arg)); break;
+                case 1: cpu.SetA(Besm6Math.Sin(arg)); break;
+                case 2: cpu.SetA(Besm6Math.Cos(arg)); break;
+                case 3: cpu.SetA(Besm6Math.Atan(arg)); break;
+                case 4: cpu.SetA(Besm6Math.Asin(arg)); break;
+                case 5: cpu.SetA(Besm6Math.Log(arg)); break;
+                case 6: cpu.SetA(Besm6Math.Exp(arg)); break;
+                case 7: cpu.SetA(Besm6Math.Floor(arg)); break;
 
                 case 12: E50Parse(); break;   // 014 oct
                 case 15: E50Format(); break;  // 017 oct
 
                 case 54: // 066 oct — смена страницы плоттера.
                     _machine.Plotter.ChangePage();
-                    cpu.SetAcc(0);
+                    cpu.SetA(0);
                     break;
 
                 case 55:  // 067 oct — DATE*, ОС Дубна.
@@ -432,7 +432,7 @@ namespace Besm6.Loader
                             | (4UL << 16) | (5UL << 12)   // min_hi=4, min_lo=5
                             | (5UL << 8)  | (6UL << 4);   // sec_hi=5, sec_lo=6
                     }
-                    cpu.SetAcc(word);
+                    cpu.SetA(word);
                     break;
                 }
 
@@ -467,10 +467,10 @@ namespace Besm6.Loader
                 case 137:
                     throw new ProcessorException("Task paused waiting for tape");
 
-                case 28735: cpu.SetAcc(0); break;         // 070077 oct
-                case 28800: cpu.SetAcc(0x8000UL); break;   // 070200 oct: 0'0010'0000 in dubna/e50.cpp
-                case 28808: cpu.SetAcc(0); break;         // 070210 oct
-                case 28812: cpu.SetAcc(System.Convert.ToUInt64("1234567012345670", 8)); break; // 070214 oct
+                case 28735: cpu.SetA(0); break;         // 070077 oct
+                case 28800: cpu.SetA(0x8000UL); break;   // 070200 oct: 0'0010'0000 in dubna/e50.cpp
+                case 28808: cpu.SetA(0); break;         // 070210 oct
+                case 28812: cpu.SetA(System.Convert.ToUInt64("1234567012345670", 8)); break; // 070214 oct
 
                 default:
                     throw new ProcessorException($"Unimplemented extracode *50 {Convert.ToString(addr, 8)}");
@@ -487,8 +487,8 @@ namespace Besm6.Loader
             long addr = cpu.GetM(M16);
             switch (addr)
             {
-                case 0: cpu.SetAcc(Besm6Math.Sin(cpu.GetAcc().Value)); return;
-                case 1: cpu.SetAcc(Besm6Math.Cos(cpu.GetAcc().Value)); return;
+                case 0: cpu.SetA(Besm6Math.Sin(cpu.GetA().Value)); return;
+                case 1: cpu.SetA(Besm6Math.Cos(cpu.GetA().Value)); return;
                 default: throw new ProcessorException($"Unimplemented extracode *51 {Convert.ToString(addr, 8)}");
             }
         }
@@ -498,7 +498,7 @@ namespace Besm6.Loader
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *52 {Convert.ToString(addr, 8)}");
-            cpu.SetAcc(Besm6Math.Cos(cpu.GetAcc().Value));
+            cpu.SetA(Besm6Math.Cos(cpu.GetA().Value));
         }
 
         private void E53()
@@ -506,7 +506,7 @@ namespace Besm6.Loader
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *53 {Convert.ToString(addr, 8)}");
-            cpu.SetAcc(Besm6Math.Atan(cpu.GetAcc().Value));
+            cpu.SetA(Besm6Math.Atan(cpu.GetA().Value));
         }
 
         private void E54()
@@ -514,7 +514,7 @@ namespace Besm6.Loader
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *54 {Convert.ToString(addr, 8)}");
-            cpu.SetAcc(Besm6Math.Asin(cpu.GetAcc().Value));
+            cpu.SetA(Besm6Math.Asin(cpu.GetA().Value));
         }
 
         private void E55()
@@ -522,7 +522,7 @@ namespace Besm6.Loader
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *55 {Convert.ToString(addr, 8)}");
-            cpu.SetAcc(Besm6Math.Log(cpu.GetAcc().Value));
+            cpu.SetA(Besm6Math.Log(cpu.GetA().Value));
         }
 
         private void E56()
@@ -530,7 +530,7 @@ namespace Besm6.Loader
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *56 {Convert.ToString(addr, 8)}");
-            cpu.SetAcc(Besm6Math.Exp(cpu.GetAcc().Value));
+            cpu.SetA(Besm6Math.Exp(cpu.GetA().Value));
         }
 
         // ─── E57: монтаж лент / файлов (порт dubna/e57.cpp) ───────────────────
@@ -543,29 +543,29 @@ namespace Besm6.Loader
             // Детальная диагностика E57 (BESM6_TRACE).
             if (_traceExtracodes)
             {
-                long acc = (long)cpu.GetAcc().Value;
+                long a = (long)cpu.GetA().Value;
                 long m13 = cpu.GetM(13);
                 EnsureTraceWriter().WriteLine(
-                    $"[E57] addr=0{Convert.ToString(addr, 8)} ACC=0{acc:X} M[13]=0{m13:X}");
+                    $"[E57] addr=0{Convert.ToString(addr, 8)} A=0{a:X} M[13]=0{m13:X}");
             }
 
             switch (addr)
             {
                 case 0:
-                    // floor(ACC) — уже в E50 case 14.
-                    cpu.SetAcc(Besm6Math.Floor(cpu.GetAcc().Value));
+                    // floor(A) — уже в E50 case 14.
+                    cpu.SetA(Besm6Math.Floor(cpu.GetA().Value));
                     return;
                 case 2:
                     // Output to Calcomp plotter.
-                    _machine.Plotter.CalcompPutCh((char)(cpu.GetAcc().Value & 0xFF));
-                    cpu.SetAcc(0);
+                    _machine.Plotter.CalcompPutCh((char)(cpu.GetA().Value & 0xFF));
+                    cpu.SetA(0);
                     return;
                 case 3:
                     // Delay 1 sec — no-op.
                     return;
                 case 5:
                     // Forex unknown — return 0.
-                    cpu.SetAcc(0);
+                    cpu.SetA(0);
                     return;
                 case 7:
                     // Task paused waiting for tape.
@@ -588,8 +588,8 @@ namespace Besm6.Loader
 
                 if ((addr & E57_ASSIGN) != 0)
                 {
-                    // Mount tape: tapeId in ACC, disk unit in M[15 octal] = M[13 decimal].
-                    long tapeIdAssign = (long)cpu.GetAcc().Value;
+                    // Mount tape: tapeId in A, disk unit in M[15 octal] = M[13 decimal].
+                    long tapeIdAssign = (long)cpu.GetA().Value;
                     int diskUnit = (int)(cpu.GetM(13) & 0x7F);
                     bool writePermit = (addr & E57_WRITE) != 0;
                     bool ok = _mountTapeWithMode != null
@@ -604,7 +604,7 @@ namespace Besm6.Loader
                             $"[E57] ASSIGN tape=0{tapeIdAssign:X} -> unit=0{Convert.ToString(diskUnit, 8)} " +
                             $"mounted_id=0{(mounted?.VolumeId.ToString("X") ?? "null")}");
                     }
-                    cpu.SetAcc((ulong)diskUnit);
+                    cpu.SetA((ulong)diskUnit);
                     return;
                 }
 
@@ -612,16 +612,16 @@ namespace Besm6.Loader
                 {
                     // Release tapes according to bitmask on accumulator.
                     if ((addr & E57_READY) == 0)
-                        _releaseTapes((long)cpu.GetAcc().Value);
-                    cpu.SetAcc(0);
+                        _releaseTapes((long)cpu.GetA().Value);
+                    cpu.SetA(0);
                     return;
                 }
 
                 // Find mounted tape (by name and number).
-                // Return disk number (unit) in ACC.
-                long tapeIdFind = (long)cpu.GetAcc().Value;
+                // Return disk number (unit) in A.
+                long tapeIdFind = (long)cpu.GetA().Value;
                 int unit = _findTape(tapeIdFind);
-                cpu.SetAcc((ulong)unit);
+                cpu.SetA((ulong)unit);
             }
             else
             {
@@ -642,7 +642,7 @@ namespace Besm6.Loader
             const int notFound = 16;
 
             var cpu = _machine.Cpu;
-            ulong request = cpu.GetAcc().Value;
+            ulong request = cpu.GetA().Value;
             if ((request & keyMask) != keyValue)
                 throw new ProcessorException("Wrong access key in *57 77777");
 
@@ -659,7 +659,7 @@ namespace Besm6.Loader
                     ulong disc = Read(infoAddr + 1) & 0xFFFFFFFFF000UL;
                     if (disc != discLocal && disc != discHome && disc != discTmp)
                         throw new ProcessorException($"Unsupported disc name: 0x{disc:X12}");
-                    cpu.SetAcc(0);
+                    cpu.SetA(0);
                     return;
                 }
                 case 1:
@@ -684,7 +684,7 @@ namespace Besm6.Loader
                         reply |= (ulong)error << 42;
                         Write(address + 2, reply);
                     }
-                    cpu.SetAcc(0);
+                    cpu.SetA(0);
                     return;
                 }
                 case 3: // FILE_OPEN
@@ -701,7 +701,7 @@ namespace Besm6.Loader
                         item = (item & ~(0x3FUL << 42)) | ((ulong)(error & 0x3F) << 42);
                         Write(address, item);
                     }
-                    cpu.SetAcc(0);
+                    cpu.SetA(0);
                     return;
                 }
                 case 4: // SCRATCH_OPEN
@@ -715,7 +715,7 @@ namespace Besm6.Loader
                         int unit = (int)((item >> 36) & 0x3F);
                         _scratchMount(unit, size * 32);
                     }
-                    cpu.SetAcc(0);
+                    cpu.SetA(0);
                     return;
                 }
                 case 5:
@@ -743,9 +743,9 @@ namespace Besm6.Loader
             if (addr == 0x7FFF) // 077777 octal
             {
                 // Вывод на плоттер Watanabe или Tektronix.
-                // Адрес начала данных — в младших 15 битах ACC; тип плоттера — в старших 12 битах.
-                var bp = new BytePointer(_machine.Memory, (uint)(cpu.GetAcc().Value & 0x7FFF));
-                switch ((cpu.GetAcc().Value >> 36) & 0xFFF)
+                // Адрес начала данных — в младших 15 битах A; тип плоттера — в старших 12 битах.
+                var bp = new BytePointer(_machine.Memory, (uint)(cpu.GetA().Value & 0x7FFF));
+                switch ((cpu.GetA().Value >> 36) & 0xFFF)
                 {
                     case 0:
                         // Watanabe WX4675.
@@ -776,14 +776,14 @@ namespace Besm6.Loader
 
                     default:
                         throw new ProcessorException(
-                            $"Extracode *61 77777: unknown target {Convert.ToString(((int)cpu.GetAcc().Value >> 36) & 0xFFF, 8)}");
+                            $"Extracode *61 77777: unknown target {Convert.ToString(((int)cpu.GetA().Value >> 36) & 0xFFF, 8)}");
                 }
-                cpu.SetAcc(0);
+                cpu.SetA(0);
                 return;
             }
 
-            // Неизвестный адрес — сброс ACC.
-            cpu.SetAcc(0);
+            // Неизвестный адрес — сброс A.
+            cpu.SetA(0);
         }
 
         // ─── E64: вывод текста (полный протокол, см. ExtracodeHandler.E64.cs) ───
@@ -800,7 +800,7 @@ namespace Besm6.Loader
         {
             var cpu = _machine.Cpu;
             long execAddr = cpu.GetM(M16) & 0x7FFF;
-            long ctrl = (execAddr == 0) ? (long)cpu.GetAcc().Value : (long)_machine.Memory.Read((uint)execAddr).Value;
+            long ctrl = (execAddr == 0) ? (long)cpu.GetA().Value : (long)_machine.Memory.Read((uint)execAddr).Value;
 
             bool isRead = (ctrl & (1L << 39)) != 0;
             int unit = (int)((ctrl >> 12) & 0x3F);

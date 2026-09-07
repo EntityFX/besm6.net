@@ -9,9 +9,9 @@ namespace Besm6.Core
     /// </summary>
     public class Alu
     {
-        private const ulong RAU_NORM_DISABLE  = (ulong)RauFlags.NormDisable;
-        private const ulong RAU_ROUND_DISABLE = (ulong)RauFlags.RoundDisable;
-        private const ulong RAU_OVF_DISABLE   = (ulong)RauFlags.OvfDisable;
+        private const ulong R_NORM_DISABLE  = (ulong)RFlags.NormDisable;
+        private const ulong R_ROUND_DISABLE = (ulong)RFlags.RoundDisable;
+        private const ulong R_OVF_DISABLE   = (ulong)RFlags.OvfDisable;
 
         private const ulong BIT41  = Besm6Constants.BIT41;
         private const ulong BIT48  = Besm6Constants.BIT48;
@@ -27,41 +27,41 @@ namespace Besm6.Core
             _proc = proc;
         }
 
-        public void Add(Word48 val, bool negateAcc, bool negateVal)
+        public void Add(Word48 val, bool negateA, bool negateVal)
         {
-            MantissaExponent acc = new MantissaExponent(new Word48(_proc._acc.Value));
+            MantissaExponent a = new MantissaExponent(new Word48(_proc._a.Value));
             MantissaExponent word = new MantissaExponent(val);
 
-            if (!negateAcc)
+            if (!negateA)
             {
                 if (!negateVal) { /* сложение */ }
                 else { word.Negate(); }
             }
             else
             {
-                if (!negateVal) { acc.Negate(); }
+                if (!negateVal) { a.Negate(); }
                 else
                 {
-                    if (acc.IsNegative()) acc.Negate();
+                    if (a.IsNegative()) a.Negate();
                     if (!word.IsNegative()) word.Negate();
                 }
             }
 
             MantissaExponent a1, a2;
-            int diff = (int)(acc.Exponent - word.Exponent);
+            int diff = (int)(a.Exponent - word.Exponent);
             if (diff < 0)
             {
                 diff = -diff;
-                a1 = acc;
+                a1 = a;
                 a2 = word;
             }
             else
             {
                 a1 = word;
-                a2 = acc;
+                a2 = a;
             }
 
-            Word48 mr = Word48.Zero;
+            Word48 y = Word48.Zero;
             bool neg = a1.IsNegative();
             bool roundFlag = false;
 
@@ -70,15 +70,15 @@ namespace Besm6.Core
             }
             else if (diff <= 40)
             {
-                mr = Word48.FromInt48((ulong)(a1.Mantissa << (40 - diff)) & BITS40);
-                roundFlag = mr.Value != 0;
+                y = Word48.FromInt48((ulong)(a1.Mantissa << (40 - diff)) & BITS40);
+                roundFlag = y.Value != 0;
                 a1.Mantissa = (long)((ulong)((a1.Mantissa >> diff) | (neg ? (~0L << (40 - diff)) : 0)) & BITS42);
             }
             else if (diff <= 80)
             {
                 int d2 = diff - 40;
                 roundFlag = a1.Mantissa != 0;
-                mr = Word48.FromInt48((ulong)((a1.Mantissa >> d2) | (neg ? (~0L << (40 - d2)) : 0)) & BITS40);
+                y = Word48.FromInt48((ulong)((a1.Mantissa >> d2) | (neg ? (~0L << (40 - d2)) : 0)) & BITS40);
                 a1.Mantissa = neg ? (long)BITS42 : 0;
             }
             else
@@ -86,95 +86,95 @@ namespace Besm6.Core
                 roundFlag = a1.Mantissa != 0;
                 if (neg)
                 {
-                    mr = Word48.FromInt48(BITS40);
+                    y = Word48.FromInt48(BITS40);
                     a1.Mantissa = (long)BITS42;
                 }
                 else
                 {
-                    mr = Word48.Zero;
+                    y = Word48.Zero;
                     a1.Mantissa = 0;
                 }
             }
 
-            acc.Exponent = a2.Exponent;
-            acc.Mantissa = a1.Mantissa + a2.Mantissa;
+            a.Exponent = a2.Exponent;
+            a.Mantissa = a1.Mantissa + a2.Mantissa;
 
-            if (acc.IsDenormal())
+            if (a.IsDenormal())
             {
-                roundFlag |= (acc.Mantissa & 1) != 0;
-                mr = Word48.FromInt48((mr.Value >> 1) | ((ulong)(acc.Mantissa & 1) << 39));
-                acc.NormalizeToTheRight();
+                roundFlag |= (a.Mantissa & 1) != 0;
+                y = Word48.FromInt48((y.Value >> 1) | ((ulong)(a.Mantissa & 1) << 39));
+                a.NormalizeToTheRight();
             }
 
-            NormalizeAndRound(acc, mr.Value, roundFlag);
+            NormalizeAndRound(a, y.Value, roundFlag);
         }
 
-        public void NormalizeAndRound(MantissaExponent acc, ulong mr, bool roundFlag)
+        public void NormalizeAndRound(MantissaExponent a, ulong y, bool roundFlag)
         {
             ulong rr = 0;
-            ulong r;
-            ulong rau = _proc._rau;
+            ulong normalizedBits;
+            ulong r = _proc._r;
 
-            if ((rau & RAU_NORM_DISABLE) != 0)
+            if ((r & R_NORM_DISABLE) != 0)
                 goto chk_rnd;
 
-            int i = (int)((acc.Mantissa >> 39) & 3);
+            int i = (int)((a.Mantissa >> 39) & 3);
             if (i == 0)
             {
-                r = (ulong)acc.Mantissa & BITS40;
-                if (r != 0)
+                normalizedBits = (ulong)a.Mantissa & BITS40;
+                if (normalizedBits != 0)
                 {
-                    int cnt = 39 - MantissaExponent.HighestBit((long)r);
-                    r <<= cnt;
-                    rr = mr >> (40 - cnt);
-                    acc.Mantissa = (long)(r | rr);
-                    mr <<= cnt;
-                    acc.Exponent -= (uint)cnt;
+                    int cnt = 39 - MantissaExponent.HighestBit((long)normalizedBits);
+                    normalizedBits <<= cnt;
+                    rr = y >> (40 - cnt);
+                    a.Mantissa = (long)(normalizedBits | rr);
+                    y <<= cnt;
+                    a.Exponent -= (uint)cnt;
                     goto chk_zero;
                 }
-                r = mr & BITS40;
-                if (r != 0)
+                normalizedBits = y & BITS40;
+                if (normalizedBits != 0)
                 {
-                    int cnt = 39 - MantissaExponent.HighestBit((long)r);
-                    rr = mr;
-                    r <<= cnt;
-                    acc.Mantissa = (long)r;
-                    mr = 0;
-                    acc.Exponent -= 40u + (uint)cnt;
+                    int cnt = 39 - MantissaExponent.HighestBit((long)normalizedBits);
+                    rr = y;
+                    normalizedBits <<= cnt;
+                    a.Mantissa = (long)normalizedBits;
+                    y = 0;
+                    a.Exponent -= 40u + (uint)cnt;
                     goto chk_zero;
                 }
                 goto zero;
             }
             else if (i == 3)
             {
-                r = ~(ulong)acc.Mantissa & BITS40;
-                if (r != 0)
+                normalizedBits = ~(ulong)a.Mantissa & BITS40;
+                if (normalizedBits != 0)
                 {
-                    int cnt = 39 - MantissaExponent.HighestBit((long)r);
-                    r = (r << cnt) | ((1UL << cnt) - 1);
-                    rr = mr >> (40 - cnt);
-                    acc.Mantissa = (long)(BIT41 | (~r & BITS40) | rr);
-                    mr <<= cnt;
-                    acc.Exponent -= (uint)cnt;
+                    int cnt = 39 - MantissaExponent.HighestBit((long)normalizedBits);
+                    normalizedBits = (normalizedBits << cnt) | ((1UL << cnt) - 1);
+                    rr = y >> (40 - cnt);
+                    a.Mantissa = (long)(BIT41 | (~normalizedBits & BITS40) | rr);
+                    y <<= cnt;
+                    a.Exponent -= (uint)cnt;
                     goto chk_zero;
                 }
-                r = ~mr & BITS40;
-                if (r != 0)
+                normalizedBits = ~y & BITS40;
+                if (normalizedBits != 0)
                 {
-                    int cnt = 39 - MantissaExponent.HighestBit((long)r);
-                    rr = mr;
-                    r = (r << cnt) | ((1UL << cnt) - 1);
-                    acc.Mantissa = (long)(BIT41 | (~r & BITS40));
-                    mr = 0;
-                    acc.Exponent -= 40u + (uint)cnt;
+                    int cnt = 39 - MantissaExponent.HighestBit((long)normalizedBits);
+                    rr = y;
+                    normalizedBits = (normalizedBits << cnt) | ((1UL << cnt) - 1);
+                    a.Mantissa = (long)(BIT41 | (~normalizedBits & BITS40));
+                    y = 0;
+                    a.Exponent -= 40u + (uint)cnt;
                     goto chk_zero;
                 }
                 else
                 {
                     rr = 1;
-                    acc.Mantissa = (long)BIT41;
-                    mr = 0;
-                    acc.Exponent -= 80;
+                    a.Mantissa = (long)BIT41;
+                    y = 0;
+                    a.Exponent -= 80;
                     goto chk_zero;
                 }
             }
@@ -184,70 +184,70 @@ namespace Besm6.Core
                 roundFlag = false;
 
         chk_rnd:
-            if ((acc.Exponent & 0x8000u) != 0)
+            if ((a.Exponent & 0x8000u) != 0)
                 goto zero;
 
-            if ((rau & RAU_ROUND_DISABLE) == 0 && roundFlag)
-                acc.Mantissa |= 1;
+            if ((r & R_ROUND_DISABLE) == 0 && roundFlag)
+                a.Mantissa |= 1;
 
-            if (acc.Mantissa == 0 && (rau & RAU_NORM_DISABLE) == 0)
+            if (a.Mantissa == 0 && (r & R_NORM_DISABLE) == 0)
                 goto zero;
 
-            _proc._acc = Word48.FromInt48((((ulong)acc.Exponent & 0x7Fu) << 41) | ((ulong)acc.Mantissa & BITS41));
-            _proc._rmr = Word48.FromInt48(mr & BITS40);
+            _proc._a = Word48.FromInt48((((ulong)a.Exponent & 0x7Fu) << 41) | ((ulong)a.Mantissa & BITS41));
+            _proc._y = Word48.FromInt48(y & BITS40);
 
-            if ((acc.Exponent & 0x80u) != 0)
+            if ((a.Exponent & 0x80u) != 0)
             {
-                if ((rau & RAU_OVF_DISABLE) == 0)
+                if ((r & R_OVF_DISABLE) == 0)
                     throw new ProcessorException("Arithmetic overflow");
             }
             return;
 
         zero:
-            _proc._acc = Word48.Zero;
-            _proc._rmr = Word48.FromInt48(_proc._rmr.Value & ~BITS40);
+            _proc._a = Word48.Zero;
+            _proc._y = Word48.FromInt48(_proc._y.Value & ~BITS40);
         }
 
         public void AddExponent(int val)
         {
-            MantissaExponent acc = new MantissaExponent(_proc._acc);
-            acc.Exponent += (uint)val;
-            _proc._rmr = Word48.Zero;
-            NormalizeAndRound(acc, 0, false);
+            MantissaExponent a = new MantissaExponent(_proc._a);
+            a.Exponent += (uint)val;
+            _proc._y = Word48.Zero;
+            NormalizeAndRound(a, 0, false);
         }
 
-        public void ChangeSign(bool negateAcc)
+        public void ChangeSign(bool negateA)
         {
-            MantissaExponent acc = new MantissaExponent(_proc._acc);
-            if (negateAcc)
+            MantissaExponent a = new MantissaExponent(_proc._a);
+            if (negateA)
             {
-                acc.Negate();
-                if (acc.IsDenormal())
-                    acc.NormalizeToTheRight();
+                a.Negate();
+                if (a.IsDenormal())
+                    a.NormalizeToTheRight();
             }
-            _proc._rmr = Word48.Zero;
-            NormalizeAndRound(acc, 0, false);
+            _proc._y = Word48.Zero;
+            NormalizeAndRound(a, 0, false);
         }
 
         public void Multiply(Word48 val)
         {
-            if (_proc._acc.Value == 0 || val.Value == 0)
+            if (_proc._a.Value == 0 || val.Value == 0)
             {
-                _proc._acc = Word48.Zero;
-                _proc._rmr = Word48.FromInt48(_proc._rmr.Value & ~BITS40);
+                _proc._a = Word48.Zero;
+                _proc._y = Word48.FromInt48(_proc._y.Value & ~BITS40);
                 return;
             }
 
-            MantissaExponent acc = new MantissaExponent(_proc._acc);
+            MantissaExponent a = new MantissaExponent(_proc._a);
             MantissaExponent word = new MantissaExponent(val);
 
-            ulong mr = (ulong)acc.Multiply(word.Mantissa);
-            acc.Exponent += word.Exponent - 64;
+            ulong y = (ulong)a.Multiply(word.Mantissa);
+            a.Exponent += word.Exponent - 64;
 
-            if (acc.IsDenormal())
-                acc.NormalizeToTheRight();
+            if (a.IsDenormal())
+                a.NormalizeToTheRight();
 
-            NormalizeAndRound(acc, mr, mr != 0);
+            NormalizeAndRound(a, y, y != 0);
         }
 
         public void Divide(Word48 val)
@@ -255,27 +255,27 @@ namespace Besm6.Core
             if (((val.Value ^ (val.Value << 1)) & BIT41) == 0)
                 throw new ProcessorException("Division by zero");
 
-            MantissaExponent dividend = new MantissaExponent(_proc._acc);
+            MantissaExponent dividend = new MantissaExponent(_proc._a);
             MantissaExponent divisor = new MantissaExponent(val);
 
-            MantissaExponent acc = NrDiv(dividend, divisor);
-            NormalizeAndRound(acc, 0, false);
+            MantissaExponent a = NrDiv(dividend, divisor);
+            NormalizeAndRound(a, 0, false);
         }
 
         public void Shift(int nbits)
         {
-            _proc._rmr = Word48.Zero;
+            _proc._y = Word48.Zero;
             if (nbits > 0)
             {
                 if (nbits < 48)
                 {
-                    _proc._rmr = Word48.FromInt48( (_proc._acc.Value << (48 - nbits)) & BITS48);
-                    _proc._acc = Word48.FromInt48(_proc._acc.Value >> nbits);
+                    _proc._y = Word48.FromInt48( (_proc._a.Value << (48 - nbits)) & BITS48);
+                    _proc._a = Word48.FromInt48(_proc._a.Value >> nbits);
                 }
                 else
                 {
-                    _proc._rmr = Word48.FromInt48(_proc._acc.Value >> (nbits - 48));
-                    _proc._acc = Word48.Zero;
+                    _proc._y = Word48.FromInt48(_proc._a.Value >> (nbits - 48));
+                    _proc._a = Word48.Zero;
                 }
             }
             else if (nbits < 0)
@@ -283,13 +283,13 @@ namespace Besm6.Core
                 int n = -nbits;
                 if (n < 48)
                 {
-                    _proc._rmr = Word48.FromInt48(_proc._acc.Value >> (48 - n));
-                    _proc._acc = Word48.FromInt48((_proc._acc.Value << n) & BITS48);
+                    _proc._y = Word48.FromInt48(_proc._a.Value >> (48 - n));
+                    _proc._a = Word48.FromInt48((_proc._a.Value << n) & BITS48);
                 }
                 else
                 {
-                    _proc._rmr = Word48.FromInt48((_proc._acc.Value << (n - 48)) & BITS48);
-                    _proc._acc = Word48.Zero;
+                    _proc._y = Word48.FromInt48((_proc._a.Value << (n - 48)) & BITS48);
+                    _proc._a = Word48.Zero;
                 }
             }
         }

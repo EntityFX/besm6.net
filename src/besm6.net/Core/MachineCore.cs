@@ -48,26 +48,27 @@ namespace Besm6.Core
 
         /// <summary>
         /// Хук трассировки ИЗМЕНЕНИЙ регистров после каждого шага — точный аналог
-        /// регистра ("ACC", "RMR", "M0".."M15", "RAU", "MOD" или "CLEARMOD") и его
+        /// регистра ("A", "Y", "M0".."M17" в восьмеричной записи, "R", "C"
+        /// или "CLEARC") и его
         /// значением. Печатает только изменённые регистры (сравнение с prev-состоянием),
         /// </summary>
         public Action<string, ulong>? RegisterTrace { get; set; }
 
         private bool _rtActive;
-        private ulong _rtAcc, _rtRmr, _rtRau;
-        private uint _rtMod;
+        private ulong _rtA, _rtY, _rtR;
+        private uint _rtC;
         private uint[] _rtM = new uint[16];
-        private bool _rtApply;
+        private bool _rtApplyC;
 
         /// <summary>Зафиксировать текущее состояние как базу сравнения (вызывать до цикла шагов).</summary>
         public void BeginRegisterTrace()
         {
             _rtActive = true;
-            _rtAcc = Cpu.GetAcc().Value;
-            _rtRmr = Cpu.GetRmr().Value;
-            _rtRau = Cpu.GetRau();
-            _rtMod = (uint)Cpu.Mod;
-            _rtApply = Cpu.ApplyModReg;
+            _rtA = Cpu.GetA().Value;
+            _rtY = Cpu.GetY().Value;
+            _rtR = Cpu.GetR();
+            _rtC = (uint)Cpu.C;
+            _rtApplyC = Cpu.ApplyC;
             for (int i = 0; i < 16; i++) _rtM[i] = Cpu.GetM(i);
         }
 
@@ -76,22 +77,22 @@ namespace Besm6.Core
             var sink = RegisterTrace;
             if (sink == null) return;
             if (!_rtActive) { BeginRegisterTrace(); return; }
-            ulong acc = Cpu.GetAcc().Value;
-            ulong rmr = Cpu.GetRmr().Value;
-            uint rau = Cpu.GetRau();
-            uint mod = (uint)Cpu.Mod;
-            bool apply = Cpu.ApplyModReg;
-            if (acc != _rtAcc) sink("ACC", acc);
-            if (rmr != _rtRmr) sink("RMR", rmr);
+            ulong a = Cpu.GetA().Value;
+            ulong y = Cpu.GetY().Value;
+            uint r = Cpu.GetR();
+            uint c = Cpu.C;
+            bool applyC = Cpu.ApplyC;
+            if (a != _rtA) sink("A", a);
+            if (y != _rtY) sink("Y", y);
             for (int i = 0; i < 16; i++)
             {
                 uint v = Cpu.GetM(i);
                 if (v != _rtM[i]) sink("M" + Convert.ToString(i, 8), v);
             }
-            if (rau != _rtRau) sink("RAU", rau);
-            if (apply != _rtApply) sink(apply ? "MOD" : "CLEARMOD", mod);
+            if (r != _rtR) sink("R", r);
+            if (applyC != _rtApplyC) sink(applyC ? "C" : "CLEARC", c);
             // Обновить prev-состояние.
-            _rtAcc = acc; _rtRmr = rmr; _rtRau = rau; _rtMod = mod; _rtApply = apply;
+            _rtA = a; _rtY = y; _rtR = r; _rtC = c; _rtApplyC = applyC;
             for (int i = 0; i < 16; i++) _rtM[i] = Cpu.GetM(i);
         }
 
@@ -134,7 +135,7 @@ namespace Besm6.Core
             {
                 Memory.Write((uint)(startAddress + i), program[i]);
             }
-            Cpu.SetPc((uint)startAddress);
+            Cpu.SetK((uint)startAddress);
         }
 
         /// <summary>
@@ -170,8 +171,8 @@ namespace Besm6.Core
             _clock.Advance(TicksPerInstruction);
             if (StepTrace != null)
             {
-                int pc = (int)Cpu.GetPc();
-                StepTrace(pc, Memory.Read((uint)pc).Value);
+                int k = (int)Cpu.GetK();
+                StepTrace(k, Memory.Read((uint)k).Value);
             }
             EmitRegisterTrace();
             return stopped;
@@ -193,7 +194,7 @@ namespace Besm6.Core
 
         public override string ToString()
         {
-            return $"MachineCore [PC: {Cpu.PC:X5}, Acc: 0x{Cpu.Acc:X12}]";
+            return $"MachineCore [K: {Cpu.K:X5}, A: 0x{Cpu.A:X12}]";
         }
     }
 }

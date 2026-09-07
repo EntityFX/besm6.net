@@ -36,8 +36,8 @@ namespace Besm6.Tests
             };
 
             // Capture all instructions.
-            var trace = new System.Collections.Generic.List<(int pc, ulong word)>();
-            loader.InstructionTrace = (pc, word) => trace.Add((pc, word));
+            var trace = new System.Collections.Generic.List<(int k, ulong word)>();
+            loader.InstructionTrace = (k, word) => trace.Add((k, word));
 
             var job = JobParser.ParseFile(dubPath);
             var lines = System.IO.File.ReadAllLines(dubPath);
@@ -49,12 +49,12 @@ namespace Besm6.Tests
             sb.AppendLine();
             for (int i = 0; i < trace.Count; i++)
             {
-                var (pc, word) = trace[i];
+                var (k, word) = trace[i];
                 int opcode = (int)((word >> 42) & 0x3F);
                 int addr = (int)((word >> 24) & 0x3FFFF);
-                string octalPc = Convert.ToString(pc, 8).PadLeft(5, '0');
+                string octalK = Convert.ToString(k, 8).PadLeft(5, '0');
                 string octalAddr = Convert.ToString(addr, 8).PadLeft(6, '0');
-                sb.AppendLine($"[{i,4}] PC={octalPc} op={Convert.ToString(opcode, 8).PadLeft(2,'0')} addr={octalAddr} word=0x{word:X12}");
+                sb.AppendLine($"[{i,4}] K={octalK} op={Convert.ToString(opcode, 8).PadLeft(2,'0')} addr={octalAddr} word=0x{word:X12}");
             }
             string outFile = System.IO.Path.Combine(repoRoot!, "diagnostics-output.txt");
             System.IO.File.WriteAllText(outFile, sb.ToString());
