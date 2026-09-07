@@ -106,7 +106,7 @@ namespace Besm6.Tui
                     _running = true;
                     var result = _loader!.RunLoaded();
                     _running = false;
-                    if (result.Success) { _halted = true; _status = "HALTED by STOP @" + result.Pc.ToString("X4"); }
+                    if (result.Success) { _halted = true; _status = "HALTED by STOP @" + result.K.ToString("X4"); }
                     else _status = "stopped: " + (result.ErrorMessage ?? "limit");
                     _instrCount += result.Instructions;
                     return true;
@@ -166,7 +166,7 @@ namespace Besm6.Tui
         private void StepOne()
         {
             var cpu = _machine!.Cpu;
-            long before = cpu.PC;
+            long before = cpu.K;
             var word = _machine.Memory.Read((uint)((int)before & 0x7FFF));
             var dis = Disassembler.DisasmWord((long)word.Value);
             bool stopped = cpu.Step();
@@ -216,9 +216,9 @@ namespace Besm6.Tui
                 var cpu = _machine.Cpu;
                 Lamp(sb, "RUN", _running);
                 Lamp(sb, "HALT", _halted);
-                Lamp(sb, "ADD", cpu.AluMode == "ADD");
-                Lamp(sb, "MUL", cpu.AluMode == "MUL");
-                Lamp(sb, "LOG", cpu.AluMode == "LOG");
+                Lamp(sb, "ADD", cpu.RMode == "ADD");
+                Lamp(sb, "MUL", cpu.RMode == "MUL");
+                Lamp(sb, "LOG", cpu.RMode == "LOG");
                 Lamp(sb, "RIGHT", cpu.RightInstruction);
             }
             sb.Append('\n');
@@ -242,9 +242,9 @@ namespace Besm6.Tui
                 sb.Append("  ").Append(b).Append('\n');
             }
 
-            Row("PC    " + Hex(cpu.PC), "ACC   " + Hex(cpu.Acc.Value));
-            Row("RMR   " + Hex(cpu.Rmr.Value), "MOD   " + Hex((ulong)cpu.Mod));
-            Row("RAU   " + Hex(cpu.Rau), "MODE  " + cpu.AluMode);
+            Row("K     " + Hex(cpu.K), "A     " + Hex(cpu.A.Value));
+            Row("Y     " + Hex(cpu.Y.Value), "C     " + Hex(cpu.C));
+            Row("R     " + Hex(cpu.R), "MODE  " + cpu.RMode);
             Row("STEPS " + _instrCount.ToString(), "STATE " + (_halted ? "HALTED" : (_running ? "RUNNING" : "IDLE")));
             sb.Append('\n');
 
@@ -260,7 +260,7 @@ namespace Besm6.Tui
             sb.Append('\n');
         }
 
-        private string M(int i) => "M[" + i.ToString("X") + "]";
+        private string M(int i) => "M[" + Convert.ToString(i, 8) + "]";
 
         private void MemoryWindow(StringBuilder sb)
         {
@@ -273,7 +273,7 @@ namespace Besm6.Tui
                 return;
             }
             var cpu = _machine.Cpu;
-            int pc = (int)(cpu.PC & 0x7FFF);
+            int k = (int)(cpu.K & 0x7FFF);
             var mem = _machine.Memory;
 
             for (int i = 0; i < 16; i++)
@@ -281,16 +281,16 @@ namespace Besm6.Tui
                 int a = (_memBase + i) & 0x7FFF;
                 if (a >= mem.Size) break;
                 var w = mem.Read((uint)a);
-                bool isPc = (a == pc);
-                if (isPc) sb.Append(YELLOW);
+                bool isK = (a == k);
+                if (isK) sb.Append(YELLOW);
 
                 sb.Append("   ").Append(a.ToString("X4")).Append(GRAY).Append(" │ ").Append(RESET);
                 sb.Append(w.Value.ToString("X12")).Append(GRAY).Append(" │ ").Append(RESET);
                 sb.Append(Disassembler.DisasmHalf((long)(w.Value >> 24))).Append(" ");
                 sb.Append(Disassembler.DisasmHalf((long)(w.Value & 0xFFFFFFL)));
-                if (isPc)
+                if (isK)
                 {
-                    sb.Append(BOLD).Append(GREEN).Append("  ◄ PC").Append(RESET);
+                    sb.Append(BOLD).Append(GREEN).Append("  ◄ K").Append(RESET);
                 }
                 sb.Append('\n');
             }

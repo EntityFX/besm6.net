@@ -9,11 +9,11 @@ namespace Besm6.Core
     /// </summary>
     public class Processor
     {
-        // Регистр режима АЛУ (RAU).
-        private const uint RAU_LOG = (uint)RauFlags.Log;
-        private const uint RAU_MULT = (uint)RauFlags.Mult;
-        private const uint RAU_ADD = (uint)RauFlags.Add;
-        private const uint RAU_MODE = (uint)RauFlags.Mode;
+        // Регистр режима арифметического устройства R (РАУ).
+        private const uint R_LOG = (uint)RFlags.Log;
+        private const uint R_MULT = (uint)RFlags.Mult;
+        private const uint R_ADD = (uint)RFlags.Add;
+        private const uint R_MODE = (uint)RFlags.Mode;
 
         // Биты (нумерация БЭСМ-6: 40-й бит = битовый индекс 39 и т.д.)
         private const ulong BIT41 = Besm6Constants.BIT41;
@@ -24,16 +24,16 @@ namespace Besm6.Core
         private const ulong BITS48 = Besm6Constants.BITS48;
 
         // Внутреннее состояние процессора (CoreState).
-        internal uint _pc;              // счётчик команд (Program Counter)
-        internal Word48 _acc;             // сумматор (ACC)
-        internal Word48 _rmr;             // регистр младших разрядов (RMR)
+        internal uint _k;               // счётчик команд K
+        internal Word48 _a;             // аккумулятор A
+        internal Word48 _y;             // регистр младших разрядов Y
         internal readonly uint[] _m = new uint[16]; // индекс-регистры M[0..15]
-        internal uint _mod;             // регистр модификации MOD
-        internal uint _rau;             // режим АЛУ
+        internal uint _c;               // регистр модификации адреса C
+        internal uint _r;               // регистр режима арифметического устройства R
         internal int _interceptCount;   // перехват overflow/div-by-zero (E75 при addr==020)
         internal uint _interceptAddr = 16;
         internal bool _rightInstrFlag;  // выполнять правую половину слова
-        internal bool _applyModReg;     // модифицировать адрес через MOD
+        internal bool _applyC;          // применить C к адресу следующей инструкции
         internal int _corrStack;
 
         internal uint _rk;              // регистр команд
@@ -67,8 +67,8 @@ namespace Besm6.Core
 
         /// <summary>
         /// (ref/trace.cpp:240). Вызывается в НАЧАЛЕ инструкции: после fetch RK и decode
-        /// (reg/addr/opcode), НО до advance PC и до исполнения (ref/processor.cpp:151).
-        /// Аргументы: (pc, rightFlag, rk, opcode). null = выключен.
+        /// (reg/addr/opcode), НО до advance K и до исполнения (ref/processor.cpp:151).
+        /// Аргументы: (k, rightFlag, rk, opcode). null = выключен.
         /// </summary>
         public Action<uint, bool, uint, uint>? TraceInstruction { get; set; }
 
@@ -87,15 +87,15 @@ namespace Besm6.Core
 
         public void Reset()
         {
-            _pc = 1;
-            _acc = Word48.FromInt48(0);
-            _rmr = Word48.FromInt48(0);
+            _k = 1;
+            _a = Word48.FromInt48(0);
+            _y = Word48.FromInt48(0);
             for (int i = 0; i < 16; i++) _m[i] = 0;
-            _mod = 0;
-            _rau = 0;
+            _c = 0;
+            _r = 0;
             _interceptCount = 0;
             _rightInstrFlag = false;
-            _applyModReg = false;
+            _applyC = false;
             _corrStack = 0;
             _debugFetchArmed = false;
             _debugMemoryArmed = false;
@@ -105,20 +105,27 @@ namespace Besm6.Core
 
         #region Доступ к регистрам (для тестов)
 
-        public uint PC { get => _pc; set => _pc = value; }
-        public Word48 Acc { get => _acc; set => _acc = value; }
-        public Word48 Rmr => _rmr;
-        public uint Rau { get => _rau; set => _rau = value & 0x3F; }
+        /// <summary>K — счётчик команд.</summary>
+        public uint K { get => _k; set => _k = value; }
+        /// <summary>A — аккумулятор.</summary>
+        public Word48 A { get => _a; set => _a = value; }
+        /// <summary>Y — регистр младших разрядов.</summary>
+        public Word48 Y => _y;
+        /// <summary>R — регистр режима арифметического устройства.</summary>
+        public uint R { get => _r; set => _r = value & 0x3F; }
+        /// <summary>M — индексные регистры.</summary>
+        public ReadOnlySpan<uint> M => _m;
+        /// <summary>C — регистр модификации адреса.</summary>
+        public uint C => _c;
         public bool OnRightInstruction => _rightInstrFlag;
 
-        public bool ApplyModReg => _applyModReg;
+        /// <summary>Признак применения регистра C к следующей инструкции.</summary>
+        public bool ApplyC => _applyC;
 
-        /// <summary>Человекочитаемый режим АЛУ (для отладчика/панели).</summary>
-        public string AluMode => IsLogical() ? "LOG" : (IsMultiplicative() ? "MUL" : "ADD");
+        /// <summary>Человекочитаемый режим регистра R.</summary>
+        public string RMode => IsLogical() ? "LOG" : (IsMultiplicative() ? "MUL" : "ADD");
         /// <summary>Сигнальный флаг правого полу-слова.</summary>
         public bool RightInstruction => _rightInstrFlag;
-        /// <summary>Регистр модификации MOD (для отладчика/панели).</summary>
-        public long Mod => _mod;
         /// <summary>
         /// Счётчик перехвата (intercept_count): 0 — перехват отключён,
         /// 1 — перехватить следующую ошибку арифметики (overflow/div-by-zero).
@@ -131,8 +138,8 @@ namespace Besm6.Core
         /// <summary>
         /// Перехват арифметической ошибки (overflow / div-zero). Точный порт
         /// если перехват вооружён (InterceptCount>0) и сообщение — "Arithmetic overflow"
-        /// или "Division by zero", то InterceptCount--, PC=InterceptAddr,
-        /// right_instr_flag=false, apply_mod_reg=false, MOD=0, вернуть true.
+        /// или "Division by zero", то InterceptCount--, K=InterceptAddr,
+        /// right_instr_flag=false, apply_c_reg=false, C=0, вернуть true.
         /// Иначе вернуть false (перехват отключён — ошибка не перехватывается).
         /// </summary>
         public bool Intercept(string message)
@@ -141,10 +148,10 @@ namespace Besm6.Core
                 (message == "Arithmetic overflow" || message == "Division by zero"))
             {
                 _interceptCount--;
-                _pc = _interceptAddr & 0x7FFF;
+                _k = _interceptAddr & 0x7FFF;
                 _rightInstrFlag = false;
-                _applyModReg = false;
-                _mod = 0;
+                _applyC = false;
+                _c = 0;
                 return true;
             }
             return false;
@@ -162,17 +169,27 @@ namespace Besm6.Core
             _corrStack = 0;
         }
 
-        public void SetPc(uint val) => _pc = val;
+        /// <summary>Устанавливает счётчик команд K.</summary>
+        public void SetK(uint val) => _k = val;
+        /// <summary>Устанавливает индексный регистр M с указанным номером.</summary>
         public void SetM(int index, uint val) => _m[index & 0xF] = val;
-        public void SetRau(ulong val) => _rau = (uint)(val & 0x3F);
-        public void SetAcc(ulong val) => _acc = Word48.FromInt48(val & BITS48);
-        public void SetRmr(ulong val) => _rmr = Word48.FromInt48(val & BITS48);
+        /// <summary>Устанавливает регистр режима R.</summary>
+        public void SetR(ulong val) => _r = (uint)(val & 0x3F);
+        /// <summary>Устанавливает аккумулятор A.</summary>
+        public void SetA(ulong val) => _a = Word48.FromInt48(val & BITS48);
+        /// <summary>Устанавливает регистр младших разрядов Y.</summary>
+        public void SetY(ulong val) => _y = Word48.FromInt48(val & BITS48);
 
-        public uint GetPc() => _pc;
+        /// <summary>Возвращает счётчик команд K.</summary>
+        public uint GetK() => _k;
+        /// <summary>Возвращает индексный регистр M с указанным номером.</summary>
         public uint GetM(int index) => _m[index & 0xF];
-        public uint GetRau() => _rau;
-        public Word48 GetAcc() => _acc;
-        public Word48 GetRmr() => _rmr;
+        /// <summary>Возвращает регистр режима R.</summary>
+        public uint GetR() => _r;
+        /// <summary>Возвращает аккумулятор A.</summary>
+        public Word48 GetA() => _a;
+        /// <summary>Возвращает регистр младших разрядов Y.</summary>
+        public Word48 GetY() => _y;
 
         internal sealed class DebugWatchAbortException : Exception
         {
@@ -206,7 +223,7 @@ namespace Besm6.Core
                     throw new ProcessorException("Bad debug watchpoint mode");
             }
 
-            _pc = xfer;
+            _k = xfer;
             _rightInstrFlag = false;
         }
 
@@ -241,13 +258,13 @@ namespace Besm6.Core
             try
             {
                 if (printInfo)
-                    TraceInstruction?.Invoke(_pc, _rightInstrFlag, _rk, opcode);
+                    TraceInstruction?.Invoke(_k, _rightInstrFlag, _rk, opcode);
 
                 _debugPrevAbort = cont;
-                _pc = cont & 0x7FFF;
+                _k = cont & 0x7FFF;
                 _rightInstrFlag = false;
-                _applyModReg = false;
-                _mod = 0;
+                _applyC = false;
+                _c = 0;
             }
             finally
             {
@@ -259,9 +276,9 @@ namespace Besm6.Core
 
         #region Арифметика АЛУ (делегирование в Alu)
 
-        public void ArithAdd(Word48 val, bool negateAcc, bool negateVal) => _alu.Add(val, negateAcc, negateVal);
+        public void ArithAdd(Word48 val, bool negateA, bool negateVal) => _alu.Add(val, negateA, negateVal);
         public void ArithAddExponent(int val) => _alu.AddExponent(val);
-        public void ArithChangeSign(bool negateAcc) => _alu.ChangeSign(negateAcc);
+        public void ArithChangeSign(bool negateA) => _alu.ChangeSign(negateA);
         public void ArithMultiply(Word48 val) => _alu.Multiply(val);
         public void ArithDivide(Word48 val) => _alu.Divide(val);
         public void ArithShift(int nbits) => _alu.Shift(nbits);
@@ -338,13 +355,13 @@ namespace Besm6.Core
 
         #region Режим АЛУ
 
-        internal bool IsAdditive() => (_rau & RAU_ADD) != 0;
-        internal bool IsMultiplicative() => (_rau & (RAU_ADD | RAU_MULT)) == RAU_MULT;
-        internal bool IsLogical() => (_rau & RAU_MODE) == RAU_LOG;
+        internal bool IsAdditive() => (_r & R_ADD) != 0;
+        internal bool IsMultiplicative() => (_r & (R_ADD | R_MULT)) == R_MULT;
+        internal bool IsLogical() => (_r & R_MODE) == R_LOG;
 
-        internal void SetAdditive() { _rau = (_rau & ~RAU_MODE) | RAU_ADD; }
-        internal void SetMultiplicative() { _rau = (_rau & ~RAU_MODE) | RAU_MULT; }
-        internal void SetLogical() { _rau = (_rau & ~RAU_MODE) | RAU_LOG; }
+        internal void SetAdditive() { _r = (_r & ~R_MODE) | R_ADD; }
+        internal void SetMultiplicative() { _r = (_r & ~R_MODE) | R_MULT; }
+        internal void SetLogical() { _r = (_r & ~R_MODE) | R_LOG; }
 
         #endregion
 
@@ -391,9 +408,9 @@ namespace Besm6.Core
         /// <summary>
         /// Канонический машинно-сравнимый трасс (TSV). Включается env-переменной
         /// BESM6_CANON_TRACE=путь. Одна строка = одна реально выполненная инструкция:
-        /// PRE-снимок состояния (ДО advance PC/half и ДО исполнения) + POST-снимок.
+        /// PRE-снимок состояния (ДО advance K/half и ДО исполнения) + POST-снимок.
         /// half = исполняемая половина (L: старшие 24 бита слова, R: младшие).
-        /// Все адреса — unsigned decimal; ACC/RMR/raw48/rk24 — hex.
+        /// Все адреса — unsigned decimal; A/Y/raw48/rk24 — hex.
         /// </summary>
         private StreamWriter? _canonTrace;
         private bool _canonOn;
@@ -414,9 +431,9 @@ namespace Besm6.Core
             var w = new StreamWriter(path, false, new UTF8Encoding(false));
             var header = new StringBuilder(512);
             header.Append("seq\tpc\thalf\traw48\trk24\topcode\treg\taddr")
-                  .Append("\tacc_b\trmr_b\trau_b\tmod_b\tamod_b\taex_b\ticnt_b\tiadr_b");
+                  .Append("\ta_b\ty_b\tr_b\tc_b\tapply_c_b\taex_b\ticnt_b\tiadr_b");
             for (int i = 0; i < 16; i++) header.Append("\tm").Append(i).Append("_b");
-            header.Append("\tacc_a\trmr_a\trau_a\tmod_a\tamod_a\taex_a\ticnt_a\tiadr_a\tpc_a\thalf_a");
+            header.Append("\ta_a\ty_a\tr_a\tc_a\tapply_c_a\taex_a\ticnt_a\tiadr_a\tpc_a\thalf_a");
             for (int i = 0; i < 16; i++) header.Append("\tm").Append(i).Append("_a");
             w.WriteLine(header.ToString());
             _canonTrace = w;
@@ -428,7 +445,7 @@ namespace Besm6.Core
             get { CanonCheck(); return _canonOn; }
         }
 
-        internal void CanonPre(uint pc, bool right, ulong word, uint rk, uint opcode, int reg, uint addr)
+        internal void CanonPre(uint k, bool right, ulong word, uint rk, uint opcode, int reg, uint addr)
         {
             CanonCheck();
             if (!_canonOn) return;
@@ -440,18 +457,18 @@ namespace Besm6.Core
             ulong seq = _canonSeq++;
             var sb = new StringBuilder(512);
             sb.Append(seq)
-              .Append('\t').Append(pc)
+              .Append('\t').Append(k)
               .Append('\t').Append(right ? 'R' : 'L')
               .Append('\t').Append(word.ToString("X12"))
               .Append('\t').Append(rk.ToString("X6"))
               .Append('\t').Append(opcode)
               .Append('\t').Append(reg)
               .Append('\t').Append(addr)
-              .Append('\t').Append(_acc.Value.ToString("X12"))
-              .Append('\t').Append(_rmr.Value.ToString("X12"))
-              .Append('\t').Append(_rau)
-              .Append('\t').Append(_mod)
-              .Append('\t').Append(_applyModReg ? 1 : 0)
+              .Append('\t').Append(_a.Value.ToString("X12"))
+              .Append('\t').Append(_y.Value.ToString("X12"))
+              .Append('\t').Append(_r)
+              .Append('\t').Append(_c)
+              .Append('\t').Append(_applyC ? 1 : 0)
               .Append('\t').Append(_aex)
               .Append('\t').Append(_interceptCount)
               .Append('\t').Append(_interceptAddr);
@@ -459,20 +476,20 @@ namespace Besm6.Core
             _canonPending = sb;
         }
 
-        internal void CanonPost(uint pc, bool right)
+        internal void CanonPost(uint k, bool right)
         {
             if (!_canonOn) return;
             if (_canonPending == null) return;
             var sb = _canonPending;
-            sb.Append('\t').Append(_acc.Value.ToString("X12"))
-              .Append('\t').Append(_rmr.Value.ToString("X12"))
-              .Append('\t').Append(_rau)
-              .Append('\t').Append(_mod)
-              .Append('\t').Append(_applyModReg ? 1 : 0)
+            sb.Append('\t').Append(_a.Value.ToString("X12"))
+              .Append('\t').Append(_y.Value.ToString("X12"))
+              .Append('\t').Append(_r)
+              .Append('\t').Append(_c)
+              .Append('\t').Append(_applyC ? 1 : 0)
               .Append('\t').Append(_aex)
               .Append('\t').Append(_interceptCount)
               .Append('\t').Append(_interceptAddr)
-              .Append('\t').Append(pc)
+              .Append('\t').Append(k)
               .Append('\t').Append(right ? 'R' : 'L');
             for (int i = 0; i < 16; i++) sb.Append('\t').Append(_m[i]);
             _canonTrace!.WriteLine(sb.ToString());

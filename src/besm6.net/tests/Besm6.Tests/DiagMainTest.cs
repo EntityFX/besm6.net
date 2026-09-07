@@ -23,12 +23,12 @@ namespace Besm6.Tests
             }
             int count = 0;
             string dump = string.Empty;
-            machine.StepTrace = (pc, word) =>
+            machine.StepTrace = (k, word) =>
             {
                 if (count == 70754)
                 {
                     var sb = new System.Text.StringBuilder();
-                    sb.AppendLine($"pc={machine.Cpu.GetPc():X} acc={machine.Cpu.GetAcc().Value:X} rmr={machine.Cpu.GetRmr().Value:X} rau={machine.Cpu.GetRau():X}");
+                    sb.AppendLine($"k={machine.Cpu.GetK():X} a={machine.Cpu.GetA().Value:X} y={machine.Cpu.GetY().Value:X} r={machine.Cpu.GetR():X}");
                     for (int a = 0x698; a <= 0x6A0; a++)
                         sb.AppendLine($"mem[{a:X3}] = {machine.Memory.Read((uint)a).Value:X12}");
                     for (int r = 0; r < 16; r++)

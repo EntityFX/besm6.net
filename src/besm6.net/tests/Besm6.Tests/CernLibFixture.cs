@@ -262,7 +262,7 @@ namespace Besm6.Tests
         }
 
         /// <summary>
-        /// «{PC:5oct} {R|L}: {octal(RK)}». Срабатывает в НАЧАЛЕ инструкции (после fetch RK,
+        /// «{K:5oct} {R|L}: {octal(RK)}». Срабатывает в НАЧАЛЕ инструкции (после fetch RK,
         /// (без мнемоники/«= result»/«Drum …») — см. tests-run/_difftrace.ps1.
         /// </summary>
         public LoadResult GenerateTrace(int lib, string name, string tracePath)
@@ -274,10 +274,10 @@ namespace Besm6.Tests
             string jobPath = WriteJobFile(lib, name, src);
 
             var traceWriter = new StreamWriter(tracePath, false, new UTF8Encoding(false));
-            _loader.CppInstructionTrace = (pc, rightFlag, rk, opcode) =>
+            _loader.CppInstructionTrace = (k, rightFlag, rk, opcode) =>
             {
                 if (IsExtracodeTraced(opcode))
-                    traceWriter.WriteLine(OctPc(pc) + " " + (rightFlag ? "R" : "L") + ": " + OctalInstr(rk));
+                    traceWriter.WriteLine(OctK(k) + " " + (rightFlag ? "R" : "L") + ": " + OctalInstr(rk));
             };
             LoadResult result;
             try
@@ -302,8 +302,8 @@ namespace Besm6.Tests
             return false;
         }
 
-        /// <summary>PC в 5 восьмеричных разрядах (std::setfill('0') << std::setw(5) в print_instruction).</summary>
-        private static string OctPc(uint pc) => Convert.ToString(pc & 0x7FFF, 8).PadLeft(5, '0');
+        /// <summary>K в 5 восьмеричных разрядах (std::setfill('0') << std::setw(5) в print_instruction).</summary>
+        private static string OctK(uint k) => Convert.ToString(k & 0x7FFF, 8).PadLeft(5, '0');
 
         /// <summary>Число в N восьмеричных разрядах (std::setfill('0') << std::setw(N)).</summary>
         private static string Oct(int x, int width) => Convert.ToString(x, 8).PadLeft(width, '0');

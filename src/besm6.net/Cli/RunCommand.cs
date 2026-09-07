@@ -103,10 +103,10 @@ namespace Besm6.Cli
 
                 if (trace)
                 {
-                    loader.InstructionTrace = (pc, word) =>
+                    loader.InstructionTrace = (k, word) =>
                     {
                         string dis = Disassembler.DisasmWord((long)word);
-                        Console.WriteLine($"  PC=0{pc:X5}  {dis}");
+                        Console.WriteLine($"  K=0{k:X5}  {dis}");
                     };
                 }
 
@@ -114,8 +114,8 @@ namespace Besm6.Cli
                 {
                     regsWriter = new StreamWriter(regsFile, false, new UTF8Encoding(false));
                     Action<string> sink = line => regsWriter!.WriteLine(line);
-                    loader.CppInstructionTrace = (pc, rf, rk, op) =>
-                        sink(OctPc(pc) + " " + (rf ? "R" : "L") + ": " + OctalInstr(rk));
+                    loader.CppInstructionTrace = (k, rf, rk, op) =>
+                        sink(OctK(k) + " " + (rf ? "R" : "L") + ": " + OctalInstr(rk));
                     loader.RegisterTrace = (name, val) => sink(RegLine(name, val));
                 }
 
@@ -145,7 +145,7 @@ namespace Besm6.Cli
 
         private static string OctW(ulong x, int width) => Convert.ToString((long)x, 8).PadLeft(width, '0');
 
-        private static string OctPc(uint pc) => Convert.ToString(pc & 0x7FFF, 8).PadLeft(5, '0');
+        private static string OctK(uint k) => Convert.ToString(k & 0x7FFF, 8).PadLeft(5, '0');
 
         /// <summary>besm6_print_instruction_octal: reg(2) + [длинная: mid(2) addr(5)] | [короткая: op(3) addr(4)].</summary>
         private static string OctalInstr(uint rk)
@@ -171,11 +171,11 @@ namespace Besm6.Cli
         {
             switch (name)
             {
-                case "ACC": return "      ACC = " + Word48Oct(val);
-                case "RMR": return "      RMR = " + Word48Oct(val);
-                case "RAU": return "      RAU = " + OctW(val, 2);
-                case "MOD": return "      MOD = " + OctW(val, 5);
-                case "CLEARMOD": return "      Clear MOD";
+                case "A": return "      A = " + Word48Oct(val);
+                case "Y": return "      Y = " + Word48Oct(val);
+                case "R": return "      R = " + OctW(val, 2);
+                case "C": return "      C = " + OctW(val, 5);
+                case "CLEARC": return "      Clear C";
                 default: return "      " + name + " = " + OctW(val, 5);
             }
         }

@@ -17,12 +17,12 @@ namespace Besm6.Loader
 
         /// <summary>
         /// E50 014: распознаватель текстовой строки (порт dubna/e50.cpp e50_parse).
-        /// Вывод: ACC = значение (число/идент), M[14] = тип (0..6), RMR = детали.
+        /// Вывод: A = значение (число/идент), M[14] = тип (0..6), Y = детали.
         /// </summary>
         private void E50Parse()
         {
             var cpu = _machine.Cpu;
-            long input = (long)cpu.GetAcc().Value;
+            long input = (long)cpu.GetA().Value;
 
             int srcAddr = (int)(input & 0x7FFF);
             bool starSlashFlag = ((input >> 16) & 1) != 0;
@@ -52,7 +52,7 @@ namespace Besm6.Loader
                 if (wordAddr == 0)
                 {
                     cpu.SetM(14, 0); // parse error
-                    cpu.SetAcc(0);
+                    cpu.SetA(0);
                     return;
                 }
             }
@@ -66,8 +66,8 @@ namespace Besm6.Loader
                     if (bp.WordAddr == 0)
                     {
                         cpu.SetM(14, 0);
-                        cpu.SetRmr((ulong)index << 24);
-                        cpu.SetAcc(0);
+                        cpu.SetY((ulong)index << 24);
+                        cpu.SetA(0);
                         return;
                     }
                     byte c = bp.Get();
@@ -75,42 +75,42 @@ namespace Besm6.Loader
                     if (c == 0 || c == 0x0A)
                     {
                         cpu.SetM(14, 0);
-                        cpu.SetRmr(((ulong)index << 24) | c);
+                        cpu.SetY(((ulong)index << 24) | c);
                         long result = ((long)c << 40) | ((long)' ' << 32) | ((long)' ' << 24)
                                     | ((long)' ' << 16) | ((long)' ' << 8) | ' ';
-                        cpu.SetAcc((ulong)result);
+                        cpu.SetA((ulong)result);
                     }
                     else if (IsDigit(c))
                     {
                         cpu.SetM(14, 1);
-                        cpu.SetRmr(((ulong)index << 24) | c);
+                        cpu.SetY(((ulong)index << 24) | c);
                         long result = ((long)c << 40) | ((long)' ' << 32) | ((long)' ' << 24)
                                     | ((long)' ' << 16) | ((long)' ' << 8) | ' ';
-                        cpu.SetAcc((ulong)result);
+                        cpu.SetA((ulong)result);
                     }
                     else if ((c == '*' || c == '/') && starSlashFlag)
                     {
                         cpu.SetM(14, 2);
-                        cpu.SetRmr(((ulong)index << 24) | c);
+                        cpu.SetY(((ulong)index << 24) | c);
                         long result = ((long)c << 40) | ((long)' ' << 32) | ((long)' ' << 24)
                                     | ((long)' ' << 16) | ((long)' ' << 8) | ' ';
-                        cpu.SetAcc((ulong)result);
+                        cpu.SetA((ulong)result);
                     }
                     else if (IsChar(c))
                     {
                         cpu.SetM(14, 2);
-                        cpu.SetRmr(((ulong)index << 24) | c);
+                        cpu.SetY(((ulong)index << 24) | c);
                         long result = ((long)c << 40) | ((long)' ' << 32) | ((long)' ' << 24)
                                     | ((long)' ' << 16) | ((long)' ' << 8) | ' ';
-                        cpu.SetAcc((ulong)result);
+                        cpu.SetA((ulong)result);
                     }
                     else
                     {
                         cpu.SetM(14, 3);
-                        cpu.SetRmr(((ulong)index << 24) | c);
+                        cpu.SetY(((ulong)index << 24) | c);
                         long result = ((long)c << 40) | ((long)' ' << 32) | ((long)' ' << 24)
                                     | ((long)' ' << 16) | ((long)' ' << 8) | ' ';
-                        cpu.SetAcc((ulong)result);
+                        cpu.SetA((ulong)result);
                     }
                     // Save state and return.
                     _e50ParseLastWordAddr = (int)bp.WordAddr;
@@ -128,7 +128,7 @@ namespace Besm6.Loader
                     if (bp.WordAddr == 0)
                     {
                         cpu.SetM(14, 0);
-                        cpu.SetAcc(0);
+                        cpu.SetA(0);
                         return;
                     }
                     byte c = bp.Get();
@@ -141,7 +141,7 @@ namespace Besm6.Loader
                             _e50ParseLastWordAddr = (int)bp.WordAddr;
                             _e50ParseLastByteIndex = (int)bp.ByteIndex;
                             _e50ParseIndex = index;
-                            cpu.SetAcc(c);
+                            cpu.SetA(c);
                             return;
 
                         case (byte)' ':
@@ -161,11 +161,11 @@ namespace Besm6.Loader
                                     value = (value << 3) + (c - '0');
                                 }
                                 cpu.SetM(14, 1);
-                                cpu.SetRmr(((ulong)index << 24) | c);
+                                cpu.SetY(((ulong)index << 24) | c);
                                 _e50ParseLastWordAddr = (int)bp.WordAddr;
                                 _e50ParseLastByteIndex = (int)bp.ByteIndex;
                                 _e50ParseIndex = index;
-                                cpu.SetAcc((ulong)value);
+                                cpu.SetA((ulong)value);
                                 return;
                             }
 
@@ -185,18 +185,18 @@ namespace Besm6.Loader
                                         value = (value << 3) + (c - '0');
                                     }
                                     cpu.SetM(14, 1);
-                                    cpu.SetRmr(((ulong)index << 24) | c);
+                                    cpu.SetY(((ulong)index << 24) | c);
                                     _e50ParseLastWordAddr = (int)bp.WordAddr;
                                     _e50ParseLastByteIndex = (int)bp.ByteIndex;
                                     _e50ParseIndex = index;
-                                    cpu.SetAcc((ulong)(-value));
+                                    cpu.SetA((ulong)(-value));
                                     return;
                                 }
                                 cpu.SetM(14, 6);
                                 _e50ParseLastWordAddr = (int)bp.WordAddr;
                                 _e50ParseLastByteIndex = (int)bp.ByteIndex;
                                 _e50ParseIndex = index;
-                                cpu.SetAcc((byte)'-');
+                                cpu.SetA((byte)'-');
                                 return;
                             }
 
@@ -211,7 +211,7 @@ namespace Besm6.Loader
                             _e50ParseLastWordAddr = (int)bp.WordAddr;
                             _e50ParseLastByteIndex = (int)bp.ByteIndex;
                             _e50ParseIndex = index;
-                            cpu.SetAcc(c);
+                            cpu.SetA(c);
                             return;
 
                         default:
@@ -221,7 +221,7 @@ namespace Besm6.Loader
                                 _e50ParseLastWordAddr = (int)bp.WordAddr;
                                 _e50ParseLastByteIndex = (int)bp.ByteIndex;
                                 _e50ParseIndex = index;
-                                cpu.SetAcc(c);
+                                cpu.SetA(c);
                                 return;
                             }
                             E50ParseIdent(ref bp, ref index, starSlashFlag, c);
@@ -248,17 +248,17 @@ namespace Besm6.Loader
             for (int i = identLen; i < 16; i++) ident[i] = ' ';
 
             cpu.SetM(14, 4);
-            long rmr = 0;
+            long y = 0;
             for (int i = 6; i < 12; i++)
-                rmr |= (long)(byte)ident[i] << ((11 - i) * 8);
-            cpu.SetRmr((ulong)rmr);
+                y |= (long)(byte)ident[i] << ((11 - i) * 8);
+            cpu.SetY((ulong)y);
             _e50ParseLastWordAddr = (int)bp.WordAddr;
             _e50ParseLastByteIndex = (int)bp.ByteIndex;
             _e50ParseIndex = index;
-            long acc = 0;
+            long a = 0;
             for (int i = 0; i < 6; i++)
-                acc |= (long)(byte)ident[i] << ((5 - i) * 8);
-            cpu.SetAcc((ulong)acc);
+                a |= (long)(byte)ident[i] << ((5 - i) * 8);
+            cpu.SetA((ulong)a);
         }
 
         // ─── E50 017: format real number (порт dubna/e50.cpp e50_format_real) ──
@@ -266,7 +266,7 @@ namespace Besm6.Loader
         private void E50Format()
         {
             var cpu = _machine.Cpu;
-            long input = (long)cpu.GetAcc().Value;
+            long input = (long)cpu.GetA().Value;
 
             int destAddr = (int)(input & 0x7FFF);
             bool rightAlign = ((input >> 15) & 1) != 0;
@@ -288,7 +288,7 @@ namespace Besm6.Loader
             if (width == 0)
             {
                 cpu.SetM(14, 0);
-                cpu.SetAcc(0);
+                cpu.SetA(0);
                 return;
             }
 
@@ -334,7 +334,7 @@ namespace Besm6.Loader
                 bp.Put((byte)' ');
 
             cpu.SetM(14, (uint)(overflow ? 1 : 0));
-            cpu.SetAcc((ulong)width);
+            cpu.SetA((ulong)width);
         }
 
         private static bool GoodForFixedFormat(double value, int precision)

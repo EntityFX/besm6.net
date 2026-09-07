@@ -10,7 +10,7 @@ namespace Besm6.Tests
     /// Референс: ref/extracode.cpp — case 051..056 (матфункции),
     /// 060/062/066/077 (default → «Unimplemented extracode»), 073 (no-op),
     /// 074 (throw ""), 200/210 (reserved/no-op).
-    /// E51-E56 проверяют WIRING хендлера (правильная функция на ACC и обратно):
+    /// E51-E56 проверяют WIRING хендлера (правильная функция на A и обратно):
     /// численная точность Sin/Cos/... покрывается тестами Besm6Math.
     /// </summary>
     [TestClass]
@@ -58,7 +58,7 @@ namespace Besm6.Tests
             var machine = new MachineCore();
             var handler = MakeHandler(machine);
             ulong accBefore = 0x200030004UL; // 48-bit word, safe 9-digit literal
-            machine.Cpu.SetAcc(accBefore);
+            machine.Cpu.SetA(accBefore);
 
             try
             {
@@ -72,7 +72,7 @@ namespace Besm6.Tests
             }
 
             // Состояние не трогается — остановка, а не обработка.
-            Assert.AreEqual(accBefore, machine.Cpu.GetAcc().Value);
+            Assert.AreEqual(accBefore, machine.Cpu.GetA().Value);
         }
 
         // ─── E73 / E20 / E21: no-op контракты (P1-9) ───────────────────────
@@ -85,13 +85,13 @@ namespace Besm6.Tests
             var machine = new MachineCore();
             var handler = MakeHandler(machine);
             ulong accBefore = 0x200030004UL;
-            machine.Cpu.SetAcc(accBefore);
+            machine.Cpu.SetA(accBefore);
             machine.Cpu.SetM(15, 0x2001);
 
             bool handled = handler.Handle(code, 0);
 
             Assert.IsTrue(handled, $"э{Convert.ToString(code, 8)} обязан обработываться как no-op");
-            Assert.AreEqual(accBefore, machine.Cpu.GetAcc().Value, "no-op не меняет ACC");
+            Assert.AreEqual(accBefore, machine.Cpu.GetA().Value, "no-op не меняет A");
             Assert.AreEqual(0x2001u, machine.Cpu.GetM(15), "no-op не меняет M[15]");
         }
 
@@ -113,7 +113,7 @@ namespace Besm6.Tests
             machine.Cpu.SetM(14, 28800); // 070200 oct
 
             Assert.IsTrue(handler.Handle(E50, 0));
-            Assert.AreEqual(0x8000UL, machine.Cpu.GetAcc().Value,
+            Assert.AreEqual(0x8000UL, machine.Cpu.GetA().Value,
                 "E50 070200 must return the capability mask used by the C++ reference");
         }
 
@@ -180,12 +180,12 @@ namespace Besm6.Tests
             var machine = new MachineCore();
             var handler = MakeHandler(machine);
             ulong word = Besm6Math.DoubleToBesm6(input);
-            machine.Cpu.SetAcc(word);
+            machine.Cpu.SetA(word);
             machine.Cpu.SetM(14, addr); // M[016] oct — адрес подкоманды
 
             Assert.IsTrue(handler.Handle(code, 0), "valid addr обязан обработаться");
-            Assert.AreEqual(fn(word), machine.Cpu.GetAcc().Value,
-                $"э{Convert.ToString(code, 8)} addr=0{Convert.ToString(addr, 8)} обязан применить fn к ACC");
+            Assert.AreEqual(fn(word), machine.Cpu.GetA().Value,
+                $"э{Convert.ToString(code, 8)} addr=0{Convert.ToString(addr, 8)} обязан применить fn к A");
         }
 
         [TestMethod]

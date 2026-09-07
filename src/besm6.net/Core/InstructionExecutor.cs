@@ -43,24 +43,24 @@ namespace Besm6.Core
 
         private bool ExecuteCore()
         {
-            ref uint pc = ref _p._pc;
-            ulong acc = _p._acc.Value;
-            ulong rmr = _p._rmr.Value;
-            ref uint rau = ref _p._rau;
-            ref uint mod = ref _p._mod;
+            ref uint k = ref _p._k;
+            ulong a = _p._a.Value;
+            ulong y = _p._y.Value;
+            ref uint r = ref _p._r;
+            ref uint c = ref _p._c;
             ref uint rk = ref _p._rk;
             ref uint aex = ref _p._aex;
             var m = _p._m;
             ref bool rightFlag = ref _p._rightInstrFlag;
-            ref bool applyMod = ref _p._applyModReg;
+            ref bool applyC = ref _p._applyC;
 
             // КАЖДОЙ инструкции — поправка стека действует только для текущей инструкции
             // и потребляется StackCorrection() при её прерывании исключением.
             _p._corrStack = 0;
 
-            pc &= 0x7FFFu;
+            k &= 0x7FFFu;
 
-            ulong word = _p.MemFetch(pc);
+            ulong word = _p.MemFetch(k);
             if (rightFlag)
                 rk = (uint)word;
             else
@@ -85,27 +85,27 @@ namespace Besm6.Core
                 opcode = (rk >> 12) & 0x3Fu;
             }
 
-            if (!rightFlag && _p.DebugCheckFetch(pc, opcode))
+            if (!rightFlag && _p.DebugCheckFetch(k, opcode))
                 return false;
 
-            // по PC/L-R/RK (без смещения и без преобразования hex↔oct). Фильтрация по экстракодам — в хуке.
-            _p.TraceInstruction?.Invoke(pc, rightFlag, rk, opcode);
+            // по K/L-R/RK (без смещения и без преобразования hex↔oct). Фильтрация по экстракодам — в хуке.
+            _p.TraceInstruction?.Invoke(k, rightFlag, rk, opcode);
 
-            // Канонический PRE-снимок (canonical TSV trace): ДО advance PC/half и
+            // Канонический PRE-снимок (canonical TSV trace): ДО advance K/half и
             // ДО применения модификатора — состояние ровно такое, как видит инструкция.
             // half = исполняемая половина (L = старшие 24 бита, R = младшие).
-            _p.CanonPre(pc, rightFlag, word, rk, opcode, reg, addr);
+            _p.CanonPre(k, rightFlag, word, rk, opcode, reg, addr);
 
-            // Фиксируем PRE pc/half для legacy instr-trace: раньше лог печатал
-            // pc/rightFlag ПОСЛЕ advance/toggle, что делало поле «R=» значением
+            // Фиксируем PRE k/half для legacy instr-trace: раньше лог печатал
+            // k/rightFlag ПОСЛЕ advance/toggle, что делало поле «R=» значением
             // УЖЕ СЛЕДУЮЩЕЙ инструкции и порождало ложное «смещение фазы» в diff.
-            uint tPc = pc;
+            uint tK = k;
             bool tRight = rightFlag;
 
-            uint nextPc = Addr(pc + 1);
+            uint nextK = Addr(k + 1);
             if (rightFlag)
             {
-                pc += 1;
+                k += 1;
                 rightFlag = false;
             }
             else
@@ -113,450 +113,450 @@ namespace Besm6.Core
                 rightFlag = true;
             }
 
-            if (applyMod)
-                addr = Addr(addr + mod);
+            if (applyC)
+                addr = Addr(addr + c);
 
-            uint nextMod = 0;
+            uint nextC = 0;
             Opcode op = (Opcode)opcode;
 
             // Instruction-level trace
             if (_instrTrace)
             {
                 var w = GetInstrWriter();
-                w.WriteLine($"{tPc:X5} R={(tRight?"R":"L")} op={opcode,3} reg={reg,2} addr={addr,5} " +
-                    $"acc={acc:X12} rau={rau:X1} mod={mod,5} m14={m[14],5} {op}");
+                w.WriteLine($"{tK:X5} R={(tRight?"R":"L")} op={opcode,3} reg={reg,2} addr={addr,5} " +
+                    $"a={a:X12} r={r:X1} c={c,5} m14={m[14],5} {op}");
             }
 
             switch (op)
             {
-                case Opcode.Zp:
+                case Opcode.Atx:
                     aex = Addr(addr + m[reg]);
-                    _p.MemStore(aex, acc);
+                    _p.MemStore(aex, a);
                     if (addr == 0 && reg == 15) m[15] = Addr(m[15] + 1);
                     break;
 
-                case Opcode.Zpm:
+                case Opcode.Stx:
                     aex = Addr(addr + m[reg]);
-                    _p.MemStore(aex, acc);
+                    _p.MemStore(aex, a);
                     m[15] = Addr(m[15] - 1);
                     _p._corrStack = 1;
-                    acc = _p.MemLoad(m[15]);
+                    a = _p.MemLoad(m[15]);
                     _p.SetLogical();
                     break;
 
-                case Opcode.Reg:
-                    // 002 рег/mod — привилегированная инструкция.
+                case Opcode.Mod:
+                    // 002 РЕГ/MOD — привилегированная инструкция.
                     throw new ProcessorException("Illegal instruction 002 рег/mod");
 
-                case Opcode.Schm:
-                    _p.MemStore(m[15], acc);
+                case Opcode.Xts:
+                    _p.MemStore(m[15], a);
                     m[15] = Addr(m[15] + 1);
                     _p._corrStack = -1;
                     aex = Addr(addr + m[reg]);
-                    acc = _p.MemLoad(aex);
+                    a = _p.MemLoad(aex);
                     _p.SetLogical();
                     break;
 
-                case Opcode.Sl:
+                case Opcode.APlusX:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
                     _p.ArithAdd(Word48.FromInt48(_p.MemLoad(aex)), false, false);
-                    acc = _p._acc.Value;
-                    rmr = _p._rmr.Value;
+                    a = _p._a.Value;
+                    y = _p._y.Value;
                     _p.SetAdditive();
                     break;
 
-                case Opcode.Vch:
+                case Opcode.AMinusX:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
                     _p.ArithAdd(Word48.FromInt48(_p.MemLoad(aex)), false, true);
-                    acc = _p._acc.Value;
-                    rmr = _p._rmr.Value;
+                    a = _p._a.Value;
+                    y = _p._y.Value;
                     _p.SetAdditive();
                     break;
 
-                case Opcode.Vchob:
+                case Opcode.XMinusA:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
                     _p.ArithAdd(Word48.FromInt48(_p.MemLoad(aex)), true, false);
-                    acc = _p._acc.Value;
-                    rmr = _p._rmr.Value;
+                    a = _p._a.Value;
+                    y = _p._y.Value;
                     _p.SetAdditive();
                     break;
 
-                case Opcode.Vchab:
+                case Opcode.Amx:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
                     _p.ArithAdd(Word48.FromInt48(_p.MemLoad(aex)), true, true);
-                    acc = _p._acc.Value;
-                    rmr = _p._rmr.Value;
+                    a = _p._a.Value;
+                    y = _p._y.Value;
                     _p.SetAdditive();
                     break;
 
-                case Opcode.Sch:
+                case Opcode.Xta:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    acc = _p.MemLoad(aex);
+                    a = _p.MemLoad(aex);
                     _p.SetLogical();
                     break;
 
-                case Opcode.I:
+                case Opcode.Aax:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    acc &= _p.MemLoad(aex);
-                    rmr = 0;
+                    a &= _p.MemLoad(aex);
+                    y = 0;
                     _p.SetLogical();
                     break;
 
-                case Opcode.Ntzh:
+                case Opcode.Aex:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    rmr = acc;
-                    acc ^= _p.MemLoad(aex);
+                    y = a;
+                    a ^= _p.MemLoad(aex);
                     _p.SetLogical();
                     break;
 
-                case Opcode.Slc:
+                case Opcode.Arx:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    acc += _p.MemLoad(aex);
-                    if ((acc & BIT49) != 0) acc = (acc + 1) & BITS48;
-                    rmr = 0;
+                    a += _p.MemLoad(aex);
+                    if ((a & BIT49) != 0) a = (a + 1) & BITS48;
+                    y = 0;
                     _p.SetMultiplicative();
                     break;
 
-                case Opcode.Znak:
+                case Opcode.Avx:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
                     _p.ArithChangeSign(((_p.MemLoad(aex) >> 40) & 1u) != 0);
-                    acc = _p._acc.Value;
-                    rmr = _p._rmr.Value;
+                    a = _p._a.Value;
+                    y = _p._y.Value;
                     _p.SetAdditive();
                     break;
 
-                case Opcode.Ili:
+                case Opcode.Aox:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    acc |= _p.MemLoad(aex);
-                    rmr = 0;
+                    a |= _p.MemLoad(aex);
+                    y = 0;
                     _p.SetLogical();
                     break;
 
-                case Opcode.Del:
+                case Opcode.ADivX:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
                     _p.ArithDivide(Word48.FromInt48(_p.MemLoad(aex)));
-                    acc = _p._acc.Value;
-                    rmr = _p._rmr.Value;
+                    a = _p._a.Value;
+                    y = _p._y.Value;
                     _p.SetMultiplicative();
                     break;
 
-                case Opcode.Umn:
+                case Opcode.AMulX:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
                     _p.ArithMultiply(Word48.FromInt48(_p.MemLoad(aex)));
-                    acc = _p._acc.Value;
-                    rmr = _p._rmr.Value;
+                    a = _p._a.Value;
+                    y = _p._y.Value;
                     _p.SetMultiplicative();
                     break;
 
-                case Opcode.Sbr:
+                case Opcode.Apx:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    acc = Processor.Besm6Pack(acc, _p.MemLoad(aex));
-                    rmr = 0;
+                    a = Processor.Besm6Pack(a, _p.MemLoad(aex));
+                    y = 0;
                     _p.SetLogical();
                     break;
 
-                case Opcode.Rzb:
+                case Opcode.Aux:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    acc = Processor.Besm6Unpack(acc, _p.MemLoad(aex));
-                    rmr = 0;
+                    a = Processor.Besm6Unpack(a, _p.MemLoad(aex));
+                    y = 0;
                     _p.SetLogical();
                     break;
 
-                case Opcode.Ched:
+                case Opcode.Acx:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    acc = (ulong)Processor.Besm6CountOnes(acc) + _p.MemLoad(aex);
-                    if ((acc & BIT49) != 0) acc = (acc + 1) & BITS48;
-                    rmr = 0;
+                    a = (ulong)Processor.Besm6CountOnes(a) + _p.MemLoad(aex);
+                    if ((a & BIT49) != 0) a = (a + 1) & BITS48;
+                    y = 0;
                     _p.SetLogical();
                     break;
 
-                case Opcode.Ned:
+                case Opcode.Anx:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    if (acc != 0)
+                    if (a != 0)
                     {
-                        int n = Processor.Besm6HighestBit(acc);
+                        int n = Processor.Besm6HighestBit(a);
                         _p.ArithShift(48 - n);
-                        rmr = _p._rmr.Value;
-                        acc = (ulong)n + _p.MemLoad(aex);
-                        if ((acc & BIT49) != 0) acc = (acc + 1) & BITS48;
+                        y = _p._y.Value;
+                        a = (ulong)n + _p.MemLoad(aex);
+                        if ((a & BIT49) != 0) a = (a + 1) & BITS48;
                     }
                     else
                     {
-                        rmr = 0;
-                        acc = _p.MemLoad(aex);
+                        y = 0;
+                        a = _p.MemLoad(aex);
                     }
                     _p.SetLogical();
                     break;
 
-                case Opcode.Slep:
+                case Opcode.EPlusX:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
                     _p.ArithAddExponent((int)(_p.MemLoad(aex) >> 41) - 64);
-                    acc = _p._acc.Value;
-                    rmr = _p._rmr.Value;
+                    a = _p._a.Value;
+                    y = _p._y.Value;
                     _p.SetMultiplicative();
                     break;
 
-                case Opcode.Vchp:
+                case Opcode.EMinusX:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
                     _p.ArithAddExponent(64 - (int)(_p.MemLoad(aex) >> 41));
-                    acc = _p._acc.Value;
-                    rmr = _p._rmr.Value;
+                    a = _p._a.Value;
+                    y = _p._y.Value;
                     _p.SetMultiplicative();
                     break;
 
-                case Opcode.Sd:
+                case Opcode.Asx:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
                     _p.ArithShift((int)(_p.MemLoad(aex) >> 41) - 64);
-                    acc = _p._acc.Value;
-                    rmr = _p._rmr.Value;
+                    a = _p._a.Value;
+                    y = _p._y.Value;
                     _p.SetLogical();
                     break;
 
-                case Opcode.Rzh:
+                case Opcode.Xtr:
                     PrepareStack(ref addr, reg, m);
                     aex = Addr(addr + m[reg]);
-                    rau = (uint)((_p.MemLoad(aex) >> 41) & 0x3Fu);
+                    r = (uint)((_p.MemLoad(aex) >> 41) & 0x3Fu);
                     break;
 
-                case Opcode.Schrzh:
+                case Opcode.Rte:
                     aex = Addr(addr + m[reg]);
-                    acc = ((ulong)(rau & aex & 0x7Fu)) << 41;
+                    a = ((ulong)(r & aex & 0x7Fu)) << 41;
                     _p.SetLogical();
                     break;
 
-                case Opcode.Schmr:
+                case Opcode.Yta:
                     aex = Addr(addr + m[reg]);
                     if (_p.IsLogical())
                     {
-                        acc = rmr;
+                        a = y;
                     }
                     else
                     {
-                        ulong x = rmr;
-                        acc = (acc & ~BITS41) | (rmr & BITS40);
-                        _p._acc = Word48.FromInt48(acc);
+                        ulong x = y;
+                        a = (a & ~BITS41) | (y & BITS40);
+                        _p._a = Word48.FromInt48(a);
                         _p.ArithAddExponent((int)(aex & 0x7Fu) - 64);
-                        acc = _p._acc.Value;
-                        rmr = x;
+                        a = _p._a.Value;
+                        y = x;
                     }
                     break;
 
-                case Opcode.Zpp:
+                case Opcode.Ext:
                     throw new ProcessorException("Illegal instruction 032 зпп");
 
-                case Opcode.Schp:
+                case Opcode.Op33:
                     throw new ProcessorException("Illegal instruction 033 счп");
 
-                case Opcode.Slpa:
+                case Opcode.EPlusN:
                     aex = Addr(addr + m[reg]);
                     _p.ArithAddExponent((int)(aex & 0x7Fu) - 64);
-                    acc = _p._acc.Value;
-                    rmr = _p._rmr.Value;
+                    a = _p._a.Value;
+                    y = _p._y.Value;
                     _p.SetMultiplicative();
                     break;
 
-                case Opcode.Vchpa:
+                case Opcode.EMinusN:
                     aex = Addr(addr + m[reg]);
                     _p.ArithAddExponent(64 - (int)(aex & 0x7Fu));
-                    acc = _p._acc.Value;
-                    rmr = _p._rmr.Value;
+                    a = _p._a.Value;
+                    y = _p._y.Value;
                     _p.SetMultiplicative();
                     break;
 
-                case Opcode.Sda:
+                case Opcode.Asn:
                     aex = Addr(addr + m[reg]);
                     _p.ArithShift((int)(aex & 0x7Fu) - 64);
-                    acc = _p._acc.Value;
-                    rmr = _p._rmr.Value;
+                    a = _p._a.Value;
+                    y = _p._y.Value;
                     _p.SetLogical();
                     break;
 
-                case Opcode.Rza:
+                case Opcode.Ntr:
                     aex = Addr(addr + m[reg]);
-                    rau = aex & 0x3Fu;
+                    r = aex & 0x3Fu;
                     break;
 
-                case Opcode.Ui:
+                case Opcode.Ati:
                     aex = Addr(addr + m[reg]);
-                    m[aex & 0xFu] = Addr((uint)acc);
+                    m[aex & 0xFu] = Addr((uint)a);
                     m[0] = 0;
                     break;
 
-                case Opcode.Uim:
+                case Opcode.Sti:
                 {
                     aex = Addr(addr + m[reg]);
                     uint rg = aex & 0xFu;
-                    uint ad = Addr((uint)acc);
+                    uint ad = Addr((uint)a);
                     if (rg != 15)
                     {
                         m[15] = Addr(m[15] - 1);
                         _p._corrStack = 1;
                     }
-                    acc = _p.MemLoad(rg != 15 ? m[15] : ad);
+                    a = _p.MemLoad(rg != 15 ? m[15] : ad);
                     m[rg] = ad;
                     m[0] = 0;
                     _p.SetLogical();
                     break;
                 }
 
-                case Opcode.Schi:
+                case Opcode.Ita:
                     aex = Addr(addr + m[reg]);
-                    acc = Addr(m[aex & 0xFu]);
+                    a = Addr(m[aex & 0xFu]);
                     _p.SetLogical();
                     break;
 
-                case Opcode.Schim:
-                    _p.MemStore(m[15], acc);
+                case Opcode.Its:
+                    _p.MemStore(m[15], a);
                     m[15] = Addr(m[15] + 1);
                     goto load_modifier;
 
-                case Opcode.Uii:
+                case Opcode.Mtj:
                     aex = addr;
                     m[aex & 0xFu] = m[reg];
                     m[0] = 0;
                     break;
 
-                case Opcode.Sli:
+                case Opcode.JPlusM:
                     aex = addr;
                     m[aex & 0xFu] = Addr(m[aex & 0xFu] + m[reg]);
                     m[0] = 0;
                     break;
 
-                case Opcode.Sop:
+                case Opcode.Op46:
                     throw new ProcessorException("Illegal instruction 046 соп");
 
                 case Opcode.Op47:
                     throw new ProcessorException("Illegal instruction 047");
 
-                case Opcode.Moda:
+                case Opcode.Utc:
                     aex = Addr(addr + m[reg]);
-                    nextMod = aex;
+                    nextC = aex;
                     break;
 
-                case Opcode.Mod:
+                case Opcode.Wtc:
                     if (addr == 0 && reg == 15)
                     {
                         m[15] = Addr(m[15] - 1);
                         _p._corrStack = 1;
                     }
                     aex = Addr(addr + m[reg]);
-                    nextMod = Addr((uint)_p.MemLoad(aex));
+                    nextC = Addr((uint)_p.MemLoad(aex));
                     break;
 
-                case Opcode.Uia:
+                case Opcode.Vtm:
                     aex = addr;
                     m[reg] = addr;
                     m[0] = 0;
                     break;
 
-                case Opcode.Slia:
+                case Opcode.Utm:
                     aex = Addr(addr + m[reg]);
                     m[reg] = aex;
                     m[0] = 0;
                     break;
 
-                case Opcode.Po:
+                case Opcode.Uza:
                     aex = Addr(addr + m[reg]);
-                    rmr = acc;
+                    y = a;
                     if (_p.IsAdditive())
                     {
-                        if ((acc & BIT41) != 0) break;
+                        if ((a & BIT41) != 0) break;
                     }
                     else if (_p.IsMultiplicative())
                     {
-                        if ((acc & BIT48) == 0) break;
+                        if ((a & BIT48) == 0) break;
                     }
                     else if (_p.IsLogical())
                     {
-                        if (acc != 0) break;
+                        if (a != 0) break;
                     }
                     else
                         break;
-                    pc = aex;
+                    k = aex;
                     rightFlag = false;
                     break;
 
-                case Opcode.Pe:
+                case Opcode.U1a:
                     aex = Addr(addr + m[reg]);
-                    rmr = acc;
+                    y = a;
                     if (_p.IsAdditive())
                     {
-                        if ((acc & BIT41) == 0) break;
+                        if ((a & BIT41) == 0) break;
                     }
                     else if (_p.IsMultiplicative())
                     {
-                        if ((acc & BIT48) != 0) break;
+                        if ((a & BIT48) != 0) break;
                     }
                     else if (_p.IsLogical())
                     {
-                        if (acc == 0) break;
+                        if (a == 0) break;
                     }
-                    pc = aex;
+                    k = aex;
                     rightFlag = false;
                     break;
 
-                case Opcode.Pb:
+                case Opcode.Uj:
                     aex = Addr(addr + m[reg]);
-                    pc = aex;
+                    k = aex;
                     rightFlag = false;
                     break;
 
-                case Opcode.Pv:
+                case Opcode.Vjm:
                     aex = addr;
-                    m[reg] = nextPc;
+                    m[reg] = nextK;
                     m[0] = 0;
-                    pc = addr;
+                    k = addr;
                     rightFlag = false;
                     break;
 
-                case Opcode.Vypr:
+                case Opcode.Ij:
                     throw new ProcessorException("Illegal instruction 320 выпр/iret");
 
                 case Opcode.Stop:
-                    _p._acc = Word48.FromInt48(acc);
-                    _p._rmr = Word48.FromInt48(rmr);
-                    _p.CanonPost(pc, rightFlag);
+                    _p._a = Word48.FromInt48(a);
+                    _p._y = Word48.FromInt48(y);
+                    _p.CanonPost(k, rightFlag);
                     return true;
 
-                case Opcode.Pio:
+                case Opcode.Vzm:
                     aex = addr;
-                    if (m[reg] == 0) { pc = addr; rightFlag = false; }
+                    if (m[reg] == 0) { k = addr; rightFlag = false; }
                     break;
 
-                case Opcode.Pino:
+                case Opcode.V1m:
                     aex = addr;
-                    if (m[reg] != 0) { pc = addr; rightFlag = false; }
+                    if (m[reg] != 0) { k = addr; rightFlag = false; }
                     break;
 
-                case Opcode.E36:
+                case Opcode.Op36:
                     aex = addr;
-                    if (m[reg] == 0) { pc = addr; rightFlag = false; }
+                    if (m[reg] == 0) { k = addr; rightFlag = false; }
                     break;
 
-                case Opcode.Tsikl:
+                case Opcode.Vlm:
                     aex = addr;
                     if (m[reg] == 0) break;
                     m[reg] = Addr(m[reg] + 1);
-                    pc = addr;
+                    k = addr;
                     rightFlag = false;
                     break;
 
@@ -570,10 +570,10 @@ namespace Besm6.Core
                         // поэтому если правая половина ещё не выполнена, пропускаем её
                         // и продолжаем с левой половины следующего слова.
                         // Без этой логики C# выполняет инструкцию из правой половины
-                        // и состояние (ACC/M[14]) расходится.
+                        // и состояние (A/M[14]) расходится.
                         if (rightFlag)
                         {
-                            pc += 1;
+                            k += 1;
                             rightFlag = false;
                         }
                         // (trace_instruction вызывается ДО advance в step()):
@@ -595,22 +595,22 @@ namespace Besm6.Core
                             // processor exceptions stay pending: the loader must first
                             // apply stack correction/interception, then finalize POST.
                             if (string.IsNullOrEmpty(exception.Message))
-                                _p.CanonPost(pc, rightFlag);
+                                _p.CanonPost(k, rightFlag);
                             throw;
                         }
                         if (handled)
                         {
-                            // Обработчик экстракода может изменить ACC/RMR напрямую
-                            // (например E63: cpu.SetAcc(...)). Локальные копии acc/rmr
+                            // Обработчик экстракода может изменить A/Y напрямую
+                            // (например E63: cpu.SetA(...)). Локальные копии a/y
                             // захвачены в начале Execute() и «просрочены» — если их не
-                            // обновить, финальная запись `_p._acc = Word48.FromInt48(acc)`
+                            // обновить, финальная запись `_p._a = Word48.FromInt48(a)`
                             // внизу перезапишет изменения обработчика старым значением.
                             // напрямую, без локальной копии.)
-                            acc = _p._acc.Value;
-                            rmr = _p._rmr.Value;
-                            // экстракода вызывается core.set_logical() — RAU-режим
+                            a = _p._a.Value;
+                            y = _p._y.Value;
+                            // экстракода вызывается core.set_logical() — R-режим
                             // приводится к ЛОГИЧЕСКОМУ. Влияет на условные переходы
-                            // по/пе (Po/Pe) и весь дальнейший поток; без этого C#
+                            // ПО/ПЕ (UZA/U1A) и весь дальнейший поток; без этого C#
                             _p.SetLogical();
                             break;
                         }
@@ -619,23 +619,23 @@ namespace Besm6.Core
                     throw new ProcessorException($"Unknown instruction {opcode}");
             }
 
-            if (nextMod != 0) { mod = nextMod; applyMod = true; }
-            else { applyMod = false; }
+            if (nextC != 0) { c = nextC; applyC = true; }
+            else { applyC = false; }
 
-            _p._acc = Word48.FromInt48(acc);
-            _p._rmr = Word48.FromInt48(rmr);
-            _p.CanonPost(pc, rightFlag);
+            _p._a = Word48.FromInt48(a);
+            _p._y = Word48.FromInt48(y);
+            _p.CanonPost(k, rightFlag);
             return false;
 
         load_modifier:
             aex = Addr(addr + m[reg]);
-            acc = Addr(m[aex & 0xFu]);
+            a = Addr(m[aex & 0xFu]);
             _p.SetLogical();
-            if (nextMod != 0) { mod = nextMod; applyMod = true; }
-            else { applyMod = false; }
-            _p._acc = Word48.FromInt48(acc);
-            _p._rmr = Word48.FromInt48(rmr);
-            _p.CanonPost(pc, rightFlag);
+            if (nextC != 0) { c = nextC; applyC = true; }
+            else { applyC = false; }
+            _p._a = Word48.FromInt48(a);
+            _p._y = Word48.FromInt48(y);
+            _p.CanonPost(k, rightFlag);
             return false;
         }
 

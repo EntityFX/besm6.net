@@ -27,7 +27,7 @@ namespace Besm6.Tests
                 var handler = MakeHandler(machine);
                 machine.Cpu.SetM(14, (uint)addr);
                 handler.Handle(E65, 0);
-                Assert.AreEqual(0UL, machine.Cpu.GetAcc().Value, $"addr=0{Convert.ToString(addr, 8)}");
+                Assert.AreEqual(0UL, machine.Cpu.GetA().Value, $"addr=0{Convert.ToString(addr, 8)}");
             }
         }
 
@@ -38,7 +38,7 @@ namespace Besm6.Tests
             var handler = MakeHandler(machine);
             machine.Cpu.SetM(14, 342);
             handler.Handle(E65, 0);
-            Assert.AreEqual(3072UL, machine.Cpu.GetAcc().Value);
+            Assert.AreEqual(3072UL, machine.Cpu.GetA().Value);
         }
 
         [TestMethod]
@@ -56,7 +56,7 @@ namespace Besm6.Tests
             var handler = MakeHandler(machine);
             machine.Cpu.SetM(14, (uint)addr);
             handler.Handle(E65, 0);
-            Assert.AreEqual(expected, machine.Cpu.GetAcc().Value, $"addr=0{Convert.ToString(addr, 8)}");
+            Assert.AreEqual(expected, machine.Cpu.GetA().Value, $"addr=0{Convert.ToString(addr, 8)}");
         }
 
         [TestMethod]
@@ -70,7 +70,7 @@ namespace Besm6.Tests
                 var handler = MakeHandler(machine);
                 machine.Cpu.SetM(14, (uint)(baseAddr + idx));
                 handler.Handle(E65, 0);
-                Assert.AreEqual((ulong)CosyCodec.AllToIso[idx], machine.Cpu.GetAcc().Value, $"idx={idx}");
+                Assert.AreEqual((ulong)CosyCodec.AllToIso[idx], machine.Cpu.GetA().Value, $"idx={idx}");
             }
         }
 
@@ -88,7 +88,7 @@ namespace Besm6.Tests
             var handler = MakeHandler(machine);
             machine.Cpu.SetM(14, (uint)addr);
             handler.Handle(E65, 0);
-            Assert.AreEqual(expected, machine.Cpu.GetAcc().Value, $"addr=0{Convert.ToString(addr, 8)}");
+            Assert.AreEqual(expected, machine.Cpu.GetA().Value, $"addr=0{Convert.ToString(addr, 8)}");
         }
 
         [TestMethod]

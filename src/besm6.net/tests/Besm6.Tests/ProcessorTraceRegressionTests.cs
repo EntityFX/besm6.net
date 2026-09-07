@@ -10,7 +10,7 @@ namespace Besm6.Tests
 {
     /// <summary>
     /// Регрессии instrumentation: trace обязан описывать именно исполняемую инструкцию,
-    /// а не уже изменённые PC/half после предварительного advance.
+    /// а не уже изменённые K/half после предварительного advance.
     /// </summary>
     [TestClass]
     [DoNotParallelize]
@@ -39,12 +39,12 @@ namespace Besm6.Tests
         private static uint O(string octal) => Convert.ToUInt32(octal, 8);
 
         [TestMethod]
-        public void TraceInstruction_ReportsPreExecutionPcAndExecutedHalf()
+        public void TraceInstruction_ReportsPreExecutionKAndExecutedHalf()
         {
             _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), vtm 2(2)")));
-            _cpu.SetPc(O("10"));
+            _cpu.SetK(O("10"));
 
-            var trace = new List<(uint Pc, bool Right, uint Rk, uint Opcode)>();
+            var trace = new List<(uint K, bool Right, uint Rk, uint Opcode)>();
             _cpu.TraceInstruction = (pc, right, rk, opcode) => trace.Add((pc, right, rk, opcode));
 
             _cpu.Step();
@@ -52,14 +52,14 @@ namespace Besm6.Tests
 
             Assert.AreEqual(2, trace.Count);
 
-            Assert.AreEqual(O("10"), trace[0].Pc);
+            Assert.AreEqual(O("10"), trace[0].K);
             Assert.IsFalse(trace[0].Right, "Первая инструкция слова должна логироваться как LEFT.");
-            Assert.AreEqual((uint)Opcode.Uia, trace[0].Opcode);
+            Assert.AreEqual((uint)Opcode.Vtm, trace[0].Opcode);
 
-            Assert.AreEqual(O("10"), trace[1].Pc,
+            Assert.AreEqual(O("10"), trace[1].K,
                 "RIGHT half всё ещё принадлежит тому же 48-битному слову.");
             Assert.IsTrue(trace[1].Right, "Вторая инструкция слова должна логироваться как RIGHT.");
-            Assert.AreEqual((uint)Opcode.Uia, trace[1].Opcode);
+            Assert.AreEqual((uint)Opcode.Vtm, trace[1].Opcode);
         }
 
         [TestMethod]
@@ -67,7 +67,7 @@ namespace Besm6.Tests
         {
             ulong word = Besm6.Asm.Assembler.Asm("vtm 1(1), vtm 2(2)");
             _memory.Write(O("10"), new Word48(word));
-            _cpu.SetPc(O("10"));
+            _cpu.SetK(O("10"));
 
             var trace = new List<(uint Rk, bool Right)>();
             _cpu.TraceInstruction = (_, right, rk, _) => trace.Add((rk, right));
@@ -95,7 +95,7 @@ namespace Besm6.Tests
             {
                 Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", path);
                 _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), vtm 2(2)")));
-                _cpu.SetPc(O("10"));
+                _cpu.SetK(O("10"));
 
                 _cpu.Step();
                 typeof(Processor).GetMethod("CanonFlush", BindingFlags.Instance | BindingFlags.NonPublic)!
@@ -108,6 +108,8 @@ namespace Besm6.Tests
                 Assert.AreEqual(2, lines.Length,
                     "Canonical TSV must contain one physical header line and one physical row per executed instruction.");
                 StringAssert.StartsWith(lines[0], headerPrefix);
+                StringAssert.Contains(lines[0], "\ta_b\ty_b\tr_b\tc_b\tapply_c_b\t");
+                StringAssert.Contains(lines[0], "\ta_a\ty_a\tr_a\tc_a\tapply_c_a\t");
 
                 string[] columns = lines[0].Split('\t');
                 string[] values = lines[1].Split('\t');
@@ -143,7 +145,7 @@ namespace Besm6.Tests
                 Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", path);
                 Environment.SetEnvironmentVariable("BESM6_CANON_TRACE_LIMIT", "1");
                 _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), vtm 2(2)")));
-                _cpu.SetPc(O("10"));
+                _cpu.SetK(O("10"));
 
                 _cpu.Step();
                 _cpu.Step();
@@ -178,7 +180,7 @@ namespace Besm6.Tests
             {
                 Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", path);
                 _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("stop, vtm 2(2)")));
-                _cpu.SetPc(O("10"));
+                _cpu.SetK(O("10"));
 
                 Assert.IsTrue(_cpu.Step());
                 ((IDisposable)typeof(Processor)
@@ -216,7 +218,7 @@ namespace Besm6.Tests
             {
                 Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", path);
                 _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("*74, vtm 2(2)")));
-                _cpu.SetPc(O("10"));
+                _cpu.SetK(O("10"));
                 _cpu.ExtracodeHandler = (_, _) => throw new ProcessorException("");
 
                 ProcessorException? exception = null;
@@ -267,7 +269,7 @@ namespace Besm6.Tests
             {
                 Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", path);
                 _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("*50, stop")));
-                _cpu.SetPc(O("10"));
+                _cpu.SetK(O("10"));
                 _cpu.InterceptCount = 1;
                 _cpu.InterceptAddr = O("20");
                 _cpu.ExtracodeHandler = (_, _) => throw new ProcessorException("Division by zero");
@@ -285,7 +287,7 @@ namespace Besm6.Tests
                 _cpu.StackCorrection();
                 Assert.IsTrue(_cpu.Intercept(exception.Message));
                 typeof(Processor).GetMethod("CanonPost", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .Invoke(_cpu, new object[] { _cpu.GetPc(), _cpu.RightInstruction });
+                    .Invoke(_cpu, new object[] { _cpu.GetK(), _cpu.RightInstruction });
                 ((IDisposable)typeof(Processor)
                     .GetField("_canonTrace", BindingFlags.Instance | BindingFlags.NonPublic)!
                     .GetValue(_cpu)!).Dispose();

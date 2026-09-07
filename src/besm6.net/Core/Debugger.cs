@@ -23,12 +23,12 @@ namespace Besm6.Core
         public void Start()
         {
             Console.WriteLine("=== BESM-6 Console Debugger ===");
-            Console.WriteLine("Commands: step, run, regs, dump <addr>, load <file>, dub <file.dub>, pc <addr>, disasm <addr>, exit");
+            Console.WriteLine("Commands: step, run, regs, dump <addr>, load <file>, dub <file.dub>, k <addr>, disasm <addr>, exit");
             Console.WriteLine("-------------------------------------------------------");
 
             while (_isRunning)
             {
-                Console.Write($"[PC:{_machine.Cpu.PC:X5}] > ");
+                Console.Write($"[K:{_machine.Cpu.K:X5}] > ");
                 string? input = Console.ReadLine()?.Trim().ToLowerInvariant();
                 if (string.IsNullOrEmpty(input)) continue;
 
@@ -64,15 +64,16 @@ namespace Besm6.Core
                         else
                             Console.WriteLine("Usage: dub <file.dub>");
                         break;
-                    case "pc":
-                        if (parts.Length > 1 && TryParseAddr(parts[1], out int pc))
+                    case "k":
+                    case "pc": // совместимый псевдоним старой команды
+                        if (parts.Length > 1 && TryParseAddr(parts[1], out int k))
                         {
-                            _machine.Cpu.SetPc((uint)pc);
-                            Console.WriteLine($"PC = {pc:X5}");
+                            _machine.Cpu.SetK((uint)k);
+                            Console.WriteLine($"K = {k:X5}");
                         }
                         else
                         {
-                            Console.WriteLine("Usage: pc <address>");
+                            Console.WriteLine("Usage: k <address>");
                         }
                         break;
                     case "disasm":
@@ -86,7 +87,7 @@ namespace Besm6.Core
                         _isRunning = false;
                         break;
                     default:
-                        Console.WriteLine("Unknown command. Available: step, run, regs, dump, load, pc, disasm, exit");
+                        Console.WriteLine("Unknown command. Available: step, run, regs, dump, load, k, disasm, exit");
                         break;
                 }
             }
@@ -125,7 +126,7 @@ namespace Besm6.Core
         {
             var cpu = _machine.Cpu;
             Console.WriteLine(
-                $"PC={cpu.PC:X5}  Acc=0x{cpu.Acc:X12}  Rmr=0x{cpu.Rmr:X12}  Rau={cpu.Rau:X2}  MOD={cpu.GetM(15):X5}");
+                $"K={cpu.K:X5}  A=0x{cpu.A:X12}  Y=0x{cpu.Y:X12}  R={cpu.R:X2}  C={cpu.C:X5}");
         }
 
         private void DumpMemory(int address, int count)
@@ -156,7 +157,7 @@ namespace Besm6.Core
             try
             {
                 _machine.LoadBinary(filename);
-                Console.WriteLine($"Loaded {filename} at PC=0");
+                Console.WriteLine($"Loaded {filename} at K=0");
             }
             catch (Exception ex)
             {

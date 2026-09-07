@@ -67,10 +67,10 @@ namespace Besm6.Loader
         public bool Verbose { get; set; }
 
         /// <summary>
-        /// Эвристика обнаружения spin-loop (PC в узком диапазоне долго).
+        /// Эвристика обнаружения spin-loop (K в узком диапазоне долго).
         /// завершится естественно, и опирается только на предел инструкций (-l).
         /// Его можно включить флагом --loop-detect для отладки реальных зависаний:
-        /// но эвристика (PC в узком диапазоне) не отличает легитимный цикл MONSYS
+        /// но эвристика (K в узком диапазоне) не отличает легитимный цикл MONSYS
         /// </summary>
         public bool LoopDetect { get; set; } = false;
 
@@ -81,8 +81,8 @@ namespace Besm6.Loader
         public Action<int, ulong>? InstructionTrace { get; set; }
 
         /// <summary>
-        /// ref/trace.cpp:240). Срабатывает в НАЧАЛЕ инструкции (после fetch RK и decode, ДО advance PC)
-        /// с (pc, rightFlag, rk, opcode). null = выключена.
+        /// ref/trace.cpp:240). Срабатывает в НАЧАЛЕ инструкции (после fetch RK и decode, ДО advance K)
+        /// с (k, rightFlag, rk, opcode). null = выключена.
         /// </summary>
         public Action<uint, bool, uint, uint>? CppInstructionTrace { get; set; }
 
@@ -463,7 +463,7 @@ namespace Besm6.Loader
         /// <summary>
         /// Загрузить скрипт в память БЕЗ выполнения (для TUI/отладчика).
         /// Заполняет память (raw-слова) либо готовит MONSYS-загрузчик,
-        /// устанавливает PC. Возвращает стартовый PC.
+        /// устанавливает K. Возвращает стартовый K.
         /// </summary>
         public long LoadScript(string path)
         {
@@ -481,10 +481,10 @@ namespace Besm6.Loader
                     int addr = (baseAddr + i) & 0x7FFF;
                     _machine.Memory.Write((uint)addr, new Word48((ulong)job.RawWords[i]));
                 }
-                _machine.Cpu.SetPc((uint)baseAddr);
+                _machine.Cpu.SetK((uint)baseAddr);
                 _memStartBase = baseAddr;
                 if (Verbose)
-                    Console.WriteLine($"Loaded {job.RawWords.Count} raw words at 0{baseAddr:X}, start PC=0{baseAddr:X}");
+                    Console.WriteLine($"Loaded {job.RawWords.Count} raw words at 0{baseAddr:X}, start K=0{baseAddr:X}");
                 return baseAddr;
             }
 
@@ -515,10 +515,10 @@ namespace Besm6.Loader
                     _machine.Memory.Write((uint)addr, new Word48((ulong)val));
                 }
 
-                _machine.Cpu.SetPc((uint)baseAddr);
+                _machine.Cpu.SetK((uint)baseAddr);
                 _memStartBase = baseAddr;
                 if (Verbose)
-                    Console.WriteLine($"Assembled {asmResult.Words.Count} words at 0{baseAddr:X}, start PC=0{baseAddr:X}");
+                    Console.WriteLine($"Assembled {asmResult.Words.Count} words at 0{baseAddr:X}, start K=0{baseAddr:X}");
                 return _memStartBase;
             }
 
@@ -526,8 +526,8 @@ namespace Besm6.Loader
             WriteScriptToDrum(job, rawLines);
             MountScriptTapes(job);
             BootMsDubna();
-            _memStartBase = (int)_machine.Cpu.GetPc();
-            return _machine.Cpu.GetPc();
+            _memStartBase = (int)_machine.Cpu.GetK();
+            return _machine.Cpu.GetK();
         }
 
         /// <summary>Базовый адрес загруженной программы (для окна памяти TUI).</summary>
@@ -566,11 +566,11 @@ namespace Besm6.Loader
                 int addr = (baseAddr + i) & 0x7FFF;
                 _machine.Memory.Write((uint)addr, new Word48((ulong)job.RawWords[i]));
             }
-            _machine.Cpu.SetPc((uint)baseAddr);
+            _machine.Cpu.SetK((uint)baseAddr);
             InstallExtracodeHook();
 
             if (Verbose)
-                Console.WriteLine($"Loaded {job.RawWords.Count} raw words at 0{baseAddr:X}, start PC=0{baseAddr:X}");
+                Console.WriteLine($"Loaded {job.RawWords.Count} raw words at 0{baseAddr:X}, start K=0{baseAddr:X}");
 
             return RunBounded();
         }
@@ -620,11 +620,11 @@ namespace Besm6.Loader
                 _machine.Memory.Write((uint)addr, new Word48((ulong)val));
             }
 
-            _machine.Cpu.SetPc((uint)baseAddr);
+            _machine.Cpu.SetK((uint)baseAddr);
             InstallExtracodeHook();
 
             if (Verbose)
-                Console.WriteLine($"Assembled {asmResult.Words.Count} words at 0{baseAddr:X}, start PC=0{baseAddr:X}");
+                Console.WriteLine($"Assembled {asmResult.Words.Count} words at 0{baseAddr:X}, start K=0{baseAddr:X}");
 
             return RunBounded();
         }
@@ -675,28 +675,28 @@ namespace Besm6.Loader
             HaltedByStop = false;
             long lastReport = 0;
 
-            // Loop detector: if PC oscillates within a small range for a long window,
+            // Loop detector: if K oscillates within a small range for a long window,
             // the machine is stuck in a spin-loop (MONSYS I/O wait, abort path, etc.).
             const int LoopWindow = 20_000;
             const int LoopRange = 16;
-            long[] pcHistory = new long[LoopWindow];
-            int pcHistIdx = 0;
+            long[] kHistory = new long[LoopWindow];
+            int kHistIdx = 0;
 
             // Подключаем трассировку.
             if (InstructionTrace != null)
             {
                 long[] counter = { 0 };
-                _machine.StepTrace = (pc, word) =>
+                _machine.StepTrace = (k, word) =>
                 {
                     counter[0]++;
-                    InstructionTrace(pc, word);
+                    InstructionTrace(k, word);
                 };
             }
 
-            // фиксирует pc/rightFlag/rk/opcode ДО advance PC.
+            // фиксирует k/rightFlag/rk/opcode ДО advance K.
             if (CppInstructionTrace != null)
             {
-                _machine.Cpu.TraceInstruction = (pc, rf, rk, op) => CppInstructionTrace(pc, rf, rk, op);
+                _machine.Cpu.TraceInstruction = (k, rf, rk, op) => CppInstructionTrace(k, rf, rk, op);
             }
 
             if (RegisterTrace != null)
@@ -714,7 +714,7 @@ namespace Besm6.Loader
                     if (stopped)
                     {
                         HaltedByStop = true;
-                        return LoadResult.Halt(_machine.Cpu.GetPc(), InstructionsExecuted);
+                        return LoadResult.Halt(_machine.Cpu.GetK(), InstructionsExecuted);
                     }
 
                     // Wall-clock стоп внутри цикла: зациклившаяся машина не жжёт
@@ -724,39 +724,39 @@ namespace Besm6.Loader
                         && wallStopwatch.ElapsedMilliseconds > wallLimitMs)
                     {
                         if (Verbose) Console.WriteLine();
-                        return LoadResult.StoppedByLimit(_machine.Cpu.GetPc(), InstructionsExecuted);
+                        return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
                     }
 
-                    // Loop detection: track PC in a sliding window.
-                    long curPc = _machine.Cpu.GetPc();
-                    pcHistory[pcHistIdx % LoopWindow] = curPc;
-                    pcHistIdx++;
+                    // Loop detection: track K in a sliding window.
+                    long currentK = _machine.Cpu.GetK();
+                    kHistory[kHistIdx % LoopWindow] = currentK;
+                    kHistIdx++;
 
                     if (LoopDetect && InstructionsExecuted >= LoopWindow && (InstructionsExecuted % LoopWindow) == 0)
                     {
-                        long minPc = long.MaxValue, maxPc = long.MinValue;
+                        long minK = long.MaxValue, maxK = long.MinValue;
                         for (int i = 0; i < LoopWindow; i++)
                         {
-                            long v = pcHistory[i];
-                            if (v < minPc) minPc = v;
-                            if (v > maxPc) maxPc = v;
+                            long v = kHistory[i];
+                            if (v < minK) minK = v;
+                            if (v > maxK) maxK = v;
                         }
-                        if ((maxPc - minPc) < LoopRange)
+                        if ((maxK - minK) < LoopRange)
                         {
-                            string diag = $"Loop detected: PC stuck in range 0{minPc:X4}-0{maxPc:X4} " +
+                            string diag = $"Loop detected: K stuck in range 0{minK:X4}-0{maxK:X4} " +
                                          $"for {LoopWindow / 1000}K+ instructions. " +
                                          "MONSYS is in an I/O wait/abort spin-loop (channel-done not signaled). " +
                                          "This is a known MONSYS kernel gap (same in C++ dubna reference). " +
                                          "See plans/monsys-kernel-support.md.";
                             if (Verbose) Console.WriteLine($"\n  [LOOP] {diag}");
-                            return LoadResult.Failed(diag, curPc, InstructionsExecuted);
+                            return LoadResult.Failed(diag, currentK, InstructionsExecuted);
                         }
                     }
 
                     if (Verbose && InstructionsExecuted - lastReport >= 100_000)
                     {
                         lastReport = InstructionsExecuted;
-                        Console.Write($"\r  [{InstructionsExecuted / 1000}K] PC=0{curPc:X4}   ");
+                        Console.Write($"\r  [{InstructionsExecuted / 1000}K] K=0{currentK:X4}   ");
                     }
                 }
                 catch (ProcessorException ex)
@@ -772,29 +772,29 @@ namespace Besm6.Loader
 
                     if (string.IsNullOrEmpty(ex.Message))
                     {
-                        _machine.Cpu.CanonPost(_machine.Cpu.GetPc(), _machine.Cpu._rightInstrFlag);
+                        _machine.Cpu.CanonPost(_machine.Cpu.GetK(), _machine.Cpu._rightInstrFlag);
                         HaltedByStop = true;
-                        return LoadResult.Halt(_machine.Cpu.GetPc(), InstructionsExecuted);
+                        return LoadResult.Halt(_machine.Cpu.GetK(), InstructionsExecuted);
                     }
 
                     if (_machine.Cpu.Intercept(ex.Message))
                     {
                         // Canonical TSV trace: POST-снимок для перехваченной инструкции —
-                        _machine.Cpu.CanonPost(_machine.Cpu.GetPc(), _machine.Cpu._rightInstrFlag);
+                        _machine.Cpu.CanonPost(_machine.Cpu.GetK(), _machine.Cpu._rightInstrFlag);
                         // Intercept applied — resume from intercept address.
                         if (Verbose)
-                            Console.Write($"\r  [INTERCEPT @ 0{_machine.Cpu.GetPc():X4}] {ex.Message} → 0{_machine.Cpu.GetPc():X4}\n");
+                            Console.Write($"\r  [INTERCEPT @ 0{_machine.Cpu.GetK():X4}] {ex.Message} → 0{_machine.Cpu.GetK():X4}\n");
                         continue;
                     }
 
                     // Not intercepted — fatal error.
-                    _machine.Cpu.CanonPost(_machine.Cpu.GetPc(), _machine.Cpu._rightInstrFlag);
+                    _machine.Cpu.CanonPost(_machine.Cpu.GetK(), _machine.Cpu._rightInstrFlag);
                     if (Verbose) Console.WriteLine();
-                    return LoadResult.Failed(ex.Message, _machine.Cpu.GetPc(), InstructionsExecuted);
+                    return LoadResult.Failed(ex.Message, _machine.Cpu.GetK(), InstructionsExecuted);
                 }
             }
             if (Verbose) Console.WriteLine();
-            return LoadResult.StoppedByLimit(_machine.Cpu.GetPc(), InstructionsExecuted);
+            return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
         }
 
         //
@@ -844,7 +844,7 @@ namespace Besm6.Loader
             mem.Write(1543, new Word48(69633L));                          // 0000000000210001 oct = (физ. и мат.)
             mem.Write(1544, new Word48(824633790493L));                  // 00014000000210035 oct = /MONTRAN
 
-            _machine.Cpu.SetPc(1032);
+            _machine.Cpu.SetK(1032);
         }
     }
 
@@ -855,23 +855,24 @@ namespace Besm6.Loader
     {
         public bool Success { get; private init; }
         public bool Stopped { get; private init; }
-        public long Pc { get; private init; }
+        /// <summary>K — счётчик команд в момент завершения загрузки или выполнения.</summary>
+        public long K { get; private init; }
         public long Instructions { get; private init; }
         public string? ErrorMessage { get; private init; }
         public bool LimitExceeded { get; private init; }
 
-        public static LoadResult Halt(long pc, long instr) => new()
-        { Success = true, Stopped = true, Pc = pc, Instructions = instr };
-        public static LoadResult StoppedByLimit(long pc, long instr) => new()
-        { Success = false, Stopped = false, Pc = pc, Instructions = instr, LimitExceeded = true };
-        public static LoadResult Failed(string msg, long pc, long instr) => new()
-        { Success = false, Stopped = false, Pc = pc, Instructions = instr, ErrorMessage = msg };
+        public static LoadResult Halt(long k, long instr) => new()
+        { Success = true, Stopped = true, K = k, Instructions = instr };
+        public static LoadResult StoppedByLimit(long k, long instr) => new()
+        { Success = false, Stopped = false, K = k, Instructions = instr, LimitExceeded = true };
+        public static LoadResult Failed(string msg, long k, long instr) => new()
+        { Success = false, Stopped = false, K = k, Instructions = instr, ErrorMessage = msg };
 
         public override string ToString()
         {
-            if (Stopped) return $"Halted by STOP at 0{Pc:X} after {Instructions} instructions";
-            if (LimitExceeded) return $"Instruction limit exceeded at 0{Pc:X} after {Instructions} instructions";
-            return $"Error at 0{Pc:X}: {ErrorMessage}";
+            if (Stopped) return $"Halted by STOP at 0{K:X} after {Instructions} instructions";
+            if (LimitExceeded) return $"Instruction limit exceeded at 0{K:X} after {Instructions} instructions";
+            return $"Error at 0{K:X}: {ErrorMessage}";
         }
 
         private LoadResult() { }

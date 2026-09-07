@@ -12,7 +12,7 @@ namespace Besm6.Tests
     /// ref/assembler.cpp) — это независимый от C# Asm эталон.
     ///
     /// Дополнительно: начальное CPU state ДО первой инструкции:
-    /// PC = 02010 oct (1032 dec), half = LEFT, ACC = RMR = 0, RAU = 0, MOD = 0,
+    /// K = 02010 oct (1032 dec), half = LEFT, A = Y = 0, R = 0, C = 0,
     /// </summary>
     [TestClass]
     public class BootstrapDubnaTests
@@ -84,13 +84,13 @@ namespace Besm6.Tests
             _loader.BootMsDubna();
 
             var cpu = _machine.Cpu;
-            Assert.AreEqual(1032u, cpu.GetPc(), "PC должен быть 02010 oct = 1032 dec");
+            Assert.AreEqual(1032u, cpu.GetK(), "K должен быть 02010 oct = 1032 dec");
             Assert.IsFalse(cpu.OnRightInstruction, "half = LEFT (правая половина ещё не исполнялась)");
-            Assert.AreEqual(0UL, cpu.GetAcc().Value & 0xFFFF_FFFF_FFFFUL, "ACC = 0");
-            Assert.AreEqual(0UL, cpu.GetRmr().Value & 0xFFFF_FFFF_FFFFUL, "RMR = 0");
-            Assert.AreEqual(0u, cpu.GetRau(), "RAU = 0 (нет режима)");
-            Assert.AreEqual(0L, cpu.Mod, "MOD = 0");
-            Assert.IsFalse(cpu.ApplyModReg, "apply_mod_reg = false");
+            Assert.AreEqual(0UL, cpu.GetA().Value & 0xFFFF_FFFF_FFFFUL, "A = 0");
+            Assert.AreEqual(0UL, cpu.GetY().Value & 0xFFFF_FFFF_FFFFUL, "Y = 0");
+            Assert.AreEqual(0u, cpu.GetR(), "R = 0 (нет режима)");
+            Assert.AreEqual(0L, cpu.C, "C = 0");
+            Assert.IsFalse(cpu.ApplyC, "apply_c_reg = false");
             for (int i = 0; i < 16; i++)
                 Assert.AreEqual(0u, cpu.GetM(i), $"M[{i}] = 0");
         }

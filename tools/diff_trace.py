@@ -11,6 +11,12 @@ from typing import Dict, Iterator, NamedTuple, Optional, TextIO, Tuple
 
 
 IDENTITY_FIELDS = ("seq", "pc", "half", "raw48", "rk24", "opcode", "reg", "addr")
+REGISTER_COLUMN_ALIASES = {
+    "acc_b": "a_b", "rmr_b": "y_b", "rau_b": "r_b",
+    "mod_b": "c_b", "amod_b": "apply_c_b",
+    "acc_a": "a_a", "rmr_a": "y_a", "rau_a": "r_a",
+    "mod_a": "c_a", "amod_a": "apply_c_a",
+}
 
 
 class TraceResult(NamedTuple):
@@ -25,6 +31,12 @@ class TraceResult(NamedTuple):
 
 
 def _rows(stream: TextIO, path: Path) -> Iterator[Dict[str, str]]:
+    def make_row(header, values):
+        return {
+            REGISTER_COLUMN_ALIASES.get(column, column): value
+            for column, value in zip(header, values)
+        }
+
     def split_segment(line: str):
         values = line.rstrip("\r\n").split("\t")
         while values and values[-1] == "":
@@ -35,7 +47,7 @@ def _rows(stream: TextIO, path: Path) -> Iterator[Dict[str, str]]:
     if not header_line:
         raise ValueError(f"empty trace: {path}")
     header = split_segment(header_line)
-    legacy = "acc_b" not in header
+    legacy = "a_b" not in header and "acc_b" not in header
     if legacy:
         for _ in range(4):
             segment = stream.readline()
@@ -62,7 +74,7 @@ def _rows(stream: TextIO, path: Path) -> Iterator[Dict[str, str]]:
                         raise ValueError(
                             f"{path}:{line_number}: expected at most {len(header)} columns, got {len(values)}"
                         )
-                    row = dict(zip(header, values))
+                    row = make_row(header, values)
                     row["__trace_incomplete"] = "1"
                     yield row
                     return
@@ -71,7 +83,7 @@ def _rows(stream: TextIO, path: Path) -> Iterator[Dict[str, str]]:
             raise ValueError(
                 f"{path}:{line_number}: expected {len(header)} columns, got {len(values)}"
             )
-        yield dict(zip(header, values))
+        yield make_row(header, values)
         line_number += 5 if legacy else 1
 
 
@@ -87,12 +99,12 @@ def _differences(
 
 def _post_classification(fields) -> str:
     names = set(fields)
-    if names and names <= {"rau_a"}:
-        return "RAU"
-    if names & {"acc_a", "rmr_a"}:
-        return "ACC_RMR"
-    if names & {"mod_a", "amod_a", "aex_a"}:
-        return "MODIFIER"
+    if names and names <= {"r_a"}:
+        return "R"
+    if names & {"a_a", "y_a"}:
+        return "A_Y"
+    if names & {"c_a", "apply_c_a", "aex_a"}:
+        return "C"
     if names & {"pc_a", "half_a"}:
         return "CONTROL_FLOW"
     if any(name.startswith("m") and name.endswith("_a") for name in names):
@@ -193,8 +205,8 @@ def format_report(result: TraceResult) -> str:
     if cpp:
         lines.extend(
             [
-                f"PC decimal: {cpp.get('pc', '?')}",
-                f"PC octal: {_octal(cpp.get('pc'))}",
+                f"K decimal: {cpp.get('pc', '?')}",
+                f"K octal: {_octal(cpp.get('pc'))}",
                 f"Half: {cpp.get('half', '?')}",
                 f"Raw48: {cpp.get('raw48', '?')}",
                 f"RK: {cpp.get('rk24', '?')}",
@@ -211,7 +223,7 @@ def format_report(result: TraceResult) -> str:
             left, right = pair
             marker = "=" if all(left.get(field) == right.get(field) for field in IDENTITY_FIELDS) else "!"
             return (
-                f"  {label} {marker} seq={left.get('seq', '?')} pc={left.get('pc', '?')}"
+                f"  {label} {marker} seq={left.get('seq', '?')} k={left.get('pc', '?')}"
                 f"/{_octal(left.get('pc'))} {left.get('half', '?')} rk={left.get('rk24', '?')}"
             )
 

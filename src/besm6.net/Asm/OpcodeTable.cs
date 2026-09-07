@@ -11,7 +11,7 @@ namespace Besm6.Asm
             "atx",  "stx",  "mod",  "xts",  "a+x",  "a-x",  "x-a",  "amx",
             "xta",  "aax",  "aex",  "arx",  "avx",  "aox",  "a/x",  "a*x",
             "apx",  "aux",  "acx",  "anx",  "e+x",  "e-x",  "asx",  "xtr",
-            "rte",  "yta",  "*32",  "ext",  "e+n",  "e-n",  "asn",  "ntr",
+            "rte",  "yta",  "ext",  "*33",  "e+n",  "e-n",  "asn",  "ntr",
             "ati",  "sti",  "ita",  "its",  "mtj",  "j+m",  "*46",  "*47",
             "*50",  "*51",  "*52",  "*53",  "*54",  "*55",  "*56",  "*57",
             "*60",  "*61",  "*62",  "*63",  "*64",  "*65",  "*66",  "*67",
@@ -71,6 +71,13 @@ namespace Besm6.Asm
         /// </summary>
         public static bool TryGetOpcode(string opname, out int opcode)
         {
+            // Совместимый числовой псевдоним прежней таблицы для документированного EXT.
+            if (opname == "*32")
+            {
+                opcode = (int)Besm6.Core.Opcode.Ext;
+                return true;
+            }
+
             for (int i = 0; i < 64; ++i)
             {
                 if (ShortBemsh[i] == opname || ShortMadlen[i] == opname)

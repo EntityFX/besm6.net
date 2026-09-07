@@ -29,9 +29,9 @@ namespace Besm6.Tests
             public int Size => 32768;
         }
 
-        private void SetAcc(string oct) => _cpu.SetAcc(FromOctal(oct).Value);
-        private Word48 GetAcc() => _cpu.GetAcc();
-        private void SetRau(ulong rau) => _cpu.SetRau(rau);
+        private void SetA(string oct) => _cpu.SetA(FromOctal(oct).Value);
+        private Word48 GetA() => _cpu.GetA();
+        private void SetR(ulong r) => _cpu.SetR(r);
 
         [TestMethod]
         public void Test_Alu_Add()
@@ -77,8 +77,8 @@ namespace Besm6.Tests
         [TestMethod]
         public void Test_Alu_Multiply_NoNormalize()
         {
-            // RAU=3 отключает нормализацию и округление.
-            SetRau(3);
+            // R=3 отключает нормализацию и округление.
+            SetR(3);
             // 1.0 * 1.0 = 1/4 * 2^2 (денормализованный)
             VerifyMul("04050000000000000", "04050000000000000", "04104000000000000");
             // 1.0 * (-1.0) = -1/2 * 2^1
@@ -109,7 +109,7 @@ namespace Besm6.Tests
         [TestMethod]
         public void Test_Alu_Divide_NoNormalize()
         {
-            SetRau(3);
+            SetR(3);
             // 1.0 / 1.0 = 1.0
             VerifyDiv("04050000000000000", "04050000000000000", "04050000000000000");
             // -1.0 / -1.0 = 1.0
@@ -125,7 +125,7 @@ namespace Besm6.Tests
         {
             try
             {
-                SetAcc("04050000000000000");
+                SetA("04050000000000000");
                 _cpu.ArithDivide(new Word48(0));
                 Assert.Fail("Expected ProcessorException was not thrown");
             }
@@ -157,45 +157,45 @@ namespace Besm6.Tests
 
         private void VerifyAdd(string octA, string octX, string octExpected)
         {
-            SetAcc(octA);
+            SetA(octA);
             _cpu.ArithAdd(FromOctal(octX), false, false);
-            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Add failed: {octA} + {octX} = {ToOctal(GetAcc().Value)} (Expected: {octExpected})");
+            Assert.AreEqual(FromOctal(octExpected), GetA(), $"Add failed: {octA} + {octX} = {ToOctal(GetA().Value)} (Expected: {octExpected})");
         }
 
         private void VerifySub(string octA, string octX, string octExpected)
         {
-            SetAcc(octA);
+            SetA(octA);
             _cpu.ArithAdd(FromOctal(octX), false, true);
-            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Sub failed: {octA} - {octX} = {ToOctal(GetAcc().Value)} (Expected: {octExpected})");
+            Assert.AreEqual(FromOctal(octExpected), GetA(), $"Sub failed: {octA} - {octX} = {ToOctal(GetA().Value)} (Expected: {octExpected})");
         }
 
         private void VerifyMul(string octA, string octX, string octExpected)
         {
-            SetAcc(octA);
+            SetA(octA);
             _cpu.ArithMultiply(FromOctal(octX));
-            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Multiply failed: {octA} * {octX} = {ToOctal(GetAcc().Value)} (Expected: {octExpected})");
+            Assert.AreEqual(FromOctal(octExpected), GetA(), $"Multiply failed: {octA} * {octX} = {ToOctal(GetA().Value)} (Expected: {octExpected})");
         }
 
         private void VerifyDiv(string octA, string octX, string octExpected)
         {
-            SetAcc(octA);
+            SetA(octA);
             _cpu.ArithDivide(FromOctal(octX));
-            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Divide failed: {octA} / {octX} = {ToOctal(GetAcc().Value)} (Expected: {octExpected})");
+            Assert.AreEqual(FromOctal(octExpected), GetA(), $"Divide failed: {octA} / {octX} = {ToOctal(GetA().Value)} (Expected: {octExpected})");
         }
 
         private void VerifyChangeSign(string octA, string octExpected)
         {
-            SetAcc(octA);
-            // Смена знака аккумулятора (команда «знак» с отрицательным операндом): negateAcc=true.
+            SetA(octA);
+            // Смена знака аккумулятора (команда «знак» с отрицательным операндом): negateA=true.
             _cpu.ArithChangeSign(true);
-            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"ChangeSign failed: {octA} -> {ToOctal(GetAcc().Value)} (Expected: {octExpected})");
+            Assert.AreEqual(FromOctal(octExpected), GetA(), $"ChangeSign failed: {octA} -> {ToOctal(GetA().Value)} (Expected: {octExpected})");
         }
 
         private void VerifyShift(string octA, int shift, string octExpected)
         {
-            SetAcc(octA);
+            SetA(octA);
             _cpu.ArithShift(shift);
-            Assert.AreEqual(FromOctal(octExpected), GetAcc(), $"Shift failed: {octA} by {shift} = {ToOctal(GetAcc().Value)} (Expected: {octExpected})");
+            Assert.AreEqual(FromOctal(octExpected), GetA(), $"Shift failed: {octA} by {shift} = {ToOctal(GetA().Value)} (Expected: {octExpected})");
         }
 
         private static Word48 FromOctal(string oct)
