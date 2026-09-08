@@ -57,7 +57,7 @@ namespace Besm6.Core
         private bool _rtActive;
         private ulong _rtA, _rtY, _rtR;
         private uint _rtC;
-        private uint[] _rtM = new uint[16];
+        private readonly uint[] _rtM = new uint[16];
         private bool _rtApplyC;
 
         /// <summary>Зафиксировать текущее состояние как базу сравнения (вызывать до цикла шагов).</summary>
@@ -67,16 +67,23 @@ namespace Besm6.Core
             _rtA = Cpu.GetA().Value;
             _rtY = Cpu.GetY().Value;
             _rtR = Cpu.GetR();
-            _rtC = (uint)Cpu.C;
+            _rtC = Cpu.C;
             _rtApplyC = Cpu.ApplyC;
-            for (int i = 0; i < 16; i++) _rtM[i] = Cpu.GetM(i);
+            for (int index = 0; index < 16; index++)
+                _rtM[index] = Cpu.GetM(index);
         }
 
         private void EmitRegisterTrace()
         {
-            var sink = RegisterTrace;
-            if (sink == null) return;
-            if (!_rtActive) { BeginRegisterTrace(); return; }
+            Action<string, ulong>? sink = RegisterTrace;
+            if (sink is null)
+                return;
+            if (!_rtActive)
+            {
+                BeginRegisterTrace();
+                return;
+            }
+
             ulong a = Cpu.GetA().Value;
             ulong y = Cpu.GetY().Value;
             uint r = Cpu.GetR();
@@ -84,16 +91,22 @@ namespace Besm6.Core
             bool applyC = Cpu.ApplyC;
             if (a != _rtA) sink("A", a);
             if (y != _rtY) sink("Y", y);
-            for (int i = 0; i < 16; i++)
+            for (int index = 0; index < 16; index++)
             {
-                uint v = Cpu.GetM(i);
-                if (v != _rtM[i]) sink("M" + Convert.ToString(i, 8), v);
+                uint value = Cpu.GetM(index);
+                if (value != _rtM[index])
+                    sink("M" + Convert.ToString(index, 8), value);
             }
             if (r != _rtR) sink("R", r);
             if (applyC != _rtApplyC) sink(applyC ? "C" : "CLEARC", c);
-            // Обновить prev-состояние.
-            _rtA = a; _rtY = y; _rtR = r; _rtC = c; _rtApplyC = applyC;
-            for (int i = 0; i < 16; i++) _rtM[i] = Cpu.GetM(i);
+
+            _rtA = a;
+            _rtY = y;
+            _rtR = r;
+            _rtC = c;
+            _rtApplyC = applyC;
+            for (int index = 0; index < 16; index++)
+                _rtM[index] = Cpu.GetM(index);
         }
 
         public MachineCore(uint memorySize = 32768, string? puncherOutputDir = null)

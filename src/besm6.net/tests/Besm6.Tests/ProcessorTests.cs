@@ -1450,7 +1450,7 @@ namespace Besm6.Tests
         // ─── Экстракоды: диспетчеризация (э50..э77, э20/э21) ───────────────
         // Путь в InstructionExecutor:
         //   aex = addr + M[reg]; M[14] = aex;
-        //   if (ExtracodeHandler != null && ExtracodeHandler(op, aex)) break;
+        //   if (ExtracodeDispatch != null && ExtracodeDispatch(call)) break;
         //   else throw "Extracode N not implemented".
 
         [TestMethod]
@@ -1464,7 +1464,7 @@ namespace Besm6.Tests
         public void Test_Extracode_HandlerFalse_Throws()
         {
             // э64: обработчик возвращает false → поведение как без обработчика.
-            _cpu.ExtracodeHandler = (op, aex) => false;
+            _cpu.ExtracodeDispatch = _ => false;
             ExpectIllegal("э64 (handler=false)", Asm("э64 0(0)"));
         }
 
@@ -1473,7 +1473,12 @@ namespace Besm6.Tests
         {
             // э50 100(2), M[2]=5 → aex = 0o100 + 5 = 0o105; M[14] = aex; продолжаем.
             uint seenOp = 0, seenAex = 0;
-            _cpu.ExtracodeHandler = (int op, uint aex) => { seenOp = (uint)op; seenAex = aex; return true; };
+            _cpu.ExtracodeDispatch = call =>
+            {
+                seenOp = (uint)call.Code;
+                seenAex = call.EffectiveAddress;
+                return true;
+            };
             _cpu.SetM(2, 5);
             StoreWord("10", Asm("э50 100(2)"));
             StoreWord("11", Asm("стоп, сч 0"));
@@ -1493,7 +1498,12 @@ namespace Besm6.Tests
             // э20 — длинный экстракод (opcode 0o200 = 128).
             int seenOp = -1;
             uint seenAex = 0;
-            _cpu.ExtracodeHandler = (int op, uint aex) => { seenOp = op; seenAex = aex; return true; };
+            _cpu.ExtracodeDispatch = call =>
+            {
+                seenOp = (int)call.Code;
+                seenAex = call.EffectiveAddress;
+                return true;
+            };
             StoreWord("10", Asm("э20 200(3)"));
             _cpu.SetM(3, 0);
             _cpu.SetK((uint)O("10"));

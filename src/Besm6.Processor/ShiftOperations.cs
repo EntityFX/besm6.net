@@ -10,28 +10,28 @@ namespace Besm6.Core
     {
         private const ulong BITS48 = ArchitectureConstants.BITS48;
 
-        private readonly Processor _proc;
+        private readonly ProcessorState _state;
 
-        internal ShiftOperations(Processor proc)
+        internal ShiftOperations(ProcessorState state)
         {
-            _proc = proc;
+            _state = state;
         }
 
         /// <summary>Выполняет сдвиг A/Y на nbits бит (положительное — вправо).</summary>
         internal void Shift(int nbits)
         {
-            _proc._y = Word48.Zero;
+            _state.Y = Word48.Zero;
             if (nbits > 0)
             {
                 if (nbits < 48)
                 {
-                    _proc._y = Word48.FromInt48( (_proc._a.Value << (48 - nbits)) & BITS48);
-                    _proc._a = Word48.FromInt48(_proc._a.Value >> nbits);
+                    _state.Y = Word48.FromInt48((_state.A.Value << (48 - nbits)) & BITS48);
+                    _state.A = Word48.FromInt48(_state.A.Value >> nbits);
                 }
                 else
                 {
-                    _proc._y = Word48.FromInt48(_proc._a.Value >> (nbits - 48));
-                    _proc._a = Word48.Zero;
+                    _state.Y = Word48.FromInt48(_state.A.Value >> (nbits - 48));
+                    _state.A = Word48.Zero;
                 }
             }
             else if (nbits < 0)
@@ -39,13 +39,13 @@ namespace Besm6.Core
                 int n = -nbits;
                 if (n < 48)
                 {
-                    _proc._y = Word48.FromInt48(_proc._a.Value >> (48 - n));
-                    _proc._a = Word48.FromInt48((_proc._a.Value << n) & BITS48);
+                    _state.Y = Word48.FromInt48(_state.A.Value >> (48 - n));
+                    _state.A = Word48.FromInt48((_state.A.Value << n) & BITS48);
                 }
                 else
                 {
-                    _proc._y = Word48.FromInt48((_proc._a.Value << (n - 48)) & BITS48);
-                    _proc._a = Word48.Zero;
+                    _state.Y = Word48.FromInt48((_state.A.Value << (n - 48)) & BITS48);
+                    _state.A = Word48.Zero;
                 }
             }
         }

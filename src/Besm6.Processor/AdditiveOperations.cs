@@ -11,19 +11,19 @@ namespace Besm6.Core
         private const ulong BITS40 = ArchitectureConstants.BITS40;
         private const ulong BITS42 = ArchitectureConstants.BITS42;
 
-        private readonly Processor _proc;
+        private readonly ProcessorState _state;
         private readonly NormalizationAndRounding _normalizer;
 
-        internal AdditiveOperations(Processor proc, NormalizationAndRounding normalizer)
+        internal AdditiveOperations(ProcessorState state, NormalizationAndRounding normalizer)
         {
-            _proc = proc;
+            _state = state;
             _normalizer = normalizer;
         }
 
         /// <summary>Сложение/вычитание операнда с аккумулятором A (регистры АЛУ A/Y).</summary>
         internal void Add(Word48 val, bool negateA, bool negateVal)
         {
-            MantissaExponent a = new MantissaExponent(new Word48(_proc._a.Value));
+            MantissaExponent a = new MantissaExponent(new Word48(_state.A.Value));
             MantissaExponent word = new MantissaExponent(val);
 
             if (!negateA)
@@ -106,23 +106,23 @@ namespace Besm6.Core
         /// <summary>Прибавляет к экспоненте A заданное значение (Э50: добавление к порядку).</summary>
         internal void AddExponent(int val)
         {
-            MantissaExponent a = new MantissaExponent(_proc._a);
+            MantissaExponent a = new MantissaExponent(_state.A);
             a.Exponent += (uint)val;
-            _proc._y = Word48.Zero;
+            _state.Y = Word48.Zero;
             _normalizer.NormalizeAndRound(a, 0, false);
         }
 
         /// <summary>Изменение знака аккумулятора A (прямое или через операнд).</summary>
         internal void ChangeSign(bool negateA)
         {
-            MantissaExponent a = new MantissaExponent(_proc._a);
+            MantissaExponent a = new MantissaExponent(_state.A);
             if (negateA)
             {
                 a.Negate();
                 if (a.IsDenormal())
                     a.NormalizeToTheRight();
             }
-            _proc._y = Word48.Zero;
+            _state.Y = Word48.Zero;
             _normalizer.NormalizeAndRound(a, 0, false);
         }
     }

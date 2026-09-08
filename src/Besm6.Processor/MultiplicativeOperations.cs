@@ -12,26 +12,26 @@ namespace Besm6.Core
         private const ulong BITS40 = ArchitectureConstants.BITS40;
         private const ulong BITS48 = ArchitectureConstants.BITS48;
 
-        private readonly Processor _proc;
+        private readonly ProcessorState _state;
         private readonly NormalizationAndRounding _normalizer;
 
-        internal MultiplicativeOperations(Processor proc, NormalizationAndRounding normalizer)
+        internal MultiplicativeOperations(ProcessorState state, NormalizationAndRounding normalizer)
         {
-            _proc = proc;
+            _state = state;
             _normalizer = normalizer;
         }
 
         /// <summary>Умножение аккумулятора A на операнд.</summary>
         internal void Multiply(Word48 val)
         {
-            if (_proc._a.Value == 0 || val.Value == 0)
+            if (_state.A.Value == 0 || val.Value == 0)
             {
-                _proc._a = Word48.Zero;
-                _proc._y = Word48.FromInt48(_proc._y.Value & ~BITS40);
+                _state.A = Word48.Zero;
+                _state.Y = Word48.FromInt48(_state.Y.Value & ~BITS40);
                 return;
             }
 
-            MantissaExponent a = new MantissaExponent(_proc._a);
+            MantissaExponent a = new MantissaExponent(_state.A);
             MantissaExponent word = new MantissaExponent(val);
 
             ulong y = (ulong)a.Multiply(word.Mantissa);
@@ -49,7 +49,7 @@ namespace Besm6.Core
             if (((val.Value ^ (val.Value << 1)) & BIT41) == 0)
                 throw new ProcessorException("Division by zero");
 
-            MantissaExponent dividend = new MantissaExponent(_proc._a);
+            MantissaExponent dividend = new MantissaExponent(_state.A);
             MantissaExponent divisor = new MantissaExponent(val);
 
             MantissaExponent a = NrDiv(dividend, divisor);

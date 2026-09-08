@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Besm6.Core;
+using Besm6.Tracing;
 
 namespace Besm6.Tests
 {
@@ -37,6 +37,21 @@ namespace Besm6.Tests
         }
 
         private static uint O(string octal) => Convert.ToUInt32(octal, 8);
+
+        private CanonicalTraceWriter AttachCanonicalTrace(string path, ulong limit = ulong.MaxValue)
+        {
+            var writer = new CanonicalTraceWriter(path, limit);
+            _cpu.InstructionTrace += writer.Write;
+            return writer;
+        }
+
+        private void DetachCanonicalTrace(CanonicalTraceWriter? writer)
+        {
+            if (writer is null)
+                return;
+            _cpu.InstructionTrace -= writer.Write;
+            writer.Dispose();
+        }
 
         [TestMethod]
         public void TraceInstruction_ReportsPreExecutionKAndExecutedHalf()
@@ -89,20 +104,17 @@ namespace Besm6.Tests
         {
             const string headerPrefix = "seq\tpc\thalf\traw48\trk24\topcode\treg\taddr\t";
             string path = Path.Combine(Path.GetTempPath(), $"besm6-canon-{Guid.NewGuid():N}.tsv");
-            string? saved = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE");
+            CanonicalTraceWriter? writer = null;
 
             try
             {
-                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", path);
+                writer = AttachCanonicalTrace(path);
                 _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), vtm 2(2)")));
                 _cpu.SetK(O("10"));
 
                 _cpu.Step();
-                typeof(Processor).GetMethod("CanonFlush", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .Invoke(_cpu, null);
-                ((IDisposable)typeof(Processor)
-                    .GetField("_canonTrace", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .GetValue(_cpu)!).Dispose();
+                DetachCanonicalTrace(writer);
+                writer = null;
 
                 string[] lines = File.ReadAllLines(path);
                 Assert.AreEqual(2, lines.Length,
@@ -124,11 +136,7 @@ namespace Besm6.Tests
             }
             finally
             {
-                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", saved);
-                var writer = (IDisposable?)typeof(Processor)
-                    .GetField("_canonTrace", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .GetValue(_cpu);
-                writer?.Dispose();
+                DetachCanonicalTrace(writer);
                 if (File.Exists(path)) File.Delete(path);
             }
         }
@@ -137,35 +145,25 @@ namespace Besm6.Tests
         public void CanonicalTrace_RespectsConfiguredRowLimit()
         {
             string path = Path.Combine(Path.GetTempPath(), $"besm6-canon-limit-{Guid.NewGuid():N}.tsv");
-            string? savedPath = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE");
-            string? savedLimit = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE_LIMIT");
+            CanonicalTraceWriter? writer = null;
 
             try
             {
-                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", path);
-                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE_LIMIT", "1");
+                writer = AttachCanonicalTrace(path, 1);
                 _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), vtm 2(2)")));
                 _cpu.SetK(O("10"));
 
                 _cpu.Step();
                 _cpu.Step();
-                typeof(Processor).GetMethod("CanonFlush", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .Invoke(_cpu, null);
-                ((IDisposable)typeof(Processor)
-                    .GetField("_canonTrace", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .GetValue(_cpu)!).Dispose();
+                DetachCanonicalTrace(writer);
+                writer = null;
 
                 Assert.AreEqual(2, File.ReadAllLines(path).Length,
                     "A limit of one must retain the header and exactly one complete PRE/POST row.");
             }
             finally
             {
-                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", savedPath);
-                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE_LIMIT", savedLimit);
-                var writer = (IDisposable?)typeof(Processor)
-                    .GetField("_canonTrace", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .GetValue(_cpu);
-                writer?.Dispose();
+                DetachCanonicalTrace(writer);
                 if (File.Exists(path)) File.Delete(path);
             }
         }
@@ -174,18 +172,17 @@ namespace Besm6.Tests
         public void CanonicalTrace_IncludesStopInstructionPostState()
         {
             string path = Path.Combine(Path.GetTempPath(), $"besm6-canon-stop-{Guid.NewGuid():N}.tsv");
-            string? saved = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE");
+            CanonicalTraceWriter? writer = null;
 
             try
             {
-                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", path);
+                writer = AttachCanonicalTrace(path);
                 _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("stop, vtm 2(2)")));
                 _cpu.SetK(O("10"));
 
                 Assert.IsTrue(_cpu.Step());
-                ((IDisposable)typeof(Processor)
-                    .GetField("_canonTrace", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .GetValue(_cpu)!).Dispose();
+                DetachCanonicalTrace(writer);
+                writer = null;
 
                 string[] lines = File.ReadAllLines(path);
                 Assert.AreEqual(2, lines.Length, "STOP is an executed machine instruction and must have a complete PRE/POST row.");
@@ -199,11 +196,7 @@ namespace Besm6.Tests
             }
             finally
             {
-                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", saved);
-                var writer = (IDisposable?)typeof(Processor)
-                    .GetField("_canonTrace", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .GetValue(_cpu);
-                writer?.Dispose();
+                DetachCanonicalTrace(writer);
                 if (File.Exists(path)) File.Delete(path);
             }
         }
@@ -212,14 +205,14 @@ namespace Besm6.Tests
         public void CanonicalTrace_IncludesThrowingExtracodePostState()
         {
             string path = Path.Combine(Path.GetTempPath(), $"besm6-canon-e74-{Guid.NewGuid():N}.tsv");
-            string? saved = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE");
+            CanonicalTraceWriter? writer = null;
 
             try
             {
-                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", path);
+                writer = AttachCanonicalTrace(path);
                 _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("*74, vtm 2(2)")));
                 _cpu.SetK(O("10"));
-                _cpu.ExtracodeHandler = (_, _) => throw new ProcessorException("");
+                _cpu.ExtracodeDispatch = _ => throw new ProcessorException("");
 
                 ProcessorException? exception = null;
                 try
@@ -232,9 +225,8 @@ namespace Besm6.Tests
                 }
                 Assert.IsNotNull(exception, "E74 handler exception must escape Processor.Step().");
                 Assert.AreEqual(string.Empty, exception.Message);
-                ((IDisposable)typeof(Processor)
-                    .GetField("_canonTrace", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .GetValue(_cpu)!).Dispose();
+                DetachCanonicalTrace(writer);
+                writer = null;
 
                 string[] lines = File.ReadAllLines(path);
                 Assert.AreEqual(2, lines.Length,
@@ -250,11 +242,7 @@ namespace Besm6.Tests
             }
             finally
             {
-                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", saved);
-                var writer = (IDisposable?)typeof(Processor)
-                    .GetField("_canonTrace", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .GetValue(_cpu);
-                writer?.Dispose();
+                DetachCanonicalTrace(writer);
                 if (File.Exists(path)) File.Delete(path);
             }
         }
@@ -263,16 +251,16 @@ namespace Besm6.Tests
         public void CanonicalTrace_ThrowingExtracodeCanBeFinalizedAfterIntercept()
         {
             string path = Path.Combine(Path.GetTempPath(), $"besm6-canon-intercept-{Guid.NewGuid():N}.tsv");
-            string? saved = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE");
+            CanonicalTraceWriter? writer = null;
 
             try
             {
-                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", path);
+                writer = AttachCanonicalTrace(path);
                 _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("*50, stop")));
                 _cpu.SetK(O("10"));
                 _cpu.InterceptCount = 1;
                 _cpu.InterceptAddr = O("20");
-                _cpu.ExtracodeHandler = (_, _) => throw new ProcessorException("Division by zero");
+                _cpu.ExtracodeDispatch = _ => throw new ProcessorException("Division by zero");
 
                 ProcessorException? exception = null;
                 try
@@ -286,11 +274,9 @@ namespace Besm6.Tests
                 Assert.IsNotNull(exception);
                 _cpu.StackCorrection();
                 Assert.IsTrue(_cpu.Intercept(exception.Message));
-                typeof(Processor).GetMethod("CanonPost", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .Invoke(_cpu, new object[] { _cpu.GetK(), _cpu.RightInstruction });
-                ((IDisposable)typeof(Processor)
-                    .GetField("_canonTrace", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .GetValue(_cpu)!).Dispose();
+                _cpu.CanonPost(_cpu.GetK(), _cpu.RightInstruction);
+                DetachCanonicalTrace(writer);
+                writer = null;
 
                 string[] lines = File.ReadAllLines(path);
                 Assert.AreEqual(2, lines.Length);
@@ -305,11 +291,7 @@ namespace Besm6.Tests
             }
             finally
             {
-                Environment.SetEnvironmentVariable("BESM6_CANON_TRACE", saved);
-                var writer = (IDisposable?)typeof(Processor)
-                    .GetField("_canonTrace", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .GetValue(_cpu);
-                writer?.Dispose();
+                DetachCanonicalTrace(writer);
                 if (File.Exists(path)) File.Delete(path);
             }
         }

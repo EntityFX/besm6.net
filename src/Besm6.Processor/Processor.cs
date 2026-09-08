@@ -1,6 +1,4 @@
 using System;
-using System.IO;
-using System.Text;
 
 namespace Besm6.Core
 {
@@ -23,36 +21,30 @@ namespace Besm6.Core
         private const ulong BITS41 = ArchitectureConstants.BITS41;
         private const ulong BITS48 = ArchitectureConstants.BITS48;
 
-        // Внутреннее состояние процессора (CoreState).
-        internal uint _k;               // счётчик команд K
-        internal Word48 _a;             // аккумулятор A
-        internal Word48 _y;             // регистр младших разрядов Y
-        internal readonly uint[] _m = new uint[16]; // индекс-регистры M[0..15]
-        internal uint _c;               // регистр модификации адреса C
-        internal uint _r;               // регистр режима арифметического устройства R
-        internal int _interceptCount;   // перехват overflow/div-by-zero (E75 при addr==020)
-        internal uint _interceptAddr = 16;
-        internal bool _rightInstrFlag;  // выполнять правую половину слова
-        internal bool _applyC;          // применить C к адресу следующей инструкции
-        internal int _corrStack;
+        private readonly ProcessorState _state;
+        private readonly ProcessorTraceController _traceController;
 
-        internal uint _rk;              // регистр команд
-        internal uint _aex;             // исполнительный адрес
+        // Временные ref-мосты сохраняют внутренний API на время разбиения executor/ALU.
+        // Единственным владельцем значений остаётся ProcessorState.
+        internal ref uint _k => ref _state.K;
+        internal Word48 _a { get => _state.A; set => _state.A = value; }
+        internal Word48 _y { get => _state.Y; set => _state.Y = value; }
+        internal uint[] _m => _state.M;
+        internal ref uint _c => ref _state.C;
+        internal ref uint _r => ref _state.R;
+        internal ref int _interceptCount => ref _state.InterceptCount;
+        internal ref uint _interceptAddr => ref _state.InterceptAddress;
+        internal ref bool _rightInstrFlag => ref _state.IsRightHalf;
+        internal ref bool _applyC => ref _state.ApplyC;
+        internal ref int _corrStack => ref _state.StackCorrection;
+        internal ref uint _rk => ref _state.RawInstruction;
+        internal ref uint _aex => ref _state.EffectiveAddress;
+        internal ProcessorState State => _state;
 
         private readonly ProcessorDebugWatch _debugWatch;
         private readonly ProcessorMemoryAccess _memoryAccess;
         internal readonly Alu _alu;
         internal readonly InstructionExecutor _executor;
-
-        /// <summary>
-        /// Необязательный обработчик экстракодов (Э50..Э77, Э20, Э21).
-        /// Позволяет подсистеме загрузчика (Besm6.Loader) перехватывать экстракоды
-        /// вместо выброса исключения. Вызывается с кодом экстракода и исполнительным
-        /// адресом. Должен вернуть true, если экстракод обработан (исполнение
-        /// продолжается), либо false, чтобы поведение осталось прежним (исключение).
-        /// Если обработчик не назначен — поведение не меняется.
-        /// </summary>
-        public Func<int, uint, bool>? ExtracodeHandler { get; set; }
 
         /// <summary>
         /// (ref/trace.cpp:240). Вызывается в НАЧАЛЕ инструкции: после fetch RK и decode
@@ -61,32 +53,38 @@ namespace Besm6.Core
         /// </summary>
         public Action<uint, bool, uint, uint>? TraceInstruction { get; set; }
 
-        // Заполняются InstructionExecutor.ExtracodeDispatch перед вызовом ExtracodeHandler.
-        public int ExtracodeReg { get; set; }
-        public uint ExtracodeRawAddr { get; set; }
-        public bool ExtracodeRightFlag { get; set; }
+        /// <summary>Типизированная трассировка исполненных инструкций.</summary>
+        public Action<InstructionTraceRecord>? InstructionTrace
+        {
+            get => _traceController.InstructionTrace;
+            set => _traceController.InstructionTrace = value;
+        }
+
+        /// <summary>Типизированная трассировка изменений регистров.</summary>
+        public Action<RegisterTraceRecord>? RegisterTrace
+        {
+            get => _traceController.RegisterTrace;
+            set => _traceController.RegisterTrace = value;
+        }
+
+        /// <summary>Обработчик полного контекста вызова экстракода.</summary>
+        public Func<ExtracodeCall, bool>? ExtracodeDispatch { get; set; }
 
         public Processor(IMemory memory)
         {
-            _debugWatch = new ProcessorDebugWatch(this);
-            _memoryAccess = new ProcessorMemoryAccess(this, memory);
-            _alu = new Alu(this);
+            _state = new ProcessorState();
+            _traceController = new ProcessorTraceController(_state);
+            _debugWatch = new ProcessorDebugWatch(this, _state);
+            _memoryAccess = new ProcessorMemoryAccess(_debugWatch, memory);
+            _alu = new Alu(_state);
             _executor = new InstructionExecutor(this);
             Reset();
         }
 
         public void Reset()
         {
-            _k = 1;
-            _a = Word48.FromInt48(0);
-            _y = Word48.FromInt48(0);
-            for (int i = 0; i < 16; i++) _m[i] = 0;
-            _c = 0;
-            _r = 0;
-            _interceptCount = 0;
-            _rightInstrFlag = false;
-            _applyC = false;
-            _corrStack = 0;
+            _state.Reset();
+            _traceController.Reset();
             _debugWatch.Reset();
         }
 
@@ -248,102 +246,23 @@ namespace Besm6.Core
         /// </summary>
         public bool Step() => _executor.Execute();
 
-        #region Canonical TSV trace
-
-        /// <summary>
-        /// Канонический машинно-сравнимый трасс (TSV). Включается env-переменной
-        /// BESM6_CANON_TRACE=путь. Одна строка = одна реально выполненная инструкция:
-        /// PRE-снимок состояния (ДО advance K/half и ДО исполнения) + POST-снимок.
-        /// half = исполняемая половина (L: старшие 24 бита слова, R: младшие).
-        /// Все адреса — unsigned decimal; A/Y/raw48/rk24 — hex.
-        /// </summary>
-        private StreamWriter? _canonTrace;
-        private bool _canonOn;
-        private bool _canonChecked;
-        private ulong _canonSeq;
-        private ulong _canonLimit = ulong.MaxValue;
-        private StringBuilder? _canonPending;
-
-        private void CanonCheck()
-        {
-            if (_canonChecked) return;
-            _canonChecked = true;
-            string? path = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE");
-            if (string.IsNullOrEmpty(path)) return;
-            string? limitText = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE_LIMIT");
-            if (!string.IsNullOrWhiteSpace(limitText) && ulong.TryParse(limitText, out ulong limit))
-                _canonLimit = limit;
-            var w = new StreamWriter(path, false, new UTF8Encoding(false));
-            var header = new StringBuilder(512);
-            header.Append("seq\tpc\thalf\traw48\trk24\topcode\treg\taddr")
-                  .Append("\ta_b\ty_b\tr_b\tc_b\tapply_c_b\taex_b\ticnt_b\tiadr_b");
-            for (int i = 0; i < 16; i++) header.Append("\tm").Append(i).Append("_b");
-            header.Append("\ta_a\ty_a\tr_a\tc_a\tapply_c_a\taex_a\ticnt_a\tiadr_a\tpc_a\thalf_a");
-            for (int i = 0; i < 16; i++) header.Append("\tm").Append(i).Append("_a");
-            w.WriteLine(header.ToString());
-            _canonTrace = w;
-            _canonOn = true;
-        }
-
-        internal bool CanonOn
-        {
-            get { CanonCheck(); return _canonOn; }
-        }
+        #region Typed trace bridge
 
         internal void CanonPre(uint k, bool right, ulong word, uint rk, uint opcode, int reg, uint addr)
         {
-            CanonCheck();
-            if (!_canonOn) return;
-            if (_canonSeq >= _canonLimit)
-            {
-                _canonPending = null;
-                return;
-            }
-            ulong seq = _canonSeq++;
-            var sb = new StringBuilder(512);
-            sb.Append(seq)
-              .Append('\t').Append(k)
-              .Append('\t').Append(right ? 'R' : 'L')
-              .Append('\t').Append(word.ToString("X12"))
-              .Append('\t').Append(rk.ToString("X6"))
-              .Append('\t').Append(opcode)
-              .Append('\t').Append(reg)
-              .Append('\t').Append(addr)
-              .Append('\t').Append(_a.Value.ToString("X12"))
-              .Append('\t').Append(_y.Value.ToString("X12"))
-              .Append('\t').Append(_r)
-              .Append('\t').Append(_c)
-              .Append('\t').Append(_applyC ? 1 : 0)
-              .Append('\t').Append(_aex)
-              .Append('\t').Append(_interceptCount)
-              .Append('\t').Append(_interceptAddr);
-            for (int i = 0; i < 16; i++) sb.Append('\t').Append(_m[i]);
-            _canonPending = sb;
+            _traceController.Begin(
+                new Word48(word),
+                rk,
+                new DecodedInstruction(
+                    checked((byte)reg),
+                    (Opcode)opcode,
+                    checked((ushort)addr),
+                    (rk & (1u << 19)) != 0 ? InstructionFormat.Long : InstructionFormat.Short));
         }
 
         internal void CanonPost(uint k, bool right)
         {
-            if (!_canonOn) return;
-            if (_canonPending == null) return;
-            var sb = _canonPending;
-            sb.Append('\t').Append(_a.Value.ToString("X12"))
-              .Append('\t').Append(_y.Value.ToString("X12"))
-              .Append('\t').Append(_r)
-              .Append('\t').Append(_c)
-              .Append('\t').Append(_applyC ? 1 : 0)
-              .Append('\t').Append(_aex)
-              .Append('\t').Append(_interceptCount)
-              .Append('\t').Append(_interceptAddr)
-              .Append('\t').Append(k)
-              .Append('\t').Append(right ? 'R' : 'L');
-            for (int i = 0; i < 16; i++) sb.Append('\t').Append(_m[i]);
-            _canonTrace!.WriteLine(sb.ToString());
-            _canonPending = null;
-        }
-
-        internal void CanonFlush()
-        {
-            _canonTrace?.Flush();
+            _traceController.Complete();
         }
 
         #endregion

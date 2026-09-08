@@ -34,3 +34,19 @@ The four accepted skips are:
 
 The Python trace tooling baseline is 50 tests, all passing. Canonical TSV keeps
 `pc` and `pc_a` as compatibility field names; user-facing labels use register `K`.
+
+## Task 3 canonical trace parity
+
+The headless-processor extraction was checked against commit `843fc67` with the
+same deterministic 50-instruction workload in two checkouts:
+
+```powershell
+$env:BESM6_CANON_TRACE = '<checkout>-task3.tsv'
+$env:BESM6_CANON_TRACE_LIMIT = '50'
+dotnet run --project src/besm6.net/besm6.csproj -c Release -- run examples/b/hello.dub --limit 50 --no-wall-clock --no-hang-detect
+py -3 tools/diff_trace.py <before>-task3.tsv <after>-task3.tsv
+```
+
+Expected result: `Classification: MATCH`, `Sequence: 50`. This exercises the
+single-line header, legacy `pc`/`pc_a` names, and complete PRE/POST rows without
+checking large generated traces into Git.

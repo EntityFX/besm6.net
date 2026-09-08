@@ -15,11 +15,16 @@ namespace Besm6.Core
         private readonly ShiftOperations _shift;
 
         public Alu(Processor proc)
+            : this(proc.State)
         {
-            _normalizer = new NormalizationAndRounding(proc);
-            _additive = new AdditiveOperations(proc, _normalizer);
-            _multiplicative = new MultiplicativeOperations(proc, _normalizer);
-            _shift = new ShiftOperations(proc);
+        }
+
+        internal Alu(ProcessorState state)
+        {
+            _normalizer = new NormalizationAndRounding(state);
+            _additive = new AdditiveOperations(state, _normalizer);
+            _multiplicative = new MultiplicativeOperations(state, _normalizer);
+            _shift = new ShiftOperations(state);
         }
 
         /// <summary>Сложение/вычитание операнда с аккумулятором A.</summary>
