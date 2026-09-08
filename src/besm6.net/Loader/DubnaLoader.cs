@@ -4,6 +4,9 @@ using System.IO;
 using System.Linq;
 using Besm6.Core;
 
+// Адаптер ProgramAssembler помечен [Obsolete]; загрузчик пока использует его.
+#pragma warning disable CS0618
+
 namespace Besm6.Loader
 {
     /// <summary>

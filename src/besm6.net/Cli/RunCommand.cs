@@ -105,7 +105,7 @@ namespace Besm6.Cli
                 {
                     loader.InstructionTrace = (k, word) =>
                     {
-                        string dis = Disassembler.DisasmWord((long)word);
+                        string dis = Besm6.Asm.Disassembler.DisasmWord((long)word);
                         Console.WriteLine($"  K=0{k:X5}  {dis}");
                     };
                 }
