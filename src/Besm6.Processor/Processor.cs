@@ -39,18 +39,7 @@ namespace Besm6.Core
         internal uint _rk;              // регистр команд
         internal uint _aex;             // исполнительный адрес
 
-        private bool _debugFetchArmed;
-        private uint _debugFetchAddr;
-        private uint _debugFetchCont;
-        private bool _debugFetchPrintInfo;
-        private bool _debugMemoryArmed;
-        private uint _debugMemoryAddr;
-        private uint _debugMemoryCont;
-        private bool _debugMemoryPrintInfo;
-        private uint _debugMemoryMode;
-        private bool _debugWatchSuppressed;
-        private uint _debugPrevAbort;
-
+        private readonly ProcessorDebugWatch _debugWatch;
         private readonly IMemory _memory;
         internal readonly Alu _alu;
         internal readonly InstructionExecutor _executor;
@@ -80,6 +69,7 @@ namespace Besm6.Core
         public Processor(IMemory memory)
         {
             _memory = memory;
+            _debugWatch = new ProcessorDebugWatch(this);
             _alu = new Alu(this);
             _executor = new InstructionExecutor(this);
             Reset();
@@ -97,10 +87,7 @@ namespace Besm6.Core
             _rightInstrFlag = false;
             _applyC = false;
             _corrStack = 0;
-            _debugFetchArmed = false;
-            _debugMemoryArmed = false;
-            _debugWatchSuppressed = false;
-            _debugPrevAbort = 0;
+            _debugWatch.Reset();
         }
 
         #region Доступ к регистрам (для тестов)
@@ -196,81 +183,13 @@ namespace Besm6.Core
         }
 
         internal void ArmDebugWatch(uint xfer, bool printInfo, uint mode, uint watch, uint cont)
-        {
-            xfer &= 0x7FFF;
-            watch &= 0x7FFF;
-            cont &= 0x7FFF;
-            if (xfer == 0)
-                xfer = _debugPrevAbort != 0 ? _debugPrevAbort : cont;
-
-            switch (mode)
-            {
-                case 0:
-                    _debugFetchArmed = true;
-                    _debugFetchAddr = watch;
-                    _debugFetchCont = cont;
-                    _debugFetchPrintInfo = printInfo;
-                    break;
-                case 1:
-                case 2:
-                    _debugMemoryArmed = true;
-                    _debugMemoryAddr = watch;
-                    _debugMemoryCont = cont;
-                    _debugMemoryPrintInfo = printInfo;
-                    _debugMemoryMode = mode;
-                    break;
-                default:
-                    throw new ProcessorException("Bad debug watchpoint mode");
-            }
-
-            _k = xfer;
-            _rightInstrFlag = false;
-        }
+            => _debugWatch.ArmDebugWatch(xfer, printInfo, mode, watch, cont);
 
         internal bool DebugCheckFetch(uint addr, uint opcode)
-        {
-            if (_debugWatchSuppressed || !_debugFetchArmed || _debugFetchAddr != (addr & 0x7FFF))
-                return false;
+            => _debugWatch.DebugCheckFetch(addr, opcode);
 
-            uint cont = _debugFetchCont;
-            bool printInfo = _debugFetchPrintInfo;
-            _debugFetchArmed = false;
-            DebugFire(cont, printInfo, opcode);
-            return true;
-        }
-
-        private bool DebugCheckMemory(uint addr, uint mode)
-        {
-            if (_debugWatchSuppressed || !_debugMemoryArmed ||
-                _debugMemoryMode != mode || _debugMemoryAddr != (addr & 0x7FFF))
-                return false;
-
-            uint cont = _debugMemoryCont;
-            bool printInfo = _debugMemoryPrintInfo;
-            _debugMemoryArmed = false;
-            DebugFire(cont, printInfo, 0);
-            return true;
-        }
-
-        private void DebugFire(uint cont, bool printInfo, uint opcode)
-        {
-            _debugWatchSuppressed = true;
-            try
-            {
-                if (printInfo)
-                    TraceInstruction?.Invoke(_k, _rightInstrFlag, _rk, opcode);
-
-                _debugPrevAbort = cont;
-                _k = cont & 0x7FFF;
-                _rightInstrFlag = false;
-                _applyC = false;
-                _c = 0;
-            }
-            finally
-            {
-                _debugWatchSuppressed = false;
-            }
-        }
+        internal bool DebugCheckMemory(uint addr, uint mode)
+            => _debugWatch.DebugCheckMemory(addr, mode);
 
         #endregion
 
