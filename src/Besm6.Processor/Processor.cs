@@ -16,12 +16,12 @@ namespace Besm6.Core
         private const uint R_MODE = (uint)RFlags.Mode;
 
         // Биты (нумерация БЭСМ-6: 40-й бит = битовый индекс 39 и т.д.)
-        private const ulong BIT41 = Besm6Constants.BIT41;
-        private const ulong BIT48 = Besm6Constants.BIT48;
-        private const ulong BIT49 = Besm6Constants.BIT49;
-        private const ulong BITS40 = Besm6Constants.BITS40;
-        private const ulong BITS41 = Besm6Constants.BITS41;
-        private const ulong BITS48 = Besm6Constants.BITS48;
+        private const ulong BIT41 = ArchitectureConstants.BIT41;
+        private const ulong BIT48 = ArchitectureConstants.BIT48;
+        private const ulong BIT49 = ArchitectureConstants.BIT49;
+        private const ulong BITS40 = ArchitectureConstants.BITS40;
+        private const ulong BITS41 = ArchitectureConstants.BITS41;
+        private const ulong BITS48 = ArchitectureConstants.BITS48;
 
         // Внутреннее состояние процессора (CoreState).
         internal uint _k;               // счётчик команд K
@@ -287,9 +287,9 @@ namespace Besm6.Core
 
         #region Вспомогательные операции (порт besm6_arch.cpp)
 
-        private static uint Addr(uint x) => Besm6Constants.Addr(x);
+        private static uint Addr(uint x) => ArchitectureConstants.NormalizeAddress(x);
 
-        private static ulong OnBit(int n) => Besm6Constants.OnBit(n);
+        private static ulong OnBit(int n) => ArchitectureConstants.OnBit(n);
 
         internal static int Besm6HighestBit(ulong val)
         {
@@ -502,10 +502,5 @@ namespace Besm6.Core
         }
 
         #endregion
-    }
-
-    public class ProcessorException : Exception
-    {
-        public ProcessorException(string message) : base(message) { }
     }
 }

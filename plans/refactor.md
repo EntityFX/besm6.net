@@ -10,6 +10,28 @@
 
 **Plan file:** `docs/superpowers/plans/2026-09-08-architecture-cleanup-phase-1.md`
 
+## Статус (2026-09-08)
+
+- **Task 1–4: выполнены.** `Besm6.Architecture` и `Besm6.Processor` — отдельные сборки.
+- **Task 5 (частично):** проект `besm6` подключен к новым сборкам через ProjectReference;
+  адаптация `MachineCore`/`SystemBus` не требуется (типы остались публичными в тех же namespace'ах).
+- **Тесты:** Architecture 10/10 ✓, Processor 92/92 ✓ (включая headless-тест
+  `HeadlessProcessorTests.Processor_Runs_Without_Monolith`), монолит 405 ✓ / 4 skip.
+- **Принятые решения (отклонения от плана):**
+  1. Типы `Besm6.Processor` остались в namespace `Besm6.Core`: namespace `Besm6.Processor`
+     «затеняет» тип `Processor` для всего кода в `Besm6.*` (ошибка CS0118). Валидация namespace
+     выполняется boundary-тестами по имени сборки.
+  2. `Besm6.Architecture` использует namespace `Besm6.Architecture` (тип `Processor` там не
+     объявлен — затенения нет); в `Besm6.Core` оставлен только `IDevice`.
+  3. `IMemory` перенесен в `Besm6.Processor` (зависимость только на Architecture).
+  4. `InternalsVisibleTo("besm6")`: `DubnaLoader` и некоторые тесты используют internal-члены
+     `Processor` (`ArmDebugWatch`, `DebugCheckFetch`, `DebugWatchAbortException`);
+     `Alu`/`InstructionExecutor` internal-члены используются монолитом.
+  5. Реликтовые `using Besm6.Processor;` в исходниках монолита удалены (namespace больше не
+     существует; тип `Processor` находится через file-level `using Besm6.Core;`).
+  6. Рефакторинг на `ProcessorState` / `IProcessorTraceSink` / `ExtracodeCall` — отложен
+     (не входит в цель «разделить сборки, сохранив поведение»).
+
 ## Ограничения
 
 - Не менять семантику инструкций, экстракодов и загрузчика.
