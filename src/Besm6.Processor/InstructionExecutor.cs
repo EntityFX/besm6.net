@@ -657,14 +657,14 @@ namespace Besm6.Core
             return false;
         }
 
-        private static uint Addr(uint x) => Besm6Constants.Addr(x);
-        private static ulong OnBit(int n) => Besm6Constants.OnBit(n);
+        private static uint Addr(uint x) => ArchitectureConstants.NormalizeAddress(x);
+        private static ulong OnBit(int n) => ArchitectureConstants.OnBit(n);
 
-        private const ulong BIT41 = Besm6Constants.BIT41;
-        private const ulong BIT48 = Besm6Constants.BIT48;
-        private const ulong BIT49 = Besm6Constants.BIT49;
-        private const ulong BITS40 = Besm6Constants.BITS40;
-        private const ulong BITS41 = Besm6Constants.BITS41;
-        private const ulong BITS48 = Besm6Constants.BITS48;
+        private const ulong BIT41 = ArchitectureConstants.BIT41;
+        private const ulong BIT48 = ArchitectureConstants.BIT48;
+        private const ulong BIT49 = ArchitectureConstants.BIT49;
+        private const ulong BITS40 = ArchitectureConstants.BITS40;
+        private const ulong BITS41 = ArchitectureConstants.BITS41;
+        private const ulong BITS48 = ArchitectureConstants.BITS48;
     }
 }

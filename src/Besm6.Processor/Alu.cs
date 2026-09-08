@@ -13,12 +13,12 @@ namespace Besm6.Core
         private const ulong R_ROUND_DISABLE = (ulong)RFlags.RoundDisable;
         private const ulong R_OVF_DISABLE   = (ulong)RFlags.OvfDisable;
 
-        private const ulong BIT41  = Besm6Constants.BIT41;
-        private const ulong BIT48  = Besm6Constants.BIT48;
-        private const ulong BITS40 = Besm6Constants.BITS40;
-        private const ulong BITS41 = Besm6Constants.BITS41;
-        private const ulong BITS42 = Besm6Constants.BITS42;
-        private const ulong BITS48 = Besm6Constants.BITS48;
+        private const ulong BIT41  = ArchitectureConstants.BIT41;
+        private const ulong BIT48  = ArchitectureConstants.BIT48;
+        private const ulong BITS40 = ArchitectureConstants.BITS40;
+        private const ulong BITS41 = ArchitectureConstants.BITS41;
+        private const ulong BITS42 = ArchitectureConstants.BITS42;
+        private const ulong BITS48 = ArchitectureConstants.BITS48;
 
         private readonly Processor _proc;
 
