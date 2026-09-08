@@ -14,7 +14,7 @@ JSON/JUnit-отчёт и полный stdout/stderr каждого сценар�
 Быстрый commit-gate (name/algol/bemsh) и полный набор примеров (nightly)
 используют один и тот же runner/manifest (A5 item 4):
 
-  dotnet build src/besm6.net/besm6.net.sln
+  dotnet build Besm6.sln
   python tools/run_all_examples.py --suite fast          # commit gate
   python tools/run_all_examples.py --suite full          # full examples
   python tools/run_all_examples.py --only name,algol     # явный список
@@ -33,8 +33,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve()
 DEFAULT_ROOT = HERE.parent.parent          # <root>/tools/run_all_examples.py -> <root>
-DEFAULT_DLL_REL = Path("src") / "besm6.net" / "bin" / "Debug" / "net8.0" / "besm6.dll"
-SOLUTION_REL = Path("src") / "besm6.net" / "besm6.net.sln"
+DEFAULT_DLL_REL = Path("src") / "Besm6.Cli" / "bin" / "Debug" / "net8.0" / "besm6.dll"
+SOLUTION_REL = Path("Besm6.sln")
 DEFAULT_LIMIT = "20000000"                  # 20M инструкций (совпадает с Config.DefaultLimit; защита от зависаний)
 DEFAULT_TIMEOUT = 120                       # секунд на сценарий
 FAST_EXAMPLES = ("name", "algol", "bemsh")  # быстрый commit-gate

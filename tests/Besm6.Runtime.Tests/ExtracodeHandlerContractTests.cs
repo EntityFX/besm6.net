@@ -15,7 +15,7 @@ namespace Besm6.Tests
     [TestCategory("Extracode")]
     public sealed class ExtracodeHandlerContractTests
     {
-        // Значения opcode — десятичные (см. src/besm6.net/Core/Extracode.cs).
+        // Значения opcode — десятичные (см. src/Besm6.Processor/Core/Extracode.cs).
         private const int E20 = 128; // 200 oct
         private const int E21 = 136; // 210 oct
         private const int E50 = 40;  // 050 oct

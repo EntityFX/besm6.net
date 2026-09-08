@@ -1,16 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace Besm6.Architecture.Tests
 {
     /// <summary>
-    /// РђСЂС…РёС‚РµРєС‚СѓСЂРЅС‹Рµ РіСЂР°РЅРёС†С‹ С„Р°Р·С‹ 1 (plans/refactor.md):
-    /// - Besm6.Architecture РЅРµ СЃСЃС‹Р»Р°РµС‚СЃСЏ РЅР° РґСЂСѓРіРёРµ BESM-6 СЃР±РѕСЂРєРё;
-    /// - Besm6.Processor СЃСЃС‹Р»Р°РµС‚СЃСЏ С‚РѕР»СЊРєРѕ РЅР° Besm6.Architecture
-    ///   (Рё РЅР° СЃРёСЃС‚РµРјРЅС‹Рµ СЃР±РѕСЂРєРё .NET), Р° РЅРµ РЅР° Loader, CLI РёР»Рё TUI;
-    /// - Besm6.Processor РЅРµ СЃРѕРґРµСЂР¶РёС‚ С‚РёРїРѕРІ СѓСЃС‚СЂРѕР№СЃС‚РІ Рё Р·Р°РіСЂСѓР·С‡РёРєР°;
-    /// - РјРѕРЅРѕР»РёС‚РЅС‹Р№ executable СЃСЃС‹Р»Р°РµС‚СЃСЏ РЅР° РѕР±Рµ РІС‹РЅРµСЃРµРЅРЅС‹Рµ СЃР±РѕСЂРєРё.
+    /// Границы сборок этапа 1 (plans/refactor.md) и финальная модель (plans/SuperPlan.md):
+    /// Architecture изолирована; Processor -> Architecture; Assembler -> Architecture+Processor;
+    /// Runtime -> Architecture+Processor+Assembler (без CLI/TUI); CLI и TUI — независимые
+    /// executables; граф зависимостей не содержит циклов.
     /// </summary>
     [TestClass]
     public sealed class AssemblyBoundaryTests
@@ -36,6 +35,15 @@ namespace Besm6.Architecture.Tests
             return assemblyName is not null
                 && (assemblyName.Equals("besm6", StringComparison.OrdinalIgnoreCase)
                     || assemblyName.StartsWith("Besm6.", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static string[] Besm6Refs(Assembly? asm)
+        {
+            return (asm?.GetReferencedAssemblies() ?? Array.Empty<AssemblyName>())
+                .Where(d => IsBesm6Family(d.Name))
+                .Select(d => d.Name!)
+                .OrderBy(n => n)
+                .ToArray();
         }
 
         [TestMethod]
@@ -118,16 +126,92 @@ namespace Besm6.Architecture.Tests
         }
 
         [TestMethod]
-        public void Besm6Executable_References_Both_Extracted_Assemblies()
+        public void Assembler_Assembly_References_Only_Architecture_And_Processor()
         {
-            var mono = Assembly.GetAssembly(typeof(Besm6.Runtime.MachineCore));
-            Assert.IsNotNull(mono, "РњРѕРЅРѕР»РёС‚РЅС‹Р№ executable (besm6) РґРѕР»Р¶РµРЅ РѕСЃС‚Р°РІР°С‚СЊСЃСЏ СЃР±РѕСЂРєРѕР№ СЂРµС€РµРЅРёСЏ.");
+            var asm = TryLoad("Besm6.Assembler");
+            Assert.IsNotNull(asm, "Сборка Besm6.Assembler не найдена (src/Besm6.Assembler не существует).");
 
-            string[] refs = mono.GetReferencedAssemblies().Select(d => d.Name ?? string.Empty).ToArray();
-            CollectionAssert.Contains(refs, "Besm6.Architecture",
-                "besm6 РґРѕР»Р¶РµРЅ СЃСЃС‹Р»Р°С‚СЊСЃСЏ РЅР° Besm6.Architecture.");
-            CollectionAssert.Contains(refs, "Besm6.Processor",
-                "besm6 РґРѕР»Р¶РµРЅ СЃСЃС‹Р»Р°С‚СЊСЃСЏ РЅР° Besm6.Processor.");
+            string[] refs = Besm6Refs(asm);
+            CollectionAssert.AreEquivalent(
+                new[] { "Besm6.Architecture" }, refs,
+                "Besm6.Assembler зависит только от Architecture, а не " + string.Join(", ", refs));
         }
-    }
-}
+
+        [TestMethod]
+        public void Runtime_Assembly_References_Expected_Production_Assemblies()
+        {
+            var asm = TryLoad("Besm6.Runtime");
+            Assert.IsNotNull(asm, "Сборка Besm6.Runtime не найдена (src/Besm6.Runtime не существует).");
+
+            string[] refs = Besm6Refs(asm);
+            CollectionAssert.Contains(refs, "Besm6.Architecture");
+            CollectionAssert.Contains(refs, "Besm6.Processor");
+            CollectionAssert.Contains(refs, "Besm6.Assembler");
+
+            foreach (var forbidden in new[] { "Besm6.Cli", "Besm6.Tui" })
+            {
+                CollectionAssert.DoesNotContain(refs, forbidden,
+                    "Besm6.Runtime не должна ссылаться на " + forbidden + ".");
+            }
+        }
+
+        [TestMethod]
+        public void Cli_Assembly_References_Runtime_And_Not_Tui()
+        {
+            var asm = TryLoad("besm6");
+            Assert.IsNotNull(asm, "Executable-сборка besm6 (CLI) не найдена (src/Besm6.Cli не существует).");
+
+            string[] refs = Besm6Refs(asm);
+            CollectionAssert.Contains(refs, "Besm6.Runtime",
+                "CLI должна ссылаться на Besm6.Runtime.");
+            CollectionAssert.DoesNotContain(refs, "Besm6.Tui",
+                "CLI не должна ссылаться на TUI.");
+        }
+
+        [TestMethod]
+        public void Tui_Assembly_References_Runtime_And_Not_Cli()
+        {
+            var asm = TryLoad("besm6-tui");
+            Assert.IsNotNull(asm, "Executable-сборка besm6-tui (TUI) не найдена (src/Besm6.Tui не существует).");
+
+            string[] refs = Besm6Refs(asm);
+            CollectionAssert.Contains(refs, "Besm6.Runtime",
+                "TUI должна ссылаться на Besm6.Runtime.");
+            CollectionAssert.DoesNotContain(refs, "besm6",
+                "TUI не должна ссылаться на CLI-сборку.");
+        }
+
+        [TestMethod]
+        public void Besm6_Assembly_Graph_Contains_No_Cycles()
+        {
+            string[] known =
+            {
+                "Besm6.Architecture", "Besm6.Processor", "Besm6.Assembler",
+                "Besm6.Runtime", "besm6", "besm6-tui"
+            };
+
+            var direct = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+            foreach (var name in known)
+            {
+                var asm = TryLoad(name);
+                Assert.IsNotNull(asm, "Сборка {0} не найдена.", name);
+                direct[name] = Besm6Refs(asm!);
+            }
+
+            bool HasCycleFrom(string node, HashSet<string> stack)
+            {
+                if (stack.Contains(node))
+                    return true;
+                if (!direct.TryGetValue(node, out var deps))
+                    return false;
+                stack.Add(node);
+                bool found = deps.Any(d => HasCycleFrom(d, stack));
+                stack.Remove(node);
+                return found;
+            }
+
+            bool hasCycle = known.Any(root => HasCycleFrom(root, new HashSet<string>()));
+            Assert.IsFalse(hasCycle, "Граф зависимостей BESM-6 сборок содержит цикл.");
+        }
+    }
+}

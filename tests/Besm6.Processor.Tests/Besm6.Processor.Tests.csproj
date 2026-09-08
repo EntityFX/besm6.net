@@ -17,19 +17,16 @@
 
   <ItemGroup>
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Using Include="Besm6.Architecture" />
+    <Using Include="Besm6.Core" />
+    <Using Include="Besm6.Runtime" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Процессорные тесты кодируют инструкции через Assembler монолита
-         (Besm6.Asm), поэтому проект остаётся зависимым от besm6;
-         при этом сами тесты не используют MachineCore и Loader. -->
-    <ProjectReference Include="..\..\src\besm6.net\besm6.csproj" />
     <ProjectReference Include="..\..\src\Besm6.Processor\Besm6.Processor.csproj" />
     <ProjectReference Include="..\..\src\Besm6.Architecture\Besm6.Architecture.csproj" />
+    <ProjectReference Include="..\..\src\Besm6.Assembler\Besm6.Assembler.csproj" />
+    <ProjectReference Include="..\..\src\Besm6.Runtime\Besm6.Runtime.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Using Include="Besm6.Architecture" />
-  </ItemGroup>
-
-</Project>
+</Project>

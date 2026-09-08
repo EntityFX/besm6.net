@@ -28,11 +28,11 @@ jobs:
           python-version: "3.12"
 
       - name: Build with zero warnings
-        run: dotnet build src/besm6.net/besm6.net.sln --configuration Release --no-incremental
+        run: dotnet build Besm6.sln --configuration Release --no-incremental
 
       - name: Unit, integration, and CLI contracts
         run: >-
-          dotnet test src/besm6.net/tests/Besm6.Tests/Besm6.Tests.csproj
+          dotnet test Besm6.sln
           --configuration Release --no-build
           --filter "FullyQualifiedName!~Besm6.Tests.CernLibTests"
           --logger "trx;LogFileName=fast-tests.trx"
@@ -41,7 +41,7 @@ jobs:
         run: python -m unittest discover -s tools/tests -p "test_*.py"
 
       - name: Publish self-contained workload directory
-        run: dotnet publish src/besm6.net/besm6.csproj --configuration Release --no-build --output tests-run/publish
+        run: dotnet publish src/Besm6.Cli/Besm6.Cli.csproj --configuration Release --no-build --output tests-run/publish
 
       - name: Published CLI examples
         run: >-
@@ -53,7 +53,7 @@ jobs:
         env:
           BESM6_CERN_BATCH: names:a400,z005
         run: >-
-          dotnet test src/besm6.net/tests/Besm6.Tests/Besm6.Tests.csproj
+          dotnet test tests/Besm6.Integration.Tests/Besm6.Integration.Tests.csproj
           --configuration Release --no-build
           --filter "FullyQualifiedName~Besm6.Tests.CernLibTests.Case_MatchesExpectFile"
           --logger "trx;LogFileName=cern-beacons.trx"
@@ -79,7 +79,7 @@ jobs:
           path: |
             tests-run/examples
             tests-run/cernlib
-            src/besm6.net/tests/Besm6.Tests/TestResults
+            tests/Besm6.Integration.Tests/TestResults
           if-no-files-found: ignore
 
   full-cern:
@@ -94,13 +94,13 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Build with zero warnings
-        run: dotnet build src/besm6.net/besm6.net.sln --configuration Release --no-incremental
+        run: dotnet build Besm6.sln --configuration Release --no-incremental
 
       - name: Run all 397 active CERN cases
         env:
           BESM6_CERN_BATCH: all
         run: >-
-          dotnet test src/besm6.net/tests/Besm6.Tests/Besm6.Tests.csproj
+          dotnet test tests/Besm6.Integration.Tests/Besm6.Integration.Tests.csproj
           --configuration Release --no-build
           --filter "FullyQualifiedName~Besm6.Tests.CernLibTests.Case_MatchesExpectFile"
           --logger "trx;LogFileName=cern-full.trx"
@@ -125,5 +125,5 @@ jobs:
           name: level-a-cern-full-${{ github.run_id }}
           path: |
             tests-run/cernlib
-            src/besm6.net/tests/Besm6.Tests/TestResults
+            tests/Besm6.Integration.Tests/TestResults
           if-no-files-found: ignore

@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $artifactRoot = Join-Path $repoRoot "tests-run/cernlib"
-$project = Join-Path $repoRoot "src/besm6.net/tests/Besm6.Tests/Besm6.Tests.csproj"
+$project = Join-Path $repoRoot "tests/Besm6.Integration.Tests/Besm6.Integration.Tests.csproj"
 
 $matrixPath = Join-Path $artifactRoot "matrix.csv"
 $caseName = $null

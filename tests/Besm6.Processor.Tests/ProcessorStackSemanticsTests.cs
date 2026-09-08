@@ -4,7 +4,7 @@ namespace Besm6.Tests
 {
     /// <summary>
     /// P1: PrepareStack-wiring — все 20 инструкций, использующих PrepareStack
-    /// (src/besm6.net/Core/InstructionExecutor.cs), обязаны делать pre-decrement
+    /// (src/Besm6.Processor/Core/InstructionExecutor.cs), обязаны делать pre-decrement
     /// M[17 oct] ТОЛЬКО при addr==0 и reg==17 oct. Отказ одного из call-sites
     /// (упущенный вызов PrepareStack) виден именно здесь, а не в сценариях.
     /// Референс: ref/processor.cpp (prepare-stack в case 004..030).
