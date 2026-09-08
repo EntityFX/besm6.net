@@ -36,7 +36,6 @@ namespace Besm6.Cli
                 new AsmCommand(),
                 new DisasmCommand(),
                 new CheckCommand(),
-                new TuiCommand(),
             };
             commandList.Add(new HelpCommand(commandList));
             var commands = new Dictionary<string, ICommand>(StringComparer.OrdinalIgnoreCase);

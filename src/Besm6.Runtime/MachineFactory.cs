@@ -1,3 +1,5 @@
+using Besm6.Runtime;
+
 namespace Besm6
 {
     /// <summary>
