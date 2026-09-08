@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);CS0618</NoWarn>
   </PropertyGroup>
 
@@ -17,16 +17,13 @@
 
   <ItemGroup>
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Besm6.Assembler\Besm6.Assembler.csproj" />
-    <ProjectReference Include="..\..\src\Besm6.Architecture\Besm6.Architecture.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="Besm6.Assembler" />
     <Using Include="Besm6.Architecture" />
+    <Using Include="Besm6.Runtime" />
+    <Using Include="Besm6.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Besm6.Runtime\Besm6.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

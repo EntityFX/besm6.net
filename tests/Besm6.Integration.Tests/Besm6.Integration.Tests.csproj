@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <PackageReference Include="MSTest" Version="4.0.2" />
+    <PackageReference Include="MSTest.TestAdapter" Version="4.2.3" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Using Include="Besm6.Architecture" />
+    <Using Include="Besm6.Runtime" />
+    <Using Include="Besm6.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Besm6.Runtime\Besm6.Runtime.csproj" />
+    <ProjectReference Include="..\..\src\Besm6.Cli\Besm6.Cli.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- CERNlib: манифест активных кейсов (см. CernLibManifest.ActiveCases). -->
+    <None Update="cernlib_manifest.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="raw\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>raw\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </None>
+  </ItemGroup>
+
+</Project>

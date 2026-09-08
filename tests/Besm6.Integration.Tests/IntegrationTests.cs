@@ -88,8 +88,8 @@ namespace Besm6.Tests
         [TestMethod]
         public void RawHelloDub_ProducesHi()
         {
-            string? path = FindFileInParentDirs("src/besm6.net/tests/raw", "hello.dub");
-            Assert.IsNotNull(path, "File src/besm6.net/tests/raw/hello.dub not found");
+            string? path = FindFileInParentDirs("tests/Besm6.Integration.Tests/raw", "hello.dub");
+            Assert.IsNotNull(path, "File tests/Besm6.Integration.Tests/raw/hello.dub not found");
 
             LoadResult result = _loader.RunScript(path);
             Assert.IsTrue(result.Success, result.ToString());

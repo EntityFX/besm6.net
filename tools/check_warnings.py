@@ -23,7 +23,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve()
 DEFAULT_ROOT = HERE.parent.parent
-DEFAULT_SLN = Path("src") / "besm6.net" / "besm6.net.sln"
+DEFAULT_SLN = Path("Besm6.sln")
 DEFAULT_BASELINE = Path("tools") / "warnings_baseline.json"
 
 # строка вида:  path\File.cs(12,5): warning CS8618: message [E:\...\project.csproj]
@@ -89,7 +89,7 @@ def _build(sln, root):
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--root", default=None, help="Корень проекта (по умолчанию от расположения скрипта).")
-    p.add_argument("--sln", default=None, help="Путь к .sln (по умолчанию src/besm6.net/besm6.net.sln).")
+    p.add_argument("--sln", default=None, help="Путь к .sln (по умолчанию Besm6.sln).")
     p.add_argument("--baseline", default=None, help="Путь к baseline JSON (по умолчанию tools/warnings_baseline.json).")
     p.add_argument("--update", action="store_true", help="Перегенерировать baseline из текущей сборки.")
     args = p.parse_args(argv)

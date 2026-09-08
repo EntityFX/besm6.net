@@ -7,7 +7,7 @@
 # Использование:
 #   pwsh -File plans\_count_cernlib.ps1
 #   pwsh -File plans\_count_cernlib.ps1 -RefRoot D:\dubna
-#   pwsh -File plans\_count_cernlib.ps1 -OutJson src\besm6.net\tests\Besm6.Tests\cernlib_manifest.json
+#   pwsh -File plans\_count_cernlib.ps1 -OutJson tests\Besm6.Integration.Tests\cernlib_manifest.json
 #
 # Exit code: 0 — всё в порядке; 1 — отсутствуют .f/expect-файлы или дубликаты; 2 — не найден эталон.
 [CmdletBinding()]
