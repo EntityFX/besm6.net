@@ -26,8 +26,6 @@ namespace Besm6.Cli
             {
                 Console.WriteLine("  " + cmd.Name.PadRight(10) + " " + cmd.Description);
             }
-            Console.WriteLine();
-            Console.WriteLine("Run without a command to start the interactive debugger.");
             return 0;
         }
     }
