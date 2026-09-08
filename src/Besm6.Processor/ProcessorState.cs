@@ -30,6 +30,20 @@ namespace Besm6.Core
         internal bool DebugWatchSuppressed;
         internal uint PreviousDebugAbort;
 
+        internal bool IsAdditive => (R & (uint)RFlags.Add) != 0;
+        internal bool IsMultiplicative =>
+            (R & ((uint)RFlags.Add | (uint)RFlags.Mult)) == (uint)RFlags.Mult;
+        internal bool IsLogical => (R & (uint)RFlags.Mode) == (uint)RFlags.Log;
+
+        internal void SetAdditive() =>
+            R = (R & ~(uint)RFlags.Mode) | (uint)RFlags.Add;
+
+        internal void SetMultiplicative() =>
+            R = (R & ~(uint)RFlags.Mode) | (uint)RFlags.Mult;
+
+        internal void SetLogical() =>
+            R = (R & ~(uint)RFlags.Mode) | (uint)RFlags.Log;
+
         internal void Reset()
         {
             K = 1;

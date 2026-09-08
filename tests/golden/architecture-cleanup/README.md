@@ -50,3 +50,6 @@ py -3 tools/diff_trace.py <before>-task3.tsv <after>-task3.tsv
 Expected result: `Classification: MATCH`, `Sequence: 50`. This exercises the
 single-line header, legacy `pc`/`pc_a` names, and complete PRE/POST rows without
 checking large generated traces into Git.
+
+The Task 4 executor split repeated the same comparison for 200 instructions against
+commit `9da2666`; the result was `Classification: MATCH`, `Sequence: 200`.
