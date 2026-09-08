@@ -423,18 +423,18 @@ namespace Besm6.Tests
             Assert.IsTrue(loader.MountTape(24, TapeImage.TapeMonsys));
             Assert.IsTrue(loader.MountTape(25, TapeImage.TapeMonsys));
 
-            var provenance = (System.Collections.Generic.HashSet<TapeImage>)typeof(DubnaLoader)
-                .GetField("_fileBackedTapes", System.Reflection.BindingFlags.Instance |
+            var tapes = (TapeMountService)typeof(DubnaLoader)
+                .GetField("_tapes", System.Reflection.BindingFlags.Instance |
                     System.Reflection.BindingFlags.NonPublic)!
                 .GetValue(loader)!;
-            Assert.AreEqual(2, provenance.Count);
+            Assert.AreEqual(2, tapes.FileBackedTapeCount);
 
             loader.ReleaseTapes(1L << 47);
-            Assert.AreEqual(1, provenance.Count,
+            Assert.AreEqual(1, tapes.FileBackedTapeCount,
                 "Releasing one duplicate must retain provenance for the remaining unit.");
 
             loader.ReleaseTapes(1L << 46);
-            Assert.AreEqual(0, provenance.Count,
+            Assert.AreEqual(0, tapes.FileBackedTapeCount,
                 "Releasing the last duplicate must remove its provenance entry.");
         }
     }

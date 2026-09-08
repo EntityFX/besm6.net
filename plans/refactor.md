@@ -27,6 +27,14 @@
   - `Config` перенесён из CLI в Runtime.
   - Namespace: `Besm6.Runtime`.
   - `InternalsVisibleTo("Besm6.Runtime")` добавлен в Processor.
+- **Task 7: выполнен.** `DubnaLoader` разбит на сервисы (facade 174 строки):
+  - `Loading/LoadResult.cs` — тип результата (public, отдельный файл).
+  - `Loading/TapeMountService.cs` — lifecycle лент: mount, release, file search/mount, scratch, required/script tapes.
+  - `Loading/JobProgramLoader.cs` — загрузка программ: raw words, assembler, запись script на drum.
+  - `Loading/MonsysBootstrapper.cs` — MONSYS bootstrap: таблица, магический код, начальный K.
+  - `Loading/ExecutionLoop.cs` — bounded execution: instruction/wall-clock/loop limits, intercept, LoadResult.
+  - `DubnaLoader.cs` — публичный facade (< 300 строк), делегирует в сервисы.
+  - `InternalsVisibleTo("Besm6.Tests")` / `("besm6")` добавлены в Runtime.
 - **Тесты:** Architecture 18/18 ✓, Processor 101/101 ✓, Assembler 9/9 ✓, монолит 405 ✓ / 4 skip.
 - **Принятые решения (отклонения от плана):**
   1. Типы `Besm6.Processor` остались в namespace `Besm6.Core`: namespace `Besm6.Processor`
