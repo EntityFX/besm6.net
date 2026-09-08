@@ -34,6 +34,15 @@ namespace Besm6.Tests
         {
             CernLibRunResult r = _fx.Run(c);
             EmitProgress(c, r);
+            if (r.Classification == CernLibClassification.MissingSource)
+            {
+                // Data-gated skip (baseline «accepted skip»): this case's .f/expect files are
+                // not present — e.g. a CI checkout has no gitignored ref/tests corpus, only the
+                // committed examples/cernlib beacon subset is available. Skip (Inconclusive),
+                // don't fail, so the gate degrades gracefully instead of crashing discovery.
+                Assert.Inconclusive(
+                    c + ": CERN-данные отсутствуют (нет ref/tests; доступен только коммиченный examples/cernlib) — data-gated skip.");
+            }
             if (r.Success) return;
 
             var msg = new System.Text.StringBuilder();
