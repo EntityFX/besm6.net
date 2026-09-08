@@ -1,4 +1,4 @@
-namespace Besm6.Core
+namespace Besm6.Architecture
 {
     /// <summary>
     /// Флаги регистра режима арифметического устройства R (РАУ).

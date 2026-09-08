@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace Besm6.Core
+namespace Besm6.Architecture
 {
     /// <summary>
     /// Представляет 48-битное машинное слово БЭСМ-6.
