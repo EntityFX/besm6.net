@@ -18,7 +18,7 @@ namespace Besm6.Core
         // Биты (нумерация БЭСМ-6: 40-й бит = битовый индекс 39 и т.д.)
         private const ulong BIT41 = ArchitectureConstants.BIT41;
         private const ulong BIT48 = ArchitectureConstants.BIT48;
-        private const ulong BIT49 = ArchitectureConstants.BIT49;
+        private const ulong BIT49 = 1UL << 48;
         private const ulong BITS40 = ArchitectureConstants.BITS40;
         private const ulong BITS41 = ArchitectureConstants.BITS41;
         private const ulong BITS48 = ArchitectureConstants.BITS48;

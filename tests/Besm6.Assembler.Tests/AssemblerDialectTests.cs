@@ -68,4 +68,12 @@ public sealed class AssemblerDialectTests
         Assert.AreEqual(2, result.Words.Count);
         Assert.AreEqual(OpcodeXta, result.Words[0]);
     }
+
+    [TestMethod]
+    public void Madlen_EncodesNegativeShortAddressUsingExtensionBit()
+    {
+        ulong encoded = Madlen.AssembleWord("xta -1 (2)");
+
+        Assert.AreEqual(0x248FFFUL, encoded);
+    }
 }

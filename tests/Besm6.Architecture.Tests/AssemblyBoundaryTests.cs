@@ -52,6 +52,34 @@ namespace Besm6.Architecture.Tests
         }
 
         [TestMethod]
+        public void Architecture_Assembly_Contains_No_RuntimeDeviceTypes()
+        {
+            Assembly asm = typeof(Word48).Assembly;
+            string[] forbidden = asm.GetTypes()
+                .Where(type => type.Namespace?.Equals("Besm6.Core", StringComparison.Ordinal) == true
+                    || type.Name.Contains("Device", StringComparison.Ordinal)
+                    || type.Name.Contains("Loader", StringComparison.Ordinal)
+                    || type.Name.Contains("Tape", StringComparison.Ordinal)
+                    || type.Name.Contains("Disk", StringComparison.Ordinal))
+                .Select(type => type.FullName ?? type.Name)
+                .ToArray();
+
+            Assert.AreEqual(0, forbidden.Length,
+                "Architecture должна содержать только модель ISA: {0}", string.Join(", ", forbidden));
+        }
+
+        [TestMethod]
+        public void ArchitectureConstants_ExcludeExecutionOnlyBit49()
+        {
+            string[] publicFields = typeof(ArchitectureConstants)
+                .GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Select(field => field.Name)
+                .ToArray();
+
+            CollectionAssert.DoesNotContain(publicFields, "BIT49");
+        }
+
+        [TestMethod]
         public void Processor_Assembly_References_Only_Architecture()
         {
             var asm = TryLoad("Besm6.Processor");

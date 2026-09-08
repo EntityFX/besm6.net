@@ -68,22 +68,10 @@ namespace Besm6.Core
 
             rk &= 0xFFFFFFu;
 
-            int reg = (int)((rk >> 20) & 0x0Fu);
-            uint addr;
-            uint opcode;
-
-            if (((ulong)rk & OnBit(20)) != 0)
-            {
-                addr = rk & 0x7FFFu;
-                opcode = (rk >> 12) & 0xF8u;
-            }
-            else
-            {
-                addr = rk & 0xFFFu;
-                if (((ulong)rk & OnBit(19)) != 0)
-                    addr |= 0x7000u;
-                opcode = (rk >> 12) & 0x3Fu;
-            }
+            DecodedInstruction decoded = InstructionCodec.DecodeHalf(rk);
+            int reg = decoded.Register;
+            uint addr = decoded.Address;
+            uint opcode = (uint)decoded.Opcode;
 
             if (!rightFlag && _p.DebugCheckFetch(k, opcode))
                 return false;
@@ -662,7 +650,7 @@ namespace Besm6.Core
 
         private const ulong BIT41 = ArchitectureConstants.BIT41;
         private const ulong BIT48 = ArchitectureConstants.BIT48;
-        private const ulong BIT49 = ArchitectureConstants.BIT49;
+        private const ulong BIT49 = 1UL << 48;
         private const ulong BITS40 = ArchitectureConstants.BITS40;
         private const ulong BITS41 = ArchitectureConstants.BITS41;
         private const ulong BITS48 = ArchitectureConstants.BITS48;
