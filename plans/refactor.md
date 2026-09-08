@@ -35,7 +35,20 @@
   - `Loading/ExecutionLoop.cs` — bounded execution: instruction/wall-clock/loop limits, intercept, LoadResult.
   - `DubnaLoader.cs` — публичный facade (< 300 строк), делегирует в сервисы.
   - `InternalsVisibleTo("Besm6.Tests")` / `("besm6")` добавлены в Runtime.
-- **Тесты:** Architecture 18/18 ✓, Processor 101/101 ✓, Assembler 9/9 ✓, монолит 405 ✓ / 4 skip.
+- **Task 8: выполнен.** `ExtracodeHandler` разбит на 8 partial-файлов (engine 196 строк):
+  - `ExtracodeHandler.cs` (196) — engine: конструктор, поля, Handle() dispatch, MapDrumToDisk.
+  - `ExtracodeHandler.Misc.cs` (145) — E63, E65, E67, E72, E75, E76.
+  - `ExtracodeHandler.E50Main.cs` (164) — E50 dispatcher + E51–E56.
+  - `ExtracodeHandler.E50.cs` (317) — E50Parse, E50Format.
+  - `ExtracodeHandler.E57.cs` (192) — E57 tape/file operations.
+  - `ExtracodeHandler.E61.cs` (59) — E61 plotter + E64 wrapper.
+  - `ExtracodeHandler.E64.cs` (780) — E64Full console I/O.
+  - `ExtracodeHandler.E70.cs` (108) — E70 disk/drum I/O.
+  - `ExtracodeHandler.E71.cs` (71) — E71 terminal I/O.
+  - Решение: extracode-обработчики остаются в Runtime (зависят от MachineCore, TapeImage,
+    CosyCodec, Besm6Math). Перенос в Processor создаёт циклическую зависимость.
+    I/O уже передаётся через callback-делегаты (output, input, mountTape, fileSearch, fileMount).
+- **Тесты:** Architecture 18/18 ✓, Processor 101/101 ✓, Assembler 9/9 ✓, монолит 405 ✓ / 4 skip, EduCpu 49 ✓.
 - **Принятые решения (отклонения от плана):**
   1. Типы `Besm6.Processor` остались в namespace `Besm6.Core`: namespace `Besm6.Processor`
      «затеняет» тип `Processor` для всего кода в `Besm6.*` (ошибка CS0118). Валидация namespace
