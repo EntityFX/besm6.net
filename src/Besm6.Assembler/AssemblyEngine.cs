@@ -131,7 +131,7 @@ internal static class AssemblyEngine
                     else if (IsOctal(addrTok))
                         a = ParseOctalSafe(addrTok);
                     else if (IsNegativeAddress(addrTok))
-                        a = (long)ParseOctalSafe(addrTok.Substring(1)) & 0xFFFFF;
+                        a = -(long)ParseOctalSafe(addrTok.Substring(1)) & ArchitectureConstants.AddrMask;
                 }
 
                 int pIdx = rest.IndexOf('(');
@@ -145,7 +145,12 @@ internal static class AssemblyEngine
                     }
                 }
 
-                return ((long)reg << 20) | ((long)opcode << 12) | (a & 0xFFFFF);
+                var instruction = new DecodedInstruction(
+                    checked((byte)reg),
+                    (Opcode)opcode,
+                    checked((ushort)a),
+                    (opcode & 0x80) != 0 ? InstructionFormat.Long : InstructionFormat.Short);
+                return InstructionCodec.EncodeHalf(instruction);
             }
 
             // Мнемоника не распознана в данном диалекте.

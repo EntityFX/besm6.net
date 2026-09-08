@@ -10,7 +10,6 @@ namespace Besm6.Architecture
         public const long BIT40 = 1L << 39;
         public const long BIT41 = 1L << 40;
         public const long BIT48 = 1L << 47;
-        public const long BIT49 = 1L << 48;
         public const long BITS40 = (1L << 40) - 1;
         public const long BITS41 = (1L << 41) - 1;
         public const long BITS42 = (1L << 42) - 1;
