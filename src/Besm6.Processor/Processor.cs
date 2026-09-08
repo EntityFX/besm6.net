@@ -40,7 +40,7 @@ namespace Besm6.Core
         internal uint _aex;             // исполнительный адрес
 
         private readonly ProcessorDebugWatch _debugWatch;
-        private readonly IMemory _memory;
+        private readonly ProcessorMemoryAccess _memoryAccess;
         internal readonly Alu _alu;
         internal readonly InstructionExecutor _executor;
 
@@ -68,8 +68,8 @@ namespace Besm6.Core
 
         public Processor(IMemory memory)
         {
-            _memory = memory;
             _debugWatch = new ProcessorDebugWatch(this);
+            _memoryAccess = new ProcessorMemoryAccess(this, memory);
             _alu = new Alu(this);
             _executor = new InstructionExecutor(this);
             Reset();
@@ -234,33 +234,11 @@ namespace Besm6.Core
 
         #region Память
 
-        internal ulong MemFetch(ulong addr)
-        {
-            addr &= 0x7FFF;
-            if (addr == 0)
-                throw new ProcessorException("Jump to zero");
-            return _memory.Read((uint)addr).Value;
-        }
+        internal ulong MemFetch(ulong addr) => _memoryAccess.MemFetch(addr);
 
-        internal ulong MemLoad(uint addr)
-        {
-            addr &= 0x7FFF;
-            if (DebugCheckMemory(addr, 2))
-                throw new DebugWatchAbortException();
-            if (addr == 0)
-                return 0;
-            return _memory.Read(addr).Value;
-        }
+        internal ulong MemLoad(uint addr) => _memoryAccess.MemLoad(addr);
 
-        internal void MemStore(uint addr, ulong val)
-        {
-            addr &= 0x7FFF;
-            if (DebugCheckMemory(addr, 1))
-                throw new DebugWatchAbortException();
-            if (addr == 0)
-                return;
-            _memory.Write(addr, new Word48(val));
-        }
+        internal void MemStore(uint addr, ulong val) => _memoryAccess.MemStore(addr, val);
 
         #endregion
 
