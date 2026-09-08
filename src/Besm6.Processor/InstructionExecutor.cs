@@ -8,22 +8,10 @@ namespace Besm6.Core
     public class InstructionExecutor
     {
         private readonly Processor _p;
-        private readonly bool _instrTrace = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BESM6_INSTR_TRACE"));
-        private System.IO.StreamWriter? _instrWriter = null;
 
         public InstructionExecutor(Processor p)
         {
             _p = p;
-        }
-
-        private System.IO.StreamWriter GetInstrWriter()
-        {
-            if (_instrWriter == null)
-            {
-                var path = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "instr_trace.log");
-                _instrWriter = new System.IO.StreamWriter(path, append: false) { AutoFlush = true };
-            }
-            return _instrWriter;
         }
 
         /// <summary>
@@ -106,14 +94,6 @@ namespace Besm6.Core
 
             uint nextC = 0;
             Opcode op = (Opcode)opcode;
-
-            // Instruction-level trace
-            if (_instrTrace)
-            {
-                var w = GetInstrWriter();
-                w.WriteLine($"{tK:X5} R={(tRight?"R":"L")} op={opcode,3} reg={reg,2} addr={addr,5} " +
-                    $"a={a:X12} r={r:X1} c={c,5} m14={m[14],5} {op}");
-            }
 
             switch (op)
             {
@@ -564,17 +544,17 @@ namespace Besm6.Core
                             k += 1;
                             rightFlag = false;
                         }
-                        // (trace_instruction вызывается ДО advance в step()):
-                        // здесь rightFlag уже значение ПОСЛЕ advance («правая половина ещё
-                        // должна выполниться»), что инвертировано; до advance это tRight.
-                        _p.ExtracodeReg = reg;
-                        _p.ExtracodeRawAddr = addr;
-                        _p.ExtracodeRightFlag = tRight;
+                        var call = new ExtracodeCall(
+                            (Extracode)(int)opcode,
+                            aex,
+                            checked((byte)reg),
+                            checked((ushort)addr),
+                            tRight);
                         bool handled;
                         try
                         {
-                            handled = _p.ExtracodeHandler != null
-                                && _p.ExtracodeHandler((int)opcode, aex);
+                            handled = _p.ExtracodeDispatch is not null
+                                && _p.ExtracodeDispatch(call);
                         }
                         catch (ProcessorException exception)
                         {

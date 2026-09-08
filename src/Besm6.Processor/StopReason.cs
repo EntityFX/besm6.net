@@ -1,7 +1,7 @@
 namespace Besm6.Core
 {
     /// <summary>
-    /// Причина остановки машины.
+    /// Причина остановки процессора или ограниченного цикла исполнения.
     /// </summary>
     public enum StopReason
     {

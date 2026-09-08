@@ -8,12 +8,12 @@ namespace Besm6.Core
     /// </summary>
     internal sealed class ProcessorMemoryAccess
     {
-        private readonly Processor _proc;
+        private readonly ProcessorDebugWatch _debugWatch;
         private readonly IMemory _memory;
 
-        internal ProcessorMemoryAccess(Processor proc, IMemory memory)
+        internal ProcessorMemoryAccess(ProcessorDebugWatch debugWatch, IMemory memory)
         {
-            _proc = proc;
+            _debugWatch = debugWatch;
             _memory = memory;
         }
 
@@ -30,7 +30,7 @@ namespace Besm6.Core
         internal ulong MemLoad(uint addr)
         {
             addr &= 0x7FFF;
-            if (_proc.DebugCheckMemory(addr, 2))
+            if (_debugWatch.DebugCheckMemory(addr, 2))
                 throw new Processor.DebugWatchAbortException();
             if (addr == 0)
                 return 0;
@@ -41,7 +41,7 @@ namespace Besm6.Core
         internal void MemStore(uint addr, ulong val)
         {
             addr &= 0x7FFF;
-            if (_proc.DebugCheckMemory(addr, 1))
+            if (_debugWatch.DebugCheckMemory(addr, 1))
                 throw new Processor.DebugWatchAbortException();
             if (addr == 0)
                 return;

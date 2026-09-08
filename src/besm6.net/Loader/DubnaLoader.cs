@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Besm6.Core;
+using Besm6.Tracing;
 
 // Адаптер ProgramAssembler помечен [Obsolete]; загрузчик пока использует его.
 #pragma warning disable CS0618
@@ -23,6 +24,8 @@ namespace Besm6.Loader
 
         private readonly MachineCore _machine;
         private readonly ExtracodeHandler _extracode;
+        private CanonicalTraceWriter? _canonicalTraceWriter;
+        private DiagnosticTraceWriter? _diagnosticTraceWriter;
 
         // Смонтированные диски по каналу (unit 030..067).
         private readonly Dictionary<int, TapeImage> _disksByUnit = new();
@@ -650,13 +653,14 @@ namespace Besm6.Loader
 
         private void InstallExtracodeHook()
         {
-            _machine.Cpu.ExtracodeHandler = _extracode.Handle;
+            _machine.Cpu.ExtracodeDispatch = _extracode.Handle;
         }
 
         private LoadResult RunBounded()
         {
             try
             {
+                AttachFileTraceWriters();
                 return RunBoundedCore();
             }
             finally
@@ -664,8 +668,48 @@ namespace Besm6.Loader
                 // C++ Machine::run invokes Processor::finish() on every terminal
                 // path, not after each E64 call.  Preserve that buffering model.
                 _extracode.FinishOutput();
-                // Canonical TSV trace: гарантированный flush при любом выходе.
-                _machine.Cpu.CanonFlush();
+                DetachFileTraceWriters();
+            }
+        }
+
+        private void AttachFileTraceWriters()
+        {
+            string? canonicalPath = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE");
+            if (!string.IsNullOrWhiteSpace(canonicalPath))
+            {
+                ulong limit = ulong.MaxValue;
+                string? value = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE_LIMIT");
+                if (ulong.TryParse(value, out ulong parsedLimit))
+                    limit = parsedLimit;
+
+                _canonicalTraceWriter = new CanonicalTraceWriter(canonicalPath, limit);
+                _machine.Cpu.InstructionTrace += _canonicalTraceWriter.Write;
+            }
+
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BESM6_INSTR_TRACE")))
+            {
+                string path = Path.Combine(Directory.GetCurrentDirectory(), "instr_trace.log");
+                _diagnosticTraceWriter = new DiagnosticTraceWriter(path);
+                _machine.Cpu.InstructionTrace += _diagnosticTraceWriter.Write;
+                _machine.Cpu.RegisterTrace += _diagnosticTraceWriter.Write;
+            }
+        }
+
+        private void DetachFileTraceWriters()
+        {
+            if (_canonicalTraceWriter is not null)
+            {
+                _machine.Cpu.InstructionTrace -= _canonicalTraceWriter.Write;
+                _canonicalTraceWriter.Dispose();
+                _canonicalTraceWriter = null;
+            }
+
+            if (_diagnosticTraceWriter is not null)
+            {
+                _machine.Cpu.InstructionTrace -= _diagnosticTraceWriter.Write;
+                _machine.Cpu.RegisterTrace -= _diagnosticTraceWriter.Write;
+                _diagnosticTraceWriter.Dispose();
+                _diagnosticTraceWriter = null;
             }
         }
 

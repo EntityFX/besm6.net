@@ -94,7 +94,7 @@ namespace Besm6.Loader
         }
 
         /// <summary>
-        /// Точка входа из Processor.ExtracodeHandler.
+        /// Точка входа из Processor.ExtracodeDispatch.
         /// </summary>
         // Hang detection: no output (E64) or halt (E74) for too many extracode calls.
         private int _noOutputCount = 0;       // extracode calls since last E64/E74
@@ -112,11 +112,12 @@ namespace Besm6.Loader
             return _traceWriter;
         }
 
-        public bool Handle(int opcode, uint aex)
+        public bool Handle(ExtracodeCall call)
         {
             long k = _machine.Cpu.GetK();
-
-            Extracode code = (Extracode)opcode;
+            int opcode = (int)call.Code;
+            uint aex = call.EffectiveAddress;
+            Extracode code = call.Code;
 
             // print_executive_address + besm6_print_instruction_octal/mnemonics), чтобы можно
             // было напрямую diff'ить с трассой dubna_ref.exe -t.
@@ -124,9 +125,9 @@ namespace Besm6.Loader
             if (_traceExtracodes)
             {
                 var cpu2 = _machine.Cpu;
-                int reg = cpu2.ExtracodeReg;
-                uint rawAddr = cpu2.ExtracodeRawAddr;
-                bool rFlag = cpu2.ExtracodeRightFlag;
+                int reg = call.Register;
+                uint rawAddr = call.RawAddress;
+                bool rFlag = call.IsRightHalf;
 
                 static string Oct(long v, int width) => Convert.ToString(v, 8).PadLeft(width, '0');
 
@@ -204,6 +205,13 @@ namespace Besm6.Loader
                 default: return false;
             }
         }
+
+        /// <summary>
+        /// Совместимый вход для прямых тестов обработчика, не проходящих через CPU.
+        /// Контекст регистра, исходного адреса и половины слова в таком вызове отсутствует.
+        /// </summary>
+        public bool Handle(int opcode, uint effectiveAddress) =>
+            Handle(new ExtracodeCall((Extracode)opcode, effectiveAddress, 0, 0, false));
 
         // ─── E63: ОС Дубна ───────────────────────────────────────────────────
         //

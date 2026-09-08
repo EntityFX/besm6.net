@@ -16,11 +16,11 @@ namespace Besm6.Core
         private const ulong BITS40 = ArchitectureConstants.BITS40;
         private const ulong BITS41 = ArchitectureConstants.BITS41;
 
-        private readonly Processor _proc;
+        private readonly ProcessorState _state;
 
-        internal NormalizationAndRounding(Processor proc)
+        internal NormalizationAndRounding(ProcessorState state)
         {
-            _proc = proc;
+            _state = state;
         }
 
         /// <summary>Нормализует мантиссу, применяет округление и записывает A/Y.</summary>
@@ -28,7 +28,7 @@ namespace Besm6.Core
         {
             ulong rr = 0;
             ulong normalizedBits;
-            ulong r = _proc._r;
+            ulong r = _state.R;
 
             if ((r & R_NORM_DISABLE) != 0)
                 goto chk_rnd;
@@ -108,8 +108,8 @@ namespace Besm6.Core
             if (a.Mantissa == 0 && (r & R_NORM_DISABLE) == 0)
                 goto zero;
 
-            _proc._a = Word48.FromInt48((((ulong)a.Exponent & 0x7Fu) << 41) | ((ulong)a.Mantissa & BITS41));
-            _proc._y = Word48.FromInt48(y & BITS40);
+            _state.A = Word48.FromInt48((((ulong)a.Exponent & 0x7Fu) << 41) | ((ulong)a.Mantissa & BITS41));
+            _state.Y = Word48.FromInt48(y & BITS40);
 
             if ((a.Exponent & 0x80u) != 0)
             {
@@ -119,8 +119,8 @@ namespace Besm6.Core
             return;
 
         zero:
-            _proc._a = Word48.Zero;
-            _proc._y = Word48.FromInt48(_proc._y.Value & ~BITS40);
+            _state.A = Word48.Zero;
+            _state.Y = Word48.FromInt48(_state.Y.Value & ~BITS40);
         }
     }
 }

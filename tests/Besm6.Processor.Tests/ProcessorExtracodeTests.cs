@@ -36,7 +36,7 @@ public sealed class ProcessorExtracodeTests
 
         int handlerCalls = 0;
 
-        cpu.ExtracodeHandler = (opcode, address) =>
+        cpu.ExtracodeDispatch = _ =>
         {
             handlerCalls++;
             return true;
@@ -86,7 +86,7 @@ public sealed class ProcessorExtracodeTests
 
         int handlerCalls = 0;
 
-        cpu.ExtracodeHandler = (opcode, address) =>
+        cpu.ExtracodeDispatch = _ =>
         {
             handlerCalls++;
             return true;
@@ -126,7 +126,7 @@ public sealed class ProcessorExtracodeTests
 
         cpu.SetA(0x111UL);
 
-        cpu.ExtracodeHandler = (opcode, address) =>
+        cpu.ExtracodeDispatch = _ =>
         {
             cpu.SetA(expected);
             return true;
@@ -157,7 +157,7 @@ public sealed class ProcessorExtracodeTests
 
         SetY(cpu, 0x222UL);
 
-        cpu.ExtracodeHandler = (opcode, address) =>
+        cpu.ExtracodeDispatch = _ =>
         {
             SetY(cpu, expected);
             return true;
@@ -191,7 +191,7 @@ public sealed class ProcessorExtracodeTests
         //
         SetRAdditive(cpu);
 
-        cpu.ExtracodeHandler = (opcode, address) => true;
+        cpu.ExtracodeDispatch = _ => true;
 
         WriteInstructionWord(
             cpu,
@@ -222,9 +222,9 @@ public sealed class ProcessorExtracodeTests
 
         int? handlerAddress = null;
 
-        cpu.ExtracodeHandler = (opcode, address) =>
+        cpu.ExtracodeDispatch = call =>
         {
-            handlerAddress = (int)address;
+            handlerAddress = (int)call.EffectiveAddress;
             return true;
         };
 
@@ -258,9 +258,9 @@ public sealed class ProcessorExtracodeTests
 
         int? receivedOpcode = null;
 
-        cpu.ExtracodeHandler = (opcode, address) =>
+        cpu.ExtracodeDispatch = call =>
         {
-            receivedOpcode = opcode;
+            receivedOpcode = (int)call.Code;
             return true;
         };
 
@@ -289,7 +289,12 @@ public sealed class ProcessorExtracodeTests
         //
         var cpu = CreateProcessor();
 
-        cpu.ExtracodeHandler = (opcode, address) => true;
+        ExtracodeCall? observedCall = null;
+        cpu.ExtracodeDispatch = call =>
+        {
+            observedCall = call;
+            return true;
+        };
 
         WriteInstructionWord(
             cpu,
@@ -303,16 +308,16 @@ public sealed class ProcessorExtracodeTests
 
         Assert.AreEqual(
             2,
-            cpu.ExtracodeReg,
+            observedCall!.Value.Register,
             "Extracode metadata must hold the decoded register.");
 
         Assert.AreEqual(
             01234u,
-            cpu.ExtracodeRawAddr,
+            observedCall.Value.RawAddress,
             "Extracode metadata must hold the RAW (pre-indexing) address.");
 
         Assert.IsFalse(
-            cpu.ExtracodeRightFlag,
+            observedCall.Value.IsRightHalf,
             "An extracode executed in the LEFT half must be reported as LEFT.");
     }
 
@@ -320,13 +325,18 @@ public sealed class ProcessorExtracodeTests
     public void Extracode_MetadataReportsRightHalfForRightExtracode()
     {
         //
-        // REGRESSION: ExtracodeRightFlag used to be stored AFTER the extracode
+        // REGRESSION: extracode half metadata used to be stored AFTER the extracode
         // advance (k += 1; rightFlag = false), so a RIGHT-half extracode was
         // reported as LEFT.  The stored half must be the one that EXECUTED
         //
         var cpu = CreateProcessor();
 
-        cpu.ExtracodeHandler = (opcode, address) => true;
+        ExtracodeCall? observedCall = null;
+        cpu.ExtracodeDispatch = call =>
+        {
+            observedCall = call;
+            return true;
+        };
 
         WriteInstructionWord(
             cpu,
@@ -340,16 +350,16 @@ public sealed class ProcessorExtracodeTests
 
         Assert.AreEqual(
             0,
-            cpu.ExtracodeReg,
+            observedCall!.Value.Register,
             "Extracode metadata must hold the decoded register.");
 
         Assert.AreEqual(
             0u,
-            cpu.ExtracodeRawAddr,
+            observedCall.Value.RawAddress,
             "Extracode metadata must hold the RAW (pre-indexing) address.");
 
         Assert.IsTrue(
-            cpu.ExtracodeRightFlag,
+            observedCall.Value.IsRightHalf,
             "A RIGHT-half extracode must be reported as RIGHT (executed half, not post-advance state).");
     }
 
