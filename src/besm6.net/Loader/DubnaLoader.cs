@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Besm6.Core;
 using Besm6.Tracing;
+using Besm6.Assembler;
 
 // Адаптер ProgramAssembler помечен [Obsolete]; загрузчик пока использует его.
 #pragma warning disable CS0618
@@ -509,7 +510,7 @@ namespace Besm6.Loader
                     .Select(w => (index: job.AssemProgram.ToList().FindIndex(x => ReferenceEquals(x, w)), w.Value))
                     .ToList();
 
-                var asmResult = Besm6.Asm.ProgramAssembler.Assemble(textLines, baseAddr);
+                var asmResult = new AutoDetectingAssembler().AssembleProgram(textLines, baseAddr);
                 for (int i = 0; i < asmResult.Words.Count; i++)
                 {
                     int addr = (baseAddr + i) & 0x7FFF;
@@ -609,8 +610,8 @@ namespace Besm6.Loader
                 wordIdx++;
             }
 
-            // Ассемблируем через ProgramAssembler (поддерживает лейблы, MADLEN, BEMSH).
-            var asmResult = Besm6.Asm.ProgramAssembler.Assemble(textLines, baseAddr);
+            // Ассемблируем через новый ассемблер (поддерживает лейблы, MADLEN, BEMSH).
+            var asmResult = new AutoDetectingAssembler().AssembleProgram(textLines, baseAddr);
 
             // Записываем все слова в память.
             for (int i = 0; i < asmResult.Words.Count; i++)
@@ -856,7 +857,7 @@ namespace Besm6.Loader
         public void BootMsDubna()
         {
             var mem = _machine.Memory;
-            var asm = Besm6.Asm.Assembler.Asm;
+            var asm = new AutoDetectingAssembler().AssembleWord;
 
             // Физический обмен: барабан 021 перенаправляем на диск 030 (MONSYS).
             MountTape(24, TapeImage.TapeMonsys);

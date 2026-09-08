@@ -1,10 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Besm6.Asm
 {
-    /// <summary>Результат ассемблирования программы (устаревший адаптер).</summary>
+    using global::Besm6.Assembler;
+
+    /// <summary>Устаревший результат ассемблирования программы.</summary>
     [Obsolete("Используйте Besm6.Assembler.AssemblyResult")]
     public sealed class AsmResult
     {
@@ -14,19 +12,15 @@ namespace Besm6.Asm
     }
 
     /// <summary>
-    /// Устаревший адаптер к новому ассемблеру Besm6.Assembler. Сохраняет прежний
-    /// публичный API на один релиз и делегирует реализации AutoDetectingAssembler,
-    /// не содержа собственной логики.
+    /// Устаревший адаптер к новому ассемблеру. Делегирует <see cref="AutoDetectingAssembler"/>.
     /// </summary>
     [Obsolete("Используйте Besm6.Assembler.IBesm6Assembler (MadlenAssembler/BemshAssembler/AutoDetectingAssembler)")]
     public static class ProgramAssembler
     {
-        /// <summary>
-        /// Ассемблирует программу через новый ассемблер с автоматическим диалектом.
-        /// </summary>
+        /// <summary>Ассемблирует программу через новый ассемблер с автоматическим диалектом.</summary>
         public static AsmResult Assemble(IEnumerable<string> lines, int baseAddr = 512)
         {
-            var newResult = new global::Besm6.Assembler.AutoDetectingAssembler()
+            var newResult = new AutoDetectingAssembler()
                 .AssembleProgram(lines, baseAddr);
 
             return new AsmResult

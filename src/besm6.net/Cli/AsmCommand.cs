@@ -1,5 +1,5 @@
 using System;
-using Besm6.Asm;
+using Besm6.Assembler;
 
 namespace Besm6.Cli
 {
@@ -8,6 +8,8 @@ namespace Besm6.Cli
     /// </summary>
     public sealed class AsmCommand : ICommand
     {
+        private static readonly AutoDetectingAssembler _asm = new();
+
         public string Name => "asm";
         public string Description => "Assemble an instruction source into an octal word";
         public string Usage => "besm6 asm <source> [source2 ...]";
@@ -24,8 +26,8 @@ namespace Besm6.Cli
             {
                 for (int i = 0; i < args.Length; i++)
                 {
-                    ulong word = Besm6.Asm.Assembler.Asm(args[i]);
-                    Console.WriteLine($"0{Besm6.Asm.Disassembler.ToOctal((long)word)}");
+                    ulong word = _asm.AssembleWord(args[i]);
+                    Console.WriteLine($"0{Disassembler.ToOctal((long)word)}");
                 }
                 return 0;
             }
