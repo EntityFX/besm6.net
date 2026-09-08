@@ -71,10 +71,26 @@ namespace Besm6.Tests
         {
             get
             {
-                string direct = Path.Combine(Root, "ref", "tests");
-                return Directory.Exists(direct)
-                    ? direct
-                    : Path.Combine(Root, "ref", "dubna", "tests");
+                // Explicit override (dev/CI/test knob): a directory that already contains
+                // lib{N}/{name}.f + expect_{name}.txt. Highest priority so a specific CERN
+                // data set can be forced without touching the local ref/tests corpus.
+                string? env = Environment.GetEnvironmentVariable("BESM6_CERN_DATA");
+                if (!string.IsNullOrWhiteSpace(env) && Directory.Exists(env))
+                    return env;
+
+                string root = Root;
+                string[] candidates =
+                {
+                    Path.Combine(root, "ref", "tests"),             // full corpus (dev / local snapshot)
+                    Path.Combine(root, "ref", "dubna", "tests"),    // alt local layout
+                    Path.Combine(root, "examples", "cernlib"),       // committed beacon subset (present in CI)
+                };
+                foreach (string c in candidates)
+                    if (Directory.Exists(c))
+                        return c;
+                // Nothing present: sentinel path so every case classifies as MissingSource
+                // (a graceful skip) instead of FindRoot/Run crashing the whole run.
+                return Path.Combine(root, "ref", "tests");
             }
         }
         public string ArtifactsDir => Path.Combine(Root, "tests-run", "cernlib");
@@ -354,16 +370,20 @@ namespace Besm6.Tests
         // ---------------------------------------------------------------
         private static string FindRoot()
         {
+            // Anchor on TRACKED markers (examples/ + src/) so a clean CI checkout — where the
+            // gitignored CERN corpus ref/ is absent — still resolves the repo root. The CERN
+            // data directory itself is resolved separately in RefTestsDir (ref/tests ->
+            // examples/cernlib -> sentinel). Falls back to CWD instead of throwing: a missing
+            // corpus then surfaces as MissingSource (a graceful skip), never a crash at discovery.
             string? dir = Directory.GetCurrentDirectory();
             while (dir != null)
             {
-                if (Directory.Exists(Path.Combine(dir, "ref", "tests")) ||
-                    Directory.Exists(Path.Combine(dir, "ref", "dubna", "tests")))
+                if (Directory.Exists(Path.Combine(dir, "examples")) &&
+                    Directory.Exists(Path.Combine(dir, "src")))
                     return dir;
                 dir = Directory.GetParent(dir)?.FullName;
             }
-            throw new DirectoryNotFoundException("ref/tests или ref/dubna/tests не найден (CWD: " +
-                Directory.GetCurrentDirectory() + ")");
+            return Directory.GetCurrentDirectory();
         }
 
         internal static string NormalizeLineEndings(string s)
