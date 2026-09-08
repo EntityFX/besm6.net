@@ -54,6 +54,14 @@
   - No-args → help (exit 0), а не interactive debugger.
   - `HelpCommand` больше не упоминает interactive debugger.
   - `CliApplicationTests` — 7 contract tests (no-args, help, unknown, missing-arg, asm, disasm, case-insensitive).
+- **Task 8 (codecs): выполнен.** `CosyCodec` разбит на Encoding namespace:
+  - `Encoding/EncodingTables.cs` (299) — data-only: COSY markers, Koi7, GOST, TEXT, Tab0, AllToIso.
+  - `Encoding/Koi7Codec.cs` (16) — thin API: `Utf8ToKoi7`, `Koi7ToUnicode`.
+  - `Encoding/Gost10859Codec.cs` (13) — thin API: `GostToUnicode`.
+  - `Encoding/TextCodec.cs` (16) — thin API: `TextToUnicode`, `BytesToWord`.
+  - `Encoding/CosyEncoder.cs` (13) — thin API: `Encode`.
+  - `Encoding/CosyDecoder.cs` (19) — thin API: `IsReadOld`, `IsEndFile`, `Decode`.
+  - `CosyCodec.cs` (385, 277 logic) — реализация, данные делегированы в EncodingTables.
 - **Тесты:** Architecture 18/18 ✓, Processor 101/101 ✓, Assembler 9/9 ✓, монолит 412 ✓ / 4 skip, EduCpu 49 ✓.
 - **Принятые решения (отклонения от плана):**
   1. Типы `Besm6.Processor` остались в namespace `Besm6.Core`: namespace `Besm6.Processor`
