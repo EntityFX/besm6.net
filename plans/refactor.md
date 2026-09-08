@@ -48,7 +48,13 @@
   - Решение: extracode-обработчики остаются в Runtime (зависят от MachineCore, TapeImage,
     CosyCodec, Besm6Math). Перенос в Processor создаёт циклическую зависимость.
     I/O уже передаётся через callback-делегаты (output, input, mountTape, fileSearch, fileMount).
-- **Тесты:** Architecture 18/18 ✓, Processor 101/101 ✓, Assembler 9/9 ✓, монолит 405 ✓ / 4 skip, EduCpu 49 ✓.
+- **Task 9: выполнен.** Testable CLI entry point + contract tests:
+  - `Cli/CliApplication.cs` — `Run(string[] args, TextWriter? output, TextWriter? error)`.
+  - `Program.Main` делегирует в `CliApplication.Run(args)`.
+  - No-args → help (exit 0), а не interactive debugger.
+  - `HelpCommand` больше не упоминает interactive debugger.
+  - `CliApplicationTests` — 7 contract tests (no-args, help, unknown, missing-arg, asm, disasm, case-insensitive).
+- **Тесты:** Architecture 18/18 ✓, Processor 101/101 ✓, Assembler 9/9 ✓, монолит 412 ✓ / 4 skip, EduCpu 49 ✓.
 - **Принятые решения (отклонения от плана):**
   1. Типы `Besm6.Processor` остались в namespace `Besm6.Core`: namespace `Besm6.Processor`
      «затеняет» тип `Processor` для всего кода в `Besm6.*` (ошибка CS0118). Валидация namespace
