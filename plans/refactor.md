@@ -13,10 +13,21 @@
 ## Статус (2026-09-08)
 
 - **Task 1–4: выполнены.** `Besm6.Architecture` и `Besm6.Processor` — отдельные сборки.
-- **Task 5 (частично):** проект `besm6` подключен к новым сборкам через ProjectReference;
-  адаптация `MachineCore`/`SystemBus` не требуется (типы остались публичными в тех же namespace'ах).
-- **Тесты:** Architecture 10/10 ✓, Processor 92/92 ✓ (включая headless-тест
-  `HeadlessProcessorTests.Processor_Runs_Without_Monolith`), монолит 405 ✓ / 4 skip.
+- **Task 5: выполнен.** `Besm6.Assembler` — полная реализация:
+  - `Lexer` / `Parser` / `SymbolTable` — разбор, ассемблирование, две прогонки.
+  - `AssemblyDialectDetector` — выбор диалекта по `*madlen` / `*bemsh` / `*assem`.
+  - `Disassembler` — дизассемблирование через `InstructionCodec`.
+  - `AssemblyEngine` — оркестратор (< 70 строк), кодит через `InstructionCodec.EncodeHalf`.
+  - `Legacy/` — `[Obsolete]`-адаптеры `Besm6.Asm.*` (Assembler, Disassembler, OpcodeTable, ProgramAssembler).
+  - Монолитные `src/besm6.net/Asm/*.cs` удалены; CLI/TUI/DubnaLoader используют новый API.
+- **Task 6: выполнен.** `Besm6.Runtime` — отдельная сборка:
+  - Core-файлы (devices, MachineCore, SystemBus, clock, scheduler) перенесены.
+  - Loader-файлы (DubnaLoader, ExtracodeHandler, CosyCodec, JobParser, TapeImage) перенесены.
+  - Tracing-файлы (CanonicalTraceWriter, DiagnosticTraceWriter) перенесены.
+  - `Config` перенесён из CLI в Runtime.
+  - Namespace: `Besm6.Runtime`.
+  - `InternalsVisibleTo("Besm6.Runtime")` добавлен в Processor.
+- **Тесты:** Architecture 18/18 ✓, Processor 101/101 ✓, Assembler 9/9 ✓, монолит 405 ✓ / 4 skip.
 - **Принятые решения (отклонения от плана):**
   1. Типы `Besm6.Processor` остались в namespace `Besm6.Core`: namespace `Besm6.Processor`
      «затеняет» тип `Processor` для всего кода в `Besm6.*` (ошибка CS0118). Валидация namespace

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Besm6.Architecture\Besm6.Architecture.csproj" />
+    <ProjectReference Include="..\Besm6.Processor\Besm6.Processor.csproj" />
+    <ProjectReference Include="..\Besm6.Assembler\Besm6.Assembler.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Besm6.Architecture" />
+    <Using Include="Besm6.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\tapes\**\*"
+          Link="tapes\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

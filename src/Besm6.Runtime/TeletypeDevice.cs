@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Besm6.Core
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Эмуляция телетайпа БЭСМ-6.

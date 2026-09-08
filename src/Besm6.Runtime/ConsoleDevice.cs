@@ -1,7 +1,7 @@
 using System;
 using System.Text;
 
-namespace Besm6.Core
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Эмуляция консольного устройства ввода-вывода для БЭСМ-6.

@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Besm6.Core;
-using Besm6.Tracing;
-
 namespace Besm6.Tests
 {
     /// <summary>

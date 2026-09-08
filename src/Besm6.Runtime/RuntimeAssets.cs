@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Besm6.Loader
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Класс лицензии runtime-ресурса (SuperPlan Task A4):
@@ -21,7 +21,7 @@ namespace Besm6.Loader
     }
 }
 
-namespace Besm6.Loader
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Описание одного обязательного runtime-образа (лента/диск) с контрольной суммой,
@@ -53,7 +53,7 @@ namespace Besm6.Loader
     }
 }
 
-namespace Besm6.Loader
+namespace Besm6.Runtime
 {
     /// <summary>Результат успешного разрешения: каталог + полный путь и фактический checksum каждого ресурса.</summary>
     public sealed class ResolvedRuntimeAssets
@@ -70,7 +70,7 @@ namespace Besm6.Loader
     }
 }
 
-namespace Besm6.Loader
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Ошибка проверки runtime-ресурсов (SuperPlan Task A4): перечисляет каждый отсутствующий
@@ -93,7 +93,7 @@ namespace Besm6.Loader
     }
 }
 
-namespace Besm6.Loader
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Каталог обязательных runtime-образов и их fail-fast разрешение (SuperPlan Task A4).

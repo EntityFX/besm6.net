@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Besm6.Core
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Графопостроитель (порт dubna/plotter.h).

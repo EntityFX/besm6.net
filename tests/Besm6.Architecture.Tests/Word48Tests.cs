@@ -1,14 +1,13 @@
 using Besm6.Core;
-using Besm6.Loader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests
 {
     /// <summary>
-    /// Тесты конверсии Word48 <-> double.
-    /// Число БЭСМ-6: биты 47..41 — порядок (bias=64), биты 40..0 — мантисса
-    /// в дополнительном коде (знак в бите 40). Это канонический формат,
-    /// совпадающий с Besm6Math (порт besm6_arch.cpp).
+    /// РўРµСЃС‚С‹ РєРѕРЅРІРµСЂСЃРёРё Word48 <-> double.
+    /// Р§РёСЃР»Рѕ Р‘Р­РЎРњ-6: Р±РёС‚С‹ 47..41 вЂ” РїРѕСЂСЏРґРѕРє (bias=64), Р±РёС‚С‹ 40..0 вЂ” РјР°РЅС‚РёСЃСЃР°
+    /// РІ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕРј РєРѕРґРµ (Р·РЅР°Рє РІ Р±РёС‚Рµ 40). Р­С‚Рѕ РєР°РЅРѕРЅРёС‡РµСЃРєРёР№ С„РѕСЂРјР°С‚,
+    /// СЃРѕРІРїР°РґР°СЋС‰РёР№ СЃ Besm6Math (РїРѕСЂС‚ besm6_arch.cpp).
     /// </summary>
     [TestClass]
     public class Word48FloatTests
@@ -42,8 +41,8 @@ namespace Besm6.Tests
         [TestMethod]
         public void ToDouble_MatchesBesm6Math()
         {
-            // Word48.ToDouble и Besm6Math.Besm6ToDouble должны описывать ОДНО И ТО ЖЕ
-            // число БЭСМ-6 (оба претендуют на канонический формат).
+            // Word48.ToDouble Рё Besm6Math.Besm6ToDouble РґРѕР»Р¶РЅС‹ РѕРїРёСЃС‹РІР°С‚СЊ РћР”РќРћ Р РўРћ Р–Р•
+            // С‡РёСЃР»Рѕ Р‘Р­РЎРњ-6 (РѕР±Р° РїСЂРµС‚РµРЅРґСѓСЋС‚ РЅР° РєР°РЅРѕРЅРёС‡РµСЃРєРёР№ С„РѕСЂРјР°С‚).
             ulong[] words = {
                 0,
                 (65UL << 41) | (1UL << 39),       // 1.0
@@ -68,15 +67,15 @@ namespace Besm6.Tests
         {
             ulong value = 0x123456789ABCUL;
             string oct = new Word48(value).ToOctal();
-            Assert.AreEqual(16, oct.Length, "48 бит = 16 восьмеричных цифр");
+            Assert.AreEqual(16, oct.Length, "48 Р±РёС‚ = 16 РІРѕСЃСЊРјРµСЂРёС‡РЅС‹С… С†РёС„СЂ");
             Assert.AreEqual(value, Word48.FromOctal(oct).Value);
         }
 
         [TestMethod]
         public void FromOctal_Parses17DigitLeadingZero()
         {
-            // Каноническая 17-символьная запись с ведущим нулём.
-            // "04050000000000000" = 1.0; ведущий 0 даёт бит 48, который отбрасывается.
+            // РљР°РЅРѕРЅРёС‡РµСЃРєР°СЏ 17-СЃРёРјРІРѕР»СЊРЅР°СЏ Р·Р°РїРёСЃСЊ СЃ РІРµРґСѓС‰РёРј РЅСѓР»С‘Рј.
+            // "04050000000000000" = 1.0; РІРµРґСѓС‰РёР№ 0 РґР°С‘С‚ Р±РёС‚ 48, РєРѕС‚РѕСЂС‹Р№ РѕС‚Р±СЂР°СЃС‹РІР°РµС‚СЃСЏ.
             ulong one = (65UL << 41) | (1UL << 39);
             Assert.AreEqual(one, Word48.FromOctal("04050000000000000").Value);
         }

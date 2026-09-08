@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
-using Besm6.Core;
-using Besm6.Loader;
-
 namespace Besm6.Tests
 {
     /// <summary>

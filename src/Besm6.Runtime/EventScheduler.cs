@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Besm6.Core
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Неизменяемый идентификатор запланированного события (уровень B, Task B1).

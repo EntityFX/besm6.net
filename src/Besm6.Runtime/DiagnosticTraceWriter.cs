@@ -1,7 +1,5 @@
 using System.Text;
-using Besm6.Core;
-
-namespace Besm6.Tracing
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Записывает человекочитаемую диагностическую трассировку инструкций.

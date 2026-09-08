@@ -1,8 +1,6 @@
 using System;
 using System.Globalization;
-using Besm6.Core;
-
-namespace Besm6.Loader
+namespace Besm6.Runtime
 {
     public sealed partial class ExtracodeHandler
     {

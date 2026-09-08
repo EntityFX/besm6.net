@@ -5,12 +5,12 @@ using System.Reflection;
 namespace Besm6.Architecture.Tests
 {
     /// <summary>
-    /// Архитектурные границы фазы 1 (plans/refactor.md):
-    /// - Besm6.Architecture не ссылается на другие BESM-6 сборки;
-    /// - Besm6.Processor ссылается только на Besm6.Architecture
-    ///   (и на системные сборки .NET), а не на Loader, CLI или TUI;
-    /// - Besm6.Processor не содержит типов устройств и загрузчика;
-    /// - монолитный executable ссылается на обе вынесенные сборки.
+    /// РђСЂС…РёС‚РµРєС‚СѓСЂРЅС‹Рµ РіСЂР°РЅРёС†С‹ С„Р°Р·С‹ 1 (plans/refactor.md):
+    /// - Besm6.Architecture РЅРµ СЃСЃС‹Р»Р°РµС‚СЃСЏ РЅР° РґСЂСѓРіРёРµ BESM-6 СЃР±РѕСЂРєРё;
+    /// - Besm6.Processor СЃСЃС‹Р»Р°РµС‚СЃСЏ С‚РѕР»СЊРєРѕ РЅР° Besm6.Architecture
+    ///   (Рё РЅР° СЃРёСЃС‚РµРјРЅС‹Рµ СЃР±РѕСЂРєРё .NET), Р° РЅРµ РЅР° Loader, CLI РёР»Рё TUI;
+    /// - Besm6.Processor РЅРµ СЃРѕРґРµСЂР¶РёС‚ С‚РёРїРѕРІ СѓСЃС‚СЂРѕР№СЃС‚РІ Рё Р·Р°РіСЂСѓР·С‡РёРєР°;
+    /// - РјРѕРЅРѕР»РёС‚РЅС‹Р№ executable СЃСЃС‹Р»Р°РµС‚СЃСЏ РЅР° РѕР±Рµ РІС‹РЅРµСЃРµРЅРЅС‹Рµ СЃР±РѕСЂРєРё.
     /// </summary>
     [TestClass]
     public sealed class AssemblyBoundaryTests
@@ -42,12 +42,12 @@ namespace Besm6.Architecture.Tests
         public void Architecture_Assembly_Exists_And_References_No_Besm6_Families()
         {
             var asm = TryLoad("Besm6.Architecture");
-            Assert.IsNotNull(asm, "Сборка Besm6.Architecture не найдена (src/Besm6.Architecture ещё не создана).");
+            Assert.IsNotNull(asm, "РЎР±РѕСЂРєР° Besm6.Architecture РЅРµ РЅР°Р№РґРµРЅР° (src/Besm6.Architecture РµС‰С‘ РЅРµ СЃРѕР·РґР°РЅР°).");
 
             foreach (var dep in asm.GetReferencedAssemblies())
             {
                 Assert.IsFalse(IsBesm6Family(dep.Name),
-                    $"Besm6.Architecture не должна ссылаться на другие BESM-6 сборки: {dep.Name}");
+                    $"Besm6.Architecture РЅРµ РґРѕР»Р¶РЅР° СЃСЃС‹Р»Р°С‚СЊСЃСЏ РЅР° РґСЂСѓРіРёРµ BESM-6 СЃР±РѕСЂРєРё: {dep.Name}");
             }
         }
 
@@ -65,7 +65,7 @@ namespace Besm6.Architecture.Tests
                 .ToArray();
 
             Assert.AreEqual(0, forbidden.Length,
-                "Architecture должна содержать только модель ISA: {0}", string.Join(", ", forbidden));
+                "Architecture РґРѕР»Р¶РЅР° СЃРѕРґРµСЂР¶Р°С‚СЊ С‚РѕР»СЊРєРѕ РјРѕРґРµР»СЊ ISA: {0}", string.Join(", ", forbidden));
         }
 
         [TestMethod]
@@ -83,14 +83,14 @@ namespace Besm6.Architecture.Tests
         public void Processor_Assembly_References_Only_Architecture()
         {
             var asm = TryLoad("Besm6.Processor");
-            Assert.IsNotNull(asm, "Сборка Besm6.Processor не найдена (src/Besm6.Processor ещё не создана).");
+            Assert.IsNotNull(asm, "РЎР±РѕСЂРєР° Besm6.Processor РЅРµ РЅР°Р№РґРµРЅР° (src/Besm6.Processor РµС‰С‘ РЅРµ СЃРѕР·РґР°РЅР°).");
 
             foreach (var dep in asm.GetReferencedAssemblies())
             {
                 if (!IsBesm6Family(dep.Name))
-                    continue; // System.* и т.п. разрешены.
+                    continue; // System.* Рё С‚.Рї. СЂР°Р·СЂРµС€РµРЅС‹.
                 Assert.AreEqual("Besm6.Architecture", dep.Name,
-                    $"Besm6.Processor может ссылаться только на Besm6.Architecture, найден {dep.Name}");
+                    $"Besm6.Processor РјРѕР¶РµС‚ СЃСЃС‹Р»Р°С‚СЊСЃСЏ С‚РѕР»СЊРєРѕ РЅР° Besm6.Architecture, РЅР°Р№РґРµРЅ {dep.Name}");
             }
         }
 
@@ -98,7 +98,7 @@ namespace Besm6.Architecture.Tests
         public void Processor_Assembly_Contains_No_DeviceOrLoader_Types()
         {
             var asm = TryLoad("Besm6.Processor");
-            Assert.IsNotNull(asm, "Сборка Besm6.Processor не найдена (src/Besm6.Processor ещё не создана).");
+            Assert.IsNotNull(asm, "РЎР±РѕСЂРєР° Besm6.Processor РЅРµ РЅР°Р№РґРµРЅР° (src/Besm6.Processor РµС‰С‘ РЅРµ СЃРѕР·РґР°РЅР°).");
 
             Type[] types = asm.GetTypes();
             string[] forbidden = types
@@ -114,20 +114,20 @@ namespace Besm6.Architecture.Tests
                 .ToArray();
 
             Assert.AreEqual(0, forbidden.Length,
-                "Besm6.Processor не должна содержать типов устройств и загрузчика: {0}", string.Join(", ", forbidden));
+                "Besm6.Processor РЅРµ РґРѕР»Р¶РЅР° СЃРѕРґРµСЂР¶Р°С‚СЊ С‚РёРїРѕРІ СѓСЃС‚СЂРѕР№СЃС‚РІ Рё Р·Р°РіСЂСѓР·С‡РёРєР°: {0}", string.Join(", ", forbidden));
         }
 
         [TestMethod]
         public void Besm6Executable_References_Both_Extracted_Assemblies()
         {
-            var mono = Assembly.GetAssembly(typeof(Besm6.Core.MachineCore));
-            Assert.IsNotNull(mono, "Монолитный executable (besm6) должен оставаться сборкой решения.");
+            var mono = Assembly.GetAssembly(typeof(Besm6.Runtime.MachineCore));
+            Assert.IsNotNull(mono, "РњРѕРЅРѕР»РёС‚РЅС‹Р№ executable (besm6) РґРѕР»Р¶РµРЅ РѕСЃС‚Р°РІР°С‚СЊСЃСЏ СЃР±РѕСЂРєРѕР№ СЂРµС€РµРЅРёСЏ.");
 
             string[] refs = mono.GetReferencedAssemblies().Select(d => d.Name ?? string.Empty).ToArray();
             CollectionAssert.Contains(refs, "Besm6.Architecture",
-                "besm6 должен ссылаться на Besm6.Architecture.");
+                "besm6 РґРѕР»Р¶РµРЅ СЃСЃС‹Р»Р°С‚СЊСЃСЏ РЅР° Besm6.Architecture.");
             CollectionAssert.Contains(refs, "Besm6.Processor",
-                "besm6 должен ссылаться на Besm6.Processor.");
+                "besm6 РґРѕР»Р¶РµРЅ СЃСЃС‹Р»Р°С‚СЊСЃСЏ РЅР° Besm6.Processor.");
         }
     }
 }

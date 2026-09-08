@@ -1,6 +1,6 @@
 using System;
 
-namespace Besm6.Core
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Дискретное модельное время симулятора (уровень B, SuperPlan Task B1).

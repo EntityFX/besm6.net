@@ -1,6 +1,6 @@
 using System;
 
-namespace Besm6.Core
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Системная шина БЭСМ-6.

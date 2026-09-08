@@ -2,9 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Besm6.Core;
-using Besm6.Loader;
-
 namespace Besm6.Cli
 {
     /// <summary>

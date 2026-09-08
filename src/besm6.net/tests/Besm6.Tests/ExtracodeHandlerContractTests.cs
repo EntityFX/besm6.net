@@ -1,6 +1,4 @@
 using System;
-using Besm6.Core;
-using Besm6.Loader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests
