@@ -285,71 +285,19 @@ namespace Besm6.Core
 
         #endregion
 
-        #region Вспомогательные операции (порт besm6_arch.cpp)
+        #region Вспомогательные операции (делегирование в ProcessorBitOperations)
 
-        private static uint Addr(uint x) => ArchitectureConstants.NormalizeAddress(x);
+        private static uint Addr(uint x) => ProcessorBitOperations.Addr(x);
 
-        private static ulong OnBit(int n) => ArchitectureConstants.OnBit(n);
+        private static ulong OnBit(int n) => ProcessorBitOperations.OnBit(n);
 
-        internal static int Besm6HighestBit(ulong val)
-        {
-            int n = 32, cnt = 0;
-            do
-            {
-                ulong tmp = val;
-                if ((tmp >>= n) != 0)
-                {
-                    cnt += n;
-                    val = tmp;
-                }
-            } while ((n >>= 1) != 0);
-            return 48 - cnt;
-        }
+        internal static int Besm6HighestBit(ulong val) => ProcessorBitOperations.Besm6HighestBit(val);
 
-        internal static int Besm6CountOnes(ulong word)
-        {
-            int c = 0;
-            while (word != 0)
-            {
-                word &= word - 1;
-                c++;
-            }
-            return c;
-        }
+        internal static int Besm6CountOnes(ulong word) => ProcessorBitOperations.Besm6CountOnes(word);
 
-        internal static ulong Besm6Pack(ulong val, ulong mask)
-        {
-            ulong result = 0;
-            while (mask != 0)
-            {
-                if ((mask & 1) != 0)
-                {
-                    result >>= 1;
-                    if ((val & 1) != 0)
-                        result |= BIT48;
-                }
-                mask >>= 1;
-                val >>= 1;
-            }
-            return result & BITS48;
-        }
+        internal static ulong Besm6Pack(ulong val, ulong mask) => ProcessorBitOperations.Besm6Pack(val, mask);
 
-        internal static ulong Besm6Unpack(ulong val, ulong mask)
-        {
-            ulong result = 0;
-            for (int i = 0; i < 48; i++)
-            {
-                result <<= 1;
-                if ((mask & BIT48) != 0)
-                {
-                    if ((val & BIT48) != 0)
-                        result |= 1;
-                    val <<= 1;
-                }
-                mask <<= 1;
-            }
-            return result & BITS48;
-        }
+        internal static ulong Besm6Unpack(ulong val, ulong mask) => ProcessorBitOperations.Besm6Unpack(val, mask);
 
         #endregion
 
