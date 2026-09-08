@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>besm6-tui</AssemblyName>
+    <RootNamespace>Besm6.Tui</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="besm6.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\tapes\**\*"
+          Link="tapes\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Besm6.Assembler\Besm6.Assembler.csproj" />
+    <ProjectReference Include="..\Besm6.Runtime\Besm6.Runtime.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Besm6.Architecture" />
+    <Using Include="Besm6.Runtime" />
+  </ItemGroup>
+</Project>
