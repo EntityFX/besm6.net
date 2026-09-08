@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using Besm6.Core;
-using Besm6.Asm;
+using Besm6.Assembler;
 using Besm6.Loader;
 
 namespace Besm6.Tui
@@ -128,7 +128,7 @@ namespace Besm6.Tui
                     if (arg.Length == 0) { _status = "asm <instruction>"; return true; }
                     try
                     {
-                        ulong w = Besm6.Asm.Assembler.Asm(arg);
+                        ulong w = new AutoDetectingAssembler().AssembleWord(arg);
                         _status = "asm: " + arg + " = 0x" + w.ToString("X12");
                     }
                     catch (Exception ex) { _status = "asm error: " + ex.Message; }
@@ -168,7 +168,7 @@ namespace Besm6.Tui
             var cpu = _machine!.Cpu;
             long before = cpu.K;
             var word = _machine.Memory.Read((uint)((int)before & 0x7FFF));
-            var dis = Besm6.Asm.Disassembler.DisasmWord((long)word.Value);
+            var dis = Disassembler.DisasmWord((long)word.Value);
             bool stopped = cpu.Step();
             _instrCount++;
             if (stopped) { _halted = true; _running = false; _status = "HALTED by STOP @" + before.ToString("X4"); }
@@ -286,8 +286,8 @@ namespace Besm6.Tui
 
                 sb.Append("   ").Append(a.ToString("X4")).Append(GRAY).Append(" │ ").Append(RESET);
                 sb.Append(w.Value.ToString("X12")).Append(GRAY).Append(" │ ").Append(RESET);
-                sb.Append(Besm6.Asm.Disassembler.DisasmHalf((long)(w.Value >> 24))).Append(" ");
-                sb.Append(Besm6.Asm.Disassembler.DisasmHalf((long)(w.Value & 0xFFFFFFL)));
+                sb.Append(Disassembler.DisasmHalf((long)(w.Value >> 24))).Append(" ");
+                sb.Append(Disassembler.DisasmHalf((long)(w.Value & 0xFFFFFFL)));
                 if (isK)
                 {
                     sb.Append(BOLD).Append(GREEN).Append("  ◄ K").Append(RESET);

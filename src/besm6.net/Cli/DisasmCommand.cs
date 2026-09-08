@@ -1,5 +1,5 @@
 using System;
-using Besm6.Asm;
+using Besm6.Assembler;
 
 namespace Besm6.Cli
 {
@@ -25,7 +25,7 @@ namespace Besm6.Cli
                 for (int i = 0; i < args.Length; i++)
                 {
                     long word = Convert.ToInt64(args[i], 8);
-                    Console.WriteLine(Besm6.Asm.Disassembler.DisasmWord(word));
+                    Console.WriteLine(Disassembler.DisasmWord(word));
                 }
                 return 0;
             }

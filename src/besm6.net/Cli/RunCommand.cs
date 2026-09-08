@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
-using Besm6.Asm;
+using Besm6.Assembler;
 using Besm6.Core;
 using Besm6.Loader;
 
@@ -105,7 +105,7 @@ namespace Besm6.Cli
                 {
                     loader.InstructionTrace = (k, word) =>
                     {
-                        string dis = Besm6.Asm.Disassembler.DisasmWord((long)word);
+                        string dis = Disassembler.DisasmWord((long)word);
                         Console.WriteLine($"  K=0{k:X5}  {dis}");
                     };
                 }
