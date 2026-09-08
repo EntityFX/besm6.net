@@ -7,12 +7,6 @@ namespace Besm6.Core
     /// </summary>
     public class Processor
     {
-        // Регистр режима арифметического устройства R (РАУ).
-        private const uint R_LOG = (uint)RFlags.Log;
-        private const uint R_MULT = (uint)RFlags.Mult;
-        private const uint R_ADD = (uint)RFlags.Add;
-        private const uint R_MODE = (uint)RFlags.Mode;
-
         // Биты (нумерация БЭСМ-6: 40-й бит = битовый индекс 39 и т.д.)
         private const ulong BIT41 = ArchitectureConstants.BIT41;
         private const ulong BIT48 = ArchitectureConstants.BIT48;
@@ -68,7 +62,11 @@ namespace Besm6.Core
         }
 
         /// <summary>Обработчик полного контекста вызова экстракода.</summary>
-        public Func<ExtracodeCall, bool>? ExtracodeDispatch { get; set; }
+        public Func<ExtracodeCall, bool>? ExtracodeDispatch
+        {
+            get => _executor.ExtracodeDispatch;
+            set => _executor.ExtracodeDispatch = value;
+        }
 
         public Processor(IMemory memory)
         {
@@ -77,7 +75,7 @@ namespace Besm6.Core
             _debugWatch = new ProcessorDebugWatch(this, _state);
             _memoryAccess = new ProcessorMemoryAccess(_debugWatch, memory);
             _alu = new Alu(_state);
-            _executor = new InstructionExecutor(this);
+            _executor = new InstructionExecutor(this, _state, _memoryAccess, _alu);
             Reset();
         }
 
@@ -220,13 +218,13 @@ namespace Besm6.Core
 
         #region Режим АЛУ
 
-        internal bool IsAdditive() => (_r & R_ADD) != 0;
-        internal bool IsMultiplicative() => (_r & (R_ADD | R_MULT)) == R_MULT;
-        internal bool IsLogical() => (_r & R_MODE) == R_LOG;
+        internal bool IsAdditive() => _state.IsAdditive;
+        internal bool IsMultiplicative() => _state.IsMultiplicative;
+        internal bool IsLogical() => _state.IsLogical;
 
-        internal void SetAdditive() { _r = (_r & ~R_MODE) | R_ADD; }
-        internal void SetMultiplicative() { _r = (_r & ~R_MODE) | R_MULT; }
-        internal void SetLogical() { _r = (_r & ~R_MODE) | R_LOG; }
+        internal void SetAdditive() => _state.SetAdditive();
+        internal void SetMultiplicative() => _state.SetMultiplicative();
+        internal void SetLogical() => _state.SetLogical();
 
         #endregion
 
