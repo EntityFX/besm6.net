@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace Besm6.Core
+namespace Besm6.Architecture
 {
     /// <summary>
     /// Вспомогательная структура для работы с числом БЭСМ-6 в формате "порядок и мантисса".

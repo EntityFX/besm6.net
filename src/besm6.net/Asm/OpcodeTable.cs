@@ -74,7 +74,7 @@ namespace Besm6.Asm
             // Совместимый числовой псевдоним прежней таблицы для документированного EXT.
             if (opname == "*32")
             {
-                opcode = (int)Besm6.Core.Opcode.Ext;
+                opcode = (int)Besm6.Architecture.Opcode.Ext;
                 return true;
             }
 
