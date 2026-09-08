@@ -24,8 +24,8 @@ namespace Besm6.Cli
             {
                 for (int i = 0; i < args.Length; i++)
                 {
-                    ulong word = Assembler.Asm(args[i]);
-                    Console.WriteLine($"0{Disassembler.ToOctal((long)word)}");
+                    ulong word = Besm6.Asm.Assembler.Asm(args[i]);
+                    Console.WriteLine($"0{Besm6.Asm.Disassembler.ToOctal((long)word)}");
                 }
                 return 0;
             }

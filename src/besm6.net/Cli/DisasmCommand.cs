@@ -25,7 +25,7 @@ namespace Besm6.Cli
                 for (int i = 0; i < args.Length; i++)
                 {
                     long word = Convert.ToInt64(args[i], 8);
-                    Console.WriteLine(Disassembler.DisasmWord(word));
+                    Console.WriteLine(Besm6.Asm.Disassembler.DisasmWord(word));
                 }
                 return 0;
             }
