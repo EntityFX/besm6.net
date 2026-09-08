@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace Besm6.Core
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Эмуляция дискового устройства для БЭСМ-6.

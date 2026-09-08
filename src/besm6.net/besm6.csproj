@@ -14,8 +14,6 @@
     <None Update="besm6.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <!-- MIT-ресурсы dubna, необходимые MONSYS/CERN workloads. Исходный revision и
-       provenance: ref/README.md; integrity manifest: RuntimeAssets.cs. -->
   <ItemGroup>
     <None Include="..\..\tapes\**\*"
           Link="tapes\%(RecursiveDir)%(Filename)%(Extension)"
@@ -31,9 +29,11 @@
     <ProjectReference Include="..\Besm6.Architecture\Besm6.Architecture.csproj" />
     <ProjectReference Include="..\Besm6.Assembler\Besm6.Assembler.csproj" />
     <ProjectReference Include="..\Besm6.Processor\Besm6.Processor.csproj" />
+    <ProjectReference Include="..\Besm6.Runtime\Besm6.Runtime.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Besm6.Architecture" />
+    <Using Include="Besm6.Runtime" />
   </ItemGroup>
 </Project>

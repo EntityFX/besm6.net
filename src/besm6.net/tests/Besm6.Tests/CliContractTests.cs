@@ -12,7 +12,7 @@ public sealed class CliContractTests
     [TestMethod]
     public void Help_PrintsAllCommandsAndReturnsZero()
     {
-        Type program = typeof(Config).Assembly.GetType("Besm6.Program", throwOnError: true)!;
+        Type program = Assembly.Load("besm6").GetType("Besm6.Program", throwOnError: true)!;
         MethodInfo main = program.GetMethod("Main", BindingFlags.Static | BindingFlags.NonPublic)!;
         TextWriter originalOut = Console.Out;
         TextWriter originalError = Console.Error;

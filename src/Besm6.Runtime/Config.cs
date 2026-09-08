@@ -1,47 +1,46 @@
+using Besm6.Runtime;
 using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Besm6.Loader;
-
 namespace Besm6
 {
     /// <summary>
-    /// Конфигурация симулятора БЭСМ-6 (загружается из besm6.json).
+    /// РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ СЃРёРјСѓР»СЏС‚РѕСЂР° Р‘Р­РЎРњ-6 (Р·Р°РіСЂСѓР¶Р°РµС‚СЃСЏ РёР· besm6.json).
     /// </summary>
     public sealed class Config
     {
-        /// <summary>Путь к каталогу лент (tapes).</summary>
+        /// <summary>РџСѓС‚СЊ Рє РєР°С‚Р°Р»РѕРіСѓ Р»РµРЅС‚ (tapes).</summary>
         [JsonPropertyName("tapes")]
         public string? Tapes { get; set; }
 
-        /// <summary>Путь к образу диска.</summary>
+        /// <summary>РџСѓС‚СЊ Рє РѕР±СЂР°Р·Сѓ РґРёСЃРєР°.</summary>
         [JsonPropertyName("disk")]
         public string? Disk { get; set; }
 
-        /// <summary>Путь к образу барабана.</summary>
+        /// <summary>РџСѓС‚СЊ Рє РѕР±СЂР°Р·Сѓ Р±Р°СЂР°Р±Р°РЅР°.</summary>
         [JsonPropertyName("drum")]
         public string? Drum { get; set; }
 
-        /// <summary>Предел инструкций для `run`.</summary>
+        /// <summary>РџСЂРµРґРµР» РёРЅСЃС‚СЂСѓРєС†РёР№ РґР»СЏ `run`.</summary>
         [JsonPropertyName("defaultLimit")]
         public long DefaultLimit { get; set; } = 20_000_000;
 
-        /// <summary>Предел инструкций для `check`.</summary>
+        /// <summary>РџСЂРµРґРµР» РёРЅСЃС‚СЂСѓРєС†РёР№ РґР»СЏ `check`.</summary>
         [JsonPropertyName("checkLimit")]
         public long CheckLimit { get; set; } = 5_000;
 
-        /// <summary>Базовый адрес загрузки (восьмеричный).</summary>
+        /// <summary>Р‘Р°Р·РѕРІС‹Р№ Р°РґСЂРµСЃ Р·Р°РіСЂСѓР·РєРё (РІРѕСЃСЊРјРµСЂРёС‡РЅС‹Р№).</summary>
         [JsonPropertyName("loadBase")]
         public string? LoadBaseOctal { get; set; } = "1000";
 
-        /// <summary>Объём ядра памяти (слов).</summary>
+        /// <summary>РћР±СЉС‘Рј СЏРґСЂР° РїР°РјСЏС‚Рё (СЃР»РѕРІ).</summary>
         [JsonPropertyName("memorySize")]
         public int MemorySize { get; set; } = 32768;
 
         /// <summary>
-        /// E50 067 (DATE*): использовать реальное системное время (localtime).
-        /// флаг -r отключает её и возвращает фиксированную дату.
+        /// E50 067 (DATE*): РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЂРµР°Р»СЊРЅРѕРµ СЃРёСЃС‚РµРјРЅРѕРµ РІСЂРµРјСЏ (localtime).
+        /// С„Р»Р°Рі -r РѕС‚РєР»СЋС‡Р°РµС‚ РµС‘ Рё РІРѕР·РІСЂР°С‰Р°РµС‚ С„РёРєСЃРёСЂРѕРІР°РЅРЅСѓСЋ РґР°С‚Сѓ.
         /// </summary>
         [JsonPropertyName("useWallClock")]
         public bool UseWallClock { get; set; } = true;
@@ -50,16 +49,16 @@ namespace Besm6
         private string? SourceDirectory { get; set; }
 
         /// <summary>
-        /// Загрузить конфигурацию из файла. При неявном поиске отсутствующий файл
-        /// означает значения по умолчанию; явно указанный отсутствующий файл вызывает
-        /// исключение.
+        /// Р—Р°РіСЂСѓР·РёС‚СЊ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ РёР· С„Р°Р№Р»Р°. РџСЂРё РЅРµСЏРІРЅРѕРј РїРѕРёСЃРєРµ РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‰РёР№ С„Р°Р№Р»
+        /// РѕР·РЅР°С‡Р°РµС‚ Р·РЅР°С‡РµРЅРёСЏ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ; СЏРІРЅРѕ СѓРєР°Р·Р°РЅРЅС‹Р№ РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‰РёР№ С„Р°Р№Р» РІС‹Р·С‹РІР°РµС‚
+        /// РёСЃРєР»СЋС‡РµРЅРёРµ.
         /// </summary>
         public static Config Load(string? path = null)
         {
             bool explicitPath = path != null;
             if (path == null)
             {
-                // Ищем besm6.json рядом с exe или в текущей директории.
+                // РС‰РµРј besm6.json СЂСЏРґРѕРј СЃ exe РёР»Рё РІ С‚РµРєСѓС‰РµР№ РґРёСЂРµРєС‚РѕСЂРёРё.
                 path = Path.Combine(AppContext.BaseDirectory, "besm6.json");
                 if (!File.Exists(path))
                     path = "besm6.json";
@@ -81,8 +80,8 @@ namespace Besm6
         }
 
         /// <summary>
-        /// Разрешить путь к ресурсу с учетом расположения конфигурации,
-        /// текущего каталога и стандартных каталогов.
+        /// Р Р°Р·СЂРµС€РёС‚СЊ РїСѓС‚СЊ Рє СЂРµСЃСѓСЂСЃСѓ СЃ СѓС‡РµС‚РѕРј СЂР°СЃРїРѕР»РѕР¶РµРЅРёСЏ РєРѕРЅС„РёРіСѓСЂР°С†РёРё,
+        /// С‚РµРєСѓС‰РµРіРѕ РєР°С‚Р°Р»РѕРіР° Рё СЃС‚Р°РЅРґР°СЂС‚РЅС‹С… РєР°С‚Р°Р»РѕРіРѕРІ.
         /// </summary>
         public string ResolvePath(string relative)
         {

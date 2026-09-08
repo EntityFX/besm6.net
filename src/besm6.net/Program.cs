@@ -1,8 +1,7 @@
+using Besm6.Core;
 using System;
 using System.Collections.Generic;
 using Besm6.Cli;
-using Besm6.Core;
-
 namespace Besm6
 {
     class Program

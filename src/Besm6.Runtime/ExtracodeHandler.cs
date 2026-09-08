@@ -1,7 +1,5 @@
 using System;
-using Besm6.Core;
-
-namespace Besm6.Loader
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Обработчик экстракодов для загрузчика Dubna (порт dubna/extracode.cpp).

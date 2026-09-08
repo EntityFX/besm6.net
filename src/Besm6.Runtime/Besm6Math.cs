@@ -1,7 +1,5 @@
 using System;
-using Besm6.Core;
-
-namespace Besm6.Loader
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Математические функции БЭСМ-6.

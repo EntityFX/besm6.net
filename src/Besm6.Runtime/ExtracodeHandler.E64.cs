@@ -1,8 +1,6 @@
 using System;
 using System.Text;
-using Besm6.Core;
-
-namespace Besm6.Loader
+namespace Besm6.Runtime
 {
     /// <summary>
     /// E64: полный протокол вывода (порт dubna/e64.cpp).

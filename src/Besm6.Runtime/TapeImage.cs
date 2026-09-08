@@ -1,9 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using Besm6.Core;
-
-namespace Besm6.Loader
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Образ ленты/диска в SIMH-формате.

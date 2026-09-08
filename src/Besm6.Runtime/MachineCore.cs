@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Besm6.Core
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Главный класс симулятора БЭСМ-6.

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Besm6.Core
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Менеджер периферийных устройств БЭСМ-6.

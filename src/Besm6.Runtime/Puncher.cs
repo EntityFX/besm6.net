@@ -1,9 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
-using Besm6.Loader;
-
-namespace Besm6.Core
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Вывод перфокарт (порт dubna/puncher.cpp).

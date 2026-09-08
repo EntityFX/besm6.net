@@ -2,14 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Besm6.Core;
-using Besm6.Tracing;
 using Besm6.Assembler;
 
 // Адаптер ProgramAssembler помечен [Obsolete]; загрузчик пока использует его.
 #pragma warning disable CS0618
 
-namespace Besm6.Loader
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Загрузчик программ Dubna (.dub job-скрипты).

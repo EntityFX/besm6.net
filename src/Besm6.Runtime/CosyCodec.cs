@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Besm6.Loader
+namespace Besm6.Runtime
 {
     /// <summary>
     /// Кодировка COSY и таблицы ГОСТ-10859 / KOI-7 / TEXT.
