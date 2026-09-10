@@ -76,6 +76,27 @@ public sealed class BitGridControlTests
     }
 
     [STATestMethod]
+    public void BitGridControl_ReportsFullContentSize()
+    {
+        using var grid = new BitGridControl();
+        grid.Configure(
+            48,
+            [
+                new BitField("Знак", 47, 47, BitFieldKind.Sign),
+                new BitField("Порядок", 46, 45, BitFieldKind.Exponent),
+                new BitField("Мантисса", 44, 0, BitFieldKind.Fraction),
+            ]);
+        grid.PerformLayout();
+
+        // Три ряда по 50 px + легенда + заголовок: контейнер обязан
+        // вместить весь контент, а не обжиматься под внутренние скроллы.
+        Assert.IsFalse(grid.AutoScroll, "сетка не должна сжиматься с внутренним скроллом");
+        Assert.IsTrue(
+            grid.PreferredSize.Height >= 3 * 50 + 60,
+            $"высота сетки должна покрывать весь контент (факт: {grid.PreferredSize.Height})");
+    }
+
+    [STATestMethod]
     public void RowsArePerfectlyAlignedAndGroupedByEight()
     {
         using var grid = new BitGridControl();
