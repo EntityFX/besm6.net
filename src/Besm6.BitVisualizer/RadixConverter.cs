@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace Besm6.Architecture.Visualization;
+namespace Besm6.BitVisualizer;
 
 /// <summary>Результат перевода целого числа между системами счисления.</summary>
 public sealed record RadixConversionResult(

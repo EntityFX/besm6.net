@@ -66,9 +66,14 @@ dotnet run --project src/Besm6.BitVisualizer.WinForms/Besm6.BitVisualizer.WinFor
 
 ```powershell
 dotnet build Besm6.sln -c Release
+dotnet test tests/Besm6.BitVisualizer.Tests/Besm6.BitVisualizer.Tests.csproj -c Release
 dotnet test tests/Besm6.Architecture.Tests/Besm6.Architecture.Tests.csproj -c Release
 dotnet test tests/Besm6.BitVisualizer.WinForms.Tests/Besm6.BitVisualizer.WinForms.Tests.csproj -c Release
 ```
 
-Ядро (`Besm6.Architecture`, папка `Visualization`) не зависит от Windows Forms
-и покрывается тестами без запуска формы.
+Визуализационное ядро вынесено в отдельную сборку `Besm6.BitVisualizer`
+(`BitPattern`, `BitField`, `CalculationReport`, декодеры чисел и команд
+БЭСМ-6, `IntegerDecoder`, `Ieee754Decoder`, `RadixConverter`). Она ссылается
+на `Besm6.Architecture` (за `Word48` и `InstructionCodec`) и не зависит от
+Windows Forms; UI-проект `Besm6.BitVisualizer.WinForms` ссылается на обе.
+Визуализационное ядро покрыто тестами без запуска формы.

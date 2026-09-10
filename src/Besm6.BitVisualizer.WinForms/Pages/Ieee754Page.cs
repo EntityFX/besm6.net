@@ -1,5 +1,5 @@
 using System.Globalization;
-using Besm6.Architecture.Visualization;
+using Besm6.BitVisualizer;
 using Besm6.BitVisualizer.WinForms.Controls;
 
 namespace Besm6.BitVisualizer.WinForms.Pages;

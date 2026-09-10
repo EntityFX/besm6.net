@@ -1,4 +1,6 @@
-namespace Besm6.Architecture.Visualization;
+using Besm6.Architecture;
+
+namespace Besm6.BitVisualizer;
 
 internal static class OpcodeInfoCatalog
 {

@@ -1,4 +1,4 @@
-namespace Besm6.Architecture.Visualization;
+namespace Besm6.BitVisualizer;
 
 /// <summary>Семантическая категория поля, не зависящая от UI-палитры.</summary>
 public enum BitFieldKind

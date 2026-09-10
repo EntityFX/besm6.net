@@ -1,5 +1,5 @@
 using System.Text;
-using Besm6.Architecture.Visualization;
+using Besm6.BitVisualizer;
 
 namespace Besm6.BitVisualizer.WinForms.Controls;
 

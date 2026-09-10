@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Numerics;
 using Besm6.Architecture;
-using Besm6.Architecture.Visualization;
+using Besm6.BitVisualizer;
 using Besm6.BitVisualizer.WinForms.Controls;
 
 namespace Besm6.BitVisualizer.WinForms.Pages;
