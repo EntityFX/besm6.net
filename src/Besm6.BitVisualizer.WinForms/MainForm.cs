@@ -1,5 +1,6 @@
 using Besm6.Architecture.Visualization;
 using Besm6.BitVisualizer.WinForms.Controls;
+using Besm6.BitVisualizer.WinForms.Pages;
 
 namespace Besm6.BitVisualizer.WinForms;
 
@@ -23,13 +24,30 @@ public sealed class MainForm : Form
         MinimumSize = new Size(900, 600);
         ClientSize = new Size(1280, 800);
 
+        CalculationPages =
+        [
+            new Besm6FloatPage(),
+            new IntegerPage(),
+            new Ieee754Page(),
+            new InstructionPage(),
+            new RadixConverterPage(),
+        ];
+        foreach (CalculationPageBase page in CalculationPages)
+        {
+            page.Dock = DockStyle.Fill;
+            page.ReportCreated += (_, report) => Publish(report);
+            page.ErrorCreated += (_, error) => PublishError(page.PageName, error.Input, error.Message);
+        }
+
+        _tabs.TabPages.Add(new TabPage("Число БЭСМ-6") { Controls = { CalculationPages[0] } });
+        _tabs.TabPages.Add(new TabPage("Целые числа") { Controls = { CalculationPages[1] } });
+        _tabs.TabPages.Add(new TabPage("IEEE-754") { Controls = { CalculationPages[2] } });
+        _tabs.TabPages.Add(new TabPage("Команда БЭСМ-6") { Controls = { CalculationPages[3] } });
+        _tabs.TabPages.Add(new TabPage("Системы счисления") { Controls = { CalculationPages[4] } });
+
         _split.Panel1.Controls.Add(_tabs);
         _split.Panel2.Controls.Add(_log);
         Controls.Add(_split);
-
-        // Временные заглушки вкладок до подключения рабочих страниц (Task 7).
-        foreach (string title in TabTitles)
-            _tabs.TabPages.Add(new TabPage(title));
 
         Shown += (_, _) =>
         {
@@ -38,14 +56,8 @@ public sealed class MainForm : Form
         };
     }
 
-    private static readonly string[] TabTitles =
-    [
-        "Число БЭСМ-6",
-        "Целые числа",
-        "IEEE-754",
-        "Команда БЭСМ-6",
-        "Системы счисления",
-    ];
+    /// <summary>Рабочие вкладки в порядке слева направо.</summary>
+    public IReadOnlyList<CalculationPageBase> CalculationPages { get; }
 
     /// <summary>Имена вкладок в порядке слева направо (для тестов).</summary>
     public string[] TabNames => _tabs.TabPages.Cast<TabPage>().Select(page => page.Text).ToArray();
