@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Numerics;
 using Besm6.BitVisualizer;
 using Besm6.BitVisualizer.WinForms.Controls;
@@ -72,5 +73,48 @@ public sealed class BitGridControlTests
 
         Assert.AreEqual(new BitPattern(8, new BigInteger(0b10000000)), grid.ToBitPattern());
         StringAssert.Contains(grid.BitBoxes[7].AccessibleName, "Знак");
+    }
+
+    [STATestMethod]
+    public void RowsArePerfectlyAlignedAndGroupedByEight()
+    {
+        using var grid = new BitGridControl();
+        grid.Configure(
+            48,
+            [
+                new BitField("Знак", 47, 47, BitFieldKind.Sign),
+                new BitField("Порядок", 46, 45, BitFieldKind.Exponent),
+                new BitField("Мантисса", 44, 0, BitFieldKind.Fraction),
+            ]);
+        grid.PerformLayout();
+
+        // Все ячейки ряда стоят на одной линии, X растёт строго,
+        // чекбоксы — в одной и той же точке внутри каждой ячейки.
+        for (int row = 0; row < 3; row++)
+        {
+            int[] bits = Enumerable.Range(0, 16).Select(offset => 47 - (row * 16 + offset)).ToArray();
+
+            Assert.AreEqual(
+                1,
+                bits.Select(bit => grid.BitCells[bit].Top).Distinct().Count(),
+                $"все ячейки ряда {row} должны иметь одинаковый верхний край");
+
+            int[] xs = bits.Select(bit => grid.BitCells[bit].Left).ToArray();
+            for (int i = 1; i < xs.Length; i++)
+            {
+                Assert.IsTrue(xs[i] > xs[i - 1], $"клетки ряда {row} должны строго расти по X");
+            }
+
+            Assert.AreEqual(
+                1,
+                bits.Select(bit => grid.BitBoxes[bit].Location).Distinct().Count(),
+                "чекбокс должен стоять в одной точке в каждой ячейке");
+        }
+
+        // Между блоками по восемь бит — визуальный зазор (34 + 10 px плюс рамки ячеек).
+        int firstBitOfSecondGroup = 47 - 8;
+        int lastBitOfFirstGroup = 47 - 7;
+        int step = grid.BitCells[firstBitOfSecondGroup].Left - grid.BitCells[lastBitOfFirstGroup].Left;
+        Assert.IsTrue(step is > 44 and < 52, $"шаг через границу группы должен включать зазор (факт: {step})");
     }
 }

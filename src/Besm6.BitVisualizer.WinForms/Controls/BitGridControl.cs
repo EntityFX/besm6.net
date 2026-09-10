@@ -1,21 +1,29 @@
 using System.Numerics;
 using Besm6.BitVisualizer;
+using Besm6.BitVisualizer.WinForms;
 
 namespace Besm6.BitVisualizer.WinForms.Controls;
 
-/// <summary>Сетка битов: блоки по восемь ячеек от старшего бита (слева) к младшему (справа).</summary>
+/// <summary>
+/// Сетка чекбоксов для битов: бит 0 — правый, MSB — левый. Ячейки имеют
+/// фиксированную геометрию (детерминированное выравнивание рядов), биты
+/// сгруппированы по восьми, поля подсвечиваются и дублируются легендой.
+/// Индексация коллекций (<see cref="BitBoxes"/>, <see cref="BitCells"/>) —
+/// по номеру бита, а не порядку создания.
+/// </summary>
 public sealed class BitGridControl : UserControl
 {
-    private const int CellWidth = 30;
-    private const int CellHeight = 42;
+    private const int BitsPerGroup = 8;
+    private const int BitsPerRow = 16;
+    private const int CellWidth = 34;
+    private const int CellHeight = 50;
+    private const int CheckboxSize = 20;
+    private const int GroupGap = 10;
+    private static readonly Color TextColor = Color.FromArgb(0x33, 0x3A, 0x47);
 
-    private readonly TableLayoutPanel _rows = new()
-    {
-        Dock = DockStyle.Fill,
-        AutoSize = true,
-        AutoSizeMode = AutoSizeMode.GrowAndShrink,
-        ColumnCount = 1,
-    };
+    private readonly Label _title;
+    private readonly FlowLayoutPanel _legend;
+    private readonly TableLayoutPanel _grid;
     private readonly List<Panel> _cells = new();
     private readonly List<Label> _labels = new();
     private readonly List<CheckBox> _boxes = new();
@@ -25,137 +33,239 @@ public sealed class BitGridControl : UserControl
     {
         AutoScroll = true;
         Padding = new Padding(6);
-        Controls.Add(_rows);
+
+        _title = new Label
+        {
+            Text = "Биты (старшие слева)",
+            AutoSize = true,
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+            ForeColor = TextColor,
+            Dock = DockStyle.Top,
+            Margin = new Padding(2, 2, 0, 6),
+        };
+
+        _legend = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = true,
+            Dock = DockStyle.Top,
+            Margin = new Padding(2, 0, 0, 10),
+        };
+
+        _grid = new TableLayoutPanel
+        {
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0),
+        };
+
+        Controls.Add(_grid);
+        Controls.Add(_legend);
+        Controls.Add(_title);
     }
 
-    /// <summary>Число битов в сетке.</summary>
     public int BitCount => _bitCount;
 
-    /// <summary>Чекбоксы битов; индекс элемента — номер бита (0 — младший).</summary>
     public IReadOnlyList<CheckBox> BitBoxes => _boxes;
 
-    /// <summary>Номер бита (0 — младший), отображённый на позиции <paramref name="visualIndex"/> слева направо.</summary>
-    public int GetDisplayedBitIndex(int visualIndex)
-    {
-        if (visualIndex < 0 || visualIndex >= _bitCount)
-            throw new ArgumentOutOfRangeException(nameof(visualIndex), "Визуальный индекс выходит за границы сетки.");
-        return _bitCount - 1 - visualIndex;
-    }
+    public IReadOnlyList<Panel> BitCells => _cells;
 
-    /// <summary>Перестраивает сетку под заданную ширину и схему полей, сбрасывая состояние битов.</summary>
-    public void Configure(int width, IReadOnlyList<BitField> fields)
+    /// <summary>Перестраивает сетку под <paramref name="bitWidth"/> битов.</summary>
+    public void Configure(int bitWidth, IReadOnlyList<BitField> fields)
     {
-        if (width < 1)
-            throw new ArgumentOutOfRangeException(nameof(width), "Ширина должна быть положительной.");
-        ArgumentNullException.ThrowIfNull(fields);
+        if (bitWidth is < 1 or > 64)
+        {
+            throw new ArgumentOutOfRangeException(nameof(bitWidth), bitWidth, "Размер сетки должен быть от 1 до 64 бит.");
+        }
 
-        _bitCount = width;
+        if (fields is null)
+        {
+            throw new ArgumentNullException(nameof(fields));
+        }
+
+        _bitCount = bitWidth;
         _cells.Clear();
         _labels.Clear();
         _boxes.Clear();
-        _rows.SuspendLayout();
-        _rows.Controls.Clear();
-        _rows.RowStyles.Clear();
-        _rows.RowCount = 0;
+        _grid.Controls.Clear();
+        _grid.ColumnStyles.Clear();
+        _grid.RowStyles.Clear();
 
-        for (int row = 0; row * 8 < width; row++)
+        int rows = (bitWidth + BitsPerRow - 1) / BitsPerRow;
+        bool hasSecondHalf = bitWidth > BitsPerGroup;
+        int columns = hasSecondHalf ? BitsPerRow + 1 : BitsPerGroup;
+        _grid.ColumnCount = columns;
+
+        for (int column = 0; column < columns; column++)
         {
-            var rowPanel = new FlowLayoutPanel
-            {
-                FlowDirection = FlowDirection.LeftToRight,
-                AutoSize = true,
-                Margin = new Padding(0, 0, 0, 6),
-            };
-            for (int column = 0; column < 8; column++)
-            {
-                int bitIndex = width - 1 - (row * 8 + column);
-                if (bitIndex < 0)
-                {
-                    rowPanel.Controls.Add(new Panel { Size = new Size(CellWidth, CellHeight) });
-                    continue;
-                }
-
-                rowPanel.Controls.Add(CreateCell(bitIndex));
-            }
-
-            _rows.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            _rows.Controls.Add(rowPanel, 0, _rows.RowCount++);
+            bool isGap = column == BitsPerGroup;
+            _grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, isGap ? GroupGap : CellWidth));
         }
 
-        _rows.ResumeLayout();
+        for (int row = 0; row < rows; row++)
+        {
+            _grid.RowStyles.Add(new RowStyle(SizeType.Absolute, CellHeight));
+        }
+
+        for (int row = 0; row < rows; row++)
+        {
+            for (int column = 0; column < BitsPerRow; column++)
+            {
+                int bitIndex = bitWidth - 1 - (row * BitsPerRow + column);
+                if (bitIndex < 0)
+                {
+                    break;
+                }
+
+                (Panel cell, Label label, CheckBox box) = CreateCell(bitIndex);
+                _cells.Add(cell);
+                _labels.Add(label);
+                _boxes.Add(box);
+                int tableColumn = hasSecondHalf && column >= BitsPerGroup ? column + 1 : column;
+                _grid.Controls.Add(cell, tableColumn, row);
+            }
+        }
+
+        // Ячейки создаются строго от MSB к LSB: после разворота
+        // индекс списка совпадает с номером бита.
+        _cells.Reverse();
+        _labels.Reverse();
+        _boxes.Reverse();
+
         ApplyFields(fields);
     }
 
-    /// <summary>Перекрашивает ячейки и подписи по новой схеме полей, сохраняя состояние чекбоксов.</summary>
     public void ApplyFields(IReadOnlyList<BitField> fields)
     {
-        ArgumentNullException.ThrowIfNull(fields);
-        for (int bitIndex = 0; bitIndex < _bitCount; bitIndex++)
+        if (fields is null)
         {
-            BitField field = fields.FirstOrDefault(candidate => candidate.Contains(bitIndex))
-                ?? new BitField("Значение", bitIndex, bitIndex, BitFieldKind.Value);
-            _cells[bitIndex].BackColor = Theme.ColorFor(field.Kind);
-            _labels[bitIndex].ForeColor = Theme.ForegroundFor(field.Kind);
-            _boxes[bitIndex].AccessibleName = $"{field.Name}, бит {bitIndex}";
+            throw new ArgumentNullException(nameof(fields));
+        }
+
+        BuildLegend(fields);
+
+        foreach (BitField field in fields)
+        {
+            Color color = Theme.ColorFor(field.Kind);
+            Color text = Theme.ForegroundFor(field.Kind);
+
+            for (int bitIndex = field.LeastSignificantBit; bitIndex <= field.MostSignificantBit; bitIndex++)
+            {
+                _labels[bitIndex].ForeColor = text;
+                _cells[bitIndex].BackColor = color;
+                _boxes[bitIndex].AccessibleName = $"Бит {bitIndex}, {field.Name}";
+            }
         }
     }
 
-    /// <summary>Устанавливает состояние всех чекбоксов по беззнаковому значению.</summary>
-    public void SetValue(BigInteger value)
+    /// <summary>Номер бита, отображаемого на позиции <paramref name="position"/> (0 — левая ячейка).</summary>
+    public int GetDisplayedBitIndex(int position)
     {
-        if (value < BigInteger.Zero || value >= BigInteger.One << _bitCount)
-            throw new ArgumentOutOfRangeException(nameof(value), "Значение не помещается в ширину сетки.");
-        for (int bitIndex = 0; bitIndex < _bitCount; bitIndex++)
-            _boxes[bitIndex].Checked = ((value >> bitIndex) & BigInteger.One) != BigInteger.Zero;
+        if (position < 0 || position >= _bitCount)
+        {
+            throw new ArgumentOutOfRangeException(nameof(position), position, "Позиция вне диапазона сетки.");
+        }
+
+        return _bitCount - 1 - position;
     }
 
-    /// <summary>Собирает состояние чекбоксов в <see cref="BitPattern"/> ширины сетки.</summary>
+    /// <summary>Устанавливает состояние всех битов по беззнаковому значению.</summary>
+    public void SetValue(BigInteger value)
+    {
+        if (value < BigInteger.Zero || value >= (BigInteger.One << _bitCount))
+        {
+            throw new ArgumentOutOfRangeException(nameof(value), value, "Значение не помещается в ширину сетки.");
+        }
+
+        for (int i = 0; i < _bitCount; i++)
+        {
+            _boxes[i].Checked = ((value >> i) & BigInteger.One) != BigInteger.Zero;
+        }
+    }
+
     public BitPattern ToBitPattern()
     {
         BigInteger value = BigInteger.Zero;
-        for (int bitIndex = _bitCount - 1; bitIndex >= 0; bitIndex--)
+
+        for (int i = 0; i < _bitCount; i++)
         {
-            value <<= 1;
-            if (_boxes[bitIndex].Checked)
-                value += BigInteger.One;
+            if (_boxes[i].Checked)
+            {
+                value |= BigInteger.One << i;
+            }
         }
 
         return new BitPattern(_bitCount, value);
     }
 
-    /// <summary>Сбрасывает все биты в ноль.</summary>
     public void Clear()
     {
         foreach (CheckBox box in _boxes)
+        {
             box.Checked = false;
+        }
     }
 
-    private Panel CreateCell(int bitIndex)
+    /// <summary>
+    /// Геометрия фиксирована: подписи и чекбокс стоят в одной точке в каждой
+    /// ячейке, поэтому ряды получаются идеально ровными.
+    /// </summary>
+    private static (Panel Cell, Label Label, CheckBox Box) CreateCell(int bitIndex)
     {
         var label = new Label
         {
             Text = bitIndex.ToString(),
-            AutoSize = true,
-            Font = new Font("Segoe UI", 7.5f),
+            AutoSize = false,
+            Size = new Size(CellWidth, 16),
+            Location = new Point(0, 2),
+            TextAlign = ContentAlignment.MiddleCenter,
+            Font = new Font("Segoe UI", 8f),
+            ForeColor = TextColor,
+            Margin = Padding.Empty,
         };
+
         var box = new CheckBox
         {
-            Size = new Size(18, 18),
-            Appearance = Appearance.Button,
+            AutoSize = false,
+            Size = new Size(CheckboxSize, CheckboxSize),
+            Location = new Point((CellWidth - CheckboxSize) / 2, 24),
+            CheckAlign = ContentAlignment.MiddleCenter,
             TextAlign = ContentAlignment.MiddleCenter,
-            FlatStyle = FlatStyle.Flat,
+            ForeColor = TextColor,
+            BackColor = Color.Transparent,
             Margin = Padding.Empty,
-            Padding = Padding.Empty,
         };
-        var cell = new Panel { Size = new Size(CellWidth, CellHeight) };
-        label.Location = new Point((CellWidth - label.PreferredWidth) / 2, 2);
-        box.Location = new Point((CellWidth - 18) / 2, 16);
+
+        var cell = new Panel
+        {
+            Size = new Size(CellWidth, CellHeight),
+            Margin = Padding.Empty,
+        };
+
         cell.Controls.Add(label);
         cell.Controls.Add(box);
+        return (cell, label, box);
+    }
 
-        _cells.Add(cell);
-        _labels.Add(label);
-        _boxes.Add(box);
-        return cell;
+    private void BuildLegend(IReadOnlyList<BitField> fields)
+    {
+        _legend.Controls.Clear();
+
+        foreach (BitField field in fields)
+        {
+            _legend.Controls.Add(new Label
+            {
+                Text = field.Name,
+                AutoSize = true,
+                ForeColor = Theme.ForegroundFor(field.Kind),
+                BackColor = Theme.ColorFor(field.Kind),
+                BorderStyle = BorderStyle.FixedSingle,
+                Padding = new Padding(8, 3, 8, 3),
+                Margin = new Padding(0, 0, 10, 0),
+            });
+        }
     }
 }
