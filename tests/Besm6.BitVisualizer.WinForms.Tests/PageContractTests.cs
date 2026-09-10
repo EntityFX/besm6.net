@@ -108,4 +108,40 @@ public sealed class PageContractTests
         page.SetFormatBit(false);
         Assert.IsTrue(page.HasShortLayout);
     }
+
+    [STATestMethod]
+    public void TallContent_StaysReachableThroughScrolling()
+    {
+        using var viewport = new Panel { Size = new Size(500, 240) };
+        using var page = new Besm6FloatPage();
+        viewport.Controls.Add(page);
+        page.PerformLayout();
+        viewport.PerformLayout();
+
+        Panel? host = FindAutoScrollHost(page);
+        Assert.IsNotNull(host, "страница должна содержать прокручиваемый контейнер");
+
+        host!.PerformLayout();
+        Assert.IsTrue(
+            host.VerticalScroll.Visible || host.AutoScrollMinSize.Height > host.ClientSize.Height,
+            "контент выше вкладки должен давать прокрутку, а не обрезание результата");
+    }
+
+    private static Panel? FindAutoScrollHost(Control root)
+    {
+        foreach (Control child in root.Controls)
+        {
+            if (child is Panel { AutoScroll: true } panel)
+            {
+                return panel;
+            }
+
+            if (child is Panel nested && FindAutoScrollHost(nested) is { } found)
+            {
+                return found;
+            }
+        }
+
+        return null;
+    }
 }

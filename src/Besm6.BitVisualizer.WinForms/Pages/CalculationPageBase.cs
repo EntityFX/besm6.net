@@ -65,7 +65,7 @@ public abstract class CalculationPageBase : UserControl
 
         var layout = new TableLayoutPanel
         {
-            Dock = DockStyle.Fill,
+            Dock = DockStyle.Top,
             AutoSize = true,
             AutoSizeMode = AutoSizeMode.GrowAndShrink,
             ColumnCount = 1,
@@ -77,7 +77,12 @@ public abstract class CalculationPageBase : UserControl
             layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             layout.Controls.Add(row, 0, layout.RowCount++);
         }
-        Controls.Add(layout);
+
+        // Хост со скроллом: когда контент выше вкладки, появляется прокрутка,
+        // а действия и карточка результата остаются достижимыми, а не обрезанными.
+        var host = new Panel { AutoScroll = true, Dock = DockStyle.Fill };
+        host.Controls.Add(layout);
+        Controls.Add(host);
     }
 
     /// <summary>Название категории вкладки для журнала.</summary>

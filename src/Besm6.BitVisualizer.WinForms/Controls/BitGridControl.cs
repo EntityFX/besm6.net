@@ -24,6 +24,7 @@ public sealed class BitGridControl : UserControl
     private readonly Label _title;
     private readonly FlowLayoutPanel _legend;
     private readonly TableLayoutPanel _grid;
+    private readonly TableLayoutPanel _layout;
     private readonly List<Panel> _cells = new();
     private readonly List<Label> _labels = new();
     private readonly List<CheckBox> _boxes = new();
@@ -31,7 +32,8 @@ public sealed class BitGridControl : UserControl
 
     public BitGridControl()
     {
-        AutoScroll = true;
+        AutoSize = true;
+        AutoSizeMode = AutoSizeMode.GrowAndShrink;
         Padding = new Padding(6);
 
         _title = new Label
@@ -40,7 +42,6 @@ public sealed class BitGridControl : UserControl
             AutoSize = true,
             Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
             ForeColor = TextColor,
-            Dock = DockStyle.Top,
             Margin = new Padding(2, 2, 0, 6),
         };
 
@@ -49,7 +50,6 @@ public sealed class BitGridControl : UserControl
             AutoSize = true,
             FlowDirection = FlowDirection.LeftToRight,
             WrapContents = true,
-            Dock = DockStyle.Top,
             Margin = new Padding(2, 0, 0, 10),
         };
 
@@ -58,13 +58,26 @@ public sealed class BitGridControl : UserControl
             AutoSize = true,
             AutoSizeMode = AutoSizeMode.GrowAndShrink,
             CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
-            Dock = DockStyle.Fill,
             Margin = new Padding(0),
         };
 
-        Controls.Add(_grid);
-        Controls.Add(_legend);
-        Controls.Add(_title);
+        _layout = new TableLayoutPanel
+        {
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            ColumnCount = 1,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty,
+        };
+        _layout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        _layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        _layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        _layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        _layout.Controls.Add(_title, 0, 0);
+        _layout.Controls.Add(_legend, 0, 1);
+        _layout.Controls.Add(_grid, 0, 2);
+
+        Controls.Add(_layout);
     }
 
     public int BitCount => _bitCount;
