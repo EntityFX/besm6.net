@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Numerics;
 
-namespace Besm6.Architecture.Visualization;
+namespace Besm6.BitVisualizer;
 
 public enum Ieee754Class
 {

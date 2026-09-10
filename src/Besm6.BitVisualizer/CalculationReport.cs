@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Besm6.Architecture.Visualization;
+namespace Besm6.BitVisualizer;
 
 /// <summary>Пошаговый учебный отчёт одного вычисления.</summary>
 public sealed class CalculationReport

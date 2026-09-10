@@ -1,6 +1,8 @@
 using System.Globalization;
 
-namespace Besm6.Architecture.Visualization;
+using Besm6.Architecture;
+
+namespace Besm6.BitVisualizer;
 
 public sealed record Besm6FloatDecodeResult(
     Word48 Word,

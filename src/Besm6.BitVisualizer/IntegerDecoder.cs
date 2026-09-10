@@ -1,7 +1,8 @@
 using System.Globalization;
 using System.Numerics;
+using Besm6.Architecture;
 
-namespace Besm6.Architecture.Visualization;
+namespace Besm6.BitVisualizer;
 
 public enum IntegerInterpretation
 {

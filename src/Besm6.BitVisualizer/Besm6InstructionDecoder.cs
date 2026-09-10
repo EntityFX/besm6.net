@@ -1,4 +1,6 @@
-namespace Besm6.Architecture.Visualization;
+using Besm6.Architecture;
+
+namespace Besm6.BitVisualizer;
 
 public sealed record Besm6InstructionDecodeResult(
     DecodedInstruction Instruction,

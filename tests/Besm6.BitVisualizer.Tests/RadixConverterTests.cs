@@ -1,7 +1,7 @@
 using System.Numerics;
-using Besm6.Architecture.Visualization;
+using Besm6.BitVisualizer;
 
-namespace Besm6.Architecture.Tests.Visualization;
+namespace Besm6.BitVisualizer.Tests;
 
 [TestClass]
 public sealed class RadixConverterTests

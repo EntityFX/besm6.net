@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Text;
 
-namespace Besm6.Architecture.Visualization;
+namespace Besm6.BitVisualizer;
 
 /// <summary>Неизменяемая битовая последовательность фиксированной ширины.</summary>
 public sealed class BitPattern : IEquatable<BitPattern>
