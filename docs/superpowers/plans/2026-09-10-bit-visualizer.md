@@ -1,6 +1,6 @@
 # BESM-6 Bit Visualizer Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build a Russian-language .NET 8 Windows Forms application that visually decodes bit patterns for BESM-6 numbers and instructions, modern integers, IEEE-754 values, and radix conversions while accumulating a shared educational log.
 
@@ -38,7 +38,7 @@
 - Produces: `BitFieldKind`, `BitField(string Name, int MostSignificantBit, int LeastSignificantBit, BitFieldKind Kind)`.
 - Produces: `CalculationReport(string Operation, string Input, string Result, IReadOnlyList<string> Steps)` and `Render()`.
 
-- [ ] **Step 1: Write failing primitive tests**
+- [x] **Step 1: Write failing primitive tests**
 
 ```csharp
 [TestMethod]
@@ -68,13 +68,13 @@ public void Formatting_PadsToDeclaredWidth()
 }
 ```
 
-- [ ] **Step 2: Run tests and confirm missing-type failures**
+- [x] **Step 2: Run tests and confirm missing-type failures**
 
 Run: `dotnet test tests/Besm6.Architecture.Tests/Besm6.Architecture.Tests.csproj --filter "FullyQualifiedName~BitPatternTests|FullyQualifiedName~CalculationReportTests"`
 
 Expected: compilation fails because the visualization types do not exist.
 
-- [ ] **Step 3: Implement immutable primitives**
+- [x] **Step 3: Implement immutable primitives**
 
 Implement `BitPattern` with `BigInteger`, reject width below 1, negative values, values at or above `BigInteger.One << width`, and bit indexes outside `0..Width-1`. Build base-2/8/16 strings without narrowing the value and pad them to `ceil(width / bitsPerDigit)`.
 
@@ -82,11 +82,11 @@ Implement the semantic enum values `Value`, `Sign`, `Exponent`, `Fraction`, `Reg
 
 Implement `CalculationReport.Render()` exactly as operation, `Вход: ...`, numbered steps, and `Результат: ...`, separated by new lines. Copy incoming collections to arrays so callers cannot mutate results.
 
-- [ ] **Step 4: Run targeted tests until green**
+- [x] **Step 4: Run targeted tests until green**
 
 Run the Task 1 test command. Expected: all selected tests pass with zero warnings.
 
-- [ ] **Step 5: Commit Task 1**
+- [x] **Step 5: Commit Task 1**
 
 ```powershell
 git add -- src/Besm6.Architecture/Visualization tests/Besm6.Architecture.Tests/Visualization
@@ -107,7 +107,7 @@ git commit -m "feat(architecture): add bit visualization primitives"
 - Produces: `IntegerDecodeResult(BigInteger Value, IntegerInterpretation Interpretation, IReadOnlyList<BitField> Fields, CalculationReport Report)`.
 - Produces: `IntegerDecoder.Decode(BitPattern bits, IntegerInterpretation interpretation)`.
 
-- [ ] **Step 1: Write failing decoder tests**
+- [x] **Step 1: Write failing decoder tests**
 
 ```csharp
 [DataTestMethod]
@@ -135,13 +135,13 @@ public void Decode_SignedUsesTwosComplement(string binary, string expected)
 
 The local `Bits` helper maps each character to `c == '1'` and calls `BitPattern.FromMsbFirst`.
 
-- [ ] **Step 2: Run tests and confirm RED**
+- [x] **Step 2: Run tests and confirm RED**
 
 Run: `dotnet test tests/Besm6.Architecture.Tests/Besm6.Architecture.Tests.csproj --filter FullyQualifiedName~IntegerDecoderTests`
 
 Expected: compilation fails because `IntegerDecoder` is missing.
 
-- [ ] **Step 3: Implement integer decoding and educational steps**
+- [x] **Step 3: Implement integer decoding and educational steps**
 
 Accept only widths 8, 16, 32, and 64. For signed values compute:
 
@@ -154,11 +154,11 @@ BigInteger value = bits.GetBit(bits.Width - 1)
 
 List each set-bit contribution in descending bit order. Use negative sign weight only when signed mode has its top bit set. Return one `Sign` field plus one `Value` field in signed mode; return a single `Value` field in unsigned mode.
 
-- [ ] **Step 4: Run targeted tests until green**
+- [x] **Step 4: Run targeted tests until green**
 
 Run the Task 2 command and then the Task 1 command. Expected: all pass.
 
-- [ ] **Step 5: Commit Task 2**
+- [x] **Step 5: Commit Task 2**
 
 ```powershell
 git add -- src/Besm6.Architecture/Visualization/IntegerDecoder.cs tests/Besm6.Architecture.Tests/Visualization/IntegerDecoderTests.cs
@@ -179,7 +179,7 @@ git commit -m "feat(architecture): decode signed and unsigned integers"
 - Produces: `Ieee754DecodeResult(double Value, Ieee754Class Classification, int RawExponent, BigInteger Fraction, IReadOnlyList<BitField> Fields, CalculationReport Report)`.
 - Produces: `Ieee754Decoder.Decode(BitPattern bits)` for widths 16, 32, and 64.
 
-- [ ] **Step 1: Write failing known-pattern and special-value tests**
+- [x] **Step 1: Write failing known-pattern and special-value tests**
 
 ```csharp
 [DataTestMethod]
@@ -204,21 +204,21 @@ public void Decode_ClassifiesBinary16Specials(string binary, Ieee754Class expect
 }
 ```
 
-- [ ] **Step 2: Run IEEE tests and confirm RED**
+- [x] **Step 2: Run IEEE tests and confirm RED**
 
 Run: `dotnet test tests/Besm6.Architecture.Tests/Besm6.Architecture.Tests.csproj --filter FullyQualifiedName~Ieee754DecoderTests`
 
 Expected: compilation fails because the decoder types are missing.
 
-- [ ] **Step 3: Implement format metadata, classification, formula, and runtime cross-check**
+- [x] **Step 3: Implement format metadata, classification, formula, and runtime cross-check**
 
 Map widths to exponent/fraction/bias tuples `(5,10,15)`, `(8,23,127)`, and `(11,52,1023)`. Extract fields with `BigInteger` masks. Compute runtime values using `UInt16BitsToHalf`, `Int32BitsToSingle`, and `Int64BitsToDouble`. Build separate report branches for zero, infinity, NaN, subnormal, and normal values, using invariant-culture round-trip formatting.
 
-- [ ] **Step 4: Run targeted and primitive tests until green**
+- [x] **Step 4: Run targeted and primitive tests until green**
 
 Run the Task 3 command followed by all `Visualization` tests. Expected: all pass.
 
-- [ ] **Step 5: Commit Task 3**
+- [x] **Step 5: Commit Task 3**
 
 ```powershell
 git add -- src/Besm6.Architecture/Visualization/Ieee754Decoder.cs tests/Besm6.Architecture.Tests/Visualization/Ieee754DecoderTests.cs
@@ -242,7 +242,7 @@ git commit -m "feat(architecture): add IEEE-754 visual decoder"
 - Produces: `Besm6InstructionDecodeResult(DecodedInstruction Instruction, string Mnemonic, string Description, IReadOnlyList<BitField> Fields, CalculationReport Report)`.
 - Produces: `Besm6FloatDecoder.Decode(BitPattern)` and `Besm6InstructionDecoder.Decode(BitPattern)`.
 
-- [ ] **Step 1: Write failing BESM-6 tests**
+- [x] **Step 1: Write failing BESM-6 tests**
 
 ```csharp
 [TestMethod]
@@ -278,13 +278,13 @@ public void InstructionDecoder_LongFormatReturnsDynamicFieldLayout()
 }
 ```
 
-- [ ] **Step 2: Run BESM-6 tests and confirm RED**
+- [x] **Step 2: Run BESM-6 tests and confirm RED**
 
 Run: `dotnet test tests/Besm6.Architecture.Tests/Besm6.Architecture.Tests.csproj --filter "FullyQualifiedName~Besm6FloatDecoderTests|FullyQualifiedName~Besm6InstructionDecoderTests"`
 
 Expected: compilation fails because the new decoders do not exist.
 
-- [ ] **Step 3: Implement native float extraction through `Word48`**
+- [x] **Step 3: Implement native float extraction through `Word48`**
 
 Require width 48. Create `new Word48((ulong)bits.UnsignedValue)`, extract raw exponent from bits 47–41, and sign-extend the lower 41 bits:
 
@@ -296,15 +296,15 @@ if ((mantissa & (1L << 40)) != 0)
 
 Return `word.ToDouble()` as the authoritative value and explain `mantissa / 2^40 × 2^(rawExponent - 64)`.
 
-- [ ] **Step 4: Implement instruction adapter and complete opcode catalogue**
+- [x] **Step 4: Implement instruction adapter and complete opcode catalogue**
 
 Require width 24 and decode with `InstructionCodec.DecodeHalf`. Provide Russian mnemonic/description entries for every named `Opcode`; for unnamed short codes 050–077 octal return a numeric `*NN` mnemonic and the description `Экстракод БЭСМ-6`. Return short fields for register 23–20, format 19, extension 18, opcode 17–12, address 11–0; return long fields for register 23–20, format 19, opcode 18–15, address 14–0.
 
-- [ ] **Step 5: Run targeted tests and all existing architecture tests**
+- [x] **Step 5: Run targeted tests and all existing architecture tests**
 
 Run the Task 4 command, then `dotnet test tests/Besm6.Architecture.Tests/Besm6.Architecture.Tests.csproj`. Expected: all pass.
 
-- [ ] **Step 6: Commit Task 4**
+- [x] **Step 6: Commit Task 4**
 
 ```powershell
 git add -- src/Besm6.Architecture/Visualization/Besm6FloatDecoder.cs src/Besm6.Architecture/Visualization/Besm6InstructionDecoder.cs src/Besm6.Architecture/Visualization/OpcodeInfoCatalog.cs tests/Besm6.Architecture.Tests/Visualization/Besm6FloatDecoderTests.cs tests/Besm6.Architecture.Tests/Visualization/Besm6InstructionDecoderTests.cs
@@ -324,7 +324,7 @@ git commit -m "feat(architecture): explain BESM-6 words and instructions"
 - Produces: `RadixConversionResult(BigInteger Value, string Output, CalculationReport Report)`.
 - Produces: `RadixConverter.Convert(string input, int sourceBase, int targetBase)` for bases 2–36.
 
-- [ ] **Step 1: Write failing conversion and validation tests**
+- [x] **Step 1: Write failing conversion and validation tests**
 
 ```csharp
 [DataTestMethod]
@@ -347,21 +347,21 @@ public void Convert_RejectsDigitOutsideSourceBase()
 }
 ```
 
-- [ ] **Step 2: Run radix tests and confirm RED**
+- [x] **Step 2: Run radix tests and confirm RED**
 
 Run: `dotnet test tests/Besm6.Architecture.Tests/Besm6.Architecture.Tests.csproj --filter FullyQualifiedName~RadixConverterTests`
 
 Expected: compilation fails because `RadixConverter` is missing.
 
-- [ ] **Step 3: Implement parsing, conversion, and both explanation phases**
+- [x] **Step 3: Implement parsing, conversion, and both explanation phases**
 
 Trim input, consume one optional leading minus, map `0-9A-Z` digits, and reject empty magnitude or invalid digits. Parse using `value = value * sourceBase + digit`. Format zero directly; otherwise repeatedly call `BigInteger.DivRem` on the absolute value, collect remainder digits, reverse them, and restore the sign. Record every accumulation and division step.
 
-- [ ] **Step 4: Run radix and all visualization tests until green**
+- [x] **Step 4: Run radix and all visualization tests until green**
 
 Run the Task 5 command, then all tests matching `FullyQualifiedName~Visualization`. Expected: all pass.
 
-- [ ] **Step 5: Commit Task 5**
+- [x] **Step 5: Commit Task 5**
 
 ```powershell
 git add -- src/Besm6.Architecture/Visualization/RadixConverter.cs tests/Besm6.Architecture.Tests/Visualization/RadixConverterTests.cs
@@ -389,7 +389,7 @@ git commit -m "feat(architecture): add explained radix conversion"
 - Produces: `SharedLogControl.Append(CalculationReport report, DateTime timestamp)`, `AppendError(string category, string input, string message, DateTime timestamp)`, `Text`, and `ClearLog()`.
 - Produces: `MainForm.Publish(CalculationReport)` and `PublishError(...)` used by pages.
 
-- [ ] **Step 1: Create test project and write failing control tests**
+- [x] **Step 1: Create test project and write failing control tests**
 
 ```csharp
 [STATestMethod]
@@ -413,13 +413,13 @@ public void Append_AccumulatesLabeledReports()
 }
 ```
 
-- [ ] **Step 2: Run UI tests and confirm RED**
+- [x] **Step 2: Run UI tests and confirm RED**
 
 Run: `dotnet test tests/Besm6.BitVisualizer.WinForms.Tests/Besm6.BitVisualizer.WinForms.Tests.csproj`
 
 Expected: compilation fails because the UI project and controls are incomplete.
 
-- [ ] **Step 3: Implement project, theme, and reusable controls**
+- [x] **Step 3: Implement project, theme, and reusable controls**
 
 Set UI target to `net8.0-windows`, `OutputType` to `WinExe`, `UseWindowsForms` to true, and reference `Besm6.Architecture`. Set the test target to `net8.0-windows`, enable Windows Forms, use the repository MSTest package versions, and reference UI and Architecture.
 
@@ -427,15 +427,15 @@ Build `BitGridControl` with an `AutoScroll` panel of `TableLayoutPanel` byte gro
 
 Build `SharedLogControl` from a toolbar and read-only monospaced `RichTextBox`. Append two blank lines between reports, prefix the timestamp, preserve history, select the newly appended block, and scroll it into view. Implement Copy through `Clipboard.SetText` only when text exists.
 
-- [ ] **Step 4: Implement `MainForm` shell**
+- [x] **Step 4: Implement `MainForm` shell**
 
 Use a horizontal `SplitContainer` with tabs in panel 1 and shared log in panel 2, minimum size 1280×800, DPI autoscaling, Russian title, and stable minimum panel sizes. Add temporary empty tab pages with the five final names so the shell is runnable.
 
-- [ ] **Step 5: Run UI tests until green and build UI project**
+- [x] **Step 5: Run UI tests until green and build UI project**
 
 Run the Task 6 test command and `dotnet build src/Besm6.BitVisualizer.WinForms/Besm6.BitVisualizer.WinForms.csproj -c Release`. Expected: tests and build pass with zero warnings.
 
-- [ ] **Step 6: Commit Task 6**
+- [x] **Step 6: Commit Task 6**
 
 ```powershell
 git add -- src/Besm6.BitVisualizer.WinForms tests/Besm6.BitVisualizer.WinForms.Tests
@@ -461,7 +461,7 @@ git commit -m "feat(ui): add visualizer shell and bit controls"
 - Produces: `CalculationPageBase.ReportCreated` and `CalculationPageBase.ErrorCreated` events.
 - Produces public read-only testing properties: each page's `BitCount`, chosen width/mode, displayed result, and action method `Calculate()` or `Decode()`.
 
-- [ ] **Step 1: Write failing page contract tests**
+- [x] **Step 1: Write failing page contract tests**
 
 ```csharp
 [STATestMethod]
@@ -502,17 +502,17 @@ public void EachPage_PublishesOneReportForOneCalculation()
 }
 ```
 
-- [ ] **Step 2: Run page tests and confirm RED**
+- [x] **Step 2: Run page tests and confirm RED**
 
 Run: `dotnet test tests/Besm6.BitVisualizer.WinForms.Tests/Besm6.BitVisualizer.WinForms.Tests.csproj --filter FullyQualifiedName~PageContractTests`
 
 Expected: compilation fails because pages and final shell properties are missing.
 
-- [ ] **Step 3: Implement common page layout and report events**
+- [x] **Step 3: Implement common page layout and report events**
 
 `CalculationPageBase` creates a scrollable vertical table with title/help text, input area, action row, and result card. It catches only expected `ArgumentException`/`FormatException` around user actions, displays an inline red validation label, and raises an error event. Unexpected exceptions are raised as neutral diagnostic errors while stack details are included only under `#if DEBUG`.
 
-- [ ] **Step 4: Implement bit-based pages**
+- [x] **Step 4: Implement bit-based pages**
 
 `Besm6FloatPage` fixes 48 bits with exponent and mantissa colors and invokes `Besm6FloatDecoder`.
 
@@ -524,19 +524,19 @@ Expected: compilation fails because pages and final shell properties are missing
 
 Each page shows compact result labels and raises the complete report exactly once.
 
-- [ ] **Step 5: Implement radix page**
+- [x] **Step 5: Implement radix page**
 
 Use one input textbox, two numeric selectors constrained to 2–36, four quick-base buttons per selector, a swap button, a read-only result textbox, and an inline error label. Invoke `RadixConverter.Convert`, preserve the original input on error, and raise the report once on success.
 
-- [ ] **Step 6: Replace placeholder tabs and wire common log**
+- [x] **Step 6: Replace placeholder tabs and wire common log**
 
 Construct each page once in `MainForm`, add it to the correctly named tab, subscribe both events to the shared log, and expose read-only test views without duplicating UI state. Set initial splitter distance after `OnShown` so minimum panel sizes are respected.
 
-- [ ] **Step 7: Run all UI tests and build UI**
+- [x] **Step 7: Run all UI tests and build UI**
 
 Run `dotnet test tests/Besm6.BitVisualizer.WinForms.Tests/Besm6.BitVisualizer.WinForms.Tests.csproj` and `dotnet build src/Besm6.BitVisualizer.WinForms/Besm6.BitVisualizer.WinForms.csproj -c Release`. Expected: all pass with no warnings.
 
-- [ ] **Step 8: Commit Task 7**
+- [x] **Step 8: Commit Task 7**
 
 ```powershell
 git add -- src/Besm6.BitVisualizer.WinForms tests/Besm6.BitVisualizer.WinForms.Tests
@@ -556,7 +556,7 @@ git commit -m "feat(ui): add five bit visualizer pages"
 - Consumes: completed core, UI, and test projects.
 - Produces: discoverable solution projects and user launch instructions.
 
-- [ ] **Step 1: Add solution-level failing presence check**
+- [x] **Step 1: Add solution-level failing presence check**
 
 Before adding projects, run:
 
@@ -566,7 +566,7 @@ dotnet sln Besm6.sln list | Select-String 'Besm6.BitVisualizer'
 
 Expected: no matches, proving the new projects are not yet integrated.
 
-- [ ] **Step 2: Add projects to the solution without rewriting unrelated entries**
+- [x] **Step 2: Add projects to the solution without rewriting unrelated entries**
 
 Run:
 
@@ -575,11 +575,11 @@ dotnet sln Besm6.sln add src/Besm6.BitVisualizer.WinForms/Besm6.BitVisualizer.Wi
 dotnet sln Besm6.sln add tests/Besm6.BitVisualizer.WinForms.Tests/Besm6.BitVisualizer.WinForms.Tests.csproj --solution-folder tests
 ```
 
-- [ ] **Step 3: Write launch and feature documentation**
+- [x] **Step 3: Write launch and feature documentation**
 
 Document prerequisites, `dotnet run --project src/Besm6.BitVisualizer.WinForms`, the purpose of all five tabs, the signed checkbox, color legend, common-log accumulation, and Copy/Clear actions. State that all calculations occur locally.
 
-- [ ] **Step 4: Run fresh automated verification**
+- [x] **Step 4: Run fresh automated verification**
 
 Run:
 
@@ -591,21 +591,21 @@ dotnet build Besm6.sln -c Release
 
 Expected: every command exits 0 with no failed tests, errors, or warnings.
 
-- [ ] **Step 5: Launch and visually inspect the application**
+- [x] **Step 5: Launch and visually inspect the application**
 
 Run `dotnet run --project src/Besm6.BitVisualizer.WinForms/Besm6.BitVisualizer.WinForms.csproj -c Release`. Verify five visible tabs, exact bit counts 48/8–64/16–64/24, readable category colors, aligned byte groups, resize behavior, signed-mode recoloring, immediate instruction-format recoloring, one successful operation per page, five labeled entries in the shared log, Copy, Clear, and one invalid radix input recorded as an error.
 
-- [ ] **Step 6: Review the complete requirement diff**
+- [x] **Step 6: Review the complete requirement diff**
 
 Run `git diff --check` and `git status --short`. Inspect only files created or intentionally modified by this plan, and confirm unrelated pre-existing changes remain untouched.
 
-- [ ] **Step 7: Commit integration and documentation**
+- [x] **Step 7: Commit integration and documentation**
 
 ```powershell
 git add -- Besm6.sln docs/bit-visualizer.md src/Besm6.BitVisualizer.WinForms/Besm6.BitVisualizer.WinForms.csproj
 git commit -m "docs: integrate BESM-6 bit visualizer"
 ```
 
-- [ ] **Step 8: Final completion audit**
+- [x] **Step 8: Final completion audit**
 
 Re-read `docs/superpowers/specs/2026-09-10-bit-visualizer-design.md` line by line. For every criterion, identify a passing test, successful build output, or visual observation. Do not report completion while any criterion lacks evidence.
