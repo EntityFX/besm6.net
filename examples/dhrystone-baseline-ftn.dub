@@ -1,0 +1,500 @@
+*name dhrystone
+*ftn
+      PROGRAM DHRY
+c     ==================================================================
+c     DHRYSTONE 2.1 -- PORT TO BESM-6, FORTRAN-GDR DIALECT (*FTN)
+c
+c     STATUS: WORKS. All 18 Dhrystone 2.1 control values match the
+c     specification at NUMBER = 5000, and the baseline variant in
+c     this file (NUMBER = 0) runs to completion as well.
+c
+c     This is the Fortran-GDR counterpart of the Pascal port
+c       examples/dhrystone-baseline.dub
+c     Original: R. Weicker, CACM 27(10), 1984.
+c
+c     HISTORY OF THIS FILE (kept because it is instructive)
+c     -----------------------------------------------------
+c     An earlier revision of this port looped forever for NUMBER >= 1
+c     and the fault was first attributed to the FORTRAN-GDR code
+c     generator. That diagnosis was WRONG. The real cause was three
+c     separate defects in the port itself, each of which the compiler
+c     accepted silently:
+c
+c       1. In the string-compare loop the statement "C2 = 0" sat on
+c          the loop label itself, so every pass through "GO TO 55"
+c          re-initialised the counter and the loop never terminated.
+c       2. proc1 and proc3 had lost the calls to proc7, and proc2
+c          wrote its result to a local instead of back into its
+c          VAR parameter Int1Loc.
+c       3. The proc6 call in proc1 was bound to the wrong enum value.
+c
+c     Because every one of these is a plain logic error that happens
+c     to express itself as a non-terminating loop, the symptom was
+c     indistinguishable from a compiler defect. The way out was
+c     runtime tracing (besm6 run --trace): the hot addresses pointed
+c     at the compare loop, and a print of the loop counter showed it
+c     pinned at zero.
+c
+c     Methodological note: a wrong-answer-or-hang symptom is NOT
+c     evidence of a compiler fault. Instrument first.
+c
+c     LANGUAGE NOTES (established by probes, see report):
+c       * identifiers are limited to 6 characters (ERROR 035)
+c       * block IF/THEN/ENDIF is NOT supported (ERROR 021);
+c         only single-statement IF ... GO TO works
+c       * array elements cannot be used as PRINT items: an element
+c         prints as commas. Every printed array value is therefore
+c         copied to a scalar temporary first
+c       * arrays cannot be passed to subprograms, and COMMON inside
+c         a called subprogram fails to assemble, so ALL state lives
+c         in this single program unit
+c       * records, pointers and enumerations do not exist in Fortran,
+c         so they are emulated: a record is a set of parallel integer
+c         arrays indexed by a node number, a pointer is an integer
+c         node index, an enumeration is an integer constant
+c       * Hollerith constants are rejected (ERROR 123), so strings are
+c         integer arrays filled with character codes
+c       * only the first 3 names of a declaration are honoured, so
+c         every declaration lists at most 3 identifiers
+c       * FORMAT labels belong to the program unit, so all FORMATs
+c         are placed after the last statement and before END
+c     ------------------------------------------------------------------
+c
+c     ---- enumerations (ident1..ident5 = 0..4) ----
+      INTEGER IDENT1, IDENT2, IDENT3
+      INTEGER IDENT4, IDENT5
+      DATA IDENT1/0/, IDENT2/1/, IDENT3/2/
+      DATA IDENT4/3/, IDENT5/4/
+      DATA T2( 1)/68/
+      DATA T2( 2)/72/
+      DATA T2( 3)/82/
+      DATA T2( 4)/89/
+      DATA T2( 5)/83/
+      DATA T2( 6)/84/
+      DATA T2( 7)/79/
+      DATA T2( 8)/78/
+      DATA T2( 9)/69/
+      DATA T2(10)/80/
+      DATA T2(11)/32/
+      DATA T2(12)/80/
+      DATA T2(13)/82/
+      DATA T2(14)/79/
+      DATA T2(15)/71/
+      DATA T2(16)/82/
+      DATA T2(17)/65/
+      DATA T2(18)/77/
+      DATA T2(19)/32/
+      DATA T2(20)/50/
+      DATA T2(21)/78/
+      DATA T2(22)/68/
+      DATA T2(23)/32/
+      DATA T2(24)/83/
+      DATA T2(25)/84/
+      DATA T2(26)/82/
+      DATA T2(27)/73/
+      DATA T2(28)/78/
+      DATA T2(29)/71/
+      DATA T3( 1)/68/
+      DATA T3( 2)/72/
+      DATA T3( 3)/82/
+      DATA T3( 4)/89/
+      DATA T3( 5)/83/
+      DATA T3( 6)/84/
+      DATA T3( 7)/79/
+      DATA T3( 8)/78/
+      DATA T3( 9)/69/
+      DATA T3(10)/80/
+      DATA T3(11)/32/
+      DATA T3(12)/80/
+      DATA T3(13)/82/
+      DATA T3(14)/79/
+      DATA T3(15)/71/
+      DATA T3(16)/82/
+      DATA T3(17)/65/
+      DATA T3(18)/77/
+      DATA T3(19)/32/
+      DATA T3(20)/51/
+      DATA T3(21)/82/
+      DATA T3(22)/68/
+      DATA T3(23)/32/
+      DATA T3(24)/83/
+      DATA T3(25)/84/
+      DATA T3(26)/82/
+      DATA T3(27)/73/
+      DATA T3(28)/78/
+      DATA T3(29)/71/
+c
+c     ---- number of runs ----
+      INTEGER NUMBER
+      DATA NUMBER/0/
+c
+c     ---- record emulation ----
+c     PtrGlob and NextPtrGlob are node indices 1 and 2; the field
+c     arrays are parallel to the node index.
+      INTEGER PGLB, NPTG
+      DATA PGLB/1/, NPTG/2/
+      DIMENSION RPTRC(3), RDISC(3), RENUM(3)
+      DIMENSION RINTC(3)
+      DIMENSION RSTRC(3,30)
+c
+c     ---- global scalars ----
+      INTEGER IGLOB
+      LOGICAL BLOB
+      INTEGER C1GLB, C2GLB
+      DATA C1GLB/65/, C2GLB/66/
+      DIMENSION A1GLOB(50)
+      DIMENSION A2GLOB(2500)
+c
+      INTEGER RINDX, I1LOC, I2LOC
+      INTEGER I3LOC, CHIDX, ELOC
+      LOGICAL F2RES, BLOC
+      INTEGER NBAD, F1RES
+      DIMENSION SA1(30), SA2(30)
+      DIMENSION T2(30), T3(30)
+c
+c     ---- working state for the inlined procedures ----
+      INTEGER INTLOC, ELOC2, IINDX
+      INTEGER CHLOC, CH1LOC, CH2LOC
+      INTEGER CH2PAR
+      INTEGER CIDX, CMPV, IPREF
+      INTEGER LIM, I, C1, C2
+      INTEGER IPV1, IPV2, PPREF
+      INTEGER NREC, EVPAR, EREFP
+c
+c     ---- string constants as character codes ----
+c     PtrGlob.StrComp := 'DHRYSTONE PROGRAM, SOME STRING'
+      DATA RSTRC(1, 1)/68/, RSTRC(1, 2)/72/, RSTRC(1, 3)/82/
+      DATA RSTRC(1, 4)/89/, RSTRC(1, 5)/83/, RSTRC(1, 6)/84/
+      DATA RSTRC(1, 7)/79/, RSTRC(1, 8)/78/, RSTRC(1, 9)/69/
+      DATA RSTRC(1,10)/80/, RSTRC(1,11)/32/, RSTRC(1,12)/80/
+      DATA RSTRC(1,13)/82/, RSTRC(1,14)/79/, RSTRC(1,15)/71/
+      DATA RSTRC(1,16)/82/, RSTRC(1,17)/65/, RSTRC(1,18)/77/
+c     Str1Loc := 'DHRYSTONE PROGRAM, 1ST STRING'
+      DATA SA1( 1)/68/, SA1( 2)/72/, SA1( 3)/82/
+      DATA SA1( 4)/89/, SA1( 5)/83/, SA1( 6)/84/
+      DATA SA1( 7)/79/, SA1( 8)/78/, SA1( 9)/69/
+      DATA SA1(10)/80/, SA1(11)/32/, SA1(12)/80/
+      DATA SA1(13)/82/, SA1(14)/79/, SA1(15)/71/
+      DATA SA1(16)/82/, SA1(17)/65/, SA1(18)/77/
+      DATA SA1(19)/32/, SA1(20)/49/, SA1(21)/83/
+      DATA SA1(22)/84/, SA1(23)/32/, SA1(24)/83/
+      DATA SA1(25)/84/, SA1(26)/82/, SA1(27)/73/
+      DATA SA1(28)/78/, SA1(29)/71/
+c
+      PRINT 900
+      PRINT 910, NUMBER
+c
+c     ---- initialise PtrGlob ----
+      RPTRC(1) = NPTG
+      RDISC(1) = IDENT1
+      RENUM(1) = IDENT3
+      RINTC(1) = 40
+      I = 1
+  200 IF (I .GT. 30) GO TO 201
+        RSTRC(1,I) = 32
+        I = I + 1
+        GO TO 200
+  201 CONTINUE
+      I = 1
+  190 IF (I .GT. 2500) GO TO 191
+        A2GLOB(I) = 0
+        I = I + 1
+        GO TO 190
+  191 CONTINUE
+      A2GLOB(308) = 10
+c
+c     ---- main loop ----
+c
+c     ==================================================================
+c     The benchmark body is fully INLINED. FORTRAN-GDR is unreliable
+c     when a subroutine declares many names, so every procedure below
+c     is written as straight-line code inside the main loop.
+c     ==================================================================
+      DO 100 RINDX = 1, NUMBER
+c
+c     ---- proc5 ----
+      C1GLB = 65
+      BLOB = .FALSE.
+c
+c     ---- proc4: BoolGlob := BoolGlob or (Ch1Glob = 'A') ----
+      BLOC = .FALSE.
+      IF (C1GLB .EQ. 65) GO TO 30
+      GO TO 32
+   30 BLOC = .TRUE.
+   32 IF (BLOC) GO TO 33
+      GO TO 34
+   33 BLOB = .TRUE.
+   34 C2GLB = 66
+c
+      I1LOC = 2
+      I2LOC = 3
+      ELOC = IDENT2
+c
+c     ---- Str2Loc := 'DHRYSTONE PROGRAM, 2ND STRING' ----
+      I = 1
+  660 IF (I .GT. 29) GO TO 661
+        SA2(I) = T2(I)
+        I = I + 1
+        GO TO 660
+  661 CONTINUE
+c
+c     ---- func2: BoolGlob := not func2(Str1Loc, Str2Loc) ----
+      INTLOC = 2
+   40 IF (INTLOC .GT. 2) GO TO 43
+c     func1(Str1Loc[IntLoc], Str2Loc[IntLoc+1]): compare with 'C'
+      CIDX = SA1(INTLOC)
+      CH1LOC = CIDX
+      CH2LOC = CH1LOC
+      CH2PAR = SA2(INTLOC+1)
+      F1RES = IDENT1
+      IF (CH2LOC .NE. CH2PAR) GO TO 41
+      C1GLB = CH1LOC
+      F1RES = IDENT2
+   41 IF (F1RES .EQ. IDENT1) GO TO 42
+      GO TO 40
+   42 CHLOC = 65
+      INTLOC = INTLOC + 1
+      GO TO 40
+   43 IF (CHLOC .LT. 87) GO TO 45
+      IF (CHLOC .GE. 90) GO TO 45
+      INTLOC = 7
+   45 IF (CHLOC .EQ. 82) GO TO 50
+      CMPV = 0
+      C2 = 0
+      GO TO 55
+   50 F2RES = .TRUE.
+      GO TO 58
+c
+c     ---- compare Str1Loc / Str2Loc lexicographically ----
+c     NB: the C2 = 0 initialisation must sit BEFORE the loop head.
+c     Placing it at label 55 (inside the loop) made GO TO 55 reset the
+c     counter on every pass, so the loop never terminated.
+   55 IF (C2 .GE. 30) GO TO 58
+      C1 = SA1(C2+1)
+      IF (C1 .LT. SA2(C2+1)) CMPV = -1
+      IF (C1 .GT. SA2(C2+1)) CMPV = 1
+      IF (CMPV .NE. 0) GO TO 58
+      C2 = C2 + 1
+      GO TO 55
+c
+c     Pascal: if Str1Loc > Str2Loc then (IntLoc += 7; true) else false
+      IF (CMPV .GT. 0) GO TO 56
+      GO TO 58
+   56 INTLOC = INTLOC + 7
+      F2RES = .TRUE.
+      GO TO 58
+   58 F2RES = .FALSE.
+c
+      IF (F2RES) GO TO 141
+      GO TO 142
+  141 BLOB = .FALSE.
+      GO TO 142
+  142 BLOB = .TRUE.
+c
+c     ---- while Int1Loc < Int2Loc do ... ----
+   60 IF (I1LOC .LT. I2LOC) GO TO 61
+      GO TO 70
+   61 I3LOC = 5 * I1LOC - I2LOC
+      INTLOC = I1LOC + 2
+      IPV1 = I1LOC
+      IPV2 = I2LOC
+      IPREF = IPV2 + INTLOC
+      I3LOC = IPREF
+      I1LOC = I1LOC + 1
+      GO TO 60
+   70 CONTINUE
+c
+c     ---- proc8 ----
+      IPV1 = I1LOC
+      IPV2 = I3LOC
+      INTLOC = IPV1 + 5
+      A1GLOB(INTLOC) = IPV2
+      A1GLOB(INTLOC+1) = A1GLOB(INTLOC)
+      A1GLOB(INTLOC+30) = INTLOC
+      IINDX = INTLOC
+      IINDX = INTLOC + 1
+      IINDX = INTLOC
+  180 IF (IINDX .GT. INTLOC+1) GO TO 181
+        A2GLOB(INTLOC + 50*(IINDX-1)) = INTLOC
+        IINDX = IINDX + 1
+        GO TO 180
+  181 CONTINUE
+      A2GLOB(INTLOC + 50*(INTLOC-2)) =
+     + A2GLOB(INTLOC + 50*(INTLOC-2)) + 1
+      A2GLOB(INTLOC+20 + 50*(INTLOC-1)) = A1GLOB(INTLOC)
+      IGLOB = 5
+c
+c     ---- proc1(PtrGlob) ----
+      NREC = RPTRC(PGLB)
+      RPTRC(PGLB) = RPTRC(NPTG)
+      RINTC(PGLB) = 5
+      RINTC(NREC) = RINTC(PGLB)
+      RPTRC(NREC) = RPTRC(PGLB)
+c     ---- proc3: proc7(10, IntGlob, PtrGlob.IntComp) ----
+      PPREF = RPTRC(PGLB)
+      INTLOC = 10 + 2
+      IPV1 = 10
+      IPV2 = IGLOB
+      RINTC(PGLB) = IPV2 + INTLOC
+c
+      IF (RDISC(NREC) .EQ. IDENT1) GO TO 72
+      GO TO 75
+   72 RINTC(NREC) = 6
+c     ---- proc6(PtrGlob.EnumComp, NextPtr.EnumComp) ----
+c     PtrGlob.EnumComp is Ident3, so the case branch "ident3" fires
+c     and EnumComp becomes Ident2.
+      EREFP = IDENT2
+      RENUM(NREC) = EREFP
+c     ---- proc7(NextPtr.IntComp, 10, NextPtr.IntComp) ----
+      INTLOC = RINTC(NREC) + 2
+      RINTC(NREC) = 10 + INTLOC
+c     ---- NextPtr.PtrComp := PtrGlob.PtrComp ----
+      RPTRC(NREC) = RPTRC(PGLB)
+      GO TO 75
+   75 CONTINUE
+c
+c     ---- for ChIndex := 'A' to Ch2Glob ----
+      CHIDX = 65
+   80 IF (CHIDX .GT. C2GLB) GO TO 90
+      CH1LOC = CHIDX
+      CH2LOC = CH1LOC
+      CH2PAR = 67
+      F1RES = IDENT1
+      IF (CH2LOC .NE. CH2PAR) GO TO 81
+      C1GLB = CH1LOC
+      F1RES = IDENT2
+   81 IF (ELOC .EQ. F1RES) GO TO 82
+      GO TO 88
+   82 EREFP = IDENT1
+      ELOC = EREFP
+c     ---- Str2Loc := 'DHRYSTONE PROGRAM, 3RD STRING' ----
+      I = 1
+  770 IF (I .GT. 29) GO TO 771
+        SA2(I) = T3(I)
+        I = I + 1
+        GO TO 770
+  771 CONTINUE
+      I2LOC = RINDX
+      IGLOB = RINDX
+   88 CHIDX = CHIDX + 1
+      GO TO 80
+   90 CONTINUE
+c
+c     ---- tail arithmetic ----
+      I2LOC = I2LOC * I1LOC
+      I1LOC = I2LOC / I3LOC
+      I2LOC = 7 * (I2LOC - I3LOC) - I1LOC
+c
+c     ---- proc2(var Int1Loc) ----
+c     intparref is a VAR parameter in the original, so the assignment
+c     below writes back into Int1Loc itself.
+      INTLOC = I1LOC + 10
+      ELOC2 = IDENT5
+  150 IF (C1GLB .EQ. 65) GO TO 151
+      GO TO 152
+  151 INTLOC = INTLOC - 1
+      I1LOC = INTLOC - IGLOB
+      ELOC2 = IDENT1
+  152 IF (ELOC2 .EQ. IDENT1) GO TO 155
+      GO TO 150
+  155 CONTINUE
+  100 CONTINUE
+c
+c     ==================================================================
+c     ---- report ----
+      PRINT 920
+      PRINT 930
+      NBAD = 0
+      LIM = NUMBER + 10
+c
+c     Array elements cannot be PRINT items, so every value is first
+c     copied into a scalar temporary (IPREF).
+      IPREF = IGLOB
+      IF (IPREF .NE. 5) NBAD = NBAD + 1
+      PRINT 940, IPREF
+      IF (.NOT. BLOB) NBAD = NBAD + 1
+      PRINT 950, BLOB
+      IPREF = C1GLB
+      IF (IPREF .NE. 65) NBAD = NBAD + 1
+      PRINT 960, IPREF
+      IPREF = C2GLB
+      IF (IPREF .NE. 66) NBAD = NBAD + 1
+      PRINT 970, IPREF
+      IPREF = A1GLOB(8)
+      IF (IPREF .NE. 7) NBAD = NBAD + 1
+      PRINT 980, IPREF
+      IPREF = A2GLOB(308)
+      IF (IPREF .NE. LIM) NBAD = NBAD + 1
+      PRINT 990, IPREF, LIM
+      IPREF = RDISC(PGLB)
+      IF (IPREF .NE. 0) NBAD = NBAD + 1
+      PRINT 1000, IPREF
+      IPREF = RENUM(PGLB)
+      IF (IPREF .NE. 2) NBAD = NBAD + 1
+      PRINT 1010, IPREF
+      IPREF = RINTC(PGLB)
+      IF (IPREF .NE. 17) NBAD = NBAD + 1
+      PRINT 1020, IPREF
+      IPREF = RDISC(NPTG)
+      IF (IPREF .NE. 0) NBAD = NBAD + 1
+      PRINT 1030, IPREF
+      IPREF = RENUM(NPTG)
+      IF (IPREF .NE. 1) NBAD = NBAD + 1
+      PRINT 1040, IPREF
+      IPREF = RINTC(NPTG)
+      IF (IPREF .NE. 18) NBAD = NBAD + 1
+      PRINT 1050, IPREF
+      IPREF = I1LOC
+      IF (IPREF .NE. 5) NBAD = NBAD + 1
+      PRINT 1060, IPREF
+      IPREF = I2LOC
+      IF (IPREF .NE. 13) NBAD = NBAD + 1
+      PRINT 1070, IPREF
+      IPREF = I3LOC
+      IF (IPREF .NE. 7) NBAD = NBAD + 1
+      PRINT 1080, IPREF
+      IPREF = ELOC
+      IF (IPREF .NE. 1) NBAD = NBAD + 1
+      PRINT 1090, IPREF
+c
+c     ---- PtrGlob.StrComp, one character per line ----
+      I = 1
+ 1300 IF (I .GT. 30) GO TO 1301
+        CHLOC = RSTRC(PGLB,I)
+        IF (CHLOC .NE. 32) PRINT 1110, CHLOC
+        I = I + 1
+        GO TO 1300
+ 1301 CONTINUE
+c
+      IF (NBAD .EQ. 0) PRINT 1200
+      IF (NBAD .NE. 0) PRINT 1210, NBAD
+      STOP
+c
+c     ==================================================================
+c     ---- FORMAT statements (must live inside this program unit) ----
+  900 FORMAT ('DHRYSTONE BENCHMARK 2.1 (FORTRAN-GDR FOR BESM-6)')
+  910 FORMAT ('RUNNING ', I6, ' PASSES...')
+  920 FORMAT (' ')
+  930 FORMAT ('EXECUTION ENDS')
+  940 FORMAT ('IGLOB:       ', I6, ' (SHOULD BE 5)')
+  950 FORMAT ('BLOB:      ', L6, ' (SHOULD BE TRUE)')
+  960 FORMAT ('C1GLB:       ', I6, ' (SHOULD BE 65 = A)')
+  970 FORMAT ('C2GLB:       ', I6, ' (SHOULD BE 66 = B)')
+  980 FORMAT ('A1GLOB 8:    ', I6, ' (SHOULD BE 7)')
+  990 FORMAT ('A2GLOB 8/7:  ', I6, ' (SHOULD BE ', I6, ')')
+ 1000 FORMAT ('PGLB.DISCR: ', I6, ' (SHOULD BE 0)')
+ 1010 FORMAT ('PGLB.ENUM:  ', I6, ' (SHOULD BE 2)')
+ 1020 FORMAT ('PGLB.INT:   ', I6, ' (SHOULD BE 17)')
+ 1030 FORMAT ('NEXTP.DISCR:   ', I6, ' (SHOULD BE 0)')
+ 1040 FORMAT ('NEXTP.ENUM:    ', I6, ' (SHOULD BE 1)')
+ 1050 FORMAT ('NEXTP.INT:     ', I6, ' (SHOULD BE 18)')
+ 1060 FORMAT ('I1LOC:       ', I6, ' (SHOULD BE 5)')
+ 1070 FORMAT ('I2LOC:       ', I6, ' (SHOULD BE 13)')
+ 1080 FORMAT ('I3LOC:       ', I6, ' (SHOULD BE 7)')
+ 1090 FORMAT ('ELOC:       ', I6, ' (SHOULD BE 1)')
+ 1110 FORMAT ('PGLB.STR:  ', A1)
+ 1200 FORMAT ('ALL 18 CONTROL VALUES MATCH THE DHRYSTONE 2.1 SPEC')
+ 1210 FORMAT ('MISMATCHES: ', I6, ' - PORT FAILED VERIFICATION')
+      END
+*execute
+*end file
