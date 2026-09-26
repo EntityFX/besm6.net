@@ -29,6 +29,12 @@ namespace Besm6.Runtime
         public Action<uint, bool, uint, uint>? CppInstructionTrace { get; set; }
         public Action<string, ulong>? RegisterTrace { get; set; }
 
+        /// <summary>
+        /// Read-only typed-трассировка исполненных инструкций (для профайлера).
+        /// Подписывается на существующий хук процессора и не изменяет исполнительный путь.
+        /// </summary>
+        public Action<InstructionTraceRecord>? TypedInstructionTrace { get; set; }
+
         public ExecutionLoop(MachineCore machine, ExtracodeHandler extracode,
             Action<string>? verboseLog, Action<string>? output, Action<string>? progressOutput)
         {
@@ -69,6 +75,12 @@ namespace Besm6.Runtime
                 _machine.Cpu.InstructionTrace += _canonicalTraceWriter.Write;
             }
 
+            if (TypedInstructionTrace is not null)
+            {
+                // Профайлер опкодов (Runtime/Profiling): только наблюдение, не влияет на семантику.
+                _machine.Cpu.InstructionTrace += TypedInstructionTrace;
+            }
+
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BESM6_INSTR_TRACE")))
             {
                 string path = Path.Combine(Directory.GetCurrentDirectory(), "instr_trace.log");
@@ -80,6 +92,11 @@ namespace Besm6.Runtime
 
         private void DetachFileTraceWriters()
         {
+            if (TypedInstructionTrace is not null)
+            {
+                _machine.Cpu.InstructionTrace -= TypedInstructionTrace;
+            }
+
             if (_canonicalTraceWriter is not null)
             {
                 _machine.Cpu.InstructionTrace -= _canonicalTraceWriter.Write;
