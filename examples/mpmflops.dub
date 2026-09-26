@@ -1,0 +1,131 @@
+*name mpmflops
+*ftn
+c     MP-MFLOPS BENCHMARK 1 -- port to BESM-6 (Fortran-GDR, *ftn)
+c
+c     Original: David H. Carey / Mike McMahon / Philip Semanchuk
+c       anybench/src/benchmarks/generic/mpmflops/mpmflops.c
+c
+c     Port notes (see reports/mpmflops-porting-report.md):
+c       * FORTRAN-GDR identifiers are limited to 6 characters
+c         (ERROR 035 "TOO MANY CHARACTERS IN IDENTIFIER"), so every
+c         name below is <= 6 chars (NWRDS, RPTS, OPWD, AVAL, ...).
+c       * COMMON is rejected by this compiler in the tested form, and a
+c         dummy array argument requires a FIXED size (no x(n)).
+c         => the three kernels are selected by the DATA switch KPART
+c            (1=triad, 2=triadplus, 3=triadplus2, 0=baseline: no kernel
+c            at all, used to subtract the fixed overhead of the monitor
+c            + compiler + init + validation).
+c       * NWRDS = 9000 (not 102400): BESM-6 has only 32768 words of RAM
+c         in the whole machine.
+c       * threads = 1: BESM-6 is a uniprocessor running one Dubna task.
+c       * flops/word follow the original: 2, 8 and 32.
+c
+c     Elapsed time / MFLOPS are NOT printed here: on the real machine
+c     they come from clock_gettime, which does not exist in the
+c     emulator. They are computed outside by the opcode profiler
+c     (besm6 run --profile --mflops N --baseline-cycles M), from
+c     the modelled BESM-6 cycle table. This program only reports
+c     the flops it performed and validates the results, exactly like
+c     the original.
+c     ---------------------------------------------------------------
+      program mpmfl
+      real x(9000)
+      real xv, av, bv, cv, dv, ev, fv, gv, hv, jv, kv, lv
+      real mv, ov, pv, qv, rv, sv, tv, uv, vv, wv, yv
+      real one, newd
+      integer kpart, nwrds, rpts, opwd, i, ipas, nbad
+      integer ncalc
+      real flops
+      data kpart/1/
+      data nwrds/9000/, rpts/30/, newd/0.999999/
+      data av/0.000020/, xv/0.999950/, bv/0.999980/, cv/0.000011/
+      data dv/1.000011/, ev/0.000012/, fv/0.999992/, gv/0.000013/
+      data hv/1.000013/, jv/0.000014/, kv/0.999994/, lv/0.000015/
+      data mv/1.000015/, ov/0.000016/, pv/0.999996/, qv/0.000017/
+      data rv/1.000017/, sv/0.000018/, tv/1.000018/, uv/0.000019/
+      data vv/1.000019/, wv/0.000021/, yv/1.000021/
+c
+      opwd = 0
+      if (kpart .eq. 1) opwd = 2
+      if (kpart .eq. 2) opwd = 8
+      if (kpart .eq. 3) opwd = 32
+c
+c     ---- data initialisation (identical for every part) ----
+      do 10 i = 1, nwrds
+         x(i) = newd
+ 10   continue
+c
+c     ---- the repeat passes ----
+      do 30 ipas = 1, rpts
+         if (kpart .eq. 1) go to 11
+         if (kpart .eq. 2) go to 12
+         if (kpart .eq. 3) go to 13
+         go to 30
+ 11      do 20 i = 1, nwrds
+            x(i) = (x(i) + av) * xv
+ 20      continue
+         go to 30
+ 12      do 21 i = 1, nwrds
+            x(i) = (x(i) + av) * bv
+     +         - (x(i) + cv) * dv
+     +         + (x(i) + ev) * fv
+ 21      continue
+         go to 30
+ 13      do 22 i = 1, nwrds
+            x(i) = (x(i) + av) * bv
+     +         - (x(i) + cv) * dv
+     +         + (x(i) + ev) * fv
+     +         - (x(i) + gv) * hv
+     +         + (x(i) + jv) * kv
+     +         - (x(i) + lv) * mv
+     +         + (x(i) + ov) * pv
+     +         - (x(i) + qv) * rv
+     +         + (x(i) + sv) * tv
+     +         - (x(i) + uv) * vv
+     +         + (x(i) + wv) * yv
+ 22      continue
+ 30   continue
+c
+c     ---- validation: all elements must be identical ----
+      nbad = 0
+      one = x(1)
+      do 40 i = 2, nwrds
+         if (x(i) .ne. one) nbad = nbad + 1
+ 40   continue
+c     ---- flops actually performed (exact, as in the original) ----
+      ncalc = nwrds * rpts
+      flops = ncalc * opwd
+c
+      print 100, kpart
+      print 200, nwrds
+      print 210, opwd
+      print 220, rpts
+      print 300, flops
+      print 400, one
+c     NB: FORTRAN-GDR cannot use a FORMAT label as GO TO
+c         target: ERROR 056 "UNDEFINED LABEL" for labels
+c         600/700/800/900/950 even though the FORMATs are
+c         present. Status messages are emitted with guarded
+c         PRINT statements instead of a GO TO chain.
+      if (kpart .eq. 0) print 600
+      if (one .eq. newd) print 700
+      if (kpart .ne. 0 .and. one .ne. newd) print 800
+      if (nbad .eq. 0) print 900
+      if (nbad .ne. 0) print 950
+      stop
+ 100  format ('MP-MFLOPS PART ', i2)
+ 200  format ('WORDS=', i6)
+ 210  format ('OPS/WORD=', i3)
+ 220  format ('REPEAT PASSES=', i6)
+ 300  format ('FLOPS=', 1p, e20.12)
+ 400  format ('FIRST RESULT=', 1p, e20.12)
+ 500  format ('ELEMENTS DIFFERING FROM FIRST=', i6)
+ 600  format ('BASELINE RUN: NO KERNEL EXECUTED')
+ 700  format ('ERROR - AT LEAST ONE FIRST RESULT OF 0.999999',
+     - ' - NO CALCULATIONS?')
+ 800  format ('CALCULATIONS PERFORMED')
+ 900  format ('ALL SAME: YES')
+ 950  format ('ALL SAME: NO')
+      end
+*execute
+*end file
