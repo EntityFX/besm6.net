@@ -113,6 +113,60 @@ namespace Besm6.Runtime
                 Measurable: true);
         }
 
+        /// <summary>
+        /// Метрики mpmflops (MFLOPS) на основе модельного числа тактов.
+        /// <paramref name="flops"/> — точное число операций, выполненных ядром
+        /// (его печатает сама программа: words × ops/word × repeat passes).
+        /// <paramref name="baselineCycles"/>/<paramref name="baselineInstructions"/> —
+        /// накладные расходы (монитор + компиляция + инициализация + валидация).
+        /// </summary>
+        public MflopsMetrics ComputeMflops(
+            long flops, long baselineCycles = 0, long baselineInstructions = 0)
+        {
+            long workloadCycles = TotalCycles - baselineCycles;
+            long workloadInstructions = TotalInstructions - baselineInstructions;
+            if (flops <= 0 || workloadCycles <= 0)
+                return MflopsMetrics.NotMeasurable;
+
+            double seconds = workloadCycles * (Besm6Timing.NanosecondsPerCycle / 1_000_000_000.0);
+            if (seconds <= 0.0)
+                return MflopsMetrics.NotMeasurable;
+
+            double mflops = flops / 1_000_000.0 / seconds;
+            return new MflopsMetrics(
+                Flops: flops,
+                Cycles: workloadCycles,
+                Instructions: workloadInstructions,
+                Seconds: seconds,
+                Mflops: mflops,
+                FlopsPerCycle: flops / (double)workloadCycles,
+                FlopsPerInstruction: workloadInstructions == 0
+                    ? 0.0
+                    : flops / (double)workloadInstructions,
+                Measurable: true);
+        }
+
+        /// <summary>Блок метрик в стиле оригинального mpmflops.</summary>
+        public string FormatMflops(
+            long flops, long baselineCycles = 0, long baselineInstructions = 0)
+        {
+            MflopsMetrics m = ComputeMflops(flops, baselineCycles, baselineInstructions);
+            var sb = new StringBuilder();
+            if (!m.Measurable)
+            {
+                sb.AppendLine("MP-MFLOPS: недостаточно данных для расчёта (нужны flops > 0 и такты > 0).");
+                return sb.ToString();
+            }
+
+            sb.AppendLine("MP-MFLOPS Benchmark (model time, BESM-6 cycle table, 100 ns/cycle)");
+            sb.AppendLine(Invariant($"Total MFLOPS:                      {m.Mflops:F4}"));
+            sb.AppendLine(Invariant($"Instructions per flop:            {1.0 / m.FlopsPerInstruction:F5}"));
+            sb.AppendLine(Invariant($"Flops per cycle:                  {m.FlopsPerCycle:F5}"));
+            sb.AppendLine(Invariant($"Model time:                       {m.Seconds:F6} c"));
+            sb.AppendLine(Invariant($"Flops:                            {m.Flops}"));
+            return sb.ToString();
+        }
+
         /// <summary>Сводка профайлера: итоги + топ-N опкодов.</summary>
         public string FormatSummary(int top = 15)
         {
@@ -268,5 +322,21 @@ namespace Besm6.Runtime
     {
         /// <summary>Недостаточно данных для расчёта.</summary>
         public static DhrystoneMetrics NotMeasurable => new(0, 0, 0, 0.0, 0.0, 0.0, false);
+    }
+
+    /// <summary>Метрики mpmflops, посчитанные по модельному времени.</summary>
+    public readonly record struct MflopsMetrics(
+        long Flops,
+        long Cycles,
+        long Instructions,
+        double Seconds,
+        double Mflops,
+        double FlopsPerCycle,
+        double FlopsPerInstruction,
+        bool Measurable)
+    {
+        /// <summary>Недостаточно данных для расчёта.</summary>
+        public static MflopsMetrics NotMeasurable =>
+            new(0, 0, 0, 0.0, 0.0, 0.0, 0.0, false);
     }
 }

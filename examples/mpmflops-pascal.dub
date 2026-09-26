@@ -1,0 +1,103 @@
+*name mpmflops
+*pascal
+(* ================================================================== *)
+(* MP-MFLOPS BENCHMARK 1 -- port to BESM-6, PASCAL dialect.          *)
+(* Same benchmark as examples/mpmflops.dub (Fortran-GDR version).    *)
+(*                                                                 *)
+(* Original: David H. Carey / Mike McMahon / Philip Semanchuk       *)
+(*   anybench/src/benchmarks/generic/mpmflops/mpmflops.c             *)
+(*                                                                 *)
+(* Port notes (full report: reports/mpmflops-porting-report.md):    *)
+(*   * *library:22 is MANDATORY: without it the Pascal runtime is    *)
+(*     not linked and writeln produces no output at all.             *)
+(*   * *pascal MUST be the first control card after *name. Any text  *)
+(*     before it makes MONSYS start the default FORTRAN compiler     *)
+(*     and the *pascal line is then fed to Fortran as source.        *)
+(*   * *library:22 goes AFTER the program text, before *execute.     *)
+(*   * arrays of real: rvec = packed array [1..9000] of real         *)
+(*   * words = 9000 (BESM-6 has 32768 words of RAM in total)         *)
+(*   * kpart selects the kernel: 1=triad, 2=triadplus,               *)
+(*     3=triadplus2, 0=baseline (no kernel, for overhead removal)    *)
+(*   * elapsed time / MFLOPS are produced by the opcode profiler     *)
+(*     (besm6 run --profile --mflops N), because the emulated DATE*  *)
+(*     returns host wall-clock, not BESM-6 model time.               *)
+(*   * rpts = 30 keeps the whole job under the 20M instruction limit *)
+(*     used by tools/run_all_examples.py (full suite).               *)
+(* ================================================================== *)
+program mpmfl (output);
+const
+    nwrds = 9000;
+    rpts = 30;
+    kpart = 1;
+    newd = 0.999999;
+type
+    rvec = packed array [1..9000] of real;
+var
+    x: rvec;
+    av, xv, bv, cv, dv, ev, fv, gv, hv, jv, kv, lv: real;
+    mv, ov, pv, qv, rv, sv, tv, uv, vv, wv, yv: real;
+    one, flops: real;
+    i, j, ipas, nbad, opwd, ncalc: integer;
+begin
+  av := 0.000020; xv := 0.999950;
+  bv := 0.999980; cv := 0.000011;
+  dv := 1.000011; ev := 0.000012;
+  fv := 0.999992; gv := 0.000013;
+  hv := 1.000013; jv := 0.000014;
+  kv := 0.999994; lv := 0.000015;
+  mv := 1.000015; ov := 0.000016;
+  pv := 0.999996; qv := 0.000017;
+  rv := 1.000017; sv := 0.000018;
+  tv := 1.000018; uv := 0.000019;
+  vv := 1.000019; wv := 0.000021;
+  yv := 1.000021;
+  opwd := 0;
+  if kpart = 1 then opwd := 2;
+  if kpart = 2 then opwd := 8;
+  if kpart = 3 then opwd := 32;
+  for i := 1 to nwrds do x[i] := newd;
+  for ipas := 1 to rpts do
+  begin
+    if kpart = 1 then
+      for i := 1 to nwrds do x[i] := (x[i] + av) * xv;
+    if kpart = 2 then
+      for i := 1 to nwrds do
+        x[i] := (x[i] + av) * bv - (x[i] + cv) * dv
+             + (x[i] + ev) * fv;
+    if kpart = 3 then
+      for i := 1 to nwrds do
+        x[i] := (x[i] + av) * bv - (x[i] + cv) * dv
+             + (x[i] + ev) * fv - (x[i] + gv) * hv
+             + (x[i] + jv) * kv - (x[i] + lv) * mv
+             + (x[i] + ov) * pv - (x[i] + qv) * rv
+             + (x[i] + sv) * tv - (x[i] + uv) * vv
+             + (x[i] + wv) * yv;
+  end;
+  nbad := 0;
+  one := x[1];
+  for i := 2 to nwrds do
+    if x[i] <> one then nbad := nbad + 1;
+  ncalc := nwrds * rpts;
+  flops := ncalc * opwd;
+  writeln ('MP-MFLOPS PART ', kpart:2);
+  writeln ('WORDS= ', nwrds:6);
+  writeln ('OPS/WORD= ', opwd:3);
+  writeln ('REPEAT PASSES= ', rpts:6);
+  writeln ('FLOPS= ', flops:20);
+  writeln ('FIRST RESULT= ', one:20);
+  writeln ('ELEMENTS DIFFERING FROM FIRST= ', nbad:6);
+  if kpart = 0 then writeln ('BASELINE RUN: NO KERNEL EXECUTED');
+  if one = newd then
+  begin
+    writeln ('ERROR - FIRST RESULT IS 0.999999');
+    writeln ('       - NO CALCULATIONS?');
+  end
+  else
+    writeln ('CALCULATIONS PERFORMED');
+  if nbad = 0 then writeln ('ALL SAME: YES');
+  if nbad <> 0 then writeln ('ALL SAME: NO');
+  stop;
+end.
+*library:22
+*execute
+*end file

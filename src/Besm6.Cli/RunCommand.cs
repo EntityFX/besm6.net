@@ -11,7 +11,7 @@ namespace Besm6.Cli
     {
         public string Name => "run";
         public string Description => "Load and execute a .dub job script";
-        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--passes N] [--baseline-cycles N] [--baseline-instructions N] [--config path]";
+        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--passes N] [--mflops N] [--baseline-cycles N] [--baseline-instructions N] [--config path]";
 
         public int Execute(string[] args)
         {
@@ -36,6 +36,7 @@ namespace Besm6.Cli
             long profilePasses = 0;
             long profileBaselineCycles = 0;
             long profileBaselineInstructions = 0;
+            long profileMflops = 0;
 
             for (int i = 1; i < args.Length; i++)
             {
@@ -97,6 +98,11 @@ namespace Besm6.Cli
                         // Инструкции накладных расходов (компиляция/загрузка), которые вычитаются.
                         long.TryParse(args[++i], out profileBaselineInstructions);
                         break;
+                    case "--mflops" when i + 1 < args.Length:
+                        // Число FLOPS, выполненных ядром (для блока MP-MFLOPS). Значение
+                        // берётся из строки "FLOPS=" в выводе самой программы.
+                        long.TryParse(args[++i], out profileMflops);
+                        break;
                 }
             }
 
@@ -153,6 +159,9 @@ namespace Besm6.Cli
                     if (profilePasses > 0)
                         Console.Write(opcodeProfiler.FormatDhrystone(
                             profilePasses, profileBaselineCycles, profileBaselineInstructions));
+                    if (profileMflops > 0)
+                        Console.Write(opcodeProfiler.FormatMflops(
+                            profileMflops, profileBaselineCycles, profileBaselineInstructions));
                 }
 
                 if (result.Success) return 0;
