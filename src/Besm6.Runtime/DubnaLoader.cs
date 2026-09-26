@@ -50,6 +50,14 @@ namespace Besm6.Runtime
         public Action<int, ulong>? InstructionTrace { get => _exec.InstructionTrace; set => _exec.InstructionTrace = value; }
         public Action<uint, bool, uint, uint>? CppInstructionTrace { get => _exec.CppInstructionTrace; set => _exec.CppInstructionTrace = value; }
         public Action<string, ulong>? RegisterTrace { get => _exec.RegisterTrace; set => _exec.RegisterTrace = value; }
+
+        /// <summary>
+        /// Read-only typed-трассировка инструкций для профайлера опкодов
+        /// (<see cref="OpcodeProfiler"/>). Не изменяет исполнительный путь процессора.
+        /// </summary>
+        public Action<InstructionTraceRecord>? TypedInstructionTrace
+        { get => _exec.TypedInstructionTrace; set => _exec.TypedInstructionTrace = value; }
+
         public Func<string, string>? Input { get; set; }
 
         public long InstructionsExecuted => _exec.InstructionsExecuted;

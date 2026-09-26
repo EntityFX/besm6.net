@@ -1,0 +1,265 @@
+*name dhrystone
+*pascal
+program dhrystone (output);
+const
+    numberofruns = 0;
+type
+    enumeration = (ident1, ident2, ident3, ident4, ident5);
+    onefifty = 1..50;
+    capitalletter = char;
+    string30 = packed array [1..30] of char;
+    arr1dim = array [1..50] of integer;
+    arr2dim = array [1..50, 1..50] of integer;
+    recpointer = @recordtype;
+    recordtype = record
+        ptrcomp: recpointer;
+        discr: enumeration;
+        enumcomp: enumeration;
+        intcomp: onefifty;
+        strcomp: string30;
+    end;
+
+var
+    ptrglob, nextptrglob: recpointer;
+    intglob: integer;
+    boolglob: boolean;
+    ch1glob, ch2glob: char;
+    arr1glob: arr1dim;
+    arr2glob: arr2dim;
+    runindex: integer;
+    int1loc, int2loc, int3loc: onefifty;
+    chindex: char;
+    enumloc: enumeration;
+    str1loc, str2loc: string30;
+
+procedure proc7 (int1parval, int2parval: onefifty;
+                 var intparref: onefifty);
+var
+    intloc: onefifty;
+begin
+    intloc := int1parval + 2;
+    intparref := int2parval + intloc;
+end;
+
+procedure proc3 (var ptrparref: recpointer);
+begin
+    if ptrglob <> nil then
+        ptrparref := ptrglob@.ptrcomp;
+    proc7 (10, intglob, ptrglob@.intcomp);
+end;
+
+procedure proc6 (enumvalpar: enumeration;
+                 var enumrefpar: enumeration);
+begin
+    enumrefpar := enumvalpar;
+    if enumvalpar <> ident3 then
+        enumrefpar := ident4;
+    case enumvalpar of
+        ident1: enumrefpar := ident1;
+        ident2: if intglob > 100 then
+                    enumrefpar := ident1
+                else
+                    enumrefpar := ident4;
+        ident3: enumrefpar := ident2;
+        ident4: ;
+        ident5: enumrefpar := ident3;
+    end;
+end;
+
+procedure proc1 (ptrvalpar: recpointer);
+var
+    nextrec: recpointer;
+begin
+    nextrec := ptrvalpar@.ptrcomp;
+    ptrvalpar@.ptrcomp@ := ptrglob@;
+    ptrvalpar@.intcomp := 5;
+    nextrec@.intcomp := ptrvalpar@.intcomp;
+    nextrec@.ptrcomp := ptrvalpar@.ptrcomp;
+    proc3 (nextrec@.ptrcomp);
+    if nextrec@.discr = ident1 then
+    begin
+        nextrec@.intcomp := 6;
+        proc6 (ptrvalpar@.enumcomp, nextrec@.enumcomp);
+        nextrec@.ptrcomp := ptrglob@.ptrcomp;
+        proc7 (nextrec@.intcomp, 10, nextrec@.intcomp);
+    end
+    else
+        ptrvalpar@ := ptrvalpar@.ptrcomp@;
+end;
+
+procedure proc2 (var intparref: onefifty);
+var
+    intloc: onefifty;
+    enumloc2: enumeration;
+begin
+    intloc := intparref + 10;
+    repeat
+        if ch1glob = 'A' then
+        begin
+            intloc := intloc - 1;
+            intparref := intloc - intglob;
+            enumloc2 := ident1;
+        end;
+    until enumloc2 = ident1;
+end;
+
+procedure proc4;
+var
+    boolloc: boolean;
+begin
+    boolloc := ch1glob = 'A';
+    boolglob := boolloc or boolglob;
+    ch2glob := 'B';
+end;
+
+procedure proc5;
+begin
+    ch1glob := 'A';
+    boolglob := false;
+end;
+
+procedure proc8 (var arr1parref: arr1dim;
+                 var arr2parref: arr2dim;
+                 int1parval, int2parval: integer);
+var
+    intloc, intindex: integer;
+begin
+    intloc := int1parval + 5;
+    arr1parref[intloc] := int2parval;
+    arr1parref[intloc+1] := arr1parref[intloc];
+    arr1parref[intloc+30] := intloc;
+    for intindex := intloc to intloc+1 do
+        arr2parref[intloc, intindex] := intloc;
+    arr2parref[intloc, intloc-1] := arr2parref[intloc, intloc-1] + 1;
+    arr2parref[intloc+20, intloc] := arr1parref[intloc];
+    intglob := 5;
+end;
+
+function func1 (ch1parval, ch2parval: capitalletter): enumeration;
+var
+    ch1loc, ch2loc: capitalletter;
+begin
+    ch1loc := ch1parval;
+    ch2loc := ch1loc;
+    if ch2loc <> ch2parval then
+        func1 := ident1
+    else
+    begin
+        ch1glob := ch1loc;
+        func1 := ident2;
+    end;
+end;
+
+function func2 (var str1parref, str2parref: string30): boolean;
+var
+    intloc: onefifty;
+    chloc: capitalletter;
+begin
+    intloc := 2;
+    while intloc <= 2 do
+    begin
+        if func1 (str1parref[intloc],
+                  str2parref[intloc+1]) = ident1 then
+        begin
+            chloc := 'A';
+            intloc := intloc + 1;
+        end;
+    end;
+    if (chloc >= 'W') and (chloc < 'Z') then
+        intloc := 7;
+    if chloc = 'R' then
+        func2 := true
+    else
+    begin
+        if str1parref > str2parref then
+        begin
+            intloc := intloc + 7;
+            func2 := true;
+        end
+        else
+            func2 := false;
+    end;
+end;
+
+begin
+    writeln('Dhrystone Benchmark 2.1 (Pascal for BESM-6)');
+    writeln('Running ', numberofruns, ' passes...');
+
+    new(nextptrglob);
+    new(ptrglob);
+
+    ptrglob@.ptrcomp := nextptrglob;
+    ptrglob@.discr := ident1;
+    ptrglob@.enumcomp := ident3;
+    ptrglob@.intcomp := 40;
+    ptrglob@.strcomp := 'DHRYSTONE PROGRAM, SOME STRING';
+
+    str1loc := 'DHRYSTONE PROGRAM, 1''ST STRING';
+
+    arr2glob[8, 7] := 10;
+
+    for runindex := 1 to numberofruns do
+    begin
+        proc5;
+        proc4;
+        int1loc := 2;
+        int2loc := 3;
+        str2loc := 'DHRYSTONE PROGRAM, 2''ND STRING';
+        enumloc := ident2;
+        boolglob := not func2 (str1loc, str2loc);
+        while int1loc < int2loc do
+        begin
+            int3loc := 5 * int1loc - int2loc;
+            proc7 (int1loc, int2loc, int3loc);
+            int1loc := int1loc + 1;
+        end;
+        proc8 (arr1glob, arr2glob, int1loc, int3loc);
+        proc1 (ptrglob);
+        for chindex := 'A' to ch2glob do
+            if enumloc = func1 (chindex, 'C') then
+            begin
+                proc6 (ident1, enumloc);
+                str2loc := 'DHRYSTONE PROGRAM, 3''RD STRING';
+                int2loc := runindex;
+                intglob := runindex;
+            end;
+        int2loc := int2loc * int1loc;
+        int1loc := int2loc div int3loc;
+        int2loc := 7 * (int2loc - int3loc) - int1loc;
+        proc2 (int1loc);
+    end;
+
+    writeln;
+    writeln('Execution ends');
+    writeln('Final values of the variables:');
+    writeln('IntGlob:       ', intglob, ' (should be 5)');
+    writeln('BoolGlob:      ', boolglob, ' (should be TRUE)');
+    writeln('Ch1Glob:       ', ch1glob, ' (should be A)');
+    writeln('Ch2Glob:       ', ch2glob, ' (should be B)');
+    writeln('Arr1Glob 8:    ', arr1glob[8], ' (should be 7)');
+    writeln('Arr2Glob 8/7:  ', arr2glob[8, 7],
+            ' (should be ', numberofruns + 10, ')');
+    writeln('PtrGlob.Discr: ', ord(ptrglob@.discr),
+            ' (should be 0)');
+    writeln('PtrGlob.Enum:  ', ord(ptrglob@.enumcomp),
+            ' (should be 2)');
+    writeln('PtrGlob.Int:   ', ptrglob@.intcomp,
+            ' (should be 17)');
+    writeln('PtrGlob.Str:   ', ptrglob@.strcomp);
+    writeln('NextPtr.Discr: ', ord(nextptrglob@.discr),
+            ' (should be 0)');
+    writeln('NextPtr.Enum:  ', ord(nextptrglob@.enumcomp),
+            ' (should be 1)');
+    writeln('NextPtr.Int:   ', nextptrglob@.intcomp,
+            ' (should be 18)');
+    writeln('NextPtr.Str:   ', nextptrglob@.strcomp);
+    writeln('Int1Loc:       ', int1loc, ' (should be 5)');
+    writeln('Int2Loc:       ', int2loc, ' (should be 13)');
+    writeln('Int3Loc:       ', int3loc, ' (should be 7)');
+    writeln('EnumLoc:       ', ord(enumloc), ' (should be 1)');
+    writeln('Str1Loc:       ', str1loc);
+    writeln('Str2Loc:       ', str2loc);
+end.
+*library:22
+*execute
+*end file

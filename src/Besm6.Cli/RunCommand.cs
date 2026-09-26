@@ -11,7 +11,7 @@ namespace Besm6.Cli
     {
         public string Name => "run";
         public string Description => "Load and execute a .dub job script";
-        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--config path]";
+        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--passes N] [--baseline-cycles N] [--baseline-instructions N] [--config path]";
 
         public int Execute(string[] args)
         {
@@ -32,6 +32,10 @@ namespace Besm6.Cli
             bool noWallClock = false;
             bool hangDetect = false;
             bool noHangDetect = false;
+            bool profile = false;
+            long profilePasses = 0;
+            long profileBaselineCycles = 0;
+            long profileBaselineInstructions = 0;
 
             for (int i = 1; i < args.Length; i++)
             {
@@ -77,6 +81,22 @@ namespace Besm6.Cli
                         hangDetect = false;
                         noHangDetect = true;
                         break;
+                    case "--profile":
+                        // Гистограмма опкодов + модельное время по таблице тактов БЭСМ-6.
+                        profile = true;
+                        break;
+                    case "--passes" when i + 1 < args.Length:
+                        // Число проходов тела бенчмарка (для блока Dhrystone/DMIPS).
+                        long.TryParse(args[++i], out profilePasses);
+                        break;
+                    case "--baseline-cycles" when i + 1 < args.Length:
+                        // Такты накладных расходов (компиляция/загрузка), которые вычитаются.
+                        long.TryParse(args[++i], out profileBaselineCycles);
+                        break;
+                    case "--baseline-instructions" when i + 1 < args.Length:
+                        // Инструкции накладных расходов (компиляция/загрузка), которые вычитаются.
+                        long.TryParse(args[++i], out profileBaselineInstructions);
+                        break;
                 }
             }
 
@@ -98,6 +118,14 @@ namespace Besm6.Cli
                 loader.HangDetect = hangDetect && !noHangDetect;
                 if (noWallClock) loader.UseWallClock = false;
 
+                OpcodeProfiler? opcodeProfiler = null;
+                if (profile)
+                {
+                    // Профайлер опкодов: read-only хук, Gate A (семантика инструкций) не затрагивается.
+                    opcodeProfiler = new OpcodeProfiler();
+                    loader.TypedInstructionTrace = opcodeProfiler.Observe;
+                }
+
                 if (trace)
                 {
                     loader.InstructionTrace = (k, word) =>
@@ -118,6 +146,14 @@ namespace Besm6.Cli
 
                 var result = loader.RunScript(jobFile);
                 Console.WriteLine(result);
+
+                if (opcodeProfiler != null)
+                {
+                    Console.Write(opcodeProfiler.FormatSummary());
+                    if (profilePasses > 0)
+                        Console.Write(opcodeProfiler.FormatDhrystone(
+                            profilePasses, profileBaselineCycles, profileBaselineInstructions));
+                }
 
                 if (result.Success) return 0;
                 if (result.LimitExceeded)
