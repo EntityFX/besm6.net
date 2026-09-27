@@ -114,6 +114,46 @@ namespace Besm6.Runtime
         }
 
         /// <summary>
+        /// Метрики Whetstone (MWIPS) на основе модельного числа тактов.
+        /// <paramref name="operations"/> — число операций, выполненных восемью
+        /// циклами (печатает сама программа: сумма n&#215;ops_per_iter по N1..N8).
+        /// <paramref name="loopCycles"/> — такты, приходящиеся именно на циклы,
+        /// если они измерены посегментно; иначе используется полная стоимость
+        /// прогона за вычетом накладных расходов.
+        /// </summary>
+        public WhetstoneMetrics ComputeWhetstone(
+            long operations, long baselineCycles = 0, long baselineInstructions = 0,
+            long loopCycles = 0)
+        {
+            long workloadCycles = loopCycles > 0
+                ? loopCycles
+                : TotalCycles - baselineCycles;
+            long workloadInstructions = loopCycles > 0
+                ? 0
+                : TotalInstructions - baselineInstructions;
+            if (operations <= 0 || workloadCycles <= 0)
+                return WhetstoneMetrics.NotMeasurable;
+
+            double seconds = workloadCycles * (Besm6Timing.NanosecondsPerCycle / 1_000_000_000.0);
+            if (seconds <= 0.0)
+                return WhetstoneMetrics.NotMeasurable;
+
+            double mops = operations / 1_000_000.0 / seconds;
+            // MWIPS по оригиналу: WIPS = ops/сек, нормировка на 10 и на 100 проходов x100.
+            double mwips = mops * 10.0;
+            return new WhetstoneMetrics(
+                Operations: operations,
+                Cycles: workloadCycles,
+                Instructions: workloadInstructions,
+                Seconds: seconds,
+                Mops: mops,
+                Mwips: mwips,
+                OperationsPerCycle: (double)operations / workloadCycles,
+                VaxMips: mwips / Besm6Timing.ReferenceMwips,
+                Measurable: true);
+        }
+
+        /// <summary>
         /// Метрики mpmflops (MFLOPS) на основе модельного числа тактов.
         /// <paramref name="flops"/> — точное число операций, выполненных ядром
         /// (его печатает сама программа: words × ops/word × repeat passes).
@@ -202,6 +242,31 @@ namespace Besm6.Runtime
                 }
             }
 
+            return sb.ToString();
+        }
+
+        /// <summary>Блок метрик в стиле оригинального Whetstone (Curnow 1972).</summary>
+        public string FormatWhetstone(
+            long operations, long baselineCycles = 0, long baselineInstructions = 0,
+            long loopCycles = 0)
+        {
+            WhetstoneMetrics m = ComputeWhetstone(
+                operations, baselineCycles, baselineInstructions, loopCycles);
+            var sb = new StringBuilder();
+            if (!m.Measurable)
+            {
+                sb.AppendLine("Whetstone: недостаточно данных для расчёта (нужны операции > 0 и такты > 0).");
+                return sb.ToString();
+            }
+
+            sb.AppendLine("Whetstone Benchmark (model time, BESM-6 cycle table, 100 ns/cycle)");
+            sb.AppendLine(Invariant($"Operations (loops N1..N8):         {m.Operations}"));
+            sb.AppendLine(Invariant($"Loops only cycles:                {m.Cycles}"));
+            sb.AppendLine(Invariant($"Model time:                       {m.Seconds:F6} c"));
+            sb.AppendLine(Invariant($"Total MOPS:                       {m.Mops:F4}"));
+            sb.AppendLine(Invariant($"MWIPS rating:                     {m.Mwips:F4}"));
+            sb.AppendLine(Invariant($"Operations per cycle:             {m.OperationsPerCycle:F5}"));
+            sb.AppendLine(Invariant($"VAX MIPS rating:                   {m.VaxMips:F4}"));
             return sb.ToString();
         }
 
@@ -322,6 +387,23 @@ namespace Besm6.Runtime
     {
         /// <summary>Недостаточно данных для расчёта.</summary>
         public static DhrystoneMetrics NotMeasurable => new(0, 0, 0, 0.0, 0.0, 0.0, false);
+    }
+
+    /// <summary>Метрики Whetstone, посчитанные по модельному времени.</summary>
+    public readonly record struct WhetstoneMetrics(
+        long Operations,
+        long Cycles,
+        long Instructions,
+        double Seconds,
+        double Mops,
+        double Mwips,
+        double OperationsPerCycle,
+        double VaxMips,
+        bool Measurable)
+    {
+        /// <summary>Недостаточно данных для расчёта.</summary>
+        public static WhetstoneMetrics NotMeasurable =>
+            new(0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, false);
     }
 
     /// <summary>Метрики mpmflops, посчитанные по модельному времени.</summary>

@@ -24,6 +24,13 @@ namespace Besm6.Runtime
         public const double ReferenceDhrystonesPerSecond = 1757.0;
 
         /// <summary>
+        /// Эталонный рейтинг Whetstone для DEC VAX-11/780, MWIPS.
+        /// По оригинальной публикации Curnow (CCTA 1972) VAX-11/780 даёт
+        /// 1.6 MWIPS, что принимается за 1.0 MIPS шкалы VAX.
+        /// </summary>
+        public const double ReferenceMwips = 1.6;
+
+        /// <summary>
         /// Число тактов процессора БЭСМ-6 для заданного опкода (по таблице учебника).
         /// </summary>
         public static int CyclesOf(Opcode opcode)

@@ -11,7 +11,7 @@ namespace Besm6.Cli
     {
         public string Name => "run";
         public string Description => "Load and execute a .dub job script";
-        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--passes N] [--mflops N] [--baseline-cycles N] [--baseline-instructions N] [--config path]";
+        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--passes N] [--mflops N] [--ops N] [--loop-cycles N] [--baseline-cycles N] [--baseline-instructions N] [--config path]";
 
         public int Execute(string[] args)
         {
@@ -37,6 +37,8 @@ namespace Besm6.Cli
             long profileBaselineCycles = 0;
             long profileBaselineInstructions = 0;
             long profileMflops = 0;
+        long profileOps = 0;
+        long profileLoopCycles = 0;
 
             for (int i = 1; i < args.Length; i++)
             {
@@ -97,6 +99,14 @@ namespace Besm6.Cli
                     case "--baseline-instructions" when i + 1 < args.Length:
                         // Инструкции накладных расходов (компиляция/загрузка), которые вычитаются.
                         long.TryParse(args[++i], out profileBaselineInstructions);
+                        break;
+                    case "--ops" when i + 1 < args.Length:
+                        // Число операций восьми циклов Whetstone (для блока MWIPS).
+                        long.TryParse(args[++i], out profileOps);
+                        break;
+                    case "--loop-cycles" when i + 1 < args.Length:
+                        // Такты, приходящиеся только на циклы Whetstone (посегментный замер).
+                        long.TryParse(args[++i], out profileLoopCycles);
                         break;
                     case "--mflops" when i + 1 < args.Length:
                         // Число FLOPS, выполненных ядром (для блока MP-MFLOPS). Значение
@@ -159,6 +169,10 @@ namespace Besm6.Cli
                     if (profilePasses > 0)
                         Console.Write(opcodeProfiler.FormatDhrystone(
                             profilePasses, profileBaselineCycles, profileBaselineInstructions));
+                    if (profileOps > 0)
+                        Console.Write(opcodeProfiler.FormatWhetstone(
+                            profileOps, profileBaselineCycles, profileBaselineInstructions,
+                            profileLoopCycles));
                     if (profileMflops > 0)
                         Console.Write(opcodeProfiler.FormatMflops(
                             profileMflops, profileBaselineCycles, profileBaselineInstructions));

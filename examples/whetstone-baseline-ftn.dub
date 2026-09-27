@@ -1,0 +1,206 @@
+*name whetstone
+*ftn
+      PROGRAM WHETST
+C     ============================================================
+C     Whetstone benchmark, port to BESM-6, Fortran-GDR dialect
+C
+C     Original: H. Curnow CCTA 1972, B. Wichmann NPL 1960s
+C     C version: R. Longbottom 1996, file whets.c
+C
+C     Single precision, xtra=1 and x100=1, so the printed
+C     values are the reference values of one outer pass.
+C     The in-program timer of the original does not exist on
+C     BESM-6, so the calibration loop cannot run. The MWIPS
+C     rating is computed afterwards by the external profiler:
+C       besm6 run ... --profile --ops 15869 --loop-cycles N
+C
+C     LANGUAGE NOTES, all established by probes:
+C       - names are limited to 6 characters, ERROR 035
+C       - ALOG is the natural logarithm, LOG does not exist
+C       - DO bounds must be integer constants, ERROR 094
+C       - nested loops must use different variables, ERROR 086
+C       - one statement only on a labelled line, ERROR 055
+C       - a format may carry only one scale factor 1P
+C       - PRINT with an item needs a matching descriptor
+C       - FORMAT labels and loop labels share one namespace
+C       - no DOUBLE PRECISION, REAL is the 48 bit word
+C     ============================================================
+      REAL E0, E1, E2, E3
+      REAL X, Y, Z, T, T0, T1, T2, CHK
+      INTEGER J, K, L, I, N, M
+      REAL NOPS
+      DATA NOPS / 15869.0 /
+      T = 0.49999975
+      T0 = T
+      T1 = 0.50000025
+      T2 = 2.0
+      CHK = 0.0
+      PRINT 100
+      PRINT 110
+      PRINT 120
+  100 FORMAT ('--------------------------------------')
+  110 FORMAT ('Whetstone Benchmark on BESM-6, Fortran-GDR')
+  120 FORMAT ('Curnow 1972, Wichmann, Longbottom C 1996')
+C
+C     ---- section 1, floating point, array elements ----
+      E0 = 1.0
+      E1 = -1.0
+      E2 = -1.0
+      E3 = -1.0
+      DO 10 I = 1, 120
+         E0 = (E0 + E1 + E2 - E3) * T
+         E1 = (E0 + E1 - E2 + E3) * T
+         E2 = (E0 - E1 + E2 + E3) * T
+         E3 = (-E0 + E1 + E2 + E3) * T
+   10 CONTINUE
+      CHK = CHK + E3
+      PRINT 130, E3
+  130 FORMAT ('N1 floating point ', 1P, E20.12)
+C
+C     ---- section 2, floating point, array as parameter ----
+      DO 20 I = 1, 14
+         CALL PA (E0, E1, E2, E3, T, T2)
+   20 CONTINUE
+      CHK = CHK + E3
+      PRINT 140, E3
+  140 FORMAT ('N2 floating point ', 1P, E20.12)
+C
+C     ---- section 3, conditional jumps ----
+      J = 1
+      DO 30 I = 1, 345
+         IF (J .EQ. 1) GO TO 201
+         J = 3
+         GO TO 202
+  201    J = 2
+  202    IF (J .GT. 2) GO TO 203
+         J = 1
+         GO TO 204
+  203    J = 0
+  204    IF (J .LT. 1) GO TO 205
+         J = 0
+         GO TO 206
+  205    J = 1
+  206    CONTINUE
+   30 CONTINUE
+      CHK = CHK + J
+      PRINT 150, J
+  150 FORMAT ('N3 if then else   ', I8)
+C
+C     ---- section 4, integer arithmetic ----
+      J = 1
+      K = 2
+      L = 3
+      E0 = 0.0
+      E1 = 0.0
+      DO 40 I = 1, 210
+         J = J * (K - J) * (L - K)
+         K = L * K - (L - J) * K
+         L = (L - K) * (K + J)
+         IF (L .EQ. 2) GO TO 401
+         E0 = E0 + J + K + L
+         GO TO 402
+  401    E1 = E1 + J + K + L
+  402    IF (K .EQ. 2) GO TO 403
+         E0 = E0 + J * K * L
+         GO TO 404
+  403    E1 = E1 + J * K * L
+  404    CONTINUE
+   40 CONTINUE
+      X = (E0 + E1) / 210.0
+      CHK = CHK + X
+      PRINT 160, X
+  160 FORMAT ('N4 fixed point    ', 1P, E20.12)
+C
+C     ---- section 5, trigonometric functions ----
+      X = 0.5
+      Y = 0.5
+      DO 50 I = 1, 31
+         X = T * ATAN(T2 * SIN(X) * COS(X)
+     $     / (COS(X + Y) + COS(X - Y) - 1.0))
+         Y = T * ATAN(T2 * SIN(Y) * COS(Y)
+     $     / (COS(X + Y) + COS(X - Y) - 1.0))
+   50 CONTINUE
+      CHK = CHK + Y
+      PRINT 170, Y
+  170 FORMAT ('N5 sin,cos etc.   ', 1P, E20.12)
+C
+C     ---- section 6, procedure calls ----
+      X = 1.0
+      Y = 1.0
+      Z = 1.0
+      DO 60 I = 1, 899
+         CALL P3 (X, Y, Z, T, T1, T2)
+   60 CONTINUE
+      CHK = CHK + Z
+      PRINT 180, Z
+  180 FORMAT ('N6 floating point ', 1P, E20.12)
+C
+C
+C     ---- section 7, array references ----
+      E0 = 1.0
+      E1 = 2.0
+      E2 = 3.0
+      E3 = 0.0
+      DO 80 I = 1, 616
+         CALL PO (E0, E1, E2, E3)
+   80 CONTINUE
+      CHK = CHK + E2
+      PRINT 190, E2
+  190 FORMAT ('N7 assignments    ', 1P, E20.12)
+C
+C     ---- section 8, standard functions ----
+      X = 0.75
+      DO 70 I = 1, 93
+         X = SQRT(EXP(ALOG(X) / T1))
+   70 CONTINUE
+      CHK = CHK + X
+      PRINT 200, X
+  200 FORMAT ('N8 exp,sqrt etc.  ', 1P, E20.12)
+      PRINT 100
+      PRINT 230, NOPS
+      PRINT 210, CHK
+  210 FORMAT ('Check sum         ', 1P, E20.12)
+      PRINT 220
+  220 FORMAT ('VALIDATES')
+  230 FORMAT ('Operations N1..N8 ', 1P, E20.12)
+      STOP
+      END
+C
+C     ---- pa, body of section 2, six repetitions ----
+      SUBROUTINE PA (A0, A1, A2, A3, TT, U)
+      REAL A0, A1, A2, A3, TT, U
+      INTEGER M
+      DO 10 M = 1, 6
+         A0 = (A0 + A1 + A2 - A3) * TT
+         A1 = (A0 + A1 - A2 + A3) * TT
+         A2 = (A0 - A1 + A2 + A3) * TT
+         A3 = (-A0 + A1 + A2 + A3) / U
+   10 CONTINUE
+      RETURN
+      END
+C
+C     ---- p3, body of section 6 ----
+      SUBROUTINE P3 (PX, PY, PZ, PT, PT1, PT2)
+      REAL PX, PY, PZ, PT, PT1, PT2
+      PX = PY
+      PY = PZ
+      PX = PT * (PX + PY)
+      PY = PT1 * (PX + PY)
+      PZ = (PX + PY) / PT2
+      RETURN
+      END
+C
+C     ---- po, body of section 7 ----
+C     The C original performs three assignments in sequence on
+C     the same array, so the third reads the value just written
+C     by the first. With j=0, k=1, l=2 held constant this is
+C     e0 = e1 ; e1 = e2 ; e2 = e0. The fourth element is unused.
+      SUBROUTINE PO (B0, B1, B2, B3)
+      REAL B0, B1, B2, B3
+      B0 = B1
+      B1 = B2
+      B2 = B0
+      RETURN
+      END
+*execute
+*end file

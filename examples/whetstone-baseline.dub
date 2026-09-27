@@ -1,0 +1,170 @@
+*name whetstone
+*pascal
+program whetstone (output);
+const
+  (* this compiler does not allow a const to reference another
+     const, so the loop counts are written out as literals;
+     they correspond to x100 = 1 in the original *)
+  n1 = 12;
+  n2 = 14;
+  n3 = 345;
+  n4 = 210;
+  n5 = 32;
+  n6 = 899;
+  n7 = 616;
+  n8 = 93;
+  n1mul = 10;
+  xtra = 1;
+  x100 = 1;
+type
+  rvec = packed array [0..3] of real;
+var
+  e1: rvec;
+  x, y, z: real;
+  t, t0, t1, t2: real;
+  chk: real;
+  i, j, k, l, ix: integer;
+(* Whetstone benchmark, port to BESM-6 Pascal. *)
+(* Original: H. Curnow CCTA 1972, B. Wichmann NPL 1960s, *)
+(* C version R. Longbottom 1996, file whets.c. *)
+(* Single precision, xtra=1 x100=1, so the reference values *)
+(* are those of one outer pass. No in-program timer exists, so *)
+(* the MWIPS rating is computed by the external profiler:      *)
+(*   besm6 run ... --profile --ops 15869 --loop-cycles N      *)
+procedure pa (var v: rvec; tt, u: real);
+var m: integer;
+begin
+  for m := 0 to 5 do begin
+    v[0] := (v[0] + v[1] + v[2] - v[3]) * tt;
+    v[1] := (v[0] + v[1] - v[2] + v[3]) * tt;
+    v[2] := (v[0] - v[1] + v[2] + v[3]) * tt;
+    v[3] := (-v[0] + v[1] + v[2] + v[3]) / u;
+  end;
+end;
+procedure po (var v: rvec; jj, kk, ll: integer);
+begin
+  v[jj] := v[kk];
+  v[kk] := v[ll];
+  v[ll] := v[jj];
+end;
+procedure p3 (var px, py, pz, pt, pt1, pt2: real);
+begin
+  px := py;
+  py := pz;
+  px := pt * (px + py);
+  py := pt1 * (px + py);
+  pz := (px + py) / pt2;
+end;
+begin
+  t := 0.49999975;
+  t0 := t;
+  t1 := 0.50000025;
+  t2 := 2.0;
+  chk := 0.0;
+  writeln('--------------------------------------');
+  writeln('Whetstone Benchmark on BESM-6 (Pascal)');
+  writeln('Original Curnow 1972, Wichmann, Longbottom');
+  writeln('Single precision, xtra=1 x100=1');
+  writeln('--------------------------------------');
+  e1[0] := 1.0;
+  e1[1] := -1.0;
+  e1[2] := -1.0;
+  e1[3] := -1.0;
+  for ix := 1 to xtra do begin
+    for i := 1 to 120 do begin
+      e1[0] := (e1[0] + e1[1] + e1[2] - e1[3]) * t;
+      e1[1] := (e1[0] + e1[1] - e1[2] + e1[3]) * t;
+      e1[2] := (e1[0] - e1[1] + e1[2] + e1[3]) * t;
+      e1[3] := (-e1[0] + e1[1] + e1[2] + e1[3]) * t;
+    end;
+    t := 1.0 - t;
+  end;
+  t := t0;
+  chk := chk + e1[3];
+  writeln('N1 floating point   ', e1[3]:0:12);
+  for ix := 1 to xtra do begin
+    for i := 1 to n2 do pa(e1, t, t2);
+    t := 1.0 - t;
+  end;
+  t := t0;
+  chk := chk + e1[3];
+  writeln('N2 floating point   ', e1[3]:0:12);
+  j := 1;
+  for ix := 1 to xtra do begin
+    for i := 1 to n3 do begin
+      if j = 1 then j := 2 else j := 3;
+      if j > 2 then j := 0 else j := 1;
+      if j < 1 then j := 1 else j := 0;
+    end;
+  end;
+  chk := chk + j;
+  writeln('N3 if then else     ', j:0);
+  j := 1;
+  k := 2;
+  l := 3;
+  e1[0] := 0.0;
+  e1[1] := 0.0;
+  for ix := 1 to xtra do begin
+    for i := 1 to n4 do begin
+      j := j * (k - j) * (l - k);
+      k := l * k - (l - j) * k;
+      l := (l - k) * (k + j);
+      e1[l - 2] := e1[l - 2] + j + k + l;
+      e1[k - 2] := e1[k - 2] + j * k * l;
+    end;
+  end;
+  x := (e1[0] + e1[1]) / 210.0;
+  chk := chk + x;
+  writeln('N4 fixed point      ', x:0:12);
+  x := 0.5;
+  y := 0.5;
+  for ix := 1 to xtra do begin
+    for i := 1 to n5 - 1 do begin
+      x := t * arctan(t2 * sin(x) * cos(x)
+            / (cos(x + y) + cos(x - y) - 1.0));
+      y := t * arctan(t2 * sin(y) * cos(y)
+            / (cos(x + y) + cos(x - y) - 1.0));
+    end;
+    t := 1.0 - t;
+  end;
+  t := t0;
+  chk := chk + y;
+  writeln('N5 sin,cos etc.     ', y:0:12);
+  x := 1.0;
+  y := 1.0;
+  z := 1.0;
+  for ix := 1 to xtra do begin
+    for i := 1 to n6 do p3(x, y, z, t, t1, t2);
+  end;
+  chk := chk + z;
+  writeln('N6 floating point   ', z:0:12);
+  j := 0;
+  k := 1;
+  l := 2;
+  e1[0] := 1.0;
+  e1[1] := 2.0;
+  e1[2] := 3.0;
+  for ix := 1 to xtra do begin
+    for i := 1 to n7 do po(e1, j, k, l);
+  end;
+  chk := chk + e1[2];
+  writeln('N7 assignments      ', e1[2]:0:12);
+  x := 0.75;
+  for ix := 1 to xtra do begin
+    for i := 1 to n8 do x := sqrt(exp(ln(x) / t1));
+  end;
+  chk := chk + x;
+  writeln('N8 exp,sqrt etc.    ', x:0:12);
+  writeln('--------------------------------------');
+  writeln('Operations N1..N8   ', 15869:6);
+  writeln('Check sum           ', chk:0:12);
+  writeln('Reference expected  ', 14.9835428096086:0:12);
+  if abs(chk - 14.9835428096086) < 0.0001 then
+    writeln('WHETSTONE VALIDATES')
+  else
+    writeln('WRONG ANSWER');
+  writeln('--------------------------------------');
+end.
+*library:22
+*execute
+*end file
