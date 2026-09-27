@@ -1,0 +1,74 @@
+*name stream
+*pascal
+program stream (output);
+const
+  n = 6000;
+  ntimes = 1;
+type
+  rvec = packed array [1..n] of real;
+var
+  a, b, c: rvec;
+  j, k: integer;
+  sclr, aj, bj, cj: real;
+  erra, errb, errc, eps: real;
+  nbad: integer;
+(* STREAM 5.6 on BESM-6, Pascal. Original by J. D. McCalpin. *)
+(* Source anybench/src/benchmarks/generic/STREAM, STREAM variant. *)
+(* No MB/s figure: BESM-6 has no deterministic in-program timer. *)
+begin
+  eps := 1.0E-6;
+  nbad := 0;
+  writeln('--------------------------------------');
+  writeln('STREAM 5.6 on BESM-6 (Pascal)');
+  writeln('Array size ', n:6, '  times ', ntimes:6);
+  writeln('--------------------------------------');
+  for j := 1 to n do begin
+    a[j] := 2.0;
+    b[j] := 0.5;
+    c[j] := 0.0;
+  end;
+  sclr := 3.0;
+  for k := 1 to ntimes do begin
+    for j := 1 to n do c[j] := a[j];
+    for j := 1 to n do b[j] := sclr * c[j];
+    for j := 1 to n do c[j] := a[j] + b[j];
+    for j := 1 to n do a[j] := b[j] + sclr * c[j];
+  end;
+  writeln('Kernels Copy Scale Add Triad done');
+  aj := 1.0;
+  bj := 2.0;
+  cj := 0.0;
+  aj := 2.0 * aj;
+  for k := 1 to ntimes do begin
+    cj := aj;
+    bj := sclr * cj;
+    cj := aj + bj;
+    aj := bj + sclr * cj;
+  end;
+  erra := 0.0;
+  errb := 0.0;
+  errc := 0.0;
+  for j := 1 to n do begin
+    erra := erra + abs(a[j] - aj);
+    errb := errb + abs(b[j] - bj);
+    errc := errc + abs(c[j] - cj);
+  end;
+  erra := erra / n;
+  errb := errb / n;
+  errc := errc / n;
+  writeln('AvgRelAbsErr a ', erra:0:10);
+  writeln('AvgRelAbsErr b ', errb:0:10);
+  writeln('AvgRelAbsErr c ', errc:0:10);
+  if erra > eps then nbad := nbad + 1;
+  if errb > eps then nbad := nbad + 1;
+  if errc > eps then nbad := nbad + 1;
+  writeln('--------------------------------------');
+  if nbad = 0 then
+    writeln('SOLUTION VALIDATES')
+  else
+    writeln('FAILED ON ', nbad, ' ARRAYS');
+  writeln('--------------------------------------');
+end.
+*library:22
+*execute
+*end file
