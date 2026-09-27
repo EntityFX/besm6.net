@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using Besm6.Assembler;
+using Besm6.Core;
 namespace Besm6.Cli
 {
     /// <summary>
@@ -152,10 +153,23 @@ namespace Besm6.Cli
                 loader.HangDetect = hangDetect && !noHangDetect;
                 if (noWallClock) loader.UseWallClock = false;
 
+                OpcodeProfiler? opcodeProfiler = null;
+                if (profile)
+                {
+                    // Профайлер опкодов: read-only хук, Gate A (семантика инструкций) не затрагивается.
+                    opcodeProfiler = new OpcodeProfiler();
+                }
+
+                // --dump-mem-at и --profile подписываются на ОДИН и тот же хук
+                // loader.TypedInstructionTrace, поэтому присваивать его по очереди нельзя:
+                // второй наблюдатель затрёт первого, и снимок ОС молча пропадёт —
+                // на выходе останется бесполезный дамп памяти после прогона,
+                // где монитор уже стёр собственный образ.
+                Action<InstructionTraceRecord>? dumpObserver = null;
                 if (memDumpFile != null && memDumpAt >= 0)
                 {
                     long seen = 0;
-                    loader.TypedInstructionTrace = rec =>
+                    dumpObserver = rec =>
                     {
                         if (memDumpAt < 0) return;      // снимок уже сделан
                         if (++seen < memDumpAt) return;
@@ -165,13 +179,11 @@ namespace Besm6.Cli
                     };
                 }
 
-                OpcodeProfiler? opcodeProfiler = null;
-                if (profile)
-                {
-                    // Профайлер опкодов: read-only хук, Gate A (семантика инструкций) не затрагивается.
-                    opcodeProfiler = new OpcodeProfiler();
-                    loader.TypedInstructionTrace = opcodeProfiler.Observe;
-                }
+                Action<InstructionTraceRecord>? profilerObserver =
+                    opcodeProfiler != null ? opcodeProfiler.Observe : null;
+                Action<InstructionTraceRecord>? observer = Chain(dumpObserver, profilerObserver);
+                if (observer != null)
+                    loader.TypedInstructionTrace = observer;
 
                 if (trace)
                 {
@@ -250,6 +262,19 @@ namespace Besm6.Cli
             int op = (int)((rk >> 12) & 0x7F);
             int addr = (int)(rk & 0xFFF);
             return OctW((ulong)reg, 2) + " " + OctW((ulong)op, 3) + " " + OctW((ulong)addr, 4);
+        }
+
+        /// <summary>
+        /// Объединить наблюдателей <c>Processor.InstructionTrace</c> в один: хук
+        /// у процессора одиночный, поэтому --dump-mem-at и --profile должны
+        /// выполняться оба, а не затирать друг друга.
+        /// </summary>
+        private static Action<InstructionTraceRecord>? Chain(
+            Action<InstructionTraceRecord>? a, Action<InstructionTraceRecord>? b)
+        {
+            if (a == null) return b;
+            if (b == null) return a;
+            return rec => { a(rec); b(rec); };
         }
 
         /// <summary>
