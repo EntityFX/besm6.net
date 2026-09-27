@@ -1,0 +1,109 @@
+*name stream
+*ftn
+      PROGRAM STREAM
+C     ==========================================================
+C     STREAM 5.6 -- port to BESM-6, FORTRAN-GDR DIALECT
+C
+C     Original: John D. McCalpin, STREAM 5.6
+C     Source:   anybench/src/benchmarks/generic/STREAM
+C
+C     BASELINE variant. All four kernels are executed and the
+C     result is validated exactly as in the original checksums,
+C     but no MB/s figure is reported: BESM-6 has no deterministic
+C     in-program timer. See reports/stream-porting-report.md.
+C
+C     Per LICENSE.txt item 3b this counts as a STREAM variant.
+C
+C     LANGUAGE NOTES (all established by probes):
+C       * identifiers are limited to 6 characters (ERROR 035)
+C       * only single-statement IF ... GO TO, no block IF
+C       * DO bounds must be integer constants (ERROR 094)
+C       * PARAMETER is not available, use DATA instead
+C       * a format may carry only one scale factor 1P
+C       * array elements cannot be PRINT items: copy to a scalar
+C       * no DOUBLE PRECISION; REAL is the 48 bit BESM6 word
+C     ==========================================================
+      INTEGER N, NTIM, J, K, NBAD
+      DATA N / 6000 /
+      DATA NTIM / 1 /
+      REAL A(6000), B(6000), C(6000)
+      REAL SCLR, AJ, BJ, CJ
+      REAL ERRA, ERRB, ERRC, EPS
+      EPS = 1.0E-6
+      NBAD = 0
+      PRINT 100
+      PRINT 102
+      PRINT 103, N
+      PRINT 111, NTIM
+      PRINT 101
+  100 FORMAT ('--------------------------------------')
+  101 FORMAT ('--------------------------------------')
+  102 FORMAT ('STREAM 5.6 on BESM6 Fortran-GDR')
+  103 FORMAT ('Array size ', I6)
+  111 FORMAT ('Times per kernel ', I6)
+      DO 10 J = 1, 6000
+         A(J) = 2.0
+         B(J) = 0.5
+         C(J) = 0.0
+   10 CONTINUE
+      SCLR = 3.0
+      DO 20 K = 1, 1
+         DO 30 J = 1, 6000
+            C(J) = A(J)
+   30    CONTINUE
+         DO 40 J = 1, 6000
+            B(J) = SCLR * C(J)
+   40    CONTINUE
+         DO 50 J = 1, 6000
+            C(J) = A(J) + B(J)
+   50    CONTINUE
+         DO 60 J = 1, 6000
+            A(J) = B(J) + SCLR * C(J)
+   60    CONTINUE
+   20 CONTINUE
+      PRINT 104
+  104 FORMAT ('Kernels Copy Scale Add Triad done')
+C
+C     ---- validation, exactly as in the original checksums ----
+C     Reproduce the initialisation in scalar form, run the same
+C     kernel chain, then compare element by element.
+      AJ = 1.0
+      BJ = 2.0
+      CJ = 0.0
+      AJ = 2.0 * AJ
+      DO 70 K = 1, 1
+         CJ = AJ
+         BJ = SCLR * CJ
+         CJ = AJ + BJ
+         AJ = BJ + SCLR * CJ
+   70 CONTINUE
+      ERRA = 0.0
+      ERRB = 0.0
+      ERRC = 0.0
+      DO 80 J = 1, 6000
+         ERRA = ERRA + ABS(A(J) - AJ)
+         ERRB = ERRB + ABS(B(J) - BJ)
+         ERRC = ERRC + ABS(C(J) - CJ)
+   80 CONTINUE
+      ERRA = ERRA / 6000.0
+      ERRB = ERRB / 6000.0
+      ERRC = ERRC / 6000.0
+      PRINT 105, ERRA
+      PRINT 106, ERRB
+      PRINT 107, ERRC
+  105 FORMAT ('AvgRelAbsErr a ', 1P, E20.12)
+  106 FORMAT ('AvgRelAbsErr b ', 1P, E20.12)
+  107 FORMAT ('AvgRelAbsErr c ', 1P, E20.12)
+      IF (ERRA .GT. EPS) NBAD = NBAD + 1
+      IF (ERRB .GT. EPS) NBAD = NBAD + 1
+      IF (ERRC .GT. EPS) NBAD = NBAD + 1
+      PRINT 108
+      IF (NBAD .EQ. 0) PRINT 109
+      IF (NBAD .NE. 0) PRINT 110, NBAD
+  108 FORMAT ('--------------------------------------')
+  109 FORMAT ('SOLUTION VALIDATES')
+  110 FORMAT ('FAILED ON ', I6, ' ARRAYS')
+      STOP
+      END
+*execute
+*end file
