@@ -43,6 +43,11 @@
 Второй ключ необходим: к концу задания монитор затирает собственный образ,
 и дамп «после» содержит пустоту вместо кода ядра.
 
+`--dump-mem-at` совместим с `--profile`: оба ключа подписываются на один и тот же
+хук `Processor.InstructionTrace`, и наблюдатели вызываются оба. Это проверено
+тестом `MemoryDumpTraceHookTests` в `tests/Besm6.Cli.Tests/`: снимок с `--profile`
+побайтово совпадает со снимком без него.
+
 ## 3. Как ленты используются эмулятором
 
 Отдельного ленточного экстракода в модели нет: ленты смонтированы как
@@ -204,3 +209,14 @@ python3 tools/besm6tape.py info   tapes/monsys.9
 3. `src/Besm6.Runtime/Loading/MonsysBootstrapper.cs` — бутстрап MONSYS.
 4. `src/Besm6.Assembler/Disassembler.cs`, `src/Besm6.Architecture/InstructionCodec.cs` — кодирование ISA.
 5. `ref/dubna/` — исходники проекта-первоисточника (MIT), включая `machine.cpp` и `gost10859.h`.
+
+---
+
+## 10. Продолжение работы
+
+По этому документу код ядра не был восстановлен — здесь только картирование.
+Разбор самого ядра — в **`docs/monsys-kernel.md`** (карта, соглашение о вызовах,
+таблицы, машинный листинг) и **`docs/monsys-kernel-hl.md`** (высокоуровневый
+псевдокод и описание устройства ОС). Инструменты: `tools/besm6kernel.py`,
+`tools/besm6decomp.py`.
+
