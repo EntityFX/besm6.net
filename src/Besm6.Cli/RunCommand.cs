@@ -11,7 +11,7 @@ namespace Besm6.Cli
     {
         public string Name => "run";
         public string Description => "Load and execute a .dub job script";
-        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--passes N] [--mflops N] [--ops N] [--loop-cycles N] [--baseline-cycles N] [--baseline-instructions N] [--config path]";
+        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--passes N] [--mflops N] [--ops N] [--loop-cycles N] [--baseline-cycles N] [--baseline-instructions N] [--config path]";
 
         public int Execute(string[] args)
         {
@@ -27,6 +27,10 @@ namespace Besm6.Cli
             bool trace = false;
             string? configPath = null;
             string? regsFile = null;
+            string? memDumpFile = null;
+            long memDumpAt = -1;
+            bool memDumpDone = false;
+            int memDumpCount = 0;
             bool loopDetect = false;
             bool noLoopDetect = false;
             bool noWallClock = false;
@@ -52,6 +56,19 @@ namespace Besm6.Cli
                         break;
                     case "--trace":
                         trace = true;
+                        break;
+                    case "--dump-mem" when i + 1 < args.Length:
+                        // Дамп памяти после прогона в SIMH-формате (6 байт на слово) —
+                        // для дизассемблирования образа ОС, реально исполнявшейся на БЭСМ-6.
+                        memDumpFile = args[++i];
+                        break;
+                    case "--dump-mem-at" when i + 1 < args.Length:
+                        // Снимок памяти после N инструкций (нужно для дизассемблирования
+                        // ОС: после завершения задания монитор затирает свой образ).
+                        long.TryParse(args[++i], out memDumpAt);
+                        break;
+                    case "--dump-mem-count" when i + 1 < args.Length:
+                        int.TryParse(args[++i], out memDumpCount);
                         break;
                     case "--trace-regs" when i + 1 < args.Length:
                         // регистров после каждого шага (см. ref/trace.cpp print_instruction/
@@ -127,12 +144,26 @@ namespace Besm6.Cli
                 // (docs/runtime-assets.md), а не молча упираться в junction ref/dubna.
                 ResolvedRuntimeAssets runtimeAssets = MachineFactory.ValidateRuntimeAssets(cfg);
 
-                var loader = MachineFactory.CreateLoader(cfg, runtimeAssets: runtimeAssets);
+                var machine = MachineFactory.CreateMachine(cfg);
+                var loader = MachineFactory.CreateLoader(cfg, machine, runtimeAssets);
                 loader.InstructionLimit = limit;
                 loader.Verbose = verbose;
                 loader.LoopDetect = loopDetect && !noLoopDetect;
                 loader.HangDetect = hangDetect && !noHangDetect;
                 if (noWallClock) loader.UseWallClock = false;
+
+                if (memDumpFile != null && memDumpAt >= 0)
+                {
+                    long seen = 0;
+                    loader.TypedInstructionTrace = rec =>
+                    {
+                        if (memDumpAt < 0) return;      // снимок уже сделан
+                        if (++seen < memDumpAt) return;
+                        DumpMemory(machine, memDumpFile, memDumpCount);
+                        memDumpAt = -1;
+                        memDumpDone = true;
+                    };
+                }
 
                 OpcodeProfiler? opcodeProfiler = null;
                 if (profile)
@@ -162,6 +193,9 @@ namespace Besm6.Cli
 
                 var result = loader.RunScript(jobFile);
                 Console.WriteLine(result);
+
+                if (memDumpFile != null && !memDumpDone)
+                    DumpMemory(machine, memDumpFile, memDumpCount);
 
                 if (opcodeProfiler != null)
                 {
@@ -216,6 +250,23 @@ namespace Besm6.Cli
             int op = (int)((rk >> 12) & 0x7F);
             int addr = (int)(rk & 0xFFF);
             return OctW((ulong)reg, 2) + " " + OctW((ulong)op, 3) + " " + OctW((ulong)addr, 4);
+        }
+
+        /// <summary>
+        /// Дамп ОЗУ в SIMH-формате (6 байт на 48-битное слово) — вход для
+        /// tools/besm6tape.py, которым дизассемблируется образ ОС «Дубна».
+        /// </summary>
+        private static void DumpMemory(MachineCore machine, string path, int count)
+        {
+            int total = count > 0 ? count : 32768;   // 0o77777+1
+            using var fs = File.Create(path);
+            for (uint a = 0; a < (uint)total; a++)
+            {
+                ulong word = machine.Memory.Read(a).Value;
+                for (int sh = 40; sh >= 0; sh -= 8)
+                    fs.WriteByte((byte)((word >> sh) & 0xFF));
+            }
+            Console.Error.WriteLine($"memory dump: {total} words -> {path}");
         }
 
         /// <summary>besm6_print_word_octal: 4 группы по 4 восьмеричных разряда.</summary>
