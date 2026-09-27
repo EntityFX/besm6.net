@@ -11,6 +11,7 @@
 | 2 | `monsys-kernel.md` | Ядро: где находится, точки входа, соглашение о вызовах, таблицы | `monsys-kernel.listing.txt` — машинный листинг, 1023 строки |
 | 3 | `monsys-kernel-hl.md` | Ядро: высокоуровневый псевдокод и устройство ОС | `monsys-kernel.hl.txt` — 385 строк |
 | 4 | `ose-corpus.md` | Корпус: компиляторы и подсистемы ОС за пределами ядра | `ose-corpus.hl.txt` — 15 459 строк, 1379 тел; `ose-corpus.regions.json` — карта участков |
+| 5 | `monsys-kernel-c.md` | Всё то же на уровне C: модель памяти и числа, ограничения | `monsys-kernel.c.txt` — 21 функция, 681 строка; `ose-corpus.c.txt` — 243 функции, 5333 строки |
 
 ## Инструменты
 
@@ -18,7 +19,7 @@
 |---|---|
 | `tools/besm6tape.py` | Дизассемблер образов SIMH: `info`, `dis`, `text`, `strings`, `zones` |
 | `tools/besm6kernel.py` | Анализ ядра по снимку + трассе: `structure`, `listing`, `calls`, `where`, `selfmod` |
-| `tools/besm6decomp.py` | Декомпиляция в структурированный псевдокод (`--routine 0oNNNN` для одной подпрограммы) |
+| `tools/besm6decomp.py` | Декомпиляция в структурированный псевдокод или в C-подобный вид (`--lang c`, `--routine 0oNNNN`) |
 | `tools/besm6harvest.py` | Сбор образов ОЗУ и трасс по заданиям `.dub` + разбор карт E70 |
 | `tools/besm6corpus.py` | Сводная карта участков ОЗУ по собранным заданиям |
 
