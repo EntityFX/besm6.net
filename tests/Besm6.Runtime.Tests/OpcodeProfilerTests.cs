@@ -113,6 +113,67 @@ public sealed class OpcodeProfilerTests
     }
 
     [TestMethod]
+    public void ComputeWhetstone_MatchesModeledTimeFormula()
+    {
+        var profiler = new OpcodeProfiler();
+        for (int i = 0; i < 100; i++)
+            profiler.Observe((uint)Opcode.ADivX); // 100 × 12 = 1200 тактов
+
+        // loopCycles=1000: 1000 × 100 нс = 1e-4 c; MOPS = 1500/1e6/1e-4 = 15.
+        WhetstoneMetrics m = profiler.ComputeWhetstone(operations: 1500, loopCycles: 1000);
+
+        Assert.IsTrue(m.Measurable);
+        Assert.AreEqual(1500L, m.Operations);
+        Assert.AreEqual(1000L, m.Cycles);
+        Assert.AreEqual(1e-4, m.Seconds, 1e-15);
+        Assert.AreEqual(15.0, m.Mops, 1e-9);
+        Assert.AreEqual(150.0, m.Mwips, 1e-9);
+        Assert.AreEqual(1.5, m.OperationsPerCycle, 1e-12);
+        Assert.AreEqual(150.0 / Besm6Timing.ReferenceMwips, m.VaxMips, 1e-9);
+    }
+
+    [TestMethod]
+    public void ComputeWhetstone_LoopCyclesTakesPrecedenceOverBaseline()
+    {
+        var profiler = new OpcodeProfiler();
+        for (int i = 0; i < 100; i++)
+            profiler.Observe((uint)Opcode.ADivX);
+
+        // При заданных loopCycles базовая поправка не применяется.
+        WhetstoneMetrics withLoops =
+            profiler.ComputeWhetstone(1500, baselineCycles: 200, loopCycles: 1000);
+        WhetstoneMetrics withoutLoops =
+            profiler.ComputeWhetstone(1500, baselineCycles: 200);
+
+        Assert.AreEqual(1000L, withLoops.Cycles);
+        Assert.AreEqual(1000L, withoutLoops.Cycles);
+    }
+
+    [TestMethod]
+    public void ComputeWhetstone_WithoutOperationsOrCycles_IsNotMeasurable()
+    {
+        var profiler = new OpcodeProfiler();
+        Assert.IsFalse(profiler.ComputeWhetstone(operations: 0).Measurable);
+        Assert.IsFalse(profiler.ComputeWhetstone(operations: 1500, baselineCycles: 100_000)
+            .Measurable);
+    }
+
+    [TestMethod]
+    public void FormatWhetstone_EmitsMipsAndMwipsLines()
+    {
+        var profiler = new OpcodeProfiler();
+        for (int i = 0; i < 100; i++)
+            profiler.Observe((uint)Opcode.ADivX);
+
+        string text = profiler.FormatWhetstone(1500, loopCycles: 1000);
+
+        StringAssert.Contains(text, "Whetstone Benchmark");
+        StringAssert.Contains(text, "Total MOPS:");
+        StringAssert.Contains(text, "MWIPS rating:");
+        StringAssert.Contains(text, "15.0000");
+    }
+
+    [TestMethod]
     public void ComputeDhrystone_WithoutPassesOrCycles_IsNotMeasurable()
     {
         var profiler = new OpcodeProfiler();
