@@ -225,6 +225,57 @@ public sealed class ExecutionBlockTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void OrdinaryExceptionInsideBareBlockPreservesCountsAndAllowsResume(bool cacheEnabled)
+    {
+        var machine = new MachineCore();
+        machine.Cpu.InstructionCacheEnabled = cacheEnabled;
+        machine.LoadProgram(new[]
+        {
+            new Word48(Besm6.Asm.Assembler.Asm("vtm 1(2), a/x 0")),
+            new Word48(Besm6.Asm.Assembler.Asm("vtm 7(2), stop")),
+        }, 1);
+        long count = 0;
+        var exception = Assert.Throws<ProcessorException>(() => machine.ExecuteBlock(256, ref count));
+        Assert.AreEqual("Division by zero", exception.Message);
+        Assert.AreEqual(1L, count);
+        Assert.AreEqual(1UL, machine.Clock.Tick);
+        Assert.AreEqual(1u, machine.Cpu.GetM(2));
+        Assert.AreEqual(2u, machine.Cpu.GetK());
+        Assert.IsFalse(machine.Cpu.RightInstruction);
+
+        Assert.IsTrue(machine.ExecuteBlock(256, ref count));
+        Assert.AreEqual(3L, count);
+        Assert.AreEqual(3UL, machine.Clock.Tick);
+        Assert.AreEqual(7u, machine.Cpu.GetM(2));
+    }
+
+    [TestMethod]
+    public void ExtracodeCallbackObservesAllPriorBlockTicksAndCounts()
+    {
+        var machine = new MachineCore();
+        machine.LoadProgram(new[]
+        {
+            new Word48(Besm6.Asm.Assembler.Asm("vtm 1(2), *50 1")),
+            new Word48(Besm6.Asm.Assembler.Asm("stop")),
+        }, 1);
+        long count = 0;
+        bool observed = false;
+        machine.Cpu.ExtracodeDispatch = _ =>
+        {
+            Assert.AreEqual(1L, count);
+            Assert.AreEqual(1UL, machine.Clock.Tick);
+            observed = true;
+            return true;
+        };
+        Assert.IsTrue(machine.ExecuteBlock(256, ref count));
+        Assert.IsTrue(observed);
+        Assert.AreEqual(3L, count);
+        Assert.AreEqual(3UL, machine.Clock.Tick);
+    }
+
+    [TestMethod]
     public void TraceInstalledDuringBlockObservesSubsequentSteps()
     {
         var machine = new MachineCore();

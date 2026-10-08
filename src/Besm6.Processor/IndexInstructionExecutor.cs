@@ -12,6 +12,7 @@ namespace Besm6.Core
             _memory = memory;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
         internal InstructionOutcome Execute(ref ExecutionFrame frame)
         {
             int reg = frame.Instruction.Register;

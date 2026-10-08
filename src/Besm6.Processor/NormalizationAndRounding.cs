@@ -24,6 +24,7 @@ namespace Besm6.Core
         }
 
         /// <summary>Нормализует мантиссу, применяет округление и записывает A/Y.</summary>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
         internal void NormalizeAndRound(MantissaExponent a, ulong y, bool roundFlag)
         {
             ulong rr = 0;
