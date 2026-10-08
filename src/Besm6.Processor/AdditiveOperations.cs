@@ -21,6 +21,7 @@ namespace Besm6.Core
         }
 
         /// <summary>Сложение/вычитание операнда с аккумулятором A (регистры АЛУ A/Y).</summary>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
         internal void Add(Word48 val, bool negateA, bool negateVal)
         {
             MantissaExponent a = new MantissaExponent(new Word48(_state.A.Value));

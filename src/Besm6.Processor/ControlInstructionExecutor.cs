@@ -55,6 +55,7 @@ namespace Besm6.Core
             }
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
         private InstructionOutcome ExecuteOther(ref ExecutionFrame frame)
         {
             int reg = frame.Instruction.Register;

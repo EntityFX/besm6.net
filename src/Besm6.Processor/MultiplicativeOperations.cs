@@ -22,6 +22,7 @@ namespace Besm6.Core
         }
 
         /// <summary>Умножение аккумулятора A на операнд.</summary>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
         internal void Multiply(Word48 val)
         {
             if (_state.A.Value == 0 || val.Value == 0)
