@@ -12,6 +12,20 @@ namespace Besm6.Core
         private readonly IndexInstructionExecutor _indexInstructions;
         private readonly ControlInstructionExecutor _controlInstructions;
         private readonly ExtracodeInstructionExecutor _extracodeInstructions;
+        private const int DecodeCacheSize = 65536;
+        private CachedInstruction[]? _decodeCache;
+
+        internal bool InstructionCacheEnabled
+        {
+            get => _decodeCache is not null;
+            set => _decodeCache = value ? _decodeCache ?? new CachedInstruction[DecodeCacheSize] : null;
+        }
+
+        private struct CachedInstruction
+        {
+            internal uint Tag;
+            internal DecodedInstruction Instruction;
+        }
 
         internal InstructionExecutor(
             Processor processor,
@@ -59,9 +73,25 @@ namespace Besm6.Core
             rawInstruction &= 0xFF_FFFFu;
             _state.RawInstruction = rawInstruction;
 
-            DecodedInstruction instruction = InstructionCodec.DecodeHalf(rawInstruction);
+            DecodedInstruction instruction;
+            if (_decodeCache is { } cache)
+            {
+                // Fetch still occurs for every half. Compare the actual bits, so writes
+                // through any memory interface (including the other half) take effect.
+                uint index = (_state.K << 1) | (_state.IsRightHalf ? 1u : 0u);
+                ref CachedInstruction entry = ref cache[index];
+                uint tag = rawInstruction + 1; // Zero is a valid instruction, not an empty entry.
+                if (entry.Tag != tag)
+                {
+                    entry.Instruction = InstructionCodec.DecodeHalf(rawInstruction);
+                    entry.Tag = tag;
+                }
+                instruction = entry.Instruction;
+            }
+            else
+                instruction = InstructionCodec.DecodeHalf(rawInstruction);
             uint opcode = (uint)instruction.Opcode;
-            if (!_state.IsRightHalf && _processor.DebugCheckFetch(_state.K, opcode))
+            if (_state.DebugFetchArmed && !_state.IsRightHalf && _processor.DebugCheckFetch(_state.K, opcode))
                 return false;
 
             _processor.TraceInstruction?.Invoke(
@@ -69,24 +99,13 @@ namespace Besm6.Core
                 _state.IsRightHalf,
                 rawInstruction,
                 opcode);
-            _processor.CanonPre(
-                _state.K,
-                _state.IsRightHalf,
-                rawWord,
-                rawInstruction,
-                opcode,
-                instruction.Register,
-                instruction.Address);
+            _processor.CanonPre(rawWord, rawInstruction, instruction);
 
             var frame = new ExecutionFrame
             {
                 Instruction = instruction,
-                RawInstruction = rawInstruction,
-                RawWord = rawWord,
                 Address = instruction.Address,
                 EffectiveAddress = _state.EffectiveAddress,
-                WasRightHalf = _state.IsRightHalf,
-                NextK = ArchitectureConstants.NormalizeAddress(_state.K + 1),
                 A = _state.A.Value,
                 Y = _state.Y.Value,
             };
@@ -98,29 +117,29 @@ namespace Besm6.Core
             InstructionOutcome outcome;
             try
             {
-                outcome = Dispatch(frame);
+                outcome = Dispatch(ref frame);
             }
             catch (ProcessorException exception) when (string.IsNullOrEmpty(exception.Message))
             {
-                FinalizeInstruction(frame, updateRegistersAndModification: false);
+                FinalizeInstruction(ref frame, updateRegistersAndModification: false);
                 throw;
             }
 
-            FinalizeInstruction(frame, updateRegistersAndModification: true);
+            FinalizeInstruction(ref frame, updateRegistersAndModification: true);
             return outcome == InstructionOutcome.Stop;
         }
 
-        private InstructionOutcome Dispatch(ExecutionFrame frame)
+        private InstructionOutcome Dispatch(ref ExecutionFrame frame)
         {
             uint opcode = (uint)frame.Instruction.Opcode;
             if (opcode <= (uint)Opcode.Ntr)
-                return _memoryInstructions.Execute(frame);
+                return _memoryInstructions.Execute(ref frame);
             if (opcode is >= (uint)Opcode.Ati and <= (uint)Opcode.Op47)
-                return _indexInstructions.Execute(frame);
+                return _indexInstructions.Execute(ref frame);
             if (opcode >= (uint)Opcode.Utc)
-                return _controlInstructions.Execute(frame);
+                return _controlInstructions.Execute(ref frame);
             if (ExtracodeInstructionExecutor.CanExecute(frame.Instruction.Opcode))
-                return _extracodeInstructions.Execute(frame);
+                return _extracodeInstructions.Execute(ref frame);
             throw new ProcessorException($"Unknown instruction {opcode}");
         }
 
@@ -137,7 +156,7 @@ namespace Besm6.Core
             }
         }
 
-        private void FinalizeInstruction(ExecutionFrame frame, bool updateRegistersAndModification)
+        private void FinalizeInstruction(ref ExecutionFrame frame, bool updateRegistersAndModification)
         {
             if (updateRegistersAndModification)
             {
@@ -154,8 +173,11 @@ namespace Besm6.Core
                     }
                 }
 
-                _state.A = Word48.FromInt48(frame.A);
-                _state.Y = Word48.FromInt48(frame.Y);
+                if (!frame.RegistersInState)
+                {
+                    _state.A = Word48.FromInt48(frame.A);
+                    _state.Y = Word48.FromInt48(frame.Y);
+                }
             }
             _processor.CanonPost(_state.K, _state.IsRightHalf);
         }
