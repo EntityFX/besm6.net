@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace Besm6.Core
 {
@@ -10,6 +12,7 @@ namespace Besm6.Core
     {
         private readonly ProcessorDebugWatch _debugWatch;
         private readonly IMemory _memory;
+        private readonly CoreMemory? _coreMemory;
         internal bool IsPlainCoreMemory { get; }
 
         internal ProcessorMemoryAccess(ProcessorDebugWatch debugWatch, IMemory memory)
@@ -18,16 +21,23 @@ namespace Besm6.Core
             _memory = memory;
             // An IMemory override may observe each read or change CPU hooks.
             IsPlainCoreMemory = memory.GetType() == typeof(CoreMemory);
+            _coreMemory = IsPlainCoreMemory ? (CoreMemory)memory : null;
         }
 
         /// <summary>Читает слово по адресу команды; запрещает переход по нулевому адресу.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal ulong MemFetch(ulong addr)
         {
             addr &= 0x7FFF;
             if (addr == 0)
-                throw new ProcessorException("Jump to zero");
-            return _memory.Read((uint)addr).Value;
+                ThrowJumpToZero();
+            return _coreMemory is { } core
+                ? core.Read((uint)addr).Value : _memory.Read((uint)addr).Value;
         }
+
+        [DoesNotReturn]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowJumpToZero() => throw new ProcessorException("Jump to zero");
 
         /// <summary>Читает слово данных с проверкой load-watchpoint (mode=2).</summary>
         internal ulong MemLoad(uint addr)

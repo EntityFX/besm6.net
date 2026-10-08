@@ -14,7 +14,44 @@ namespace Besm6.Core
             _alu = alu;
         }
 
+        // Keep the frequent load/store/mode instructions small enough to inline.
+        // Their implementations live here once; other opcodes use the same fallback
+        // in both execution modes and with diagnostic subscribers.
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         internal InstructionOutcome Execute(ref ExecutionFrame frame)
+        {
+            switch (frame.Instruction.Opcode)
+            {
+                case Opcode.Xta:
+                {
+                    uint addr = frame.Address;
+                    int reg = frame.Instruction.Register;
+                    PrepareStack(addr, reg);
+                    SetEffectiveAddress(ref frame, Addr(addr + _state.M[reg]));
+                    frame.A = _memory.MemLoad(frame.EffectiveAddress);
+                    _state.SetLogical();
+                    return InstructionOutcome.Continue;
+                }
+                case Opcode.Atx:
+                {
+                    uint addr = frame.Address;
+                    int reg = frame.Instruction.Register;
+                    SetEffectiveAddress(ref frame, Addr(addr + _state.M[reg]));
+                    _memory.MemStore(frame.EffectiveAddress, frame.A);
+                    if (addr == 0 && reg == 15) _state.M[15] = Addr(_state.M[15] + 1);
+                    return InstructionOutcome.Continue;
+                }
+                case Opcode.Ntr:
+                    SetEffectiveAddress(ref frame, Addr(frame.Address + _state.M[frame.Instruction.Register]));
+                    _state.R = frame.EffectiveAddress & 0x3Fu;
+                    frame.RegistersInState = true;
+                    return InstructionOutcome.Continue;
+                default:
+                    return ExecuteOther(ref frame);
+            }
+        }
+
+        private InstructionOutcome ExecuteOther(ref ExecutionFrame frame)
         {
             int reg = frame.Instruction.Register;
             uint addr = frame.Address;
@@ -22,11 +59,6 @@ namespace Besm6.Core
 
             switch (frame.Instruction.Opcode)
             {
-                case Opcode.Atx:
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    _memory.MemStore(frame.EffectiveAddress, frame.A);
-                    if (addr == 0 && reg == 15) m[15] = Addr(m[15] + 1);
-                    break;
                 case Opcode.Stx:
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
                     _memory.MemStore(frame.EffectiveAddress, frame.A);
@@ -72,12 +104,6 @@ namespace Besm6.Core
                     _alu.Add(LoadWord(ref frame), true, true);
                     UseAluResult(ref frame);
                     _state.SetAdditive();
-                    break;
-                case Opcode.Xta:
-                    PrepareStack(addr, reg);
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    frame.A = _memory.MemLoad(frame.EffectiveAddress);
-                    _state.SetLogical();
                     break;
                 case Opcode.Aax:
                     PrepareStack(addr, reg);
@@ -221,11 +247,6 @@ namespace Besm6.Core
                     _alu.Shift((int)(frame.EffectiveAddress & 0x7Fu) - 64);
                     UseAluResult(ref frame);
                     _state.SetLogical();
-                    break;
-                case Opcode.Ntr:
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    _state.R = frame.EffectiveAddress & 0x3Fu;
-                    frame.RegistersInState = true;
                     break;
                 default:
                     throw new InvalidOperationException($"Opcode {frame.Instruction.Opcode} is not a memory instruction.");

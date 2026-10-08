@@ -205,6 +205,7 @@ namespace Besm6.Core
             return false;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private void AdvanceInstructionHalf()
         {
             if (_state.IsRightHalf)
@@ -218,6 +219,7 @@ namespace Besm6.Core
             }
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private void FinalizeInstruction(ref ExecutionFrame frame, bool updateRegistersAndModification, bool observe = true)
         {
             if (updateRegistersAndModification)
