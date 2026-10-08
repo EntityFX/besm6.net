@@ -45,6 +45,9 @@ namespace Besm6
         [JsonPropertyName("useWallClock")]
         public bool UseWallClock { get; set; } = true;
 
+        [JsonPropertyName("speed")]
+        public ExecutionSpeed Speed { get; set; } = ExecutionSpeed.Max;
+
         [JsonIgnore]
         private string? SourceDirectory { get; set; }
 

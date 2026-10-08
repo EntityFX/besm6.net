@@ -56,7 +56,7 @@ namespace Besm6.Core
             _normalizer.NormalizeAndRound(a, 0, false);
         }
 
-        private MantissaExponent NrDiv(MantissaExponent n, MantissaExponent d)
+        internal static MantissaExponent NrDiv(MantissaExponent n, MantissaExponent d)
         {
             MantissaExponent quot = new MantissaExponent(0, 0);
 
@@ -75,29 +75,33 @@ namespace Besm6.Core
 
             quot.Exponent = n.Exponent - d.Exponent + 64;
 
-            quot.Mantissa = 0;
+            long remainder = n.Mantissa;
+            long divisor = d.Mantissa;
+            long quotient = 0;
             for (long bitmask = MantissaExponent.BIT40; bitmask > 0; bitmask >>= 1)
             {
-                if (n.Mantissa == 0)
+                if (remainder == 0)
                     break;
 
-                if (Math.Abs(n.Mantissa) < MantissaExponent.BIT40)
+                // The unsigned range excludes both +/- BIT40 without computing
+                // an absolute value on every step of non-restoring division.
+                if ((ulong)(remainder + MantissaExponent.BIT40 - 1) <
+                    (ulong)(2 * MantissaExponent.BIT40 - 1))
                 {
-                    n.Mantissa *= 2;
+                    remainder *= 2;
                 }
-                else if ((n.Mantissa > 0) == (d.Mantissa > 0))
+                else if ((remainder ^ divisor) >= 0)
                 {
-                    quot.Mantissa += bitmask;
-                    n.Mantissa *= 2;
-                    n.Mantissa -= d.Mantissa;
+                    quotient += bitmask;
+                    remainder = remainder * 2 - divisor;
                 }
                 else
                 {
-                    quot.Mantissa -= bitmask;
-                    n.Mantissa *= 2;
-                    n.Mantissa += d.Mantissa;
+                    quotient -= bitmask;
+                    remainder = remainder * 2 + divisor;
                 }
             }
+            quot.Mantissa = quotient;
             return quot;
         }
     }

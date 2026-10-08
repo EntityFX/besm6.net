@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Text.Json;
+using System.Security.Cryptography;
 using Besm6.Assembler;
 using Besm6.Core;
 namespace Besm6.Cli
@@ -12,7 +14,7 @@ namespace Besm6.Cli
     {
         public string Name => "run";
         public string Description => "Load and execute a .dub job script";
-        public string Usage => "besm6 run <file.dub> [--limit N] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--passes N] [--mflops N] [--ops N] [--loop-cycles N] [--baseline-cycles N] [--baseline-instructions N] [--config path]";
+        public string Usage => "besm6 run <file.dub> [--speed original|max] [--stats] [--limit N] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--passes N] [--mflops N] [--ops N] [--loop-cycles N] [--baseline-cycles N] [--baseline-instructions N] [--config path]";
 
         public int Execute(string[] args)
         {
@@ -38,6 +40,8 @@ namespace Besm6.Cli
             bool hangDetect = false;
             bool noHangDetect = false;
             bool profile = false;
+            bool stats = false;
+            ExecutionSpeed? speedOverride = null;
             long profilePasses = 0;
             long profileBaselineCycles = 0;
             long profileBaselineInstructions = 0;
@@ -49,6 +53,17 @@ namespace Besm6.Cli
             {
                 switch (args[i])
                 {
+                    case "--speed":
+                        if (++i >= args.Length || !ExecutionSpeedNames.TryParse(args[i], out var parsedSpeed))
+                        {
+                            Console.Error.WriteLine("Error: --speed requires 'original' or 'max'.");
+                            return 1;
+                        }
+                        speedOverride = parsedSpeed;
+                        break;
+                    case "--stats":
+                        stats = true;
+                        break;
                     case "--limit" when i + 1 < args.Length:
                         long.TryParse(args[++i], out limit);
                         break;
@@ -134,12 +149,12 @@ namespace Besm6.Cli
                 }
             }
 
-            Config cfg = Config.Load(configPath);
-            if (limit == 0) limit = cfg.DefaultLimit;
-
             StreamWriter? regsWriter = null;
             try
             {
+                Config cfg = Config.Load(configPath);
+                if (speedOverride is ExecutionSpeed speed) cfg.Speed = speed;
+                if (limit == 0) limit = cfg.DefaultLimit;
                 // SuperPlan Task A4: fail-fast ДО запуска процессора — чётко перечислить отсутствующие
                 // bundled runtime-образы (monsys.9/librar.12/...) и способ восстановления
                 // (docs/runtime-assets.md), а не молча упираться в junction ref/dubna.
@@ -148,6 +163,7 @@ namespace Besm6.Cli
                 var machine = MachineFactory.CreateMachine(cfg);
                 var loader = MachineFactory.CreateLoader(cfg, machine, runtimeAssets);
                 loader.InstructionLimit = limit;
+                loader.CollectStatistics = stats;
                 loader.Verbose = verbose;
                 loader.LoopDetect = loopDetect && !noLoopDetect;
                 loader.HangDetect = hangDetect && !noHangDetect;
@@ -160,11 +176,7 @@ namespace Besm6.Cli
                     opcodeProfiler = new OpcodeProfiler();
                 }
 
-                // --dump-mem-at и --profile подписываются на ОДИН и тот же хук
-                // loader.TypedInstructionTrace, поэтому присваивать его по очереди нельзя:
-                // второй наблюдатель затрёт первого, и снимок ОС молча пропадёт —
-                // на выходе останется бесполезный дамп памяти после прогона,
-                // где монитор уже стёр собственный образ.
+                // Memory dumps need full snapshots; opcode profiling uses the allocation-free hook.
                 Action<InstructionTraceRecord>? dumpObserver = null;
                 if (memDumpFile != null && memDumpAt >= 0)
                 {
@@ -179,11 +191,9 @@ namespace Besm6.Cli
                     };
                 }
 
-                Action<InstructionTraceRecord>? profilerObserver =
-                    opcodeProfiler != null ? opcodeProfiler.Observe : null;
-                Action<InstructionTraceRecord>? observer = Chain(dumpObserver, profilerObserver);
-                if (observer != null)
-                    loader.TypedInstructionTrace = observer;
+                loader.TypedInstructionTrace = dumpObserver;
+                if (opcodeProfiler != null)
+                    loader.InstructionExecuted = opcode => opcodeProfiler.Observe((uint)opcode);
 
                 if (trace)
                 {
@@ -223,6 +233,11 @@ namespace Besm6.Cli
                         Console.Write(opcodeProfiler.FormatMflops(
                             profileMflops, profileBaselineCycles, profileBaselineInstructions));
                 }
+
+                if (stats && loader.Statistics is ExecutionStatistics statistics)
+                    WriteStatistics(machine, statistics);
+                if (loader.Statistics is { OriginalTempoMet: false })
+                    Console.Error.WriteLine("Original speed target not met: host execution is slower than modeled BESM-6 time.");
 
                 if (result.Success) return 0;
                 if (result.LimitExceeded)
@@ -264,17 +279,29 @@ namespace Besm6.Cli
             return OctW((ulong)reg, 2) + " " + OctW((ulong)op, 3) + " " + OctW((ulong)addr, 4);
         }
 
-        /// <summary>
-        /// Объединить наблюдателей <c>Processor.InstructionTrace</c> в один: хук
-        /// у процессора одиночный, поэтому --dump-mem-at и --profile должны
-        /// выполняться оба, а не затирать друг друга.
-        /// </summary>
-        private static Action<InstructionTraceRecord>? Chain(
-            Action<InstructionTraceRecord>? a, Action<InstructionTraceRecord>? b)
+        private static void WriteStatistics(MachineCore machine, ExecutionStatistics statistics)
         {
-            if (a == null) return b;
-            if (b == null) return a;
-            return rec => { a(rec); b(rec); };
+            // Outside the measured loop: a reproducible fingerprint for benchmark parity checks.
+            using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            Span<byte> wordBytes = stackalloc byte[6];
+            for (uint address = 0; address < (uint)machine.Memory.Size; address++)
+            {
+                ulong word = machine.Memory.Read(address).Value;
+                for (int i = 0; i < 6; i++) wordBytes[i] = (byte)(word >> (40 - 8 * i));
+                hash.AppendData(wordBytes);
+            }
+            var finalState = new ProcessorSnapshot(machine.Cpu.State);
+            var report = new
+            {
+                statistics,
+                finalState = new { finalState.K, finalState.IsRightHalf, A = finalState.A.Value,
+                    Y = finalState.Y.Value, finalState.R, finalState.C, finalState.ApplyC,
+                    finalState.EffectiveAddress, finalState.InterceptCount, finalState.InterceptAddress,
+                    finalState.M, ClockTicks = machine.Clock.Tick },
+                memorySha256 = Convert.ToHexString(hash.GetHashAndReset()),
+            };
+            Console.WriteLine("Execution stats: " + JsonSerializer.Serialize(report,
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
         }
 
         /// <summary>

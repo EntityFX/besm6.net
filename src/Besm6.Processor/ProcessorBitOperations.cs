@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 
 namespace Besm6.Core
 {
@@ -21,29 +22,13 @@ namespace Besm6.Core
         /// </summary>
         internal static int Besm6HighestBit(ulong val)
         {
-            int n = 32, cnt = 0;
-            do
-            {
-                ulong tmp = val;
-                if ((tmp >>= n) != 0)
-                {
-                    cnt += n;
-                    val = tmp;
-                }
-            } while ((n >>= 1) != 0);
-            return 48 - cnt;
+            return val == 0 ? 48 : BitOperations.LeadingZeroCount(val) - 15;
         }
 
         /// <summary>Подсчитывает число установленных битов в 48-битном слове.</summary>
         internal static int Besm6CountOnes(ulong word)
         {
-            int c = 0;
-            while (word != 0)
-            {
-                word &= word - 1;
-                c++;
-            }
-            return c;
+            return BitOperations.PopCount(word);
         }
 
         /// <summary>

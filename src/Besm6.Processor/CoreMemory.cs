@@ -1,54 +1,49 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace Besm6.Core
 {
     /// <summary>
     /// Реализация основной оперативной памяти БЭСМ-6.
-    /// Поддерживает многоблочную структуру (8 независимых блоков) для моделирования параллелизма.
+    /// Банки сохраняют прежнюю нумерацию; слова хранятся в одном массиве.
     /// </summary>
     public class CoreMemory : IMemory
     {
-        private readonly Word48[][] _banks;
-        private readonly uint _numBanks = 8;
-        private readonly uint _wordsPerBank;
+        private readonly Word48[] _words;
+        private const uint NumBanks = 8;
         
-        public int Size => (int)(_numBanks * _wordsPerBank);
+        public int Size => _words.Length;
 
         public CoreMemory(uint size = 32768)
         {
             if (size < 0) throw new ArgumentException("Size cannot be negative");
-            if (size % _numBanks != 0)
-                throw new ArgumentException($"Memory size must be divisible by the number of banks ({_numBanks})");
+            if (size % NumBanks != 0)
+                throw new ArgumentException($"Memory size must be divisible by the number of banks ({NumBanks})");
 
-            _wordsPerBank = size / _numBanks;
-            _banks = new Word48[_numBanks][];
-            for (int i = 0; i < _numBanks; i++)
-            {
-                _banks[i] = new Word48[_wordsPerBank];
-            }
+            _words = new Word48[size];
         }
 
         public Word48 Read(uint address)
         {
-            uint bankIndex = address % _numBanks;
-            uint offset = address / _numBanks;
-
-            if (offset < 0 || offset >= _wordsPerBank)
-                throw new IndexOutOfRangeException($"Memory access violation at address 0x{address:X5} (Bank {bankIndex})");
-
-            return _banks[bankIndex][offset];
+            Word48[] words = _words;
+            if (address >= (uint)words.Length)
+                ThrowAccessViolation(address);
+            return words[address];
         }
 
         public void Write(uint address, Word48 word)
         {
-            uint bankIndex = address % _numBanks;
-            uint offset = address / _numBanks;
-
-            if (offset < 0 || offset >= _wordsPerBank)
-                throw new IndexOutOfRangeException($"Memory access violation at address 0x{address:X5} (Bank {bankIndex})");
-
-            _banks[bankIndex][offset] = word;
+            Word48[] words = _words;
+            if (address >= (uint)words.Length)
+                ThrowAccessViolation(address);
+            words[address] = word;
         }
+
+        [DoesNotReturn]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowAccessViolation(uint address) =>
+            throw new IndexOutOfRangeException($"Memory access violation at address 0x{address:X5} (Bank {address % NumBanks})");
 
         // Метод для симуляции задержек доступа при конфликтах в банках
         public long GetAccessTimeNs(int address)

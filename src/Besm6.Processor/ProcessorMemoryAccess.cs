@@ -30,7 +30,7 @@ namespace Besm6.Core
         internal ulong MemLoad(uint addr)
         {
             addr &= 0x7FFF;
-            if (_debugWatch.DebugCheckMemory(addr, 2))
+            if (_debugWatch.MemoryWatchArmed && _debugWatch.DebugCheckMemory(addr, 2))
                 throw new Processor.DebugWatchAbortException();
             if (addr == 0)
                 return 0;
@@ -41,7 +41,7 @@ namespace Besm6.Core
         internal void MemStore(uint addr, ulong val)
         {
             addr &= 0x7FFF;
-            if (_debugWatch.DebugCheckMemory(addr, 1))
+            if (_debugWatch.MemoryWatchArmed && _debugWatch.DebugCheckMemory(addr, 1))
                 throw new Processor.DebugWatchAbortException();
             if (addr == 0)
                 return;

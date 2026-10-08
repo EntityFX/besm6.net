@@ -12,38 +12,43 @@ namespace Besm6.Core
             _memory = memory;
         }
 
-        internal InstructionOutcome Execute(ExecutionFrame frame)
+        internal InstructionOutcome Execute(ref ExecutionFrame frame)
         {
             int reg = frame.Instruction.Register;
             uint addr = frame.Address;
             uint[] m = _state.M;
+            frame.RegistersInState = true;
             switch (frame.Instruction.Opcode)
             {
                 case Opcode.Utc:
-                    SetEffectiveAddress(frame, Addr(addr + m[reg]));
+                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
                     frame.NextC = frame.EffectiveAddress;
                     break;
                 case Opcode.Wtc:
+                    // A custom memory implementation can have observable side effects.
+                    // Retain the original register commit across this memory access.
+                    frame.RegistersInState = false;
                     if (addr == 0 && reg == 15)
                     {
                         m[15] = Addr(m[15] - 1);
                         _state.StackCorrection = 1;
                     }
-                    SetEffectiveAddress(frame, Addr(addr + m[reg]));
+                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
                     frame.NextC = Addr((uint)_memory.MemLoad(frame.EffectiveAddress));
                     break;
                 case Opcode.Vtm:
-                    SetEffectiveAddress(frame, addr);
+                    SetEffectiveAddress(ref frame, addr);
                     m[reg] = addr;
                     m[0] = 0;
                     break;
                 case Opcode.Utm:
-                    SetEffectiveAddress(frame, Addr(addr + m[reg]));
+                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
                     m[reg] = frame.EffectiveAddress;
                     m[0] = 0;
                     break;
                 case Opcode.Uza:
-                    SetEffectiveAddress(frame, Addr(addr + m[reg]));
+                    frame.RegistersInState = false;
+                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
                     frame.Y = frame.A;
                     if (_state.IsAdditive)
                     {
@@ -61,7 +66,8 @@ namespace Besm6.Core
                     Branch(frame.EffectiveAddress);
                     break;
                 case Opcode.U1a:
-                    SetEffectiveAddress(frame, Addr(addr + m[reg]));
+                    frame.RegistersInState = false;
+                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
                     frame.Y = frame.A;
                     if (_state.IsAdditive)
                     {
@@ -78,12 +84,12 @@ namespace Besm6.Core
                     Branch(frame.EffectiveAddress);
                     break;
                 case Opcode.Uj:
-                    SetEffectiveAddress(frame, Addr(addr + m[reg]));
+                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
                     Branch(frame.EffectiveAddress);
                     break;
                 case Opcode.Vjm:
-                    SetEffectiveAddress(frame, addr);
-                    m[reg] = frame.NextK;
+                    SetEffectiveAddress(ref frame, addr);
+                    m[reg] = Addr(_state.K + (_state.IsRightHalf ? 1u : 0u));
                     m[0] = 0;
                     Branch(addr);
                     break;
@@ -93,19 +99,19 @@ namespace Besm6.Core
                     frame.UpdateModificationRegister = false;
                     return InstructionOutcome.Stop;
                 case Opcode.Vzm:
-                    SetEffectiveAddress(frame, addr);
+                    SetEffectiveAddress(ref frame, addr);
                     if (m[reg] == 0) Branch(addr);
                     break;
                 case Opcode.V1m:
-                    SetEffectiveAddress(frame, addr);
+                    SetEffectiveAddress(ref frame, addr);
                     if (m[reg] != 0) Branch(addr);
                     break;
                 case Opcode.Op36:
-                    SetEffectiveAddress(frame, addr);
+                    SetEffectiveAddress(ref frame, addr);
                     if (m[reg] == 0) Branch(addr);
                     break;
                 case Opcode.Vlm:
-                    SetEffectiveAddress(frame, addr);
+                    SetEffectiveAddress(ref frame, addr);
                     if (m[reg] == 0) break;
                     m[reg] = Addr(m[reg] + 1);
                     Branch(addr);
@@ -122,7 +128,7 @@ namespace Besm6.Core
             _state.IsRightHalf = false;
         }
 
-        private void SetEffectiveAddress(ExecutionFrame frame, uint value)
+        private void SetEffectiveAddress(ref ExecutionFrame frame, uint value)
         {
             frame.EffectiveAddress = value;
             _state.EffectiveAddress = value;

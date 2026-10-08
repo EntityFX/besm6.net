@@ -54,6 +54,20 @@ namespace Besm6.Core
             set => _traceController.InstructionTrace = value;
         }
 
+        /// <summary>Completed opcode notification without allocating register snapshots.</summary>
+        public Action<Opcode>? InstructionExecuted
+        {
+            get => _traceController.InstructionExecuted;
+            set => _traceController.InstructionExecuted = value;
+        }
+
+        /// <summary>Cache decoded halves while verifying the fetched bits on every instruction.</summary>
+        public bool InstructionCacheEnabled
+        {
+            get => _executor.InstructionCacheEnabled;
+            set => _executor.InstructionCacheEnabled = value;
+        }
+
         /// <summary>Типизированная трассировка изменений регистров.</summary>
         public Action<RegisterTraceRecord>? RegisterTrace
         {
@@ -246,21 +260,16 @@ namespace Besm6.Core
 
         #region Typed trace bridge
 
-        internal void CanonPre(uint k, bool right, ulong word, uint rk, uint opcode, int reg, uint addr)
+        internal void CanonPre(ulong word, uint rk, DecodedInstruction instruction)
         {
-            _traceController.Begin(
-                new Word48(word),
-                rk,
-                new DecodedInstruction(
-                    checked((byte)reg),
-                    (Opcode)opcode,
-                    checked((ushort)addr),
-                    (rk & (1u << 19)) != 0 ? InstructionFormat.Long : InstructionFormat.Short));
+            if (_traceController.IsEnabled)
+                _traceController.Begin(new Word48(word), rk, instruction);
         }
 
         internal void CanonPost(uint k, bool right)
         {
-            _traceController.Complete();
+            if (_traceController.HasPending)
+                _traceController.Complete();
         }
 
         #endregion

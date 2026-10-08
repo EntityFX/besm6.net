@@ -18,6 +18,8 @@ namespace Besm6.Core
             _state = state;
         }
 
+        internal bool MemoryWatchArmed => _state.DebugMemoryArmed;
+
         /// <summary>Сбрасывает состояние отладочных перехватов при Reset процессора.</summary>
         internal void Reset()
         {

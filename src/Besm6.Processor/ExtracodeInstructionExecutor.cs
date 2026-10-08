@@ -12,7 +12,7 @@ namespace Besm6.Core
 
         internal Func<ExtracodeCall, bool>? Dispatch { get; set; }
 
-        internal InstructionOutcome Execute(ExecutionFrame frame)
+        internal InstructionOutcome Execute(ref ExecutionFrame frame)
         {
             int reg = frame.Instruction.Register;
             uint effectiveAddress = ArchitectureConstants.NormalizeAddress(
@@ -20,6 +20,7 @@ namespace Besm6.Core
             frame.EffectiveAddress = effectiveAddress;
             _state.EffectiveAddress = effectiveAddress;
             _state.M[14] = effectiveAddress;
+            bool wasRightHalf = !_state.IsRightHalf; // The instruction half was advanced before dispatch.
 
             if (_state.IsRightHalf)
             {
@@ -32,14 +33,13 @@ namespace Besm6.Core
                 effectiveAddress,
                 frame.Instruction.Register,
                 frame.Instruction.Address,
-                frame.WasRightHalf);
+                wasRightHalf);
 
             bool handled = Dispatch is not null && Dispatch(call);
             if (!handled)
                 throw new ProcessorException($"Extracode {(int)frame.Instruction.Opcode} not implemented");
 
-            frame.A = _state.A.Value;
-            frame.Y = _state.Y.Value;
+            frame.RegistersInState = true;
             _state.SetLogical();
             return InstructionOutcome.Continue;
         }
