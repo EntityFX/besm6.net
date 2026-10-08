@@ -12,6 +12,7 @@ namespace Besm6.Core
             _memory = memory;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         internal InstructionOutcome Execute(ref ExecutionFrame frame)
         {
             int reg = frame.Instruction.Register;
@@ -23,7 +24,44 @@ namespace Besm6.Core
                 case Opcode.Utc:
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
                     frame.NextC = frame.EffectiveAddress;
-                    break;
+                    return InstructionOutcome.Continue;
+                case Opcode.Vtm:
+                    SetEffectiveAddress(ref frame, addr);
+                    m[reg] = addr;
+                    m[0] = 0;
+                    return InstructionOutcome.Continue;
+                case Opcode.Utm:
+                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
+                    m[reg] = frame.EffectiveAddress;
+                    m[0] = 0;
+                    return InstructionOutcome.Continue;
+                case Opcode.Uj:
+                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
+                    Branch(frame.EffectiveAddress);
+                    return InstructionOutcome.Continue;
+                case Opcode.Vlm:
+                    SetEffectiveAddress(ref frame, addr);
+                    if (m[reg] != 0)
+                    {
+                        m[reg] = Addr(m[reg] + 1);
+                        Branch(addr);
+                    }
+                    return InstructionOutcome.Continue;
+                case Opcode.Stop:
+                    frame.UpdateModificationRegister = false;
+                    return InstructionOutcome.Stop;
+                default:
+                    return ExecuteOther(ref frame);
+            }
+        }
+
+        private InstructionOutcome ExecuteOther(ref ExecutionFrame frame)
+        {
+            int reg = frame.Instruction.Register;
+            uint addr = frame.Address;
+            uint[] m = _state.M;
+            switch (frame.Instruction.Opcode)
+            {
                 case Opcode.Wtc:
                     // A custom memory implementation can have observable side effects.
                     // Retain the original register commit across this memory access.
@@ -35,16 +73,6 @@ namespace Besm6.Core
                     }
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
                     frame.NextC = Addr((uint)_memory.MemLoad(frame.EffectiveAddress));
-                    break;
-                case Opcode.Vtm:
-                    SetEffectiveAddress(ref frame, addr);
-                    m[reg] = addr;
-                    m[0] = 0;
-                    break;
-                case Opcode.Utm:
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    m[reg] = frame.EffectiveAddress;
-                    m[0] = 0;
                     break;
                 case Opcode.Uza:
                     frame.RegistersInState = false;
@@ -83,10 +111,6 @@ namespace Besm6.Core
                     }
                     Branch(frame.EffectiveAddress);
                     break;
-                case Opcode.Uj:
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    Branch(frame.EffectiveAddress);
-                    break;
                 case Opcode.Vjm:
                     SetEffectiveAddress(ref frame, addr);
                     m[reg] = Addr(_state.K + (_state.IsRightHalf ? 1u : 0u));
@@ -95,9 +119,6 @@ namespace Besm6.Core
                     break;
                 case Opcode.Ij:
                     throw new ProcessorException("Illegal instruction 320 выпр/iret");
-                case Opcode.Stop:
-                    frame.UpdateModificationRegister = false;
-                    return InstructionOutcome.Stop;
                 case Opcode.Vzm:
                     SetEffectiveAddress(ref frame, addr);
                     if (m[reg] == 0) Branch(addr);
@@ -109,12 +130,6 @@ namespace Besm6.Core
                 case Opcode.Op36:
                     SetEffectiveAddress(ref frame, addr);
                     if (m[reg] == 0) Branch(addr);
-                    break;
-                case Opcode.Vlm:
-                    SetEffectiveAddress(ref frame, addr);
-                    if (m[reg] == 0) break;
-                    m[reg] = Addr(m[reg] + 1);
-                    Branch(addr);
                     break;
                 default:
                     throw new InvalidOperationException($"Opcode {frame.Instruction.Opcode} is not a control instruction.");

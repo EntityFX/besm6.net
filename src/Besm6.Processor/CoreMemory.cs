@@ -24,6 +24,7 @@ namespace Besm6.Core
             _words = new Word48[size];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Word48 Read(uint address)
         {
             Word48[] words = _words;
