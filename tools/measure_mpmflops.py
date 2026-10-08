@@ -9,10 +9,11 @@ import os
 import re
 import subprocess
 import sys
+from pathlib import Path
 
-ROOT = "/home/entityfx/projects/besm6.net"
+ROOT = str(Path(__file__).resolve().parents[1])
 DLL = os.path.join(ROOT, "src/Besm6.Cli/bin/Release/net8.0/besm6.dll")
-OUT = "/tmp/mfbench"
+OUT = os.environ.get("BESM6_MFBENCH_OUTPUT", os.path.join(ROOT, "tests-run", "mfbench"))
 # Лимит инструкций на прогон. Для ps kpart=3 требуется ~72.8 млн инструкций
 # (самый тяжёлый вариант), поэтому 40 млн НЕДОСТАТОЧНО: прогон обрывается по
 # лимиту, не печатает результат и молча портит замер. См. Н-14.
@@ -45,7 +46,7 @@ def run(name, src_path, kpart, patcher):
         fh.write(patcher(text, kpart))
 
     proc = subprocess.run(
-        ["dotnet", DLL, "run", job, "--profile", "--limit", LIMIT],
+        ["dotnet", DLL, "run", job, "--profile", "--limit", LIMIT, "--no-wall-clock", "--no-hang-detect"],
         capture_output=True, text=True, timeout=3600)
     out = proc.stdout + proc.stderr
     with open(os.path.join(OUT, "%s.out" % name), "w", encoding="utf-8") as fh:

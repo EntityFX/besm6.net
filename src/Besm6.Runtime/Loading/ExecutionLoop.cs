@@ -22,16 +22,33 @@ namespace Besm6.Runtime
         public long InstructionLimit { get; set; } = 1_000_000_000L;
         public long WallClockLimitMs { get; set; } = 0;
         public bool LoopDetect { get; set; } = false;
-        public long InstructionsExecuted { get; private set; }
+        private long _instructionsExecuted;
+        public long InstructionsExecuted => _instructionsExecuted;
         public bool HaltedByStop { get; private set; }
+        private ExecutionSpeed _speed;
+        public ExecutionSpeed Speed
+        {
+            get => _speed;
+            set
+            {
+                if (!Enum.IsDefined(value)) throw new ArgumentOutOfRangeException(nameof(value));
+                _speed = value;
+            }
+        }
+        public bool CollectStatistics { get; set; }
+        public bool ProgressEnabled { get; set; }
+        public ExecutionStatistics? Statistics { get; private set; }
+        public Action<Opcode>? InstructionExecuted { get; set; }
+        private long _completedInstructions;
+        private long _totalCycles;
 
         public Action<int, ulong>? InstructionTrace { get; set; }
         public Action<uint, bool, uint, uint>? CppInstructionTrace { get; set; }
         public Action<string, ulong>? RegisterTrace { get; set; }
 
         /// <summary>
-        /// Read-only typed-трассировка исполненных инструкций (для профайлера).
-        /// Подписывается на существующий хук процессора и не изменяет исполнительный путь.
+        /// Полная типизированная трассировка исполненных инструкций для диагностики.
+        /// Подписывается на хук процессора со снимками регистров.
         /// </summary>
         public Action<InstructionTraceRecord>? TypedInstructionTrace { get; set; }
 
@@ -49,16 +66,50 @@ namespace Besm6.Runtime
 
         public LoadResult Run()
         {
+            Statistics = null;
+            _completedInstructions = 0;
+            _totalCycles = 0;
+            bool countCycles = Speed == ExecutionSpeed.Original || CollectStatistics;
+            Action<Opcode>? counter = countCycles ? ObserveExecuted : null;
+            Action<Opcode>? observer = InstructionExecuted;
+            var stopwatch = countCycles || WallClockLimitMs > 0 ? new Stopwatch() : null;
+            long allocatedBefore = CollectStatistics ? GC.GetAllocatedBytesForCurrentThread() : 0;
+            int gen0Before = CollectStatistics ? GC.CollectionCount(0) : 0;
+            var previousStepTrace = _machine.StepTrace;
+            var previousCpuTrace = _machine.Cpu.TraceInstruction;
+            var previousRegisterTrace = _machine.RegisterTrace;
+            bool previousInstructionCache = _machine.Cpu.InstructionCacheEnabled;
             try
             {
+                _machine.Cpu.InstructionCacheEnabled = Speed == ExecutionSpeed.Max;
                 AttachFileTraceWriters();
-                return RunCore();
+                _machine.Cpu.InstructionExecuted += counter;
+                _machine.Cpu.InstructionExecuted += observer;
+                return RunCore(stopwatch);
             }
             finally
             {
-                _extracode.FinishOutput();
-                DetachFileTraceWriters();
+                stopwatch?.Stop();
+                if (countCycles)
+                    Statistics = new ExecutionStatistics(Speed, _completedInstructions, _totalCycles,
+                        stopwatch!.Elapsed.TotalSeconds,
+                        CollectStatistics ? GC.GetAllocatedBytesForCurrentThread() - allocatedBefore : 0,
+                        CollectStatistics ? GC.CollectionCount(0) - gen0Before : 0);
+                _machine.Cpu.InstructionExecuted -= counter;
+                _machine.Cpu.InstructionExecuted -= observer;
+                _machine.StepTrace = previousStepTrace;
+                _machine.Cpu.TraceInstruction = previousCpuTrace;
+                _machine.RegisterTrace = previousRegisterTrace;
+                _machine.Cpu.InstructionCacheEnabled = previousInstructionCache;
+                try { _extracode.FinishOutput(); }
+                finally { DetachFileTraceWriters(); }
             }
+        }
+
+        private void ObserveExecuted(Opcode opcode)
+        {
+            _completedInstructions++;
+            _totalCycles += Besm6Timing.CyclesOf(opcode);
         }
 
         private void AttachFileTraceWriters()
@@ -112,47 +163,67 @@ namespace Besm6.Runtime
                 _diagnosticTraceWriter = null;
             }
         }
-        private LoadResult RunCore()
+        private LoadResult RunCore(Stopwatch? wallStopwatch)
         {
             long limit = InstructionLimit;
             long wallLimitMs = WallClockLimitMs;
-            var wallStopwatch = Stopwatch.StartNew();
-            InstructionsExecuted = 0;
+            var pacer = Speed == ExecutionSpeed.Original
+                ? new ExecutionPacer(new StopwatchExecutionTimeSource(wallStopwatch!)) : null;
+            double? wallLimitSeconds = wallLimitMs > 0 ? wallLimitMs / 1000.0 : null;
+            long nextCheckpoint = ExecutionPacer.CheckpointCycles;
+            _instructionsExecuted = 0;
             HaltedByStop = false;
             long lastReport = 0;
+            var progressOutput = ProgressEnabled ? _progressOutput : null;
+            bool executeBlocks = Speed == ExecutionSpeed.Max && !LoopDetect && progressOutput is null;
 
             const int LoopWindow = 20_000;
             const int LoopRange = 16;
-            long[] kHistory = new long[LoopWindow];
+            long[]? kHistory = LoopDetect ? new long[LoopWindow] : null;
             int kHistIdx = 0;
 
             if (InstructionTrace != null)
             {
-                long[] counter = { 0 };
-                _machine.StepTrace = (k, word) =>
-                {
-                    counter[0]++;
-                    InstructionTrace(k, word);
-                };
+                _machine.StepTrace += InstructionTrace;
             }
 
             if (CppInstructionTrace != null)
             {
-                _machine.Cpu.TraceInstruction = (k, rf, rk, op) => CppInstructionTrace(k, rf, rk, op);
+                _machine.Cpu.TraceInstruction += CppInstructionTrace;
             }
 
             if (RegisterTrace != null)
             {
                 _machine.BeginRegisterTrace();
-                _machine.RegisterTrace = RegisterTrace;
+                _machine.RegisterTrace += RegisterTrace;
             }
 
+            wallStopwatch?.Start();
             while (InstructionsExecuted < limit)
             {
                 try
                 {
-                    bool stopped = _machine.Step();
-                    InstructionsExecuted++;
+                    bool stopped;
+                    if (executeBlocks)
+                    {
+                        int count = (int)Math.Min(256, limit - InstructionsExecuted);
+                        // Keep precisely the old wall-clock checkpoints, even after
+                        // an exception interrupted the preceding block.
+                        if (wallLimitMs > 0)
+                            count = Math.Min(count, 4096 - (int)(InstructionsExecuted & 4095));
+                        stopped = _machine.ExecuteBlock(count, ref _instructionsExecuted);
+                    }
+                    else
+                    {
+                        stopped = _machine.Step();
+                        _instructionsExecuted++;
+                    }
+                    if (pacer is not null && (stopped || _totalCycles >= nextCheckpoint))
+                    {
+                        if (!pacer.Synchronize(_totalCycles, wallLimitSeconds))
+                            return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
+                        nextCheckpoint = _totalCycles + ExecutionPacer.CheckpointCycles;
+                    }
                     if (stopped)
                     {
                         HaltedByStop = true;
@@ -160,22 +231,25 @@ namespace Besm6.Runtime
                     }
 
                     if (wallLimitMs > 0 && (InstructionsExecuted & 4095) == 0
-                        && wallStopwatch.ElapsedMilliseconds > wallLimitMs)
+                        && wallStopwatch!.ElapsedMilliseconds > wallLimitMs)
                     {
                         if (_verboseLog != null) _verboseLog("");
                         return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
                     }
 
-                    long currentK = _machine.Cpu.GetK();
-                    kHistory[kHistIdx % LoopWindow] = currentK;
-                    kHistIdx++;
+                    long currentK = kHistory is not null || progressOutput is not null ? _machine.Cpu.GetK() : 0;
+                    if (kHistory is not null)
+                    {
+                        kHistory[kHistIdx] = currentK;
+                        kHistIdx = (kHistIdx + 1) % LoopWindow;
+                    }
 
                     if (LoopDetect && InstructionsExecuted >= LoopWindow && (InstructionsExecuted % LoopWindow) == 0)
                     {
                         long minK = long.MaxValue, maxK = long.MinValue;
                         for (int i = 0; i < LoopWindow; i++)
                         {
-                            long v = kHistory[i];
+                            long v = kHistory![i];
                             if (v < minK) minK = v;
                             if (v > maxK) maxK = v;
                         }
@@ -191,10 +265,10 @@ namespace Besm6.Runtime
                         }
                     }
 
-                    if (_progressOutput != null && InstructionsExecuted - lastReport >= 100_000)
+                    if (progressOutput != null && InstructionsExecuted - lastReport >= 100_000)
                     {
                         lastReport = InstructionsExecuted;
-                        _progressOutput($"\r  [{InstructionsExecuted / 1000}K] K=0{currentK:X4}   ");
+                        progressOutput($"\r  [{InstructionsExecuted / 1000}K] K=0{currentK:X4}   ");
                     }
                 }
                 catch (ProcessorException ex)
@@ -205,6 +279,8 @@ namespace Besm6.Runtime
                     if (string.IsNullOrEmpty(ex.Message))
                     {
                         _machine.Cpu.CanonPost(_machine.Cpu.GetK(), _machine.Cpu._rightInstrFlag);
+                        if (pacer is not null && !pacer.Synchronize(_totalCycles, wallLimitSeconds))
+                            return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
                         HaltedByStop = true;
                         return LoadResult.Halt(_machine.Cpu.GetK(), InstructionsExecuted);
                     }
@@ -212,6 +288,12 @@ namespace Besm6.Runtime
                     if (_machine.Cpu.Intercept(ex.Message))
                     {
                         _machine.Cpu.CanonPost(_machine.Cpu.GetK(), _machine.Cpu._rightInstrFlag);
+                        if (pacer is not null && _totalCycles >= nextCheckpoint)
+                        {
+                            if (!pacer.Synchronize(_totalCycles, wallLimitSeconds))
+                                return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
+                            nextCheckpoint = _totalCycles + ExecutionPacer.CheckpointCycles;
+                        }
                         if (_verboseLog != null)
                             _verboseLog($"\r  [INTERCEPT @ 0{_machine.Cpu.GetK():X4}] {ex.Message} → 0{_machine.Cpu.GetK():X4}\n");
                         continue;

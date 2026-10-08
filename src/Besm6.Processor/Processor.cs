@@ -258,6 +258,14 @@ namespace Besm6.Core
         /// </summary>
         public bool Step() => _executor.Execute();
 
+        internal bool CanExecuteUnobservedBlock =>
+            _memoryAccess.IsPlainCoreMemory && TraceInstruction is null &&
+            !_traceController.IsEnabled && !_traceController.HasPending &&
+            !_state.DebugFetchArmed && !_state.DebugMemoryArmed;
+
+        internal bool ExecuteUnobservedBlock(int count, ref long completed, ref ulong tick) =>
+            _executor.ExecuteUnobservedBlock(count, ref completed, ref tick);
+
         #region Typed trace bridge
 
         internal void CanonPre(ulong word, uint rk, DecodedInstruction instruction)

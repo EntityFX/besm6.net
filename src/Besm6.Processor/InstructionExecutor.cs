@@ -129,6 +129,7 @@ namespace Besm6.Core
             return outcome == InstructionOutcome.Stop;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private InstructionOutcome Dispatch(ref ExecutionFrame frame)
         {
             uint opcode = (uint)frame.Instruction.Opcode;
@@ -140,7 +141,68 @@ namespace Besm6.Core
                 return _controlInstructions.Execute(ref frame);
             if (ExtracodeInstructionExecutor.CanExecute(frame.Instruction.Opcode))
                 return _extracodeInstructions.Execute(ref frame);
+            return ThrowUnknownInstruction(opcode);
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static InstructionOutcome ThrowUnknownInstruction(uint opcode) =>
             throw new ProcessorException($"Unknown instruction {opcode}");
+
+        /// <summary>
+        /// Run ordinary instructions without per-step runtime/CPU wrappers.
+        /// Stop before an extracode: it can install hooks and must retain the
+        /// observable Step completion order in MachineCore.
+        /// </summary>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
+        internal bool ExecuteUnobservedBlock(int count, ref long completed, ref ulong tick)
+        {
+            var state = _state;
+            var cache = _decodeCache;
+            for (int i = 0; i < count; i++)
+            {
+                state.StackCorrection = 0;
+                state.K = ArchitectureConstants.NormalizeAddress(state.K);
+                ulong rawWord = _memory.MemFetch(state.K);
+                uint raw = (state.IsRightHalf ? (uint)rawWord : (uint)(rawWord >> 24)) & 0xFF_FFFFu;
+                DecodedInstruction instruction;
+                if (cache is not null)
+                {
+                    ref CachedInstruction entry = ref cache[(state.K << 1) | (state.IsRightHalf ? 1u : 0u)];
+                    uint tag = raw + 1;
+                    if (entry.Tag != tag)
+                    {
+                        entry.Instruction = InstructionCodec.DecodeHalf(raw);
+                        entry.Tag = tag;
+                    }
+                    instruction = entry.Instruction;
+                }
+                else
+                    instruction = InstructionCodec.DecodeHalf(raw);
+
+                // No instruction has started yet. Execute the callback-capable
+                // command using the ordinary path, including its fetch.
+                if (ExtracodeInstructionExecutor.CanExecute(instruction.Opcode))
+                    return false;
+
+                state.RawInstruction = raw;
+                var frame = new ExecutionFrame
+                {
+                    Instruction = instruction,
+                    Address = instruction.Address,
+                    EffectiveAddress = state.EffectiveAddress,
+                    A = state.A.Value,
+                    Y = state.Y.Value,
+                };
+                AdvanceInstructionHalf();
+                if (state.ApplyC)
+                    frame.Address = ArchitectureConstants.NormalizeAddress(frame.Address + state.C);
+                InstructionOutcome outcome = Dispatch(ref frame);
+                FinalizeInstruction(ref frame, updateRegistersAndModification: true, observe: false);
+                tick++;
+                completed++;
+                if (outcome == InstructionOutcome.Stop) return true;
+            }
+            return false;
         }
 
         private void AdvanceInstructionHalf()
@@ -156,7 +218,7 @@ namespace Besm6.Core
             }
         }
 
-        private void FinalizeInstruction(ref ExecutionFrame frame, bool updateRegistersAndModification)
+        private void FinalizeInstruction(ref ExecutionFrame frame, bool updateRegistersAndModification, bool observe = true)
         {
             if (updateRegistersAndModification)
             {
@@ -179,7 +241,7 @@ namespace Besm6.Core
                     _state.Y = Word48.FromInt48(frame.Y);
                 }
             }
-            _processor.CanonPost(_state.K, _state.IsRightHalf);
+            if (observe) _processor.CanonPost(_state.K, _state.IsRightHalf);
         }
     }
 }
