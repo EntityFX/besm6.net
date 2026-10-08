@@ -10,11 +10,14 @@ namespace Besm6.Core
     {
         private readonly ProcessorDebugWatch _debugWatch;
         private readonly IMemory _memory;
+        internal bool IsPlainCoreMemory { get; }
 
         internal ProcessorMemoryAccess(ProcessorDebugWatch debugWatch, IMemory memory)
         {
             _debugWatch = debugWatch;
             _memory = memory;
+            // An IMemory override may observe each read or change CPU hooks.
+            IsPlainCoreMemory = memory.GetType() == typeof(CoreMemory);
         }
 
         /// <summary>Читает слово по адресу команды; запрещает переход по нулевому адресу.</summary>

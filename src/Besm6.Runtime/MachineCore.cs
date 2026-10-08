@@ -123,7 +123,8 @@ namespace Besm6.Runtime
             // Используем системную шину для маршрутизации между памятью и устройствами.
             Memory = new SystemBus(coreMemory, Devices);
 
-            Cpu = new Processor(Memory);
+            // SystemBus forwards every address to this same memory; avoid an extra interface hop.
+            Cpu = new Processor(coreMemory);
             Puncher = new Puncher(Memory, puncherOutputDir);
             Plotter = new Plotter();
 
@@ -187,8 +188,31 @@ namespace Besm6.Runtime
                 int k = (int)Cpu.GetK();
                 StepTrace(k, Memory.Read((uint)k).Value);
             }
-            EmitRegisterTrace();
+            if (RegisterTrace is not null) EmitRegisterTrace();
             return stopped;
+        }
+
+        /// <summary>
+        /// Executes a bounded batch through the same Step path. The counter advances
+        /// only after a successful step, including STOP; exceptions leave it exact.
+        /// </summary>
+        internal bool ExecuteBlock(int count, ref long instructionsExecuted)
+        {
+            long end = instructionsExecuted + count;
+            while (instructionsExecuted < end)
+            {
+                if (StepTrace is null && RegisterTrace is null && Cpu.CanExecuteUnobservedBlock)
+                {
+                    if (Cpu.ExecuteUnobservedBlock((int)(end - instructionsExecuted),
+                            ref instructionsExecuted, ref _clock.TickReference))
+                        return true;
+                    if (instructionsExecuted == end) return false;
+                }
+                bool stopped = Step();
+                instructionsExecuted++;
+                if (stopped) return true;
+            }
+            return false;
         }
 
         /// <summary>

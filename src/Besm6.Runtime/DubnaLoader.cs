@@ -44,16 +44,20 @@ namespace Besm6.Runtime
             set => _extracode.HangDetect = value;
         }
 
-        public bool Verbose { get; set; }
+        public bool Verbose { get => _exec.ProgressEnabled; set => _exec.ProgressEnabled = value; }
         public bool LoopDetect { get => _exec.LoopDetect; set => _exec.LoopDetect = value; }
+        public ExecutionSpeed Speed { get => _exec.Speed; set => _exec.Speed = value; }
+        public bool CollectStatistics { get => _exec.CollectStatistics; set => _exec.CollectStatistics = value; }
+        public ExecutionStatistics? Statistics => _exec.Statistics;
+        public Action<Opcode>? InstructionExecuted { get => _exec.InstructionExecuted; set => _exec.InstructionExecuted = value; }
         public Action<string>? Output { get; set; }
         public Action<int, ulong>? InstructionTrace { get => _exec.InstructionTrace; set => _exec.InstructionTrace = value; }
         public Action<uint, bool, uint, uint>? CppInstructionTrace { get => _exec.CppInstructionTrace; set => _exec.CppInstructionTrace = value; }
         public Action<string, ulong>? RegisterTrace { get => _exec.RegisterTrace; set => _exec.RegisterTrace = value; }
 
         /// <summary>
-        /// Read-only typed-трассировка инструкций для профайлера опкодов
-        /// (<see cref="OpcodeProfiler"/>). Не изменяет исполнительный путь процессора.
+        /// Полная типизированная трассировка инструкций со снимками регистров.
+        /// Для подсчёта опкодов без снимков используется <see cref="InstructionExecuted"/>.
         /// </summary>
         public Action<InstructionTraceRecord>? TypedInstructionTrace
         { get => _exec.TypedInstructionTrace; set => _exec.TypedInstructionTrace = value; }

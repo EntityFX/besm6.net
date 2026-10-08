@@ -30,6 +30,7 @@ namespace Besm6.Runtime
         }
 
         public ulong Tick => _tick;
+        internal ref ulong TickReference => ref _tick;
 
         /// <summary>Сдвинуть модельное время вперёд на <paramref name="delta"/> тиков.</summary>
         public void Advance(ulong delta)
