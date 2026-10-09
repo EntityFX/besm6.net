@@ -41,18 +41,32 @@ public sealed class PageAssignment
     /// </summary>
     public void ImportAssignmentGroup(uint group, Word48 accumulator)
     {
-        if (group >= 8) throw new ArgumentOutOfRangeException(nameof(group));
+        ValidateAssignmentGroup(group, accumulator);
         Span<uint> pages = stackalloc uint[4];
         for (int field = 0; field < 4; field++)
         {
             uint page = (uint)((accumulator.Value >> (field * 5)) & 31);
-            page |= (uint)((accumulator.Value >> (28 + field)) & 1) << 5;
-            ValidatePage(page);
             pages[field] = page;
         }
         for (int field = 0; field < 4; field++)
             _physicalPages[group * 4 + (uint)field] = pages[field];
     }
+
+    internal static void ValidateAssignmentGroup(uint group, Word48 accumulator)
+    {
+        if (group >= 8) throw new ArgumentOutOfRangeException(nameof(group));
+        if ((accumulator.Value & 0xF0000000UL) != 0)
+            throw new ArgumentOutOfRangeException(nameof(accumulator), "64K assignment is unsupported by 32K memory.");
+    }
+
+    /// <summary>
+    /// Translates at the request boundary using the current assignment (TO-2, sheet 66).
+    /// Admission checks, zero operands and panel accesses must already be handled.
+    /// This method neither checks protection nor accesses memory or buffers.
+    /// </summary>
+    public uint TranslateRequest(MemoryRequestAddress request) => request.IsPhysical
+        ? request.Address
+        : _physicalPages[request.Address >> 10] * PageSize + request.Address % PageSize;
 
     /// <summary>Imports RZ0..RZ3 from accumulator bits 21..28 (TO-8, sheets 108–109).</summary>
     public void ImportProtectionGroup(uint group, Word48 accumulator)
