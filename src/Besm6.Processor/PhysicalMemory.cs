@@ -3,7 +3,7 @@ namespace Besm6.Core;
 /// <summary>
 /// Untimed 32K physical storage for the 1967 configuration (TO-8 §4.1, §4.5–4.8).
 /// Deliberately not IMemory: command fetch and operand access have different control.
-/// The CPU, buffers, panel registers and interrupt delivery are not connected yet.
+/// CPU adapters provide separate buffer/addressing policies; this storage has no timing.
 /// </summary>
 public sealed class PhysicalMemory
 {

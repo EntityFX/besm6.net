@@ -137,7 +137,10 @@
             long addr = cpu.GetM(M16) & 0x7FFF;
             if (addr > 0)
             {
-                _machine.Memory.Write((uint)addr, new Word48(cpu.GetA().Value));
+                if (_machine.MappedMemory is { } mapped)
+                    mapped.StoreCommand((uint)addr, cpu.GetA());
+                else
+                    _machine.Memory.Write((uint)addr, new Word48(cpu.GetA().Value));
 
                 // addr == 020 oct (16 dec) → enable intercept for overflow/div-zero.
                 if (addr == 16)

@@ -20,6 +20,8 @@ namespace Besm6.Runtime
         public MemoryModel MemoryModel { get; }
         /// <summary>Present only for the opt-in functional buffered memory backend.</summary>
         public BufferedMemoryBackend? BufferedMemory { get; }
+        /// <summary>Host-controlled mathematical memory; supervisor CPU is a later stage.</summary>
+        public MappedMemoryBackend? MappedMemory { get; }
         public Processor Cpu { get; }
         public DeviceManager Devices { get; }
         public Puncher Puncher { get; }
@@ -131,6 +133,13 @@ namespace Besm6.Runtime
                     BufferedMemory = new BufferedMemoryBackend();
                     cpuMemory = BufferedMemory;
                     hostMemory = BufferedMemory.HostMemory;
+                    break;
+                case MemoryModel.Mapped:
+                    if (memorySize != PhysicalMemory.WordCount)
+                        throw new ArgumentOutOfRangeException(nameof(memorySize), "Mapped requires 32768 words.");
+                    MappedMemory = new MappedMemoryBackend();
+                    cpuMemory = MappedMemory;
+                    hostMemory = MappedMemory.HostMemory;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(memoryModel));

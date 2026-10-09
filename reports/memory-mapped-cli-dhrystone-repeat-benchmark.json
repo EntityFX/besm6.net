@@ -1,0 +1,535 @@
+{
+  "environment": {
+    "platform": "Windows-10-AMD64",
+    "python": "3.12.5",
+    "dotnet": {
+      "sdk": "9.0.202",
+      "net8_runtimes": [
+        {
+          "framework": "Microsoft.AspNetCore.App",
+          "version": "8.0.24"
+        },
+        {
+          "framework": "Microsoft.NETCore.App",
+          "version": "8.0.24"
+        },
+        {
+          "framework": "Microsoft.WindowsDesktop.App",
+          "version": "8.0.24"
+        }
+      ]
+    }
+  },
+  "options": {
+    "jobs": [
+      "dh0",
+      "dh10000"
+    ],
+    "repeats": 5,
+    "warmups": 1,
+    "stats": false,
+    "order": "alternates each repetition",
+    "runtime_probe": false,
+    "legacy_variants": [],
+    "loop_scope": null
+  },
+  "variants": {
+    "baseline": {
+      "dll": "tests-run/stage3-final-baseline/besm6.dll",
+      "sha256": "0218a53b5f084a21d9dde7e99c5d530e35d6e0725ee89cb64d194aee0a790596",
+      "processor_sha256": "ea5c5f784f27e0ccca015931ab223b080dc2ab6bb99f2a2c0af522c485accae6",
+      "runtime_sha256": "76582eca8255394f2fde0fa66f6599bbc956277c55bb535ddd6d81f57e5ade16",
+      "architecture_sha256": "47c54654276906b2bdb00d5eb7be2a77b17cc093e21169813192edcc7897393b"
+    },
+    "mapped": {
+      "dll": "src/Besm6.Cli/bin/Release/net8.0/besm6.dll",
+      "sha256": "c3429af937d9a68d7919fdc57b8d70d102948f97e57c26673b613bf1510c786e",
+      "processor_sha256": "dae62c0b86a094dc23c56121eceba7e2132f8fd283cc1193adde741d1b310fc7",
+      "runtime_sha256": "4062910c5d581ba4cb82a771c8e6afded7ebdf87ece1e53b2af583fa2433e411",
+      "architecture_sha256": "a0c2bc3627078417d9c34013389772773fc1bb6322b95b5b50c8ed3944947ac6"
+    }
+  },
+  "calibration": {
+    "dh0:baseline": {
+      "halt_instructions": 6998823,
+      "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+      "report": {
+        "statistics": {
+          "speed": "max",
+          "completedInstructions": 6998824,
+          "modelCycles": 11728127,
+          "elapsedSeconds": 1.0219508,
+          "allocatedBytes": 2431928,
+          "gen0Collections": 1,
+          "modelSeconds": 1.1728127,
+          "instructionsPerSecond": 6848494.076231459,
+          "modelToWallRatio": 1.14762149019307,
+          "originalTempoMet": true
+        },
+        "finalState": {
+          "k": 280,
+          "isRightHalf": false,
+          "a": 0,
+          "y": 0,
+          "r": 6,
+          "c": 1000,
+          "applyC": false,
+          "effectiveAddress": 0,
+          "interceptCount": 1,
+          "interceptAddress": 16,
+          "m": [
+            0,
+            91,
+            450,
+            954,
+            61,
+            0,
+            953,
+            1183,
+            4845,
+            0,
+            15912,
+            4648,
+            4939,
+            279,
+            0,
+            22273
+          ],
+          "clockTicks": 6998823
+        },
+        "memorySha256": "0AEA0A7DB0E387E172B018B7D718E3A31B72DD086DCD57AB6088674207FC6845"
+      },
+      "runtime": null,
+      "process_seconds": 1.4036941002123058
+    },
+    "dh0:mapped": {
+      "halt_instructions": 6998823,
+      "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+      "report": {
+        "statistics": {
+          "speed": "max",
+          "completedInstructions": 6998824,
+          "modelCycles": 11728127,
+          "elapsedSeconds": 0.9772981,
+          "allocatedBytes": 2431928,
+          "gen0Collections": 1,
+          "modelSeconds": 1.1728127,
+          "instructionsPerSecond": 7161401.418871069,
+          "modelToWallRatio": 1.2000562571440587,
+          "originalTempoMet": true
+        },
+        "finalState": {
+          "k": 280,
+          "isRightHalf": false,
+          "a": 0,
+          "y": 0,
+          "r": 6,
+          "c": 1000,
+          "applyC": false,
+          "effectiveAddress": 0,
+          "interceptCount": 1,
+          "interceptAddress": 16,
+          "m": [
+            0,
+            91,
+            450,
+            954,
+            61,
+            0,
+            953,
+            1183,
+            4845,
+            0,
+            15912,
+            4648,
+            4939,
+            279,
+            0,
+            22273
+          ],
+          "clockTicks": 6998823
+        },
+        "memorySha256": "0AEA0A7DB0E387E172B018B7D718E3A31B72DD086DCD57AB6088674207FC6845"
+      },
+      "runtime": null,
+      "process_seconds": 1.3508854997344315
+    },
+    "dh10000:baseline": {
+      "halt_instructions": 25799834,
+      "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+      "report": {
+        "statistics": {
+          "speed": "max",
+          "completedInstructions": 25799835,
+          "modelCycles": 42349906,
+          "elapsedSeconds": 2.8812121,
+          "allocatedBytes": 2431952,
+          "gen0Collections": 1,
+          "modelSeconds": 4.2349906,
+          "instructionsPerSecond": 8954507.375559058,
+          "modelToWallRatio": 1.4698642283225174,
+          "originalTempoMet": true
+        },
+        "finalState": {
+          "k": 280,
+          "isRightHalf": false,
+          "a": 0,
+          "y": 0,
+          "r": 6,
+          "c": 994,
+          "applyC": false,
+          "effectiveAddress": 0,
+          "interceptCount": 1,
+          "interceptAddress": 16,
+          "m": [
+            0,
+            91,
+            1,
+            0,
+            1,
+            0,
+            953,
+            1183,
+            4845,
+            0,
+            15912,
+            4648,
+            4939,
+            279,
+            0,
+            22273
+          ],
+          "clockTicks": 25799834
+        },
+        "memorySha256": "65A390AD43F8DCD6B2941047FD54D4CC521D7C9EB912773C80A1FF5994F82295"
+      },
+      "runtime": null,
+      "process_seconds": 3.2442310000769794
+    },
+    "dh10000:mapped": {
+      "halt_instructions": 25799834,
+      "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+      "report": {
+        "statistics": {
+          "speed": "max",
+          "completedInstructions": 25799835,
+          "modelCycles": 42349906,
+          "elapsedSeconds": 2.7533599,
+          "allocatedBytes": 2431952,
+          "gen0Collections": 1,
+          "modelSeconds": 4.2349906,
+          "instructionsPerSecond": 9370309.707786476,
+          "modelToWallRatio": 1.5381173380203583,
+          "originalTempoMet": true
+        },
+        "finalState": {
+          "k": 280,
+          "isRightHalf": false,
+          "a": 0,
+          "y": 0,
+          "r": 6,
+          "c": 994,
+          "applyC": false,
+          "effectiveAddress": 0,
+          "interceptCount": 1,
+          "interceptAddress": 16,
+          "m": [
+            0,
+            91,
+            1,
+            0,
+            1,
+            0,
+            953,
+            1183,
+            4845,
+            0,
+            15912,
+            4648,
+            4939,
+            279,
+            0,
+            22273
+          ],
+          "clockTicks": 25799834
+        },
+        "memorySha256": "65A390AD43F8DCD6B2941047FD54D4CC521D7C9EB912773C80A1FF5994F82295"
+      },
+      "runtime": null,
+      "process_seconds": 3.150300099980086
+    }
+  },
+  "samples": {
+    "dh0:baseline": [
+      {
+        "warmup": true,
+        "halt_instructions": 6998823,
+        "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 0.6388868000358343
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 6998823,
+        "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 0.6356776999309659
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 6998823,
+        "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 0.7196148000657558
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 6998823,
+        "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 0.648261500056833
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 6998823,
+        "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 0.6230660998262465
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 6998823,
+        "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 0.5986449997872114
+      }
+    ],
+    "dh0:mapped": [
+      {
+        "warmup": true,
+        "halt_instructions": 6998823,
+        "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 0.6965740998275578
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 6998823,
+        "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 0.6609271997585893
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 6998823,
+        "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 0.7497926997020841
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 6998823,
+        "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 1.2488798000849783
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 6998823,
+        "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 0.5838588001206517
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 6998823,
+        "program_sha256": "a2b620cdde83205e3596525293b160a49fa0f5caf18c4c299ef2979fd5aa7670",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 0.5883030998520553
+      }
+    ],
+    "dh10000:baseline": [
+      {
+        "warmup": true,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 1.1357028000056744
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 1.2511918996460736
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 1.131745500024408
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 1.1791671002283692
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 1.1266006999649107
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 1.2876145001500845
+      }
+    ],
+    "dh10000:mapped": [
+      {
+        "warmup": true,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 1.22486130008474
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 1.2337263999506831
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 1.1438935999758542
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 1.1099458998069167
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 1.177505100145936
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": null,
+        "runtime": null,
+        "process_seconds": 1.148104399908334
+      }
+    ]
+  },
+  "measurements": [
+    {
+      "job": "dh0",
+      "variant": "baseline",
+      "process_seconds": 0.6356776999309659,
+      "time_reduction_percent": 0.0,
+      "speedup": 1.0,
+      "process_min_seconds": 0.5986449997872114,
+      "process_max_seconds": 0.7196148000657558,
+      "loop_seconds": null,
+      "loop_speedup": null,
+      "loop_time_reduction_percent": null
+    },
+    {
+      "job": "dh0",
+      "variant": "mapped",
+      "process_seconds": 0.6609271997585893,
+      "time_reduction_percent": -3.972060028276192,
+      "speedup": 0.96179685170039,
+      "process_min_seconds": 0.5838588001206517,
+      "process_max_seconds": 1.2488798000849783,
+      "loop_seconds": null,
+      "loop_speedup": null,
+      "loop_time_reduction_percent": null
+    },
+    {
+      "job": "dh10000",
+      "variant": "baseline",
+      "process_seconds": 1.1791671002283692,
+      "time_reduction_percent": 0.0,
+      "speedup": 1.0,
+      "process_min_seconds": 1.1266006999649107,
+      "process_max_seconds": 1.2876145001500845,
+      "loop_seconds": null,
+      "loop_speedup": null,
+      "loop_time_reduction_percent": null
+    },
+    {
+      "job": "dh10000",
+      "variant": "mapped",
+      "process_seconds": 1.148104399908334,
+      "time_reduction_percent": 2.634291638057007,
+      "speedup": 1.027055640865513,
+      "process_min_seconds": 1.1099458998069167,
+      "process_max_seconds": 1.2337263999506831,
+      "loop_seconds": null,
+      "loop_speedup": null,
+      "loop_time_reduction_percent": null
+    }
+  ],
+  "validated": true,
+  "workload_metrics": {
+    "dh10000:baseline": {
+      "unit": "DMIPS",
+      "workload_model_cycles": 30621779,
+      "model_score": 1.8586508758170919,
+      "host_process_workload_seconds": 0.5434894002974033,
+      "host_process_score": 10.472181486204297,
+      "host_loop_workload_seconds": null,
+      "host_loop_score": null
+    },
+    "dh10000:mapped": {
+      "unit": "DMIPS",
+      "workload_model_cycles": 30621779,
+      "model_score": 1.8586508758170919,
+      "host_process_workload_seconds": 0.48717720014974475,
+      "host_process_score": 11.682647779890619,
+      "host_loop_workload_seconds": null,
+      "host_loop_score": null
+    }
+  }
+}
