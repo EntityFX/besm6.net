@@ -5,7 +5,7 @@ namespace Besm6.Core;
 /// Deliberately not IMemory: command fetch and operand access have different control.
 /// The CPU, buffers, panel registers and interrupt delivery are not connected yet.
 /// </summary>
-public sealed class PhysicalMemory1967
+public sealed class PhysicalMemory
 {
     public const uint WordCount = 32768;
     public const uint BankCount = 8;
@@ -29,7 +29,7 @@ public sealed class PhysicalMemory1967
         MemoryWord50 word = ReadRaw(physicalAddress);
         if (!word.HasValidInstructionControl(rightHalf))
             throw new MemoryControlException(physicalAddress, rightHalf
-                ? MemoryAccessKind1967.InstructionRight : MemoryAccessKind1967.InstructionLeft);
+                ? MemoryAccessKind.InstructionRight : MemoryAccessKind.InstructionLeft);
         return word.Data;
     }
 
@@ -37,7 +37,7 @@ public sealed class PhysicalMemory1967
     {
         MemoryWord50 word = ReadRaw(physicalAddress);
         if (!word.HasValidOperandControl)
-            throw new MemoryControlException(physicalAddress, MemoryAccessKind1967.OperandRead);
+            throw new MemoryControlException(physicalAddress, MemoryAccessKind.OperandRead);
         return word.Data;
     }
 

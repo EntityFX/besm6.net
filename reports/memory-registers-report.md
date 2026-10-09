@@ -1,8 +1,8 @@
 # Этап 3: формат РП и РЗ
 
 По таблицам ТО-8, редакция 1–67, листы 106–109 добавлены
-`ImportAssignmentGroup` и `ImportProtectionGroup` в `PageAssignment1967`.
-[Спецификация и источник](../docs/besm6-memory-registers-1967.md).
+`ImportAssignmentGroup` и `ImportProtectionGroup` в `PageAssignment`.
+[Спецификация и источник](../docs/besm6-memory-registers.md).
 
 РП получает четыре пятиразрядных номера страниц и четыре дополнительных
 бита расширения 64K. Компонент 32K отклоняет дополнительный бит целиком,

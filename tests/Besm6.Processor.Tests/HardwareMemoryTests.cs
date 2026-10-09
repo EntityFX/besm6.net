@@ -1,8 +1,8 @@
 namespace Besm6.Tests;
 
 [TestClass]
-[TestCategory("HardwareMemory1967")]
-public sealed class HardwareMemory1967Tests
+[TestCategory("HardwareMemory")]
+public sealed class HardwareMemoryTests
 {
     // Literal bits derived by counting the printed 24-bit halves, not by Form().
     [TestMethod]
@@ -74,17 +74,17 @@ public sealed class HardwareMemory1967Tests
     [TestMethod]
     public void PhysicalAddressesKeepControlAndBankIdentity()
     {
-        var memory = new PhysicalMemory1967();
-        for (uint address = 0; address < PhysicalMemory1967.WordCount; address++)
+        var memory = new PhysicalMemory();
+        for (uint address = 0; address < PhysicalMemory.WordCount; address++)
         {
             ulong raw = address | ((ulong)(address % 4) << 48);
             memory.WriteRaw(address, new(raw));
         }
-        for (uint address = 0; address < PhysicalMemory1967.WordCount; address++)
+        for (uint address = 0; address < PhysicalMemory.WordCount; address++)
         {
             Assert.AreEqual(address | ((ulong)(address % 4) << 48), memory.ReadRaw(address).RawValue);
-            Assert.AreEqual(address % 8, PhysicalMemory1967.GetBank(address));
-            Assert.AreEqual(address / 8, PhysicalMemory1967.GetBankOffset(address));
+            Assert.AreEqual(address % 8, PhysicalMemory.GetBank(address));
+            Assert.AreEqual(address / 8, PhysicalMemory.GetBankOffset(address));
         }
     }
 
@@ -93,39 +93,39 @@ public sealed class HardwareMemory1967Tests
     [DataRow(uint.MaxValue)]
     public void PhysicalAddressesNeverWrap(uint address)
     {
-        var memory = new PhysicalMemory1967();
+        var memory = new PhysicalMemory();
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => memory.ReadRaw(address));
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => memory.WriteRaw(address, new(0)));
-        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => PhysicalMemory1967.GetBank(address));
-        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => PhysicalMemory1967.GetBankOffset(address));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => PhysicalMemory.GetBank(address));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => PhysicalMemory.GetBankOffset(address));
         Assert.AreEqual(0UL, memory.ReadRaw(0).RawValue);
     }
 
     [TestMethod]
     public void ControlFaultsHaveAddressAndAccessAndPreserveStorage()
     {
-        var memory = new PhysicalMemory1967();
+        var memory = new PhysicalMemory();
         memory.WriteRaw(1234, new(0x2000000000000)); // zero number
         Assert.AreEqual(0UL, memory.LoadOperand(1234).Value);
         foreach (bool right in new[] { false, true })
         {
             var fault = Assert.ThrowsExactly<MemoryControlException>(() => memory.FetchInstruction(1234, right));
             Assert.AreEqual(1234u, fault.PhysicalAddress);
-            Assert.AreEqual(right ? MemoryAccessKind1967.InstructionRight : MemoryAccessKind1967.InstructionLeft,
+            Assert.AreEqual(right ? MemoryAccessKind.InstructionRight : MemoryAccessKind.InstructionLeft,
                 fault.AccessKind);
         }
         Assert.AreEqual(0x2000000000000UL, memory.ReadRaw(1234).RawValue);
         memory.WriteRaw(1234, new(0)); // wrong total control, left command still valid
         Assert.AreEqual(0UL, memory.FetchInstruction(1234, false).Value);
         var operandFault = Assert.ThrowsExactly<MemoryControlException>(() => memory.LoadOperand(1234));
-        Assert.AreEqual(MemoryAccessKind1967.OperandRead, operandFault.AccessKind);
+        Assert.AreEqual(MemoryAccessKind.OperandRead, operandFault.AccessKind);
         Assert.AreEqual(0UL, memory.ReadRaw(1234).RawValue);
     }
 
     [TestMethod]
     public void PhysicalStoreReplacesPayloadAndControlBits()
     {
-        var memory = new PhysicalMemory1967();
+        var memory = new PhysicalMemory();
         memory.Store(8, new(1), false, false);
         Assert.AreEqual(1UL, memory.FetchInstruction(8, false).Value);
         Assert.AreEqual(1UL, memory.FetchInstruction(8, true).Value);
@@ -138,12 +138,12 @@ public sealed class HardwareMemory1967Tests
     [TestMethod]
     public void EveryPageAndOffsetTranslateWithoutLosingLowBits()
     {
-        var map = new PageAssignment1967();
+        var map = new PageAssignment();
         for (uint page = 0; page < 32; page++) map.SetPhysicalPage(page, 31 - page);
         for (uint address = 1; address < 32768; address++)
         {
             var resolved = map.ResolveOperand(address, false, false, false, false);
-            Assert.AreEqual(MemoryAddressKind1967.PhysicalMemory, resolved.Kind);
+            Assert.AreEqual(MemoryAddressKind.PhysicalMemory, resolved.Kind);
             Assert.AreEqual((31 - address / 1024) * 1024 + address % 1024, resolved.Address);
         }
     }
@@ -151,8 +151,8 @@ public sealed class HardwareMemory1967Tests
     [TestMethod]
     public void AliasAndRemapSelectActualPhysicalStorage()
     {
-        var map = new PageAssignment1967();
-        var memory = new PhysicalMemory1967();
+        var map = new PageAssignment();
+        var memory = new PhysicalMemory();
         map.SetPhysicalPage(2, 7);
         map.SetPhysicalPage(3, 7);
         var first = map.ResolveOperand(2 * 1024 + 27, true, false, false, false);
@@ -171,16 +171,16 @@ public sealed class HardwareMemory1967Tests
     [DataRow(true)]
     public void OperandProtectionUsesMathematicalPageEvenWhenAssignmentIsBlocked(bool write)
     {
-        var map = new PageAssignment1967 { OperandProtectionMask = 1u << 3 };
+        var map = new PageAssignment { OperandProtectionMask = 1u << 3 };
         map.SetPhysicalPage(3, 5);
         map.SetPhysicalPage(4, 3);
         foreach (bool blocked in new[] { false, true })
         {
-            var fault = Assert.ThrowsExactly<MemoryProtection1967Exception>(() =>
+            var fault = Assert.ThrowsExactly<MemoryProtectionException>(() =>
                 map.ResolveOperand(3 * 1024 + 9, write, blocked, false, false));
             Assert.AreEqual(3u, fault.MathematicalPage);
             Assert.AreEqual(3081u, fault.MathematicalAddress);
-            Assert.AreEqual(write ? MemoryAccessKind1967.OperandWrite : MemoryAccessKind1967.OperandRead,
+            Assert.AreEqual(write ? MemoryAccessKind.OperandWrite : MemoryAccessKind.OperandRead,
                 fault.AccessKind);
         }
         Assert.AreEqual(3081u, map.ResolveOperand(4 * 1024 + 9, write, false, false, false).Address);
@@ -191,12 +191,12 @@ public sealed class HardwareMemory1967Tests
     [TestMethod]
     public void InstructionProtectionIsAssignmentZeroAndIndependentOfOperandMask()
     {
-        var map = new PageAssignment1967 { OperandProtectionMask = uint.MaxValue };
+        var map = new PageAssignment { OperandProtectionMask = uint.MaxValue };
         foreach (bool right in new[] { false, true })
         {
-            var fault = Assert.ThrowsExactly<MemoryProtection1967Exception>(() =>
+            var fault = Assert.ThrowsExactly<MemoryProtectionException>(() =>
                 map.ResolveInstruction(2 * 1024 + 55, false, right));
-            Assert.AreEqual(right ? MemoryAccessKind1967.InstructionRight : MemoryAccessKind1967.InstructionLeft,
+            Assert.AreEqual(right ? MemoryAccessKind.InstructionRight : MemoryAccessKind.InstructionLeft,
                 fault.AccessKind);
         }
         // A zero page assignment still permits operands if operand protection is blocked.
@@ -211,29 +211,29 @@ public sealed class HardwareMemory1967Tests
     [DataRow(true)]
     public void ZeroOperandAndPanelSelectionAreNotPhysicalMemory(bool write)
     {
-        var map = new PageAssignment1967 { OperandProtectionMask = uint.MaxValue };
+        var map = new PageAssignment { OperandProtectionMask = uint.MaxValue };
         map.SetPhysicalPage(0, 9);
         foreach (bool blocked in new[] { false, true })
-            Assert.AreEqual(new ResolvedMemoryAddress1967(MemoryAddressKind1967.ZeroOperand, 0),
+            Assert.AreEqual(new ResolvedMemoryAddress(MemoryAddressKind.ZeroOperand, 0),
                 map.ResolveOperand(0, write, blocked, false, false));
         for (uint address = 1; address <= 7; address++)
         {
-            Assert.AreEqual(new ResolvedMemoryAddress1967(MemoryAddressKind1967.PanelRegister, address),
+            Assert.AreEqual(new ResolvedMemoryAddress(MemoryAddressKind.PanelRegister, address),
                 map.ResolveOperand(address, write, true, false, true));
-            Assert.AreEqual(new ResolvedMemoryAddress1967(MemoryAddressKind1967.PanelRegister, address),
+            Assert.AreEqual(new ResolvedMemoryAddress(MemoryAddressKind.PanelRegister, address),
                 map.ResolveInstruction(address, true, false));
-            Assert.ThrowsExactly<MemoryProtection1967Exception>(() =>
+            Assert.ThrowsExactly<MemoryProtectionException>(() =>
                 map.ResolveOperand(address, write, true, false, false));
             Assert.AreEqual(9 * 1024 + address,
                 map.ResolveOperand(address, write, false, true, false).Address);
         }
-        Assert.ThrowsExactly<MemoryProtection1967Exception>(() => map.ResolveOperand(8, write, true, false, true));
+        Assert.ThrowsExactly<MemoryProtectionException>(() => map.ResolveOperand(8, write, true, false, true));
     }
 
     [TestMethod]
     public void InvalidMappingAndMathematicalAddressCannotWrap()
     {
-        var map = new PageAssignment1967();
+        var map = new PageAssignment();
         map.SetPhysicalPage(31, 17);
         foreach (uint invalid in new[] { 32u, uint.MaxValue })
         {

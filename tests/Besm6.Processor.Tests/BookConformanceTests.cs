@@ -124,7 +124,7 @@ public sealed class BookConformanceTests
     [TestMethod]
     [DynamicData(nameof(LoadedVectors), DynamicDataDisplayName = nameof(CaseName))]
     public void BufferedOriginalAndMaxPreserveBookArithmetic(string id, ExecutionSpeed speed, JsonElement v)
-        => CheckLoadedArithmetic(id, speed, v, MemoryModel.Buffered1967);
+        => CheckLoadedArithmetic(id, speed, v, MemoryModel.Buffered);
 
     private static void CheckLoadedArithmetic(string id, ExecutionSpeed speed, JsonElement v, MemoryModel memoryModel)
     {
@@ -148,7 +148,7 @@ public sealed class BookConformanceTests
     [TestMethod]
     [DynamicData(nameof(FaultVectors), DynamicDataDisplayName = nameof(CaseName))]
     public void BufferedAvostStateAndInterceptionMatchBetweenSpeeds(string id, ExecutionSpeed speed, bool intercept, JsonElement v)
-        => CheckLoadedFault(id, speed, intercept, v, MemoryModel.Buffered1967);
+        => CheckLoadedFault(id, speed, intercept, v, MemoryModel.Buffered);
 
     private static void CheckLoadedFault(string id, ExecutionSpeed speed, bool intercept, JsonElement v, MemoryModel memoryModel)
     {

@@ -1,7 +1,7 @@
 namespace Besm6.Core;
 
 /// <summary>A diagnostic copy of one register; snapshots do not count as accesses.</summary>
-public readonly record struct MemoryBufferEntry1967(uint PhysicalAddress, MemoryWord50 Word, bool PendingWrite);
+public readonly record struct MemoryBufferEntry(uint PhysicalAddress, MemoryWord50 Word, bool PendingWrite);
 
 /// <summary>
 /// Untimed, physical-address buffer model for TO-8 (1967), §4.2–4.4, §4.10–4.11.
@@ -9,16 +9,16 @@ public readonly record struct MemoryBufferEntry1967(uint PhysicalAddress, Memory
 /// Not a CPU adapter: mathematical tags, privileged flush operations and asynchronous
 /// writeback timing still require a configuration-specific specification.
 /// </summary>
-public sealed class BufferedMemory1967
+public sealed class BufferedMemory
 {
     public const int OperandRegisterCount = 8;
     public const int InstructionRegisterCount = 4;
 
-    private readonly PhysicalMemory1967 _memory;
+    private readonly PhysicalMemory _memory;
     private readonly RegisterBuffer _operands = new(OperandRegisterCount);
     private readonly RegisterBuffer _instructions = new(InstructionRegisterCount);
 
-    public BufferedMemory1967(PhysicalMemory1967 memory)
+    public BufferedMemory(PhysicalMemory memory)
     {
         ArgumentNullException.ThrowIfNull(memory);
         _memory = memory;
@@ -27,8 +27,8 @@ public sealed class BufferedMemory1967
     public int PendingWriteCount => _operands.PendingWriteCount;
 
     /// <summary>Copies ordered from most recently to least recently accessed.</summary>
-    public MemoryBufferEntry1967[] GetOperandSnapshot() => _operands.Snapshot();
-    public MemoryBufferEntry1967[] GetInstructionSnapshot() => _instructions.Snapshot();
+    public MemoryBufferEntry[] GetOperandSnapshot() => _operands.Snapshot();
+    public MemoryBufferEntry[] GetInstructionSnapshot() => _instructions.Snapshot();
 
     /// <summary>Side-effect-free host observation of the current operand value, including BRZ.</summary>
     public MemoryWord50 PeekOperand(uint physicalAddress)
@@ -76,7 +76,7 @@ public sealed class BufferedMemory1967
         int index = _operands.Find(physicalAddress);
         MemoryWord50 word = index < 0 ? _memory.ReadRaw(physicalAddress) : _operands.Touch(index).Word;
         if (!word.HasValidOperandControl)
-            throw new MemoryControlException(physicalAddress, MemoryAccessKind1967.OperandRead);
+            throw new MemoryControlException(physicalAddress, MemoryAccessKind.OperandRead);
         return word.Data;
     }
 
@@ -95,7 +95,7 @@ public sealed class BufferedMemory1967
             word = _instructions.Touch(index).Word;
         if (!word.HasValidInstructionControl(rightHalf))
             throw new MemoryControlException(physicalAddress, rightHalf
-                ? MemoryAccessKind1967.InstructionRight : MemoryAccessKind1967.InstructionLeft);
+                ? MemoryAccessKind.InstructionRight : MemoryAccessKind.InstructionLeft);
         return word.Data;
     }
 
@@ -108,7 +108,7 @@ public sealed class BufferedMemory1967
     {
         for (int index = _operands.Count - 1; index >= 0; index--)
         {
-            MemoryBufferEntry1967 entry = _operands.At(index);
+            MemoryBufferEntry entry = _operands.At(index);
             WriteBack(entry);
             _operands.SetAt(index, entry with { PendingWrite = false });
         }
@@ -117,7 +117,7 @@ public sealed class BufferedMemory1967
     /// <summary>Explicit host operation, not an inferred hardware reset or automatic store invalidation.</summary>
     public void ClearInstructionBuffer() => _instructions.Clear();
 
-    private void WriteBack(MemoryBufferEntry1967 entry)
+    private void WriteBack(MemoryBufferEntry entry)
     {
         if (entry.PendingWrite)
             _memory.WriteRaw(entry.PhysicalAddress, entry.Word);
@@ -125,17 +125,17 @@ public sealed class BufferedMemory1967
 
     private static void ValidateAddress(uint address)
     {
-        if (address >= PhysicalMemory1967.WordCount)
+        if (address >= PhysicalMemory.WordCount)
             throw new ArgumentOutOfRangeException(nameof(address));
     }
 
     // Bounded recency order avoids timestamp rollover and needs no host or model clock.
     private sealed class RegisterBuffer(int capacity)
     {
-        private readonly MemoryBufferEntry1967[] _entries = new MemoryBufferEntry1967[capacity];
+        private readonly MemoryBufferEntry[] _entries = new MemoryBufferEntry[capacity];
         public int Count { get; private set; }
         public bool IsFull => Count == _entries.Length;
-        public MemoryBufferEntry1967 LeastRecent => _entries[Count - 1];
+        public MemoryBufferEntry LeastRecent => _entries[Count - 1];
         public int PendingWriteCount
         {
             get
@@ -153,23 +153,23 @@ public sealed class BufferedMemory1967
             return -1;
         }
 
-        public MemoryBufferEntry1967 At(int index) => _entries[index];
-        public void SetAt(int index, MemoryBufferEntry1967 entry) => _entries[index] = entry;
+        public MemoryBufferEntry At(int index) => _entries[index];
+        public void SetAt(int index, MemoryBufferEntry entry) => _entries[index] = entry;
 
-        public MemoryBufferEntry1967 Touch(int index)
+        public MemoryBufferEntry Touch(int index)
         {
-            MemoryBufferEntry1967 entry = _entries[index];
+            MemoryBufferEntry entry = _entries[index];
             ReplaceAndTouch(index, entry);
             return entry;
         }
 
-        public void ReplaceAndTouch(int index, MemoryBufferEntry1967 entry)
+        public void ReplaceAndTouch(int index, MemoryBufferEntry entry)
         {
             Array.Copy(_entries, 0, _entries, 1, index);
             _entries[0] = entry;
         }
 
-        public void Insert(MemoryBufferEntry1967 entry)
+        public void Insert(MemoryBufferEntry entry)
         {
             int shifted = Math.Min(Count, _entries.Length - 1);
             Array.Copy(_entries, 0, _entries, 1, shifted);
@@ -177,7 +177,7 @@ public sealed class BufferedMemory1967
             if (!IsFull) Count++;
         }
 
-        public MemoryBufferEntry1967[] Snapshot() => _entries.AsSpan(0, Count).ToArray();
+        public MemoryBufferEntry[] Snapshot() => _entries.AsSpan(0, Count).ToArray();
         public void Remove(uint address)
         {
             int index = Find(address);

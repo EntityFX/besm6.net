@@ -19,7 +19,7 @@ namespace Besm6.Runtime
         public IMemory Memory { get; }
         public MemoryModel MemoryModel { get; }
         /// <summary>Present only for the opt-in functional buffered memory backend.</summary>
-        public BufferedMemoryBackend1967? BufferedMemory { get; }
+        public BufferedMemoryBackend? BufferedMemory { get; }
         public Processor Cpu { get; }
         public DeviceManager Devices { get; }
         public Puncher Puncher { get; }
@@ -125,10 +125,10 @@ namespace Besm6.Runtime
                 case MemoryModel.Dubna:
                     cpuMemory = hostMemory = new CoreMemory(memorySize);
                     break;
-                case MemoryModel.Buffered1967:
-                    if (memorySize != PhysicalMemory1967.WordCount)
-                        throw new ArgumentOutOfRangeException(nameof(memorySize), "Buffered1967 requires 32768 words.");
-                    BufferedMemory = new BufferedMemoryBackend1967();
+                case MemoryModel.Buffered:
+                    if (memorySize != PhysicalMemory.WordCount)
+                        throw new ArgumentOutOfRangeException(nameof(memorySize), "Buffered requires 32768 words.");
+                    BufferedMemory = new BufferedMemoryBackend();
                     cpuMemory = BufferedMemory;
                     hostMemory = BufferedMemory.HostMemory;
                     break;

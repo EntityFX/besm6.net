@@ -4,5 +4,5 @@ namespace Besm6.Runtime;
 public enum MemoryModel
 {
     Dubna,
-    Buffered1967
+    Buffered
 }
