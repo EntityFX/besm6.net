@@ -250,7 +250,7 @@ namespace Besm6.Core
 
         #region Память
 
-        internal ulong MemFetch(ulong addr) => _memoryAccess.MemFetch(addr);
+        internal ulong MemFetch(ulong addr) => _memoryAccess.MemFetch(addr, _state.IsRightHalf);
 
         internal ulong MemLoad(uint addr) => _memoryAccess.MemLoad(addr);
 

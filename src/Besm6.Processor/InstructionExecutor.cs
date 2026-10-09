@@ -66,7 +66,7 @@ namespace Besm6.Core
             _state.StackCorrection = 0;
             _state.K = ArchitectureConstants.NormalizeAddress(_state.K);
 
-            ulong rawWord = _memory.MemFetch(_state.K);
+            ulong rawWord = _memory.MemFetch(_state.K, _state.IsRightHalf);
             uint rawInstruction = _state.IsRightHalf
                 ? (uint)rawWord
                 : (uint)(rawWord >> 24);
@@ -162,7 +162,7 @@ namespace Besm6.Core
             {
                 state.StackCorrection = 0;
                 state.K = ArchitectureConstants.NormalizeAddress(state.K);
-                ulong rawWord = _memory.MemFetch(state.K);
+                ulong rawWord = _memory.MemFetch(state.K, state.IsRightHalf);
                 uint raw = (state.IsRightHalf ? (uint)rawWord : (uint)(rawWord >> 24)) & 0xFF_FFFFu;
                 DecodedInstruction instruction;
                 if (cache is not null)

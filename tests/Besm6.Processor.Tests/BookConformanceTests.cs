@@ -119,8 +119,16 @@ public sealed class BookConformanceTests
     [TestMethod]
     [DynamicData(nameof(LoadedVectors), DynamicDataDisplayName = nameof(CaseName))]
     public void OriginalAndMaxPreserveBookArithmetic(string id, ExecutionSpeed speed, JsonElement v)
+        => CheckLoadedArithmetic(id, speed, v, MemoryModel.Dubna);
+
+    [TestMethod]
+    [DynamicData(nameof(LoadedVectors), DynamicDataDisplayName = nameof(CaseName))]
+    public void BufferedOriginalAndMaxPreserveBookArithmetic(string id, ExecutionSpeed speed, JsonElement v)
+        => CheckLoadedArithmetic(id, speed, v, MemoryModel.Buffered1967);
+
+    private static void CheckLoadedArithmetic(string id, ExecutionSpeed speed, JsonElement v, MemoryModel memoryModel)
     {
-        var machine = new MachineCore();
+        var machine = new MachineCore(memoryModel: memoryModel);
         Load(v, machine.Cpu, machine.Memory);
         var loader = new DubnaLoader(machine) { Speed = speed, InstructionLimit = 10, Output = _ => { } };
         Assert.IsTrue(loader.RunLoaded().Success, id);
@@ -135,8 +143,16 @@ public sealed class BookConformanceTests
     [TestMethod]
     [DynamicData(nameof(FaultVectors), DynamicDataDisplayName = nameof(CaseName))]
     public void AvostStateAndInterceptionMatchBetweenSpeeds(string id, ExecutionSpeed speed, bool intercept, JsonElement v)
+        => CheckLoadedFault(id, speed, intercept, v, MemoryModel.Dubna);
+
+    [TestMethod]
+    [DynamicData(nameof(FaultVectors), DynamicDataDisplayName = nameof(CaseName))]
+    public void BufferedAvostStateAndInterceptionMatchBetweenSpeeds(string id, ExecutionSpeed speed, bool intercept, JsonElement v)
+        => CheckLoadedFault(id, speed, intercept, v, MemoryModel.Buffered1967);
+
+    private static void CheckLoadedFault(string id, ExecutionSpeed speed, bool intercept, JsonElement v, MemoryModel memoryModel)
     {
-        var machine = new MachineCore();
+        var machine = new MachineCore(memoryModel: memoryModel);
         Load(v, machine.Cpu, machine.Memory);
         machine.Memory.Write(16, new Word48(0x0D80000D8000)); // STOP in both halves
         machine.Cpu.InterceptCount = intercept ? 1 : 0;

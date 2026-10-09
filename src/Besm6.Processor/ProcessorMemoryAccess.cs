@@ -13,6 +13,7 @@ namespace Besm6.Core
         private readonly ProcessorDebugWatch _debugWatch;
         private readonly IMemory _memory;
         private readonly CoreMemory? _coreMemory;
+        private readonly IInstructionMemory? _instructionMemory;
         internal bool IsPlainCoreMemory { get; }
 
         internal ProcessorMemoryAccess(ProcessorDebugWatch debugWatch, IMemory memory)
@@ -22,18 +23,22 @@ namespace Besm6.Core
             // An IMemory override may observe each read or change CPU hooks.
             IsPlainCoreMemory = memory.GetType() == typeof(CoreMemory);
             _coreMemory = IsPlainCoreMemory ? (CoreMemory)memory : null;
+            _instructionMemory = memory as IInstructionMemory;
         }
 
         /// <summary>Читает слово по адресу команды; запрещает переход по нулевому адресу.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal ulong MemFetch(ulong addr)
+        internal ulong MemFetch(ulong addr, bool rightHalf)
         {
             addr &= 0x7FFF;
             if (addr == 0)
                 ThrowJumpToZero();
             return _coreMemory is { } core
-                ? core.Read((uint)addr).Value : _memory.Read((uint)addr).Value;
+                ? core.Read((uint)addr).Value : FetchOther((uint)addr, rightHalf);
         }
+
+        private ulong FetchOther(uint address, bool rightHalf) => _instructionMemory is { } memory
+            ? memory.FetchInstruction(address, rightHalf).Value : _memory.Read(address).Value;
 
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
