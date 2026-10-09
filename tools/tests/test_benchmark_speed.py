@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location("benchmark_speed", Path(__file__).resolve().parents[1] / "benchmark_speed.py")
 bench = importlib.util.module_from_spec(SPEC)
@@ -8,6 +9,32 @@ SPEC.loader.exec_module(bench)
 
 
 class BenchmarkSpeedTests(unittest.TestCase):
+    def test_metadata_keeps_versions_without_private_installation_paths(self):
+        runtimes = ("  Microsoft.NETCore.App 8.0.24 [C:\\Users\\private-account\\.dotnet\\shared]\n"
+                    "Microsoft.WindowsDesktop.App 8.0.24 [D:\\private-profile\\shared]\n"
+                    "Microsoft.NETCore.App 9.0.3 [D:\\other-host-profile]\n")
+        result = bench.dotnet_versions("9.0.202\n", runtimes)
+        self.assertEqual(result, {"sdk": "9.0.202", "net8_runtimes": [
+            {"framework": "Microsoft.NETCore.App", "version": "8.0.24"},
+            {"framework": "Microsoft.WindowsDesktop.App", "version": "8.0.24"}]})
+        with self.assertRaises(ValueError):
+            bench.dotnet_versions("private-account@private-host", runtimes)
+
+    def test_report_paths_do_not_disclose_external_profile_directories(self):
+        self.assertEqual(bench.report_path(bench.ROOT / "src/test.dll"), "src/test.dll")
+        self.assertEqual(bench.report_path(bench.ROOT.parent / "private-account/profile/test.dll"), "<external>.dll")
+
+    def test_environment_uses_only_version_commands_and_public_platform_fields(self):
+        with patch.object(bench.subprocess, "check_output", side_effect=["9.0.202", ""]) as run, \
+             patch.object(bench.platform, "system", return_value="Windows"), \
+             patch.object(bench.platform, "release", return_value="10"), \
+             patch.object(bench.platform, "machine", return_value="AMD64"), \
+             patch.object(bench.platform, "python_version", return_value="3.12.5"):
+            self.assertEqual(bench.report_environment(), {"platform": "Windows-10-AMD64", "python": "3.12.5",
+                                                         "dotnet": {"sdk": "9.0.202", "net8_runtimes": []}})
+        self.assertEqual([call.args[0] for call in run.call_args_list],
+                         [["dotnet", "--version"], ["dotnet", "--list-runtimes"]])
+
     def memory_output(self, part=1):
         values = {0: ("1", "1", "4096", 0),
                   1: ("0.000244140625", "1", "2048.5", 12),

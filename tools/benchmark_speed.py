@@ -25,6 +25,37 @@ MEMORY_JOBS = ("mem0", "mem1", "mem2", "mem3")
 OPWD = {0: 0, 1: 2, 2: 8, 3: 32}
 
 
+def report_path(path):
+    """Use repository-relative paths; external paths may contain account names."""
+    path = pathlib.Path(path).resolve()
+    try:
+        return path.relative_to(ROOT).as_posix()
+    except ValueError:
+        return "<external>" + path.suffix
+
+
+def dotnet_versions(sdk, runtimes):
+    """Keep version fields only, without SDK installation or profile paths."""
+    version = r"\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?"
+    sdk = sdk.strip()
+    if not re.fullmatch(version, sdk):
+        raise ValueError("Unexpected .NET SDK version format")
+    selected = []
+    for line in runtimes.splitlines():
+        match = re.match(r"^\s*(Microsoft\.(?:NETCore|AspNetCore|WindowsDesktop)\.App) (" + version + r")\s+\[", line)
+        if match and match[2].split(".")[0] == "8":
+            selected.append({"framework": match[1], "version": match[2]})
+    return {"sdk": sdk, "net8_runtimes": selected}
+
+
+def report_environment():
+    """Explicit allowlist: no node name, account, environment dump or --info."""
+    return {"platform": "-".join((platform.system(), platform.release(), platform.machine())),
+            "python": platform.python_version(),
+            "dotnet": dotnet_versions(subprocess.check_output(["dotnet", "--version"], text=True),
+                                      subprocess.check_output(["dotnet", "--list-runtimes"], text=True))}
+
+
 def fortran_number(text):
     """FORTRAN-GDR writes 99.856051500828-02 without an E."""
     value = text.strip().replace("D", "E")
@@ -350,8 +381,8 @@ def main():
     logs.mkdir(exist_ok=True)
     paths, config = prepare_jobs(args.output)
     probe = build_baseline_probe(args.baseline_dll.resolve(), args.output) if args.baseline_dll else None
-    metadata = {"platform": platform.platform(), "python": sys.version, "dotnet": subprocess.check_output(
-        ["dotnet", "--info"], text=True), "arguments": {k: str(v) if isinstance(v, pathlib.Path) else v for k, v in vars(args).items()}}
+    metadata = report_environment()
+    metadata["arguments"] = {k: report_path(v) if isinstance(v, pathlib.Path) else v for k, v in vars(args).items()}
     results = {"environment": metadata, "calibration": {}, "samples": {}, "measurements": [], "accepted": False}
 
     def save():
@@ -446,7 +477,7 @@ def main():
         print("Accepted:", results["accepted"], "Report:", args.output / "results.json", flush=True)
         return 0 if results["accepted"] else 1
     except (ValueError, RuntimeError, subprocess.TimeoutExpired) as error:
-        results["error"] = str(error)
+        results["error"] = f"{type(error).__name__}: benchmark failed; details in local logs"
         save()
         print("Benchmark rejected:", error, file=sys.stderr)
         return 1
