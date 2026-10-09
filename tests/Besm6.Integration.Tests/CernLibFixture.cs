@@ -96,6 +96,24 @@ namespace Besm6.Tests
         public string ArtifactsDir => Path.Combine(Root, "tests-run", "cernlib");
 
         /// <summary>
+        /// Use a complete committed source/expected pair before the optional local
+        /// reference snapshot. An explicit data directory remains authoritative.
+        /// </summary>
+        internal string ResolveCaseDirectory(int lib, string name)
+        {
+            string? configured = Environment.GetEnvironmentVariable("BESM6_CERN_DATA");
+            if (!string.IsNullOrWhiteSpace(configured) && Directory.Exists(configured))
+                return Path.Combine(configured, "lib" + lib);
+
+            string committed = Path.Combine(Root, "examples", "cernlib", "lib" + lib);
+            if (File.Exists(Path.Combine(committed, name + ".f")) &&
+                File.Exists(Path.Combine(committed, "expect_" + name + ".txt")))
+                return committed;
+
+            return Path.Combine(RefTestsDir, "lib" + lib);
+        }
+
+        /// <summary>
         /// Каталог артефактов одного случая (Task A2): tests-run/cernlib/lib{lib}/{name}.
         /// lib1/x и lib2/x — разные каталоги: одинаковые имена в разных библиотеках
         /// не перезаписывают друг друга.
@@ -112,7 +130,7 @@ namespace Besm6.Tests
 
         public CernLibRunResult Run(int lib, string name)
         {
-            string libDir = Path.Combine(RefTestsDir, "lib" + lib);
+            string libDir = ResolveCaseDirectory(lib, name);
             string src = Path.Combine(libDir, name + ".f");
             string expectPath = Path.Combine(libDir, "expect_" + name + ".txt");
             if (!File.Exists(src) || !File.Exists(expectPath))
@@ -280,7 +298,7 @@ namespace Besm6.Tests
         /// </summary>
         public LoadResult GenerateTrace(int lib, string name, string tracePath)
         {
-            string libDir = Path.Combine(RefTestsDir, "lib" + lib);
+            string libDir = ResolveCaseDirectory(lib, name);
             string src = Path.Combine(libDir, name + ".f");
             if (!File.Exists(src)) throw new FileNotFoundException("нет исходника: " + src);
 
