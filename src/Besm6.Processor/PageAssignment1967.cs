@@ -7,7 +7,8 @@ public readonly record struct ResolvedMemoryAddress1967(MemoryAddressKind1967 Ki
 /// <summary>
 /// Page assignment/protection for 32K: TO-8 (1967), §4.19, §4.21–4.28.
 /// Host setters specify page numbers, not an assumed encoding of privileged registers.
-/// No CPU reset defaults, buffers, register instructions or device protection are inferred.
+/// Accumulator import follows the printed RP/RZ tables; CPU reset defaults, buffers,
+/// register instruction execution and device protection are not inferred.
 /// </summary>
 public sealed class PageAssignment1967
 {
@@ -29,6 +30,37 @@ public sealed class PageAssignment1967
         ValidatePage(mathematicalPage);
         ValidatePage(physicalPage);
         _physicalPages[mathematicalPage] = physicalPage;
+    }
+
+    /// <summary>
+    /// Imports the accumulator fields for RP0..RP7 (TO-8, sheet 107).
+    /// group is a host index, not a privileged instruction address.
+    /// Sixth page bits describe the 64K extension; this 32K component rejects them
+    /// before changing any assignment. This is configuration validation, not a guest fault.
+    /// Required BRZ transfers and CPU serialization are the caller's responsibility.
+    /// </summary>
+    public void ImportAssignmentGroup(uint group, Word48 accumulator)
+    {
+        if (group >= 8) throw new ArgumentOutOfRangeException(nameof(group));
+        Span<uint> pages = stackalloc uint[4];
+        for (int field = 0; field < 4; field++)
+        {
+            uint page = (uint)((accumulator.Value >> (field * 5)) & 31);
+            page |= (uint)((accumulator.Value >> (28 + field)) & 1) << 5;
+            ValidatePage(page);
+            pages[field] = page;
+        }
+        for (int field = 0; field < 4; field++)
+            _physicalPages[group * 4 + (uint)field] = pages[field];
+    }
+
+    /// <summary>Imports RZ0..RZ3 from accumulator bits 21..28 (TO-8, sheets 108–109).</summary>
+    public void ImportProtectionGroup(uint group, Word48 accumulator)
+    {
+        if (group >= 4) throw new ArgumentOutOfRangeException(nameof(group));
+        int shift = (int)group * 8;
+        uint bits = (uint)((accumulator.Value >> 20) & 255);
+        OperandProtectionMask = (OperandProtectionMask & ~(255u << shift)) | (bits << shift);
     }
 
     public ResolvedMemoryAddress1967 ResolveInstruction(uint address, bool supervisor, bool rightHalf)
