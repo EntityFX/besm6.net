@@ -82,12 +82,27 @@ namespace Besm6.Core
             set => _executor.ExtracodeDispatch = value;
         }
 
-        public Processor(IMemory memory)
+        public Processor(IMemory memory) : this(memory, ProcessorProfile.Dubna) { }
+
+        public ProcessorProfile Profile { get; }
+        public SupervisorControl? Supervisor { get; }
+        public bool LastStepCompleted { get; internal set; } = true;
+
+        public Processor(IMemory memory, ProcessorProfile profile)
         {
+            if (!Enum.IsDefined(profile)) throw new ArgumentOutOfRangeException(nameof(profile));
+            if (profile == ProcessorProfile.Supervisor && memory is not MappedMemoryBackend)
+                throw new ArgumentException("Supervisor execution requires mapped memory.", nameof(memory));
+            Profile = profile;
             _state = new ProcessorState();
+            if (profile == ProcessorProfile.Supervisor)
+            {
+                ((MappedMemoryBackend)memory).EnableSupervisorWritePublication();
+                Supervisor = new SupervisorControl(_state, (MappedMemoryBackend)memory);
+            }
             _traceController = new ProcessorTraceController(_state);
             _debugWatch = new ProcessorDebugWatch(this, _state);
-            _memoryAccess = new ProcessorMemoryAccess(_debugWatch, memory);
+            _memoryAccess = new ProcessorMemoryAccess(_debugWatch, memory, profile == ProcessorProfile.Supervisor);
             _alu = new Alu(_state);
             _executor = new InstructionExecutor(this, _state, _memoryAccess, _alu);
             Reset();
@@ -98,6 +113,8 @@ namespace Besm6.Core
             _state.Reset();
             _traceController.Reset();
             _debugWatch.Reset();
+            Supervisor?.ResetCpu();
+            LastStepCompleted = true;
         }
 
         #region Доступ к регистрам (для тестов)
@@ -292,6 +309,8 @@ namespace Besm6.Core
             if (_traceController.HasPending)
                 _traceController.Complete();
         }
+
+        internal void CancelInstructionTrace() => _traceController.CancelPending();
 
         #endregion
     }

@@ -5,7 +5,8 @@ public enum MemoryAddressKind { PhysicalMemory, ZeroOperand, PanelRegister }
 public readonly record struct ResolvedMemoryAddress(MemoryAddressKind Kind, uint Address);
 
 /// <summary>
-/// Page assignment/protection for 32K: TO-8 (1967), §4.19, §4.21–4.28.
+/// Default 32K page assignment/protection: TO-8, §4.19, §4.21–4.28.
+/// Explicit Simh512K uses the selected simulator's expanded RP fields only.
 /// Host setters specify page numbers, not an assumed encoding of privileged registers.
 /// Accumulator import follows the printed RP/RZ tables; CPU reset defaults, buffers,
 /// register instruction execution and device protection are not inferred.
@@ -15,6 +16,21 @@ public sealed class PageAssignment
     public const uint PageSize = 1024;
     public const uint PageCount = 32;
     private readonly uint[] _physicalPages = new uint[PageCount];
+    public MemoryConfiguration Configuration { get; }
+    public uint PhysicalPageCount { get; }
+
+    public PageAssignment() : this(MemoryConfiguration.Classical32K) { }
+
+    public PageAssignment(MemoryConfiguration configuration)
+    {
+        PhysicalPageCount = configuration switch
+        {
+            MemoryConfiguration.Classical32K => PageCount,
+            MemoryConfiguration.Simh512K => 512,
+            _ => throw new ArgumentOutOfRangeException(nameof(configuration))
+        };
+        Configuration = configuration;
+    }
 
     /// <summary>Bit n protects operand accesses to mathematical page n (§4.26).</summary>
     public uint OperandProtectionMask { get; set; }
@@ -28,24 +44,35 @@ public sealed class PageAssignment
     public void SetPhysicalPage(uint mathematicalPage, uint physicalPage)
     {
         ValidatePage(mathematicalPage);
-        ValidatePage(physicalPage);
+        if (physicalPage >= PhysicalPageCount)
+            throw new ArgumentOutOfRangeException(nameof(physicalPage));
         _physicalPages[mathematicalPage] = physicalPage;
     }
 
     /// <summary>
     /// Imports the accumulator fields for RP0..RP7 (TO-8, sheet 107).
     /// group is a host index, not a privileged instruction address.
-    /// Sixth page bits describe the 64K extension; this 32K component rejects them
+    /// Sixth page bits describe the 64K extension; the default 32K configuration rejects them
     /// before changing any assignment. This is configuration validation, not a guest fault.
     /// Required BRZ transfers and CPU serialization are the caller's responsibility.
     /// </summary>
     public void ImportAssignmentGroup(uint group, Word48 accumulator)
     {
-        ValidateAssignmentGroup(group, accumulator);
+        ValidateImportAssignmentGroup(group, accumulator);
         Span<uint> pages = stackalloc uint[4];
         for (int field = 0; field < 4; field++)
         {
             uint page = (uint)((accumulator.Value >> (field * 5)) & 31);
+            if (Configuration == MemoryConfiguration.Simh512K)
+            {
+                // https://github.com/simh/simh/blob/9e318d16a203a3efae3420ea3f5700a8d7e3bec3/BESM6/besm6_mmu.c#L691
+                // Selected SIMH mmu_setrp: low five bits in1..20,
+                // successive page bits interleaved in29..48; MEMSIZE mask511.
+                // The tenth encoded bit is discarded by that selected mask.
+                for (int bit = 5; bit < 10; bit++)
+                    page |= (uint)((accumulator.Value >> (28 + (bit - 5) * 4 + field)) & 1) << bit;
+                page &= PhysicalPageCount - 1;
+            }
             pages[field] = page;
         }
         for (int field = 0; field < 4; field++)
@@ -57,6 +84,14 @@ public sealed class PageAssignment
         if (group >= 8) throw new ArgumentOutOfRangeException(nameof(group));
         if ((accumulator.Value & 0xF0000000UL) != 0)
             throw new ArgumentOutOfRangeException(nameof(accumulator), "64K assignment is unsupported by 32K memory.");
+    }
+
+    internal void ValidateImportAssignmentGroup(uint group, Word48 accumulator)
+    {
+        if (Configuration == MemoryConfiguration.Classical32K)
+            ValidateAssignmentGroup(group, accumulator);
+        else if (group >= 8)
+            throw new ArgumentOutOfRangeException(nameof(group));
     }
 
     /// <summary>

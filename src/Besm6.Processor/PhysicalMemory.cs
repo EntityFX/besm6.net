@@ -1,26 +1,49 @@
 namespace Besm6.Core;
 
+/// <summary>Explicit storage/assignment configurations; SIMH expansion is an
+/// experimental compatibility contract, not historical bank wiring or timing.</summary>
+public enum MemoryConfiguration { Classical32K, Simh512K }
+
 /// <summary>
-/// Untimed 32K physical storage for the 1967 configuration (TO-8 §4.1, §4.5–4.8).
+/// Untimed physical storage. Default 32K follows TO-8 §4.1, §4.5–4.8;
+/// the explicit SIMH configuration supplies expanded capacity only.
 /// Deliberately not IMemory: command fetch and operand access have different control.
 /// CPU adapters provide separate buffer/addressing policies; this storage has no timing.
 /// </summary>
 public sealed class PhysicalMemory
 {
+    /// <summary>Legacy mathematical/classical capacity. Use CapacityWords for storage bounds.</summary>
     public const uint WordCount = 32768;
+    /// <summary>Classical bank count; no expanded physical bank geometry is specified.</summary>
     public const uint BankCount = 8;
-    private readonly MemoryWord50[] _words = new MemoryWord50[WordCount];
+    private readonly MemoryWord50[] _words;
+    public MemoryConfiguration Configuration { get; }
+    public uint CapacityWords { get; }
+
+    public PhysicalMemory() : this(MemoryConfiguration.Classical32K) { }
+
+    public PhysicalMemory(MemoryConfiguration configuration)
+    {
+        CapacityWords = configuration switch
+        {
+            MemoryConfiguration.Classical32K => WordCount,
+            MemoryConfiguration.Simh512K => 512 * 1024,
+            _ => throw new ArgumentOutOfRangeException(nameof(configuration))
+        };
+        Configuration = configuration;
+        _words = new MemoryWord50[CapacityWords];
+    }
 
     // Initial storage is raw zero, not a claim about hardware power-on/reset state.
     public MemoryWord50 ReadRaw(uint physicalAddress)
     {
-        ValidateAddress(physicalAddress);
+        ValidatePhysicalAddress(physicalAddress);
         return _words[physicalAddress];
     }
 
     public void WriteRaw(uint physicalAddress, MemoryWord50 word)
     {
-        ValidateAddress(physicalAddress);
+        ValidatePhysicalAddress(physicalAddress);
         _words[physicalAddress] = word;
     }
 
@@ -59,6 +82,12 @@ public sealed class PhysicalMemory
     private static void ValidateAddress(uint physicalAddress)
     {
         if (physicalAddress >= WordCount)
+            throw new ArgumentOutOfRangeException(nameof(physicalAddress));
+    }
+
+    private void ValidatePhysicalAddress(uint physicalAddress)
+    {
+        if (physicalAddress >= CapacityWords)
             throw new ArgumentOutOfRangeException(nameof(physicalAddress));
     }
 }

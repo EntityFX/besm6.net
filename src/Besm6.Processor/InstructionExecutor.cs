@@ -3,7 +3,7 @@ namespace Besm6.Core
     /// <summary>
     /// Единый конвейер fetch/decode/dispatch/finalize для одного полуслова БЭСМ-6.
     /// </summary>
-    public sealed class InstructionExecutor
+    public sealed partial class InstructionExecutor
     {
         private readonly Processor _processor;
         private readonly ProcessorState _state;
@@ -51,9 +51,10 @@ namespace Besm6.Core
         /// <summary>Выполняет одну инструкцию; true означает команду STOP.</summary>
         public bool Execute()
         {
+            _processor.LastStepCompleted = true;
             try
             {
-                return ExecuteCore();
+                return _processor.Supervisor is null ? ExecuteCore() : ExecuteSupervisor();
             }
             catch (Processor.DebugWatchAbortException)
             {
@@ -117,7 +118,8 @@ namespace Besm6.Core
             InstructionOutcome outcome;
             try
             {
-                outcome = Dispatch(ref frame);
+                outcome = _processor.Supervisor is { } supervisor
+                    ? DispatchSupervisor(supervisor, ref frame) : Dispatch(ref frame);
             }
             catch (ProcessorException exception) when (string.IsNullOrEmpty(exception.Message))
             {
@@ -125,7 +127,9 @@ namespace Besm6.Core
                 throw;
             }
 
-            FinalizeInstruction(ref frame, updateRegistersAndModification: true);
+            FinalizeInstruction(ref frame, updateRegistersAndModification: true,
+                preserveZeroModification: _processor.Supervisor is not null &&
+                    instruction.Opcode is Opcode.Utc or Opcode.Wtc);
             return outcome == InstructionOutcome.Stop;
         }
 
@@ -220,13 +224,17 @@ namespace Besm6.Core
         }
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-        private void FinalizeInstruction(ref ExecutionFrame frame, bool updateRegistersAndModification, bool observe = true)
+        private void FinalizeInstruction(ref ExecutionFrame frame, bool updateRegistersAndModification,
+            bool observe = true, bool preserveZeroModification = false)
         {
             if (updateRegistersAndModification)
             {
                 if (frame.UpdateModificationRegister)
                 {
-                    if (frame.NextC != 0)
+                    // Unobserved blocks are Dubna-only. Passing false there lets
+                    // the JIT retain the original hot path; supervisor UTC/WTC
+                    // still preserve a pending modification whose value is zero.
+                    if (frame.NextC != 0 || preserveZeroModification)
                     {
                         _state.C = frame.NextC;
                         _state.ApplyC = true;

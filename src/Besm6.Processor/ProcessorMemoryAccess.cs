@@ -14,10 +14,13 @@ namespace Besm6.Core
         private readonly IMemory _memory;
         private readonly CoreMemory? _coreMemory;
         private readonly IInstructionMemory? _instructionMemory;
+        private readonly bool _allowZeroInstructionAddress;
         internal bool IsPlainCoreMemory { get; }
+        internal MappedMemoryBackend? MappedBackend => _memory as MappedMemoryBackend;
 
-        internal ProcessorMemoryAccess(ProcessorDebugWatch debugWatch, IMemory memory)
+        internal ProcessorMemoryAccess(ProcessorDebugWatch debugWatch, IMemory memory, bool allowZeroInstructionAddress = false)
         {
+            _allowZeroInstructionAddress = allowZeroInstructionAddress;
             _debugWatch = debugWatch;
             _memory = memory;
             // An IMemory override may observe each read or change CPU hooks.
@@ -31,7 +34,7 @@ namespace Besm6.Core
         internal ulong MemFetch(ulong addr, bool rightHalf)
         {
             addr &= 0x7FFF;
-            if (addr == 0)
+            if (addr == 0 && !_allowZeroInstructionAddress)
                 ThrowJumpToZero();
             return _coreMemory is { } core
                 ? core.Read((uint)addr).Value : FetchOther((uint)addr, rightHalf);

@@ -20,7 +20,7 @@ namespace Besm6.Runtime
         public MemoryModel MemoryModel { get; }
         /// <summary>Present only for the opt-in functional buffered memory backend.</summary>
         public BufferedMemoryBackend? BufferedMemory { get; }
-        /// <summary>Host-controlled mathematical memory; supervisor CPU is a later stage.</summary>
+        /// <summary>Mathematical memory, optionally coupled to the supervisor CPU profile.</summary>
         public MappedMemoryBackend? MappedMemory { get; }
         public Processor Cpu { get; }
         public DeviceManager Devices { get; }
@@ -118,7 +118,33 @@ namespace Besm6.Runtime
             : this(MemoryModel.Dubna, memorySize, puncherOutputDir) { }
 
         public MachineCore(MemoryModel memoryModel, uint memorySize = 32768, string? puncherOutputDir = null)
+            : this(memoryModel, ProcessorProfile.Dubna, memorySize, puncherOutputDir) { }
+
+        public MachineCore(ProcessorProfile profile, uint memorySize = 32768, string? puncherOutputDir = null)
+            : this(profile == ProcessorProfile.Supervisor ? MemoryModel.Mapped : MemoryModel.Dubna,
+                profile, memorySize, puncherOutputDir) { }
+
+        /// <summary>Explicit geometry; Simh512K is an experimental SIMH compatibility
+        /// configuration and does not claim historical bank wiring or timing.</summary>
+        public MachineCore(ProcessorProfile profile, MemoryConfiguration configuration, string? puncherOutputDir = null)
+            : this(profile == ProcessorProfile.Supervisor ? MemoryModel.Mapped : MemoryModel.Dubna,
+                profile, ConfigurationSize(configuration), puncherOutputDir, configuration) { }
+
+        private static uint ConfigurationSize(MemoryConfiguration configuration) => configuration switch
         {
+            MemoryConfiguration.Classical32K => PhysicalMemory.WordCount,
+            MemoryConfiguration.Simh512K => 524288,
+            _ => throw new ArgumentOutOfRangeException(nameof(configuration))
+        };
+
+        public SupervisorIoController? SupervisorIo { get; }
+
+        private MachineCore(MemoryModel memoryModel, ProcessorProfile profile, uint memorySize, string? puncherOutputDir,
+            MemoryConfiguration configuration = MemoryConfiguration.Classical32K)
+        {
+            if (!Enum.IsDefined(profile)) throw new ArgumentOutOfRangeException(nameof(profile));
+            if (configuration != MemoryConfiguration.Classical32K && profile != ProcessorProfile.Supervisor)
+                throw new ArgumentException("Expanded geometry requires the explicit supervisor profile.", nameof(configuration));
             IMemory cpuMemory;
             IMemory hostMemory;
             MemoryModel = memoryModel;
@@ -135,9 +161,9 @@ namespace Besm6.Runtime
                     hostMemory = BufferedMemory.HostMemory;
                     break;
                 case MemoryModel.Mapped:
-                    if (memorySize != PhysicalMemory.WordCount)
-                        throw new ArgumentOutOfRangeException(nameof(memorySize), "Mapped requires 32768 words.");
-                    MappedMemory = new MappedMemoryBackend();
+                    if (memorySize != ConfigurationSize(configuration))
+                        throw new ArgumentOutOfRangeException(nameof(memorySize), "Mapped capacity must match its explicit configuration.");
+                    MappedMemory = new MappedMemoryBackend(configuration);
                     cpuMemory = MappedMemory;
                     hostMemory = MappedMemory.HostMemory;
                     break;
@@ -157,13 +183,18 @@ namespace Besm6.Runtime
 
             // The buffered backend separates CPU access from coherent host loading/observation.
             // Dubna still uses the original direct CoreMemory path without a bus hop.
-            Cpu = new Processor(cpuMemory);
+            Cpu = new Processor(cpuMemory, profile);
             Puncher = new Puncher(Memory, puncherOutputDir);
             Plotter = new Plotter();
 
             // B1: планировщик событий привязан к тем же модельным часам машины.
             _scheduler = new EventScheduler(_clock);
             _scheduler.AdvanceStateChanged = active => Cpu.ExecutionProhibited = active;
+            if (Cpu.Supervisor is { } supervisor)
+            {
+                SupervisorIo = new SupervisorIoController(MappedMemory!, _scheduler, () => { });
+                supervisor.Io = SupervisorIo;
+            }
         }
 
         /// <summary>
@@ -222,6 +253,7 @@ namespace Besm6.Runtime
             EnsureExecutionAllowed();
             DeliverCurrentEvents();
             bool stopped = Cpu.Step();
+            if (!Cpu.LastStepCompleted) return stopped;
             // B1: одна выполненная инструкция = TicksPerInstruction тиков модельного времени.
             // Не влияет на наблюдаемую семантику уровня A (только учёт модельного времени).
             _clock.Advance(TicksPerInstruction);
@@ -292,6 +324,27 @@ namespace Besm6.Runtime
                     break;
                 breakCondition?.Invoke(this);
             }
+        }
+
+        /// <summary>
+        /// Bounded execution with shared pacing, without installing hosted extracodes.
+        /// For the supervisor profile the limit also bounds step attempts, including
+        /// fault delivery, preventing a faulting handler from running forever without
+        /// completed commands. Failed attempts do not advance guest ticks or counters.
+        /// </summary>
+        public MachineExecutionResult RunInstructions(long instructionLimit,
+            ExecutionSpeed speed = ExecutionSpeed.Max, bool collectStatistics = false)
+        {
+            if (instructionLimit < 1) throw new ArgumentOutOfRangeException(nameof(instructionLimit));
+            var loop = new ExecutionLoop(this)
+            {
+                InstructionLimit = instructionLimit,
+                StepAttemptLimit = Cpu.Profile == ProcessorProfile.Supervisor ? instructionLimit : null,
+                Speed = speed,
+                CollectStatistics = collectStatistics
+            };
+            var outcome = loop.Run();
+            return new(outcome, loop.Statistics);
         }
 
         public override string ToString()
