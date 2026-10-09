@@ -131,6 +131,58 @@ namespace Besm6.Tests
         {
             Assert.Throws<ArgumentNullException>(() => new EventScheduler().Schedule(0, null!));
         }
+
+        [TestMethod]
+        public void CancelUnknownExecutedAndExecutingTokensReturnsFalse()
+        {
+            var sched = new EventScheduler();
+            Assert.IsFalse(sched.Cancel(new EventToken(999)));
+            EventToken token = default;
+            token = sched.Schedule(1, () => Assert.IsFalse(sched.Cancel(token)));
+            sched.AdvanceTo(1);
+            Assert.IsFalse(sched.Cancel(token));
+            Assert.IsNull(sched.NextEventTick);
+        }
+
+        [TestMethod]
+        public void CancelledEventsDoNotLimitNextBoundaryAndCanBeCancelledFromCallback()
+        {
+            var sched = new EventScheduler();
+            var cancelled = sched.Schedule(1, () => Assert.Fail("Cancelled callback"));
+            Assert.IsTrue(sched.Cancel(cancelled));
+            Assert.IsNull(sched.NextEventTick);
+            EventToken following = default;
+            sched.Schedule(3, () => Assert.IsTrue(sched.Cancel(following)));
+            following = sched.Schedule(3, () => Assert.Fail("Callback cancelled by first event"));
+            Assert.AreEqual(3UL, sched.NextEventTick);
+            sched.AdvanceTo(4);
+            Assert.IsNull(sched.NextEventTick);
+            Assert.AreEqual(4UL, sched.Now);
+        }
+
+        [TestMethod]
+        public void ScheduleOverflowLeavesQueueUnchanged()
+        {
+            var sched = new EventScheduler(new SimulationClock(ulong.MaxValue));
+            Assert.ThrowsExactly<OverflowException>(() => sched.Schedule(1, () => { }));
+            Assert.IsNull(sched.NextEventTick);
+            var token = sched.Schedule(0, () => { });
+            Assert.AreEqual(1UL, token.Id);
+            sched.AdvanceTo(ulong.MaxValue);
+        }
+
+        [TestMethod]
+        public void ExternalClockAdvancePastEventIsRejectedWithoutConsumingIt()
+        {
+            var clock = new SimulationClock();
+            var sched = new EventScheduler(clock);
+            var token = sched.Schedule(1, () => Assert.Fail("Overdue callback"));
+            clock.AdvanceTo(2);
+            Assert.ThrowsExactly<InvalidOperationException>(() => sched.AdvanceTo(2));
+            Assert.AreEqual(2UL, sched.Now);
+            Assert.IsTrue(sched.Cancel(token));
+            sched.AdvanceTo(3);
+        }
     }
 
     /// <summary>Тесты на сам <see cref="SimulationClock"/> (монотонность, запрет отката).</summary>

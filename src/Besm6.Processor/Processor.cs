@@ -168,6 +168,12 @@ namespace Besm6.Core
 
         /// <summary>Устанавливает счётчик команд K.</summary>
         public void SetK(uint val) => _k = val;
+        /// <summary>Starts at the left instruction of a word, preserving other registers.</summary>
+        public void StartAt(uint address)
+        {
+            _state.K = ArchitectureConstants.NormalizeAddress(address);
+            _state.IsRightHalf = false;
+        }
         /// <summary>Устанавливает индексный регистр M с указанным номером.</summary>
         public void SetM(int index, uint val) => _m[index & 0xF] = val;
         /// <summary>Устанавливает регистр режима R.</summary>
@@ -256,7 +262,14 @@ namespace Besm6.Core
         /// Выполняет одну инструкцию (левую или правую половину слова).
         /// Возвращает true, когда процессор остановлен (инструкция СТОП).
         /// </summary>
-        public bool Step() => _executor.Execute();
+        internal bool ExecutionProhibited { get; set; }
+
+        public bool Step()
+        {
+            if (ExecutionProhibited)
+                throw new InvalidOperationException("CPU execution inside a scheduler callback is not allowed.");
+            return _executor.Execute();
+        }
 
         internal bool CanExecuteUnobservedBlock =>
             _memoryAccess.IsPlainCoreMemory && TraceInstruction is null &&

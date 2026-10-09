@@ -130,15 +130,16 @@ namespace Besm6.Runtime
 
             // B1: планировщик событий привязан к тем же модельным часам машины.
             _scheduler = new EventScheduler(_clock);
+            _scheduler.AdvanceStateChanged = active => Cpu.ExecutionProhibited = active;
         }
 
         /// <summary>
-        /// Сброс состояния машины в начальное.
+        /// Compatibility alias for ResetCpu; memory, time, events and devices are preserved.
         /// </summary>
-        public void Reset()
-        {
-            Cpu.Reset();
-        }
+        public void Reset() => ResetCpu();
+
+        /// <summary>Resets only the CPU. Memory, time, queued events and devices survive.</summary>
+        public void ResetCpu() => Cpu.Reset();
 
         /// <summary>
         /// Загрузка программы из массива слов.
@@ -149,7 +150,7 @@ namespace Besm6.Runtime
             {
                 Memory.Write((uint)(startAddress + i), program[i]);
             }
-            Cpu.SetK((uint)startAddress);
+            Cpu.StartAt((uint)startAddress);
         }
 
         /// <summary>
@@ -179,17 +180,39 @@ namespace Besm6.Runtime
         /// </summary>
         public bool Step()
         {
+            long completed = 0;
+            return Step(ref completed);
+        }
+
+        internal bool Step(ref long completed)
+        {
+            EnsureExecutionAllowed();
+            DeliverCurrentEvents();
             bool stopped = Cpu.Step();
             // B1: одна выполненная инструкция = TicksPerInstruction тиков модельного времени.
             // Не влияет на наблюдаемую семантику уровня A (только учёт модельного времени).
             _clock.Advance(TicksPerInstruction);
+            completed++;
             if (StepTrace != null)
             {
                 int k = (int)Cpu.GetK();
                 StepTrace(k, Memory.Read((uint)k).Value);
             }
             if (RegisterTrace is not null) EmitRegisterTrace();
+            DeliverCurrentEvents();
             return stopped;
+        }
+
+        internal void EnsureExecutionAllowed()
+        {
+            if (_scheduler.IsAdvancing)
+                throw new InvalidOperationException("Machine execution inside a scheduler callback is not allowed.");
+        }
+
+        private void DeliverCurrentEvents()
+        {
+            if (_scheduler.NextEventTick is ulong next && next <= _clock.Tick)
+                _scheduler.DeliverCurrentEvents();
         }
 
         /// <summary>
@@ -198,19 +221,28 @@ namespace Besm6.Runtime
         /// </summary>
         internal bool ExecuteBlock(int count, ref long instructionsExecuted)
         {
+            EnsureExecutionAllowed();
             long end = instructionsExecuted + count;
             while (instructionsExecuted < end)
             {
+                DeliverCurrentEvents();
                 if (StepTrace is null && RegisterTrace is null && Cpu.CanExecuteUnobservedBlock)
                 {
-                    if (Cpu.ExecuteUnobservedBlock((int)(end - instructionsExecuted),
-                            ref instructionsExecuted, ref _clock.TickReference))
-                        return true;
+                    int batch = (int)(end - instructionsExecuted);
+                    if (_scheduler.NextEventTick is ulong next)
+                        batch = (int)Math.Min((ulong)batch, next - _clock.Tick);
+                    long batchEnd = instructionsExecuted + batch;
+                    bool stopped = Cpu.ExecuteUnobservedBlock(batch,
+                        ref instructionsExecuted, ref _clock.TickReference);
+                    DeliverCurrentEvents();
+                    if (stopped) return true;
                     if (instructionsExecuted == end) return false;
+                    if (instructionsExecuted == batchEnd) continue;
                 }
-                bool stopped = Step();
-                instructionsExecuted++;
-                if (stopped) return true;
+                // Events may have installed hooks or modified the next instruction.
+                // Recheck at the top after a completed batch; an extracode returns
+                // without reaching its requested boundary and needs the ordinary step.
+                if (Step(ref instructionsExecuted)) return true;
             }
             return false;
         }

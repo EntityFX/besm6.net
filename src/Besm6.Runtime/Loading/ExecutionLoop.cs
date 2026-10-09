@@ -215,8 +215,7 @@ namespace Besm6.Runtime
                     }
                     else
                     {
-                        stopped = _machine.Step();
-                        _instructionsExecuted++;
+                        stopped = _machine.Step(ref _instructionsExecuted);
                     }
                     if (pacer is not null && (stopped || _totalCycles >= nextCheckpoint))
                     {

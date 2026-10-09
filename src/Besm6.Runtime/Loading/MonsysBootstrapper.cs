@@ -58,7 +58,7 @@ namespace Besm6.Runtime
             mem.Write(1543, new Word48(69633L));
             mem.Write(1544, new Word48(824633790493L));
 
-            _machine.Cpu.SetK(1032);
+            _machine.Cpu.StartAt(1032);
         }
     }
 }

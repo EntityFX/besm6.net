@@ -64,18 +64,35 @@ namespace Besm6.Runtime
         }
     }
 
+    /// <summary>A host callback failed; this is not a guest processor fault.</summary>
+    public sealed class SchedulerCallbackException : Exception
+    {
+        public EventToken Token { get; }
+        public ulong Tick { get; }
+
+        internal SchedulerCallbackException(EventToken token, ulong tick, Exception cause)
+            : base($"Scheduled callback {token.Id} failed at tick {tick}.", cause)
+        {
+            Token = token;
+            Tick = tick;
+        }
+    }
+
     /// <summary>
     /// Стандартный <see cref="IEventScheduler"/>: минимальная priority-очередь
-    /// (время, monotonic sequence) + lazy отмена (HashSet отменённых токенов).
+    /// (время, monotonic sequence) + lazy отмена с учётом активных токенов.
     /// Время движется только вперёд и привязано к конкретной <see cref="SimulationClock"/>.
     /// </summary>
     public sealed class EventScheduler : IEventScheduler
     {
         private readonly SimulationClock _clock;
         private readonly PriorityQueue<QueuedEvent, (ulong time, ulong seq)> _queue = new();
-        private readonly HashSet<ulong> _cancelled = new();
+        private readonly HashSet<ulong> _pending = new();
         private ulong _nextToken = 1;
         private ulong _nextSeq;
+        internal ulong? NextEventTick { get; private set; }
+        internal bool IsAdvancing { get; private set; }
+        internal Action<bool>? AdvanceStateChanged { get; set; }
 
         public EventScheduler() : this(new SimulationClock()) { }
 
@@ -92,34 +109,84 @@ namespace Besm6.Runtime
         public EventToken Schedule(ulong delay, Action callback)
         {
             ArgumentNullException.ThrowIfNull(callback);
-            ulong time = _clock.Tick + delay;
-            ulong token = _nextToken++;
-            ulong seq = _nextSeq++;
+            ulong time = checked(_clock.Tick + delay);
+            ulong token = _nextToken;
+            ulong seq = _nextSeq;
+            _nextToken = checked(token + 1);
+            _nextSeq = checked(seq + 1);
             _queue.Enqueue(new QueuedEvent(token, time, callback), (time, seq));
+            _pending.Add(token);
+            if (NextEventTick is null || time < NextEventTick.Value)
+                NextEventTick = time;
             return new EventToken(token);
         }
 
-        public bool Cancel(EventToken token) => _cancelled.Add(token.Id);
+        public bool Cancel(EventToken token)
+        {
+            if (!_pending.Remove(token.Id)) return false;
+            RefreshNextEvent();
+            return true;
+        }
+
+        private void RefreshNextEvent()
+        {
+            while (_queue.TryPeek(out var ev, out var priority))
+            {
+                if (_pending.Contains(ev.Token))
+                {
+                    NextEventTick = priority.time;
+                    return;
+                }
+                _queue.Dequeue();
+            }
+            NextEventTick = null;
+        }
 
         public void AdvanceTo(ulong tick)
+            => AdvanceToCore(tick, allowOverdue: false);
+
+        // CPU hooks can schedule delay-zero events before the step commits its
+        // tick. Such events are delivered at the committed instruction boundary.
+        internal void DeliverCurrentEvents() => AdvanceToCore(_clock.Tick, allowOverdue: true);
+
+        private void AdvanceToCore(ulong tick, bool allowOverdue)
         {
+            if (IsAdvancing)
+                throw new InvalidOperationException("Nested scheduler advancement is not allowed.");
             if (tick < _clock.Tick)
                 throw new InvalidOperationException(
                     $"Simulation time cannot move backward (current {_clock.Tick}, requested {tick}).");
 
-            // Исполняем все события со временем <= tick в порядке (время, seq),
-            // продвигая часы к времени каждого события (монотонно — очередь отсортирована).
-            while (_queue.TryPeek(out _, out var prio) && prio.time <= tick)
-            {
-                if (!_queue.TryDequeue(out var ev, out _))
-                    break;
-                if (_cancelled.Contains(ev.Token))
-                    continue;
-                _clock.AdvanceTo(ev.Time);
-                ev.Callback();
-            }
+            // Advancing a shared clock past a pending event outside this scheduler
+            // is a contract violation. Do not consume the event or move time back.
+            if (!allowOverdue && NextEventTick is ulong overdue && overdue < _clock.Tick)
+                throw new InvalidOperationException("The shared clock advanced past a pending event.");
 
-            _clock.AdvanceTo(tick);
+            IsAdvancing = true;
+            AdvanceStateChanged?.Invoke(true);
+            try
+            {
+                while (NextEventTick is ulong next && next <= tick)
+                {
+                    var ev = _queue.Dequeue();
+                    _pending.Remove(ev.Token);
+                    RefreshNextEvent();
+                    _clock.AdvanceTo(Math.Max(_clock.Tick, ev.Time));
+                    _clock.AdvancementProhibited = true;
+                    try { ev.Callback(); }
+                    catch (Exception exception)
+                    {
+                        throw new SchedulerCallbackException(new EventToken(ev.Token), _clock.Tick, exception);
+                    }
+                    finally { _clock.AdvancementProhibited = false; }
+                }
+                _clock.AdvanceTo(tick);
+            }
+            finally
+            {
+                IsAdvancing = false;
+                AdvanceStateChanged?.Invoke(false);
+            }
         }
     }
 }
