@@ -1,0 +1,60 @@
+{
+  "schema": "hardware-time-source-audit-v1",
+  "date": "2026-10-10",
+  "edition": "Saltykov/Makarenko, Programming in Fortran, Nauka 1976",
+  "sources": [
+    {
+      "path": "book/fortran-1976/original/page-021.png",
+      "sha256": "304e434513cb6b289b9b91563f420a97d8b856725d5cfb59112beb1ccdb832d8",
+      "bytes": 205621,
+      "visual_checked": true
+    },
+    {
+      "path": "book/fortran-1976/original/page-247.png",
+      "sha256": "b010722623a79c480a80f5a8b19da5a5109c7c38c99f96bf8762aa0cdb43d8ca",
+      "bytes": 294904,
+      "visual_checked": true
+    },
+    {
+      "path": "book/fortran-1976/original/page-248.png",
+      "sha256": "6ef0af210ccfd41aa49ef713bd5c73e900136bedc381bf39a94a709a7baf3e0d",
+      "bytes": 261473,
+      "visual_checked": true
+    },
+    {
+      "path": "book/fortran-1976/original/page-249.png",
+      "sha256": "ddba1a54034840b55f51b8c63fa59f8c9768a26132a4b0273843c49ac600e2f1",
+      "bytes": 263941,
+      "visual_checked": true
+    },
+    {
+      "path": "book/fortran-1976/01-besm6.md",
+      "sha256": "eec781f9a0cac3cfd1b91579a2bdb3f41ed5d0f9de2049b7487257ac6c7fb01f",
+      "bytes": 94912,
+      "visual_checked": false
+    },
+    {
+      "path": "book/fortran-1976/05-appendices.md",
+      "sha256": "8411988d10a3956096bd9b2f02596b1d25e6376c067eb30b57541ed9c4c7e2e9",
+      "bytes": 12740,
+      "visual_checked": false
+    }
+  ],
+  "confirmed": [
+    "Source-specific cycle110ns on printed page21",
+    "Independent UU columns and AU min/average/max on printed pages247-249",
+    "AU XTA/AEX/XTR/NTR average2.5cycles is statistical and exactly275ns",
+    "Conditional UU values retain printed order; branch outcome mapping not inferred",
+    "Shift rows explicitly have no average",
+    "STOP, privileged missing rows and extracodes have no table default"
+  ],
+  "not_established": [
+    "Operand-dependent AU durations",
+    "UU/AU issue and retirement/overlap rules",
+    "Bank data-ready versus complete/recovery times and arbitration",
+    "Prefetch and in-flight BRZ/BRS requests",
+    "Historical device delays and interrupt acceptance within operations",
+    "110ns as a universal quantum for all BESM6 installations"
+  ],
+  "implementation_scope": "Standalone timing infrastructure and source specification; existing CPU, original pacing, SimulationClock and devices unchanged"
+}
