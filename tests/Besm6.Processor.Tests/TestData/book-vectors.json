@@ -1,0 +1,8126 @@
+{
+  "schemaVersion": 1,
+  "scope": "Dubna compatibility with independently book-derived defined bits",
+  "sources": {
+    "format": "book/fortran-1976/01-besm6.md#section-2",
+    "registers": "book/fortran-1976/01-besm6.md#section-4",
+    "arithmetic": "book/fortran-1976/01-besm6.md#section-5",
+    "extracodes": "book/fortran-1976/01-besm6.md#section-6",
+    "constants": "book/fortran-1976/03-madlen.md#section-40",
+    "table": "book/fortran-1976/05-appendices.md"
+  },
+  "constants": [
+    {
+      "id": "LOG-4",
+      "octal": "0000000000000004",
+      "value": "4"
+    },
+    {
+      "id": "INT-38",
+      "octal": "6400000000000046",
+      "value": "38"
+    },
+    {
+      "id": "INT-minus5",
+      "octal": "6437777777777773",
+      "value": "-5"
+    },
+    {
+      "id": "REAL-1",
+      "octal": "4050000000000000",
+      "value": "1"
+    },
+    {
+      "id": "REAL-20",
+      "octal": "4252000000000000",
+      "value": "20"
+    },
+    {
+      "id": "REAL-minus1",
+      "octal": "4020000000000000",
+      "value": "-1"
+    }
+  ],
+  "vectors": [
+    {
+      "id": "add-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0044000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "88F000000000",
+        "y": "000000000000",
+        "r": 48,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "subtract-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0054000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "84C000000000",
+        "y": "000000000000",
+        "r": 48,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "reverse-subtract-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0064000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "854000000000",
+        "y": "000000000000",
+        "r": 48,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "modulus-subtract-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "874000000000",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0074000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "897000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "854000000000",
+        "y": "000000000000",
+        "r": 48,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "multiply-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "8CD800000000",
+        "y": "000000000000",
+        "r": 40,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "multiply-negative-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "897000000000",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "8D2800000000",
+        "y": "000000000000",
+        "r": 40,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "round-even-lsb-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000000",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0044000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "308000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "808000000001",
+        "y": "008000000000",
+        "r": 48,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "round-odd-lsb-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000001",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0044000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "308000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "808000000001",
+        "y": "008000000000",
+        "r": 48,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "normalize-tail-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000001",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0054000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "7EFFFFFFFFFF"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "32C000000000",
+        "y": "000000000000",
+        "r": 48,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "multiply-tail-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000001",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "808000000001"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "7E8000000003",
+        "y": "000000000002",
+        "r": 40,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "add-flags1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 37,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0044000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "88F000000000",
+        "y": "000000000000",
+        "r": 49,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "subtract-flags1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 37,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0054000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "883000000000",
+        "y": "000000000000",
+        "r": 49,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "reverse-subtract-flags1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 37,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0064000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "89D000000000",
+        "y": "000000000000",
+        "r": 49,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "modulus-subtract-flags1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "874000000000",
+        "y": "AB1234567890",
+        "r": 37,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0074000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "897000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "89D000000000",
+        "y": "000000000000",
+        "r": 49,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "multiply-flags1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 37,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "8E6C00000000",
+        "y": "000000000000",
+        "r": 41,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "multiply-negative-flags1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "897000000000",
+        "y": "AB1234567890",
+        "r": 37,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "8F9400000000",
+        "y": "000000000000",
+        "r": 41,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "round-even-lsb-flags1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000000",
+        "y": "AB1234567890",
+        "r": 37,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0044000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "308000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "808000000001",
+        "y": "008000000000",
+        "r": 49,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "round-odd-lsb-flags1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000001",
+        "y": "AB1234567890",
+        "r": 37,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0044000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "308000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "808000000001",
+        "y": "008000000000",
+        "r": 49,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "normalize-tail-flags1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000001",
+        "y": "AB1234567890",
+        "r": 37,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0054000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "7EFFFFFFFFFF"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "800000000001",
+        "y": "008000000000",
+        "r": 49,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "multiply-tail-flags1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000001",
+        "y": "AB1234567890",
+        "r": 37,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "808000000001"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "804000000001",
+        "y": "000000000001",
+        "r": 41,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "add-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0044000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "88F000000000",
+        "y": "000000000000",
+        "r": 50,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "subtract-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0054000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "84C000000000",
+        "y": "000000000000",
+        "r": 50,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "reverse-subtract-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0064000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "854000000000",
+        "y": "000000000000",
+        "r": 50,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "modulus-subtract-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "874000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0074000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "897000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "854000000000",
+        "y": "000000000000",
+        "r": 50,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "multiply-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "8CD800000000",
+        "y": "000000000000",
+        "r": 42,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "multiply-negative-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "897000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "8D2800000000",
+        "y": "000000000000",
+        "r": 42,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "round-even-lsb-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0044000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "308000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "808000000000",
+        "y": "008000000000",
+        "r": 50,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "round-odd-lsb-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000001",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0044000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "308000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "808000000001",
+        "y": "008000000000",
+        "r": 50,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "normalize-tail-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000001",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0054000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "7EFFFFFFFFFF"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "32C000000000",
+        "y": "000000000000",
+        "r": 50,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "multiply-tail-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000001",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "808000000001"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "7E8000000002",
+        "y": "000000000002",
+        "r": 42,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "add-flags3",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0044000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "88F000000000",
+        "y": "000000000000",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "subtract-flags3",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0054000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "883000000000",
+        "y": "000000000000",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "reverse-subtract-flags3",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0064000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "89D000000000",
+        "y": "000000000000",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "modulus-subtract-flags3",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "874000000000",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0074000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "897000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "89D000000000",
+        "y": "000000000000",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "multiply-flags3",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "8E6C00000000",
+        "y": "000000000000",
+        "r": 43,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "multiply-negative-flags3",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "897000000000",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "8F9400000000",
+        "y": "000000000000",
+        "r": 43,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "round-even-lsb-flags3",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000000",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0044000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "308000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "808000000000",
+        "y": "008000000000",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "round-odd-lsb-flags3",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000001",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0044000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "308000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "808000000001",
+        "y": "008000000000",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "normalize-tail-flags3",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000001",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0054000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "7EFFFFFFFFFF"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "800000000001",
+        "y": "008000000000",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "multiply-tail-flags3",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "808000000001",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "808000000001"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "804000000001",
+        "y": "000000000001",
+        "r": 43,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "divide-9-by-6-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "82C000000000",
+        "y": "000000000000",
+        "r": 40,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "divide--9-by-6-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "897000000000",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "834000000000",
+        "y": "000000000000",
+        "r": 40,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "divide-9-by--6-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "874000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "834000000000",
+        "y": "000000000000",
+        "r": 40,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "divide--9-by--6-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "897000000000",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "874000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "82C000000000",
+        "y": "000000000000",
+        "r": 40,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "divide-1-by-2-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "828000000000",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "848000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "808000000000",
+        "y": "000000000000",
+        "r": 40,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "divide-0-by-6-flags0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "000000000000",
+        "y": "AB1234567890",
+        "r": 36,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "000000000000",
+        "y": "AB0000000000",
+        "r": 40,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "divide-9-by-6-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "82C000000000",
+        "y": "000000000000",
+        "r": 42,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "divide--9-by-6-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "897000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "834000000000",
+        "y": "000000000000",
+        "r": 42,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "divide-9-by--6-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "874000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "834000000000",
+        "y": "000000000000",
+        "r": 42,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "divide--9-by--6-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "897000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "874000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "82C000000000",
+        "y": "000000000000",
+        "r": 42,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "divide-1-by-2-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "828000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "848000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "808000000000",
+        "y": "000000000000",
+        "r": 42,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "divide-0-by-6-flags2",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "000000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "86C000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "000000000000",
+        "y": "AB0000000000",
+        "r": 42,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "load",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0084000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "FEDCBA987654"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "FEDCBA987654",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "and",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0094000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "0000FFFF0000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "000056780000",
+        "y": "000000000000",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "xor",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00A4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "0000FFFF0000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "1234A9879ABC",
+        "y": "123456789ABC",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "or",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00D4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "0000FFFF0000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "1234FFFF9ABC",
+        "y": "000000000000",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "cyclic-carry",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "FFFFFFFFFFFF",
+        "y": "AB1234567890",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00B4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000001"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "000000000001",
+        "y": "000000000000",
+        "r": 43,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "store-preserves-registers",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0004000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [
+        {
+          "address": 1024,
+          "word": "123456789ABC"
+        }
+      ],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "change-sign-1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00C4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "828000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "889000000000",
+        "y": "000000000000",
+        "r": 50,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "change-sign--1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-2",
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00C4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "810000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "897000000000",
+        "y": "000000000000",
+        "r": 50,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "accumulator-to-index-low15",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0200030D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          6844,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "index-to-accumulator",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0220030D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "000000000007",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "index-copy",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "3240020D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          7,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "index-add",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "32500F0D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16391
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "ntr-0",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "01F0000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 0,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "ntr-1",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "01F0010D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 1,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "ntr-2",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "01F0020D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 2,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "ntr-3",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "01F0030D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 3,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "ntr-6",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "01F0060D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 6,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "ntr-19",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "01F0130D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 19,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "ntr-32",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "01F0200D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 32,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "ntr-63",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "01F03F0D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 63,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "utc-sets-c",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0900030D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000003"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 3,
+        "applyC": true,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "utc-one-command",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0900032A0005"
+      ],
+      "steps": 2,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000003"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          8,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 9,
+        "right": false,
+        "c": 3,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 2
+      }
+    },
+    {
+      "id": "wtc-sets-c",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0984000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000003"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 3,
+        "applyC": true,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "wtc-one-command",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0984002A0005"
+      ],
+      "steps": 2,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000003"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          8,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 9,
+        "right": false,
+        "c": 3,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 2
+      }
+    },
+    {
+      "id": "utc-address-wrap",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "097FFF2A0005"
+      ],
+      "steps": 2,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          4,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 9,
+        "right": false,
+        "c": 32767,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 2
+      }
+    },
+    {
+      "id": "index-address-wrap",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "3AFFFF0D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          6,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "branch-176-group4-a0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "000000000000",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0B00100D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "000000000000",
+        "y": "000000000000",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 16,
+        "right": false,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "branch-184-group4-a0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "000000000000",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0B80100D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "000000000000",
+        "y": "000000000000",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "branch-176-group4-a1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [
+        {
+          "field": "y",
+          "book": "000000000000",
+          "issue": "BOOK-Y-BRANCH"
+        }
+      ],
+      "initial": {
+        "a": "000000000001",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0B00100D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "000000000001",
+        "y": "000000000001",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "branch-184-group4-a1",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [
+        {
+          "field": "y",
+          "book": "000000000000",
+          "issue": "BOOK-Y-BRANCH"
+        }
+      ],
+      "initial": {
+        "a": "000000000001",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0B80100D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "000000000001",
+        "y": "000000000001",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 16,
+        "right": false,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "branch-176-group8-a808000000000",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [
+        {
+          "field": "y",
+          "book": "000000000000",
+          "issue": "BOOK-Y-BRANCH"
+        }
+      ],
+      "initial": {
+        "a": "808000000000",
+        "y": "AB1234567890",
+        "r": 43,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0B00100D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "808000000000",
+        "y": "808000000000",
+        "r": 43,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 16,
+        "right": false,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "branch-184-group8-a808000000000",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [
+        {
+          "field": "y",
+          "book": "000000000000",
+          "issue": "BOOK-Y-BRANCH"
+        }
+      ],
+      "initial": {
+        "a": "808000000000",
+        "y": "AB1234567890",
+        "r": 43,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0B80100D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "808000000000",
+        "y": "808000000000",
+        "r": 43,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "branch-176-group8-a7E8000000000",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [
+        {
+          "field": "y",
+          "book": "000000000000",
+          "issue": "BOOK-Y-BRANCH"
+        }
+      ],
+      "initial": {
+        "a": "7E8000000000",
+        "y": "AB1234567890",
+        "r": 43,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0B00100D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "7E8000000000",
+        "y": "7E8000000000",
+        "r": 43,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "branch-184-group8-a7E8000000000",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [
+        {
+          "field": "y",
+          "book": "000000000000",
+          "issue": "BOOK-Y-BRANCH"
+        }
+      ],
+      "initial": {
+        "a": "7E8000000000",
+        "y": "AB1234567890",
+        "r": 43,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0B80100D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "7E8000000000",
+        "y": "7E8000000000",
+        "r": 43,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 16,
+        "right": false,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "branch-176-group16-a828000000000",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [
+        {
+          "field": "y",
+          "book": "000000000000",
+          "issue": "BOOK-Y-BRANCH"
+        }
+      ],
+      "initial": {
+        "a": "828000000000",
+        "y": "AB1234567890",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0B00100D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "828000000000",
+        "y": "828000000000",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 16,
+        "right": false,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "branch-184-group16-a828000000000",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [
+        {
+          "field": "y",
+          "book": "000000000000",
+          "issue": "BOOK-Y-BRANCH"
+        }
+      ],
+      "initial": {
+        "a": "828000000000",
+        "y": "AB1234567890",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0B80100D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "828000000000",
+        "y": "828000000000",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "branch-176-group16-a810000000000",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [
+        {
+          "field": "y",
+          "book": "000000000000",
+          "issue": "BOOK-Y-BRANCH"
+        }
+      ],
+      "initial": {
+        "a": "810000000000",
+        "y": "AB1234567890",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0B00100D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "810000000000",
+        "y": "810000000000",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "branch-184-group16-a810000000000",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-4",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [
+        {
+          "field": "y",
+          "book": "000000000000",
+          "issue": "BOOK-Y-BRANCH"
+        }
+      ],
+      "initial": {
+        "a": "810000000000",
+        "y": "AB1234567890",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0B80100D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "810000000000",
+        "y": "810000000000",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 16,
+        "right": false,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "rte-preservation-discrepancy",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "y",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [
+        {
+          "field": "r",
+          "book": 51,
+          "issue": "BOOK-R-RTE"
+        }
+      ],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "01803F0D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "660000000000",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "extracode-left-preserves-other-registers",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-6"
+      ],
+      "bookDefined": [
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [
+        {
+          "field": "r",
+          "book": 51,
+          "issue": "BOOK-R-EXTRACODE"
+        }
+      ],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0280110D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          17,
+          16384
+        ],
+        "k": 9,
+        "right": false,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      },
+      "dispatch": true
+    },
+    {
+      "id": "extracode-right-preserves-other-registers",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-6"
+      ],
+      "bookDefined": [
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [
+        {
+          "field": "r",
+          "book": 51,
+          "issue": "BOOK-R-EXTRACODE"
+        }
+      ],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 51,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "3A0007028011"
+      ],
+      "steps": 2,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 39,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          17,
+          16384
+        ],
+        "k": 9,
+        "right": false,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 2
+      },
+      "dispatch": true
+    },
+    {
+      "id": "division-avost-0",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-5"
+      ],
+      "bookDefined": [
+        "error"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 6,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 6,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": "Division by zero",
+        "ticks": 0
+      }
+    },
+    {
+      "id": "division-avost-804000000000",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-5"
+      ],
+      "bookDefined": [
+        "error"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 6,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00E4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "804000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 6,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": "Division by zero",
+        "ticks": 0
+      }
+    },
+    {
+      "id": "overflow-after-normalization",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-5"
+      ],
+      "bookDefined": [
+        "error"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "FE8000000000",
+        "y": "AB1234567890",
+        "r": 6,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "868000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "028000000000",
+        "y": "000000000000",
+        "r": 6,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": "Arithmetic overflow",
+        "ticks": 0
+      }
+    },
+    {
+      "id": "zero-multiply",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 6,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "000000000000",
+        "y": "AB0000000000",
+        "r": 10,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "zero-subtract",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "889000000000",
+        "y": "AB1234567890",
+        "r": 6,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0054000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "889000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "000000000000",
+        "y": "AB0000000000",
+        "r": 18,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "underflow",
+      "sources": [
+        "book/fortran-1976/01-besm6.md#section-5",
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [
+        "a",
+        "r",
+        "m",
+        "k"
+      ],
+      "differences": [],
+      "initial": {
+        "a": "008000000000",
+        "y": "AB1234567890",
+        "r": 6,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "00F4000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "808000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "000000000000",
+        "y": "AB0000000000",
+        "r": 10,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": false,
+        "error": null,
+        "ticks": 1
+      }
+    },
+    {
+      "id": "dubna-stop",
+      "sources": [
+        "book/fortran-1976/05-appendices.md"
+      ],
+      "bookDefined": [],
+      "differences": [],
+      "initial": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8
+      },
+      "program": [
+        "0D80000D8000"
+      ],
+      "steps": 1,
+      "memory": [
+        {
+          "address": 1024,
+          "word": "000000000000"
+        }
+      ],
+      "writes": [],
+      "expected": {
+        "a": "123456789ABC",
+        "y": "AB1234567890",
+        "r": 38,
+        "m": [
+          0,
+          0,
+          0,
+          7,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16384
+        ],
+        "k": 8,
+        "right": true,
+        "c": 0,
+        "applyC": false,
+        "stop": true,
+        "error": null,
+        "ticks": 1
+      }
+    }
+  ]
+}
