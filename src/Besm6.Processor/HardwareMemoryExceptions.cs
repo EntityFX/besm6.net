@@ -1,6 +1,6 @@
 namespace Besm6.Core;
 
-public enum MemoryAccessKind1967
+public enum MemoryAccessKind
 {
     InstructionLeft,
     InstructionRight,
@@ -12,9 +12,9 @@ public enum MemoryAccessKind1967
 public sealed class MemoryControlException : Exception
 {
     public uint PhysicalAddress { get; }
-    public MemoryAccessKind1967 AccessKind { get; }
+    public MemoryAccessKind AccessKind { get; }
 
-    public MemoryControlException(uint physicalAddress, MemoryAccessKind1967 accessKind)
+    public MemoryControlException(uint physicalAddress, MemoryAccessKind accessKind)
         : base($"Memory control failure at physical address {physicalAddress}, access {accessKind}")
     {
         PhysicalAddress = physicalAddress;
@@ -23,13 +23,13 @@ public sealed class MemoryControlException : Exception
 }
 
 /// <summary>A page protection signal, separate from Dubna's guest faults.</summary>
-public sealed class MemoryProtection1967Exception : Exception
+public sealed class MemoryProtectionException : Exception
 {
     public uint MathematicalAddress { get; }
     public uint MathematicalPage => MathematicalAddress >> 10;
-    public MemoryAccessKind1967 AccessKind { get; }
+    public MemoryAccessKind AccessKind { get; }
 
-    public MemoryProtection1967Exception(uint mathematicalAddress, MemoryAccessKind1967 accessKind)
+    public MemoryProtectionException(uint mathematicalAddress, MemoryAccessKind accessKind)
         : base($"Memory protection at mathematical address {mathematicalAddress}, access {accessKind}")
     {
         MathematicalAddress = mathematicalAddress;

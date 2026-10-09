@@ -4,13 +4,13 @@
 
 ```csharp
 var compatible = new MachineCore(); // MemoryModel.Dubna
-var buffered = new MachineCore(memoryModel: MemoryModel.Buffered1967);
+var buffered = new MachineCore(memoryModel: MemoryModel.Buffered);
 var loader = new DubnaLoader(buffered) { Speed = ExecutionSpeed.Max };
 ```
 
 Выбор относится к отдельному экземпляру машины и не меняется на ходу.
 Скорость `original|max` остаётся независимой настройкой `DubnaLoader`.
-Модель `Buffered1967` требует 32768 слов; неизвестный режим или неподдерживаемый
+Модель `Buffered` требует 32768 слов; неизвестный режим или неподдерживаемый
 размер отклоняются до создания устройств. Прежняя сигнатура конструктора,
 включая `memorySize` и `puncherOutputDir`, сохранена отдельной перегрузкой
 для исходной и двоичной совместимости.
@@ -18,9 +18,9 @@ var loader = new DubnaLoader(buffered) { Speed = ExecutionSpeed.Max };
 
 ## Различия моделей
 
-| Свойство | Dubna | Buffered1967 |
+| Свойство | Dubna | Buffered |
 |---|---|---|
-| Память CPU | Прежняя `CoreMemory` | `BufferedMemoryBackend1967` |
+| Память CPU | Прежняя `CoreMemory` | `BufferedMemoryBackend` |
 | Выборка команд | Актуальное 48-битное слово | БРС либо МОЗУ, контроль выбранной половины |
 | Запись CPU | Немедленно в память | Числовой контроль, отложенная запись в БРЗ |
 | Чтение CPU | Текущая память | БРЗ при попадании, иначе МОЗУ, контроль операнда |
@@ -43,7 +43,7 @@ var loader = new DubnaLoader(buffered) { Speed = ExecutionSpeed.Max };
 сохраняется прямой путь выборки; чтение и запись операндов не получили
 дополнительной проверки режима.
 
-`BufferedMemoryBackend1967.Read/Write` — именно операции CPU: контроль
+`BufferedMemoryBackend.Read/Write` — именно операции CPU: контроль
 операнда и БРЗ, с числовым формированием контрольных битов при записи.
 В `MachineCore` CPU получает этот backend напрямую, а `MachineCore.Memory`
 работает через отдельный `HostMemory` и прежний `SystemBus`:
@@ -73,7 +73,7 @@ var loader = new DubnaLoader(buffered) { Speed = ExecutionSpeed.Max };
 контролем. Это выбранная инициализация программной модели; состояние реальной
 МОЗУ при холодном сбросе не определяется. Нулевой адрес операнда, переход
 на ноль и watchpoints продолжают обрабатываться прежним CPU. Пультовые
-регистры из `PageAssignment1967` ещё не подключены.
+регистры из `PageAssignment` ещё не подключены.
 
 `ResetCpu` сохраняет память, оба буфера, часы, события и устройства.
 Полный аппаратный сброс по-прежнему не определён. Ошибка контроля —

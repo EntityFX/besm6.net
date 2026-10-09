@@ -11,11 +11,11 @@ public sealed class MemoryModelTests
     public void DefaultRemainsDubnaAndSelectionIsPerMachine()
     {
         var old = new MachineCore();
-        var buffered = new MachineCore(memoryModel: MemoryModel.Buffered1967);
+        var buffered = new MachineCore(memoryModel: MemoryModel.Buffered);
         Assert.AreEqual(MemoryModel.Dubna, old.MemoryModel);
         Assert.IsNotNull(typeof(MachineCore).GetConstructor(new[] { typeof(uint), typeof(string) }));
         Assert.IsNull(old.BufferedMemory);
-        Assert.AreEqual(MemoryModel.Buffered1967, buffered.MemoryModel);
+        Assert.AreEqual(MemoryModel.Buffered, buffered.MemoryModel);
         Assert.IsNotNull(buffered.BufferedMemory);
         buffered.Memory.Write(16, new(123));
         Assert.AreEqual(0UL, old.Memory.Read(16).Value);
@@ -26,7 +26,7 @@ public sealed class MemoryModelTests
     public void InvalidSelectionAndUnsupportedSizeAreRejected()
     {
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new MachineCore(memoryModel: (MemoryModel)99));
-        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new MachineCore(memoryModel: MemoryModel.Buffered1967, memorySize: 65536));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new MachineCore(memoryModel: MemoryModel.Buffered, memorySize: 65536));
         Assert.AreEqual(16, new MachineCore(16).Memory.Size);
     }
 
@@ -48,8 +48,8 @@ public sealed class MemoryModelTests
     [TestMethod]
     [DataRow(MemoryModel.Dubna, false)]
     [DataRow(MemoryModel.Dubna, true)]
-    [DataRow(MemoryModel.Buffered1967, false)]
-    [DataRow(MemoryModel.Buffered1967, true)]
+    [DataRow(MemoryModel.Buffered, false)]
+    [DataRow(MemoryModel.Buffered, true)]
     public void OriginalAndMaxPreserveFullStateWithinEachMemoryModel(MemoryModel model, bool trace)
     {
         var original = Run(model, ExecutionSpeed.Original, trace);
@@ -65,7 +65,7 @@ public sealed class MemoryModelTests
         for (uint address = 0; address < 32768; address++)
             Assert.AreEqual(original.Machine.Memory.Read(address), max.Machine.Memory.Read(address));
         Assert.AreEqual(original.Loader.Statistics!.ModelCycles, max.Loader.Statistics!.ModelCycles);
-        if (model == MemoryModel.Buffered1967)
+        if (model == MemoryModel.Buffered)
         {
             CollectionAssert.AreEqual(original.Machine.BufferedMemory!.Buffers.GetOperandSnapshot(),
                 max.Machine.BufferedMemory!.Buffers.GetOperandSnapshot());
@@ -79,7 +79,7 @@ public sealed class MemoryModelTests
 
     [TestMethod]
     [DataRow(MemoryModel.Dubna, 7u)]
-    [DataRow(MemoryModel.Buffered1967, 3u)]
+    [DataRow(MemoryModel.Buffered, 3u)]
     public void SelfModificationShowsTheSelectedMemoryVisibility(MemoryModel model, uint expected)
     {
         var machine = new MachineCore(memoryModel: model);
@@ -89,7 +89,7 @@ public sealed class MemoryModelTests
         Assert.IsFalse(machine.Step());
         Assert.AreEqual(expected, machine.Cpu.GetM(2));
         Assert.AreEqual(Code("atx 10, vtm 7(2)"), machine.Memory.Read(8));
-        if (model == MemoryModel.Buffered1967)
+        if (model == MemoryModel.Buffered)
         {
             Assert.AreEqual(Code("atx 10, vtm 3(2)"), machine.BufferedMemory!.PhysicalMemory.ReadRaw(8).Data);
             Assert.AreEqual(1, machine.BufferedMemory.Buffers.PendingWriteCount);
@@ -99,7 +99,7 @@ public sealed class MemoryModelTests
     [TestMethod]
     public void ReloadAfterRightHalfReplacesWarmRegistersAndPendingWrite()
     {
-        var machine = new MachineCore(memoryModel: MemoryModel.Buffered1967);
+        var machine = new MachineCore(memoryModel: MemoryModel.Buffered);
         machine.LoadProgram(new[] { Code("atx 10, vtm 3(2)") }, 8);
         machine.Cpu.SetA(Code("vtm 7(2), stop").Value);
         machine.Step();
@@ -118,7 +118,7 @@ public sealed class MemoryModelTests
     [TestMethod]
     public void ResetCpuPreservesBothBuffersAndModelTime()
     {
-        var machine = new MachineCore(memoryModel: MemoryModel.Buffered1967);
+        var machine = new MachineCore(memoryModel: MemoryModel.Buffered);
         machine.LoadProgram(new[] { Code("atx 20, stop") }, 8);
         machine.Cpu.SetA(123);
         machine.Step();
@@ -137,7 +137,7 @@ public sealed class MemoryModelTests
     [DataRow(2u)]
     public void WatchpointStopsBeforeBufferedOperandEffect(uint mode)
     {
-        var machine = new MachineCore(memoryModel: MemoryModel.Buffered1967);
+        var machine = new MachineCore(memoryModel: MemoryModel.Buffered);
         machine.LoadProgram(new[] { Code(mode == 1 ? "atx 20" : "xta 20"), Code("stop") }, 8);
         machine.Cpu.SetA(123);
         machine.Cpu.ArmDebugWatch(8, false, mode, 16, 9);
@@ -150,7 +150,7 @@ public sealed class MemoryModelTests
     [TestMethod]
     public void ControlFaultIsNotGuestInterceptAndDoesNotEarnTickOrNotification()
     {
-        var machine = new MachineCore(memoryModel: MemoryModel.Buffered1967);
+        var machine = new MachineCore(memoryModel: MemoryModel.Buffered);
         machine.LoadProgram(new[] { Code("xta 20, stop") }, 8);
         machine.BufferedMemory!.Buffers.StoreRaw(16, new(0));
         machine.Cpu.InterceptCount = 1;
@@ -168,7 +168,7 @@ public sealed class MemoryModelTests
     [TestMethod]
     public void CpuChecksSelectedCommandHalfAndCountsOnlyCompletedLeftHalf()
     {
-        var machine = new MachineCore(memoryModel: MemoryModel.Buffered1967);
+        var machine = new MachineCore(memoryModel: MemoryModel.Buffered);
         Word48 code = Code("vtm 1(2), stop");
         machine.LoadProgram(new[] { code }, 8);
         var command = MemoryWord50.Form(code, false, false);
@@ -177,7 +177,7 @@ public sealed class MemoryModelTests
         machine.Cpu.InstructionExecuted = _ => executed++;
         Assert.IsFalse(machine.Step());
         var fault = Assert.ThrowsExactly<MemoryControlException>(() => machine.Step());
-        Assert.AreEqual(MemoryAccessKind1967.InstructionRight, fault.AccessKind);
+        Assert.AreEqual(MemoryAccessKind.InstructionRight, fault.AccessKind);
         Assert.AreEqual(1UL, machine.Clock.Tick);
         Assert.AreEqual(1, executed);
         Assert.AreEqual(1u, machine.Cpu.GetM(2));
@@ -185,7 +185,7 @@ public sealed class MemoryModelTests
 
     [TestMethod]
     [DataRow(MemoryModel.Dubna)]
-    [DataRow(MemoryModel.Buffered1967)]
+    [DataRow(MemoryModel.Buffered)]
     public void HostedCtxPublishesCommandAndRefreshesNextFetch(MemoryModel model)
     {
         var machine = new MachineCore(memoryModel: model);
@@ -194,7 +194,7 @@ public sealed class MemoryModelTests
         var loader = new DubnaLoader(machine) { InstructionLimit = 100 };
         Assert.IsTrue(loader.RunLoaded().Success);
         Assert.AreEqual(7u, machine.Cpu.GetM(2));
-        if (model == MemoryModel.Buffered1967)
+        if (model == MemoryModel.Buffered)
         {
             var backend = machine.BufferedMemory!;
             Assert.AreEqual(Code("vtm 7(2), stop"), backend.PhysicalMemory.ReadRaw(10).Data);
@@ -206,7 +206,7 @@ public sealed class MemoryModelTests
     [TestMethod]
     public void HostObservationDoesNotChangeRegisterRecencyOrCheckGuestControl()
     {
-        var machine = new MachineCore(memoryModel: MemoryModel.Buffered1967);
+        var machine = new MachineCore(memoryModel: MemoryModel.Buffered);
         var backend = machine.BufferedMemory!;
         backend.Write(16, new(123));
         backend.Write(17, new(456));

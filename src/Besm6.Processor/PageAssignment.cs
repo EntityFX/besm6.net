@@ -1,8 +1,8 @@
 namespace Besm6.Core;
 
-public enum MemoryAddressKind1967 { PhysicalMemory, ZeroOperand, PanelRegister }
+public enum MemoryAddressKind { PhysicalMemory, ZeroOperand, PanelRegister }
 
-public readonly record struct ResolvedMemoryAddress1967(MemoryAddressKind1967 Kind, uint Address);
+public readonly record struct ResolvedMemoryAddress(MemoryAddressKind Kind, uint Address);
 
 /// <summary>
 /// Page assignment/protection for 32K: TO-8 (1967), §4.19, §4.21–4.28.
@@ -10,7 +10,7 @@ public readonly record struct ResolvedMemoryAddress1967(MemoryAddressKind1967 Ki
 /// Accumulator import follows the printed RP/RZ tables; CPU reset defaults, buffers,
 /// register instruction execution and device protection are not inferred.
 /// </summary>
-public sealed class PageAssignment1967
+public sealed class PageAssignment
 {
     public const uint PageSize = 1024;
     public const uint PageCount = 32;
@@ -63,7 +63,7 @@ public sealed class PageAssignment1967
         OperandProtectionMask = (OperandProtectionMask & ~(255u << shift)) | (bits << shift);
     }
 
-    public ResolvedMemoryAddress1967 ResolveInstruction(uint address, bool supervisor, bool rightHalf)
+    public ResolvedMemoryAddress ResolveInstruction(uint address, bool supervisor, bool rightHalf)
     {
         ValidateAddress(address);
         if (supervisor)
@@ -71,31 +71,31 @@ public sealed class PageAssignment1967
         uint physicalPage = _physicalPages[address >> 10];
         // A zero assignment closes the page for commands, not for operands (§4.28).
         if (physicalPage == 0)
-            throw new MemoryProtection1967Exception(address, rightHalf
-                ? MemoryAccessKind1967.InstructionRight : MemoryAccessKind1967.InstructionLeft);
+            throw new MemoryProtectionException(address, rightHalf
+                ? MemoryAccessKind.InstructionRight : MemoryAccessKind.InstructionLeft);
         return Physical(physicalPage * PageSize + address % PageSize);
     }
 
-    public ResolvedMemoryAddress1967 ResolveOperand(uint address, bool write,
+    public ResolvedMemoryAddress ResolveOperand(uint address, bool write,
         bool assignmentBlocked, bool protectionBlocked, bool supervisor)
     {
         ValidateAddress(address);
         if (address == 0)
-            return new(MemoryAddressKind1967.ZeroOperand, 0);
+            return new(MemoryAddressKind.ZeroOperand, 0);
         bool panelExemption = supervisor && address <= 7;
         if (!protectionBlocked && !panelExemption &&
             (OperandProtectionMask & (1u << (int)(address >> 10))) != 0)
-            throw new MemoryProtection1967Exception(address, write
-                ? MemoryAccessKind1967.OperandWrite : MemoryAccessKind1967.OperandRead);
+            throw new MemoryProtectionException(address, write
+                ? MemoryAccessKind.OperandWrite : MemoryAccessKind.OperandRead);
         return assignmentBlocked ? ResolveDirect(address)
             : Physical(_physicalPages[address >> 10] * PageSize + address % PageSize);
     }
 
-    private static ResolvedMemoryAddress1967 Physical(uint address) =>
-        new(MemoryAddressKind1967.PhysicalMemory, address);
+    private static ResolvedMemoryAddress Physical(uint address) =>
+        new(MemoryAddressKind.PhysicalMemory, address);
 
-    private static ResolvedMemoryAddress1967 ResolveDirect(uint address) => address is >= 1 and <= 7
-        ? new(MemoryAddressKind1967.PanelRegister, address) : Physical(address);
+    private static ResolvedMemoryAddress ResolveDirect(uint address) => address is >= 1 and <= 7
+        ? new(MemoryAddressKind.PanelRegister, address) : Physical(address);
 
     private static void ValidatePage(uint page)
     {
@@ -104,7 +104,7 @@ public sealed class PageAssignment1967
 
     private static void ValidateAddress(uint address)
     {
-        if (address >= PhysicalMemory1967.WordCount)
+        if (address >= PhysicalMemory.WordCount)
             throw new ArgumentOutOfRangeException(nameof(address));
     }
 }

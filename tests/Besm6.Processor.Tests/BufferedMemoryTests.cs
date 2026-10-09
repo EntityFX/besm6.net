@@ -1,25 +1,25 @@
 namespace Besm6.Tests;
 
 [TestClass]
-[TestCategory("HardwareMemory1967")]
-public sealed class BufferedMemory1967Tests
+[TestCategory("HardwareMemory")]
+public sealed class BufferedMemoryTests
 {
-    private static PhysicalMemory1967 MemoryWithWords(uint start, uint count, bool commands = true)
+    private static PhysicalMemory MemoryWithWords(uint start, uint count, bool commands = true)
     {
-        var memory = new PhysicalMemory1967();
+        var memory = new PhysicalMemory();
         for (uint address = start; address < start + count; address++)
             memory.Store(address, new(address), !commands, !commands);
         return memory;
     }
 
-    private static uint[] Addresses(MemoryBufferEntry1967[] entries) =>
+    private static uint[] Addresses(MemoryBufferEntry[] entries) =>
         entries.Select(e => e.PhysicalAddress).ToArray();
 
     [TestMethod]
     public void StoreForwardsOperandButInstructionStillSeesMozu()
     {
         var memory = MemoryWithWords(100, 1);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         buffers.Store(100, new(200), true, true);
         Assert.AreEqual(200UL, buffers.LoadOperand(100).Value);
         Assert.AreEqual(100UL, memory.ReadRaw(100).Data.Value);
@@ -34,7 +34,7 @@ public sealed class BufferedMemory1967Tests
     public void EightStoresFillRegistersAndNinthPublishesOldest()
     {
         var memory = MemoryWithWords(100, 9);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         for (uint address = 100; address < 108; address++)
             buffers.Store(address, new(address + 1000), true, true);
         for (uint address = 100; address < 108; address++)
@@ -55,7 +55,7 @@ public sealed class BufferedMemory1967Tests
     public void AccessingAllOtherRegistersMakesUntouchedOneTheVictim(int victim)
     {
         var memory = MemoryWithWords(100, 9);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         for (uint address = 100; address < 108; address++) buffers.Store(address, new(address + 1000), true, true);
         for (uint index = 0; index < 8; index++)
             if (index != victim) Assert.AreEqual(index + 1100UL, buffers.LoadOperand(100 + index).Value);
@@ -69,7 +69,7 @@ public sealed class BufferedMemory1967Tests
     public void RepeatedStoreReplacesControlAndRefreshesRecencyWithoutWriteback()
     {
         var memory = MemoryWithWords(100, 9);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         for (uint address = 100; address < 108; address++) buffers.Store(address, new(0), true, true);
         buffers.StoreRaw(100, new(0x1000000000000)); // zero command, replaces a zero number
         Assert.AreEqual(8, buffers.GetOperandSnapshot().Length);
@@ -85,7 +85,7 @@ public sealed class BufferedMemory1967Tests
     public void OperandReadMissDoesNotPopulateOrTouchWriteRegisters()
     {
         var memory = MemoryWithWords(100, 20);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         buffers.Store(100, new(1000), true, true);
         buffers.Store(101, new(1001), true, true);
         var before = buffers.GetOperandSnapshot();
@@ -98,7 +98,7 @@ public sealed class BufferedMemory1967Tests
     public void InstructionBufferRetainsOldWordAfterPendingWritesArePublished()
     {
         var memory = MemoryWithWords(100, 5);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         Assert.AreEqual(100UL, buffers.FetchInstruction(100, false).Value);
         buffers.Store(100, new(200), false, false);
         buffers.WriteBackPendingOperands();
@@ -113,7 +113,7 @@ public sealed class BufferedMemory1967Tests
     public void PublishedNumberCausesCommandControlFaultAfterOldCommandIsEvicted()
     {
         var memory = MemoryWithWords(100, 5);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         buffers.FetchInstruction(100, false);
         buffers.Store(100, new(200), true, true);
         buffers.WriteBackPendingOperands();
@@ -122,7 +122,7 @@ public sealed class BufferedMemory1967Tests
         for (uint address = 101; address <= 104; address++) buffers.FetchInstruction(address, false);
         var fault = Assert.ThrowsExactly<MemoryControlException>(() => buffers.FetchInstruction(100, false));
         Assert.AreEqual(100u, fault.PhysicalAddress);
-        Assert.AreEqual(MemoryAccessKind1967.InstructionLeft, fault.AccessKind);
+        Assert.AreEqual(MemoryAccessKind.InstructionLeft, fault.AccessKind);
     }
 
     public static IEnumerable<object[]> InstructionVictims() => Enumerable.Range(0, 4).Select(v => new object[] { v });
@@ -132,7 +132,7 @@ public sealed class BufferedMemory1967Tests
     public void CommandHitsSelectLeastRecentWordForReplacement(int victim)
     {
         var memory = MemoryWithWords(100, 5);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         for (uint address = 100; address < 104; address++) buffers.FetchInstruction(address, false);
         for (uint index = 0; index < 4; index++)
             if (index != victim) buffers.FetchInstruction(100 + index, true);
@@ -146,13 +146,13 @@ public sealed class BufferedMemory1967Tests
     [TestMethod]
     public void BothHalvesShareOneWordRegisterAndAreCheckedIndependently()
     {
-        var memory = new PhysicalMemory1967();
+        var memory = new PhysicalMemory();
         memory.WriteRaw(100, new(0)); // valid left half, invalid right half
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         Assert.AreEqual(0UL, buffers.FetchInstruction(100, false).Value);
         memory.WriteRaw(100, new(0x1000000000000)); // does not change existing BRS
         var fault = Assert.ThrowsExactly<MemoryControlException>(() => buffers.FetchInstruction(100, true));
-        Assert.AreEqual(MemoryAccessKind1967.InstructionRight, fault.AccessKind);
+        Assert.AreEqual(MemoryAccessKind.InstructionRight, fault.AccessKind);
         Assert.AreEqual(1, buffers.GetInstructionSnapshot().Length);
         Assert.AreEqual(0UL, buffers.GetInstructionSnapshot()[0].Word.RawValue);
         buffers.ClearInstructionBuffer();
@@ -163,11 +163,11 @@ public sealed class BufferedMemory1967Tests
     public void OperandControlComesFromWriteRegisterAndBadControlIsPreserved()
     {
         var memory = MemoryWithWords(100, 1);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         buffers.StoreRaw(100, new(0));
         var fault = Assert.ThrowsExactly<MemoryControlException>(() => buffers.LoadOperand(100));
         Assert.AreEqual(100u, fault.PhysicalAddress);
-        Assert.AreEqual(MemoryAccessKind1967.OperandRead, fault.AccessKind);
+        Assert.AreEqual(MemoryAccessKind.OperandRead, fault.AccessKind);
         Assert.AreEqual(0UL, buffers.GetOperandSnapshot()[0].Word.RawValue);
         Assert.AreEqual(100UL, memory.ReadRaw(100).Data.Value);
         buffers.WriteBackPendingOperands();
@@ -178,8 +178,8 @@ public sealed class BufferedMemory1967Tests
     [TestMethod]
     public void EveryRawControlCombinationSurvivesEvictionAndExplicitWriteback()
     {
-        var memory = new PhysicalMemory1967();
-        var buffers = new BufferedMemory1967(memory);
+        var memory = new PhysicalMemory();
+        var buffers = new BufferedMemory(memory);
         for (uint index = 0; index < 12; index++)
             buffers.StoreRaw(index + 100, new(0xABCDEF123456UL | ((ulong)(index % 4) << 48)));
         buffers.WriteBackPendingOperands();
@@ -191,7 +191,7 @@ public sealed class BufferedMemory1967Tests
     public void InstructionReplacementAndClearingNeverPublishOperands()
     {
         var memory = MemoryWithWords(100, 20);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         buffers.Store(100, new(1000), true, true);
         var before = buffers.GetOperandSnapshot();
         for (uint address = 100; address < 120; address++) buffers.FetchInstruction(address, false);
@@ -205,7 +205,7 @@ public sealed class BufferedMemory1967Tests
     public void ExplicitWritebackRetainsRecencyAndWarmOperandRegisters()
     {
         var memory = MemoryWithWords(100, 8);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         for (uint address = 100; address < 108; address++) buffers.Store(address, new(address + 1000), true, true);
         buffers.LoadOperand(100);
         uint[] order = Addresses(buffers.GetOperandSnapshot());
@@ -228,7 +228,7 @@ public sealed class BufferedMemory1967Tests
     public void EvictingCleanOperandRegisterDoesNotOverwriteDirectMozuUpdate()
     {
         var memory = MemoryWithWords(100, 9);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         for (uint address = 100; address < 108; address++) buffers.Store(address, new(address + 1000), true, true);
         buffers.WriteBackPendingOperands();
         memory.Store(100, new(2000), true, true);
@@ -241,7 +241,7 @@ public sealed class BufferedMemory1967Tests
     public void SnapshotsAreIndependentAndDoNotCountAsAccesses()
     {
         var memory = MemoryWithWords(100, 2);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         buffers.Store(100, new(1000), true, true);
         buffers.Store(101, new(1001), true, true);
         buffers.FetchInstruction(100, false);
@@ -258,11 +258,11 @@ public sealed class BufferedMemory1967Tests
     [TestMethod]
     public void AliasesSharePhysicalBuffersAndRemapDoesNotRetargetPendingPhysicalWrite()
     {
-        var memory = new PhysicalMemory1967();
+        var memory = new PhysicalMemory();
         memory.Store(7 * 1024 + 10, new(100), false, false);
         memory.Store(8 * 1024 + 10, new(200), false, false);
-        var buffers = new BufferedMemory1967(memory);
-        var map = new PageAssignment1967();
+        var buffers = new BufferedMemory(memory);
+        var map = new PageAssignment();
         map.SetPhysicalPage(2, 7);
         map.SetPhysicalPage(3, 7);
         uint first = map.ResolveOperand(2 * 1024 + 10, true, false, false, false).Address;
@@ -284,9 +284,9 @@ public sealed class BufferedMemory1967Tests
     [DataRow(32767u)]
     public void PhysicalBoundaryAddressesAreValidBufferTags(uint address)
     {
-        var memory = new PhysicalMemory1967();
+        var memory = new PhysicalMemory();
         memory.Store(address, new(0), false, false);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         buffers.Store(address, new(1), false, false);
         Assert.AreEqual(1UL, buffers.LoadOperand(address).Value);
         Assert.AreEqual(0UL, buffers.FetchInstruction(address, false).Value);
@@ -301,7 +301,7 @@ public sealed class BufferedMemory1967Tests
     public void InvalidAddressCannotChangeOrEvictEitherBuffer(uint address)
     {
         var memory = MemoryWithWords(100, 8);
-        var buffers = new BufferedMemory1967(memory);
+        var buffers = new BufferedMemory(memory);
         for (uint a = 100; a < 108; a++) buffers.Store(a, new(a + 1000), true, true);
         for (uint a = 100; a < 104; a++) buffers.FetchInstruction(a, false);
         var operands = buffers.GetOperandSnapshot();
