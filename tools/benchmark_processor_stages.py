@@ -9,7 +9,6 @@ import csv
 import hashlib
 import json
 import pathlib
-import platform
 import statistics
 import subprocess
 import sys
@@ -51,11 +50,10 @@ def main():
     jobs, config = bench.prepare_jobs(output)
     if any(job.startswith("mem") for job in args.jobs):
         jobs.update(bench.prepare_memory_jobs(output))
-    result = {"environment": {"platform": platform.platform(), "python": sys.version,
-                              "dotnet": subprocess.check_output(["dotnet", "--info"], text=True)},
+    result = {"environment": bench.report_environment(),
               "options": {"jobs": args.jobs, "repeats": args.repeats, "warmups": args.warmups,
                           "stats": args.stats, "order": "alternates each repetition"},
-              "variants": {name: {"dll": str(dll), "sha256": hashlib.sha256(dll.read_bytes()).hexdigest(),
+              "variants": {name: {"dll": bench.report_path(dll), "sha256": hashlib.sha256(dll.read_bytes()).hexdigest(),
                                   "processor_sha256": hashlib.sha256((dll.parent / "Besm6.Processor.dll").read_bytes()).hexdigest(),
                                   "runtime_sha256": hashlib.sha256((dll.parent / "Besm6.Runtime.dll").read_bytes()).hexdigest(),
                                   "architecture_sha256": hashlib.sha256((dll.parent / "Besm6.Architecture.dll").read_bytes()).hexdigest()}
@@ -134,7 +132,7 @@ def main():
         save()
         return 0
     except (ValueError, RuntimeError, subprocess.TimeoutExpired) as error:
-        result["error"] = str(error)
+        result["error"] = f"{type(error).__name__}: benchmark failed; details in local logs"
         save()
         print(str(error), file=sys.stderr)
         return 1
