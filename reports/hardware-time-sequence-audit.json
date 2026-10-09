@@ -47,12 +47,54 @@
       "sha256": "60334abadedf3cdcc3b2fcaceee319ab41970ebcfb5559d37f9c2d6475834a17",
       "bytes": 4313872,
       "visual_checked": true
+    },
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-17.png",
+      "sha256": "f5d72ded334dbbe17afd99f3680f354d93688d1f2c078a2b4fa4e7da9e20031f",
+      "bytes": 1422940,
+      "visual_checked": true
+    },
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-18.png",
+      "sha256": "c77c916133efcdba1882ceb474c58c1f4fdf50216de8dda87c7168d32c6830a1",
+      "bytes": 1375205,
+      "visual_checked": true
+    },
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-20.png",
+      "sha256": "87e337d5408e3c0a095607fab87429de30778ee3c8d5b73568eb76581c1ea2f3",
+      "bytes": 1385424,
+      "visual_checked": true
+    },
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-32.png",
+      "sha256": "a42dbfa66937a597b2f4d22591422bc233e29d13d1834a2d950d7d696764db4e",
+      "bytes": 1456963,
+      "visual_checked": true
+    },
+    {
+      "path": "tests-run/stage3-source/memory.pdf",
+      "sha256": "01556ed62c5ce973707374a2798138e4e6b8416b192e1accbadb87f5e00956b3",
+      "bytes": 5931286,
+      "url": "https://www.besm6.org/doc/%D0%91%D0%AD%D0%A1%D0%9C6-%D0%A2%D0%9E-V-%D0%9C%D0%9E%D0%97%D0%A3.pdf",
+      "remote_bytes_verified": true,
+      "visual_checked": false
+    },
+    {
+      "path": "docs/sources/hardware-time/mram-pdf-03.png",
+      "sha256": "49221e0543ef14369df1c9cbfd62dc0c99e923985629b0a7b685c87fed20bd85",
+      "visual_checked": true
     }
   ],
   "confirmed": [
     "Buffered overlap and PR admission backpressure; TO-2 sheets5,20,21",
     "Three address-modification cycles stated as300ns; TO-2 sheet17",
-    "AU timing depends on operand arrival; TO-3 sheet3"
+    "AU timing depends on operand arrival; TO-3 sheet3",
+    "TO-3 sheets30-31: RPK and ready operand precede PVR; previous IZOP and preparation precede SPOP",
+    "TO-3 sheets31-33: four17bit BAK registers; PVR releases selected issue slot",
+    "TO-3 sheets36-37: ready BRUS request3cycles; release of BRCh wait to acceptance1.5cycles",
+    "TO-4 revision1-66 sheet3: eight autonomous4096word banks selected by low address bits",
+    "TO-4 sheet3: minimum bank cycle2us; data return approximately0.9us; these are different intervals"
   ],
   "conflicts": [
     {
@@ -83,6 +125,9 @@
     "No changes to legacy clocks or book table",
     "No AU average used as operand-dependent duration",
     "No additive UU+AU+memory assumption",
-    "Source applicability and signal-level deadlines remain unresolved"
+    "Source applicability and signal-level deadlines remain unresolved",
+    "A/Y publication and rounding boundary require operation-specific verification; TO-3 sheets60-61",
+    "0.9us is approximate: no exact calibrated read deadline claimed",
+    "No bank timing inferred for Simh512K; MramReadTiming rejects it"
   ]
 }

@@ -63,7 +63,7 @@ public sealed class MappedMemoryTests
     }
 
     [TestMethod]
-    public void AliasesDoNotForwardUntilMozuPublication()
+    public void AliasesDoNotForwardUntilMramPublication()
     {
         var memory = Mathematical();
         memory.PhysicalMemory.Store(8197, new(7), true, true);
