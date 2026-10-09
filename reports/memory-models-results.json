@@ -1,0 +1,254 @@
+{
+  "stage": 3,
+  "stage_complete": false,
+  "milestone": "BRZ/BRS and opt-in MachineCore memory backend",
+  "baseline_commit": "b3a58dee7fd9d2ba6b1710be1071278d746a112c",
+  "models": [
+    "Dubna",
+    "Buffered1967"
+  ],
+  "default_model": "Dubna",
+  "cli_memory_flag_added": false,
+  "new_checks": {
+    "buffer_cases": 30,
+    "machine_cases": 17,
+    "book_arithmetic_cases": 114,
+    "book_fault_cases": 12,
+    "total": 173
+  },
+  "tests": {
+    "configuration": "Release net8.0",
+    "suites": [
+      {
+        "suite": "Besm6.Architecture.Tests",
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.Assembler.Tests",
+        "passed": 29,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.BitVisualizer.Tests",
+        "passed": 57,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.BitVisualizer.WinForms.Tests",
+        "passed": 19,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.Cli.Tests",
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.Integration.Tests",
+        "passed": 426,
+        "failed": 0,
+        "skipped": 3
+      },
+      {
+        "suite": "Besm6.Processor.Tests",
+        "passed": 1051,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.Runtime.Tests",
+        "passed": 298,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.Tui.Tests",
+        "passed": 44,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "passed": 1961,
+    "failed": 0,
+    "existing_skipped": 3,
+    "cern_active": 397,
+    "cern_passed": 397,
+    "golden": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "by_status": {
+        "OK": 3
+      }
+    },
+    "python_tools_passed": 66
+  },
+  "source_pdf_sha256": "7412b2c1c90195e029fe5b0067e859ce6c6f846a780062de8ab6ab4f96b6c113",
+  "historical_specification": "TO-8 revision 1-67, pages 100-104 and 107; hosted CTX contract from Fortran 1976 section 6",
+  "unchanged_semantics_sources_sha256_lf": {
+    "src/Besm6.Processor/Alu.cs": "022604dbb08d759a772b30e31866893061c937520d02e9aee7f16d6f22c57f4a",
+    "src/Besm6.Processor/MemoryInstructionExecutor.cs": "970ad0ce24b649118a35e4bc167a3224f0e04506efc10446cdd3bbed6a0aa79f",
+    "src/Besm6.Processor/ControlInstructionExecutor.cs": "3eb085a6746dd53f325f084fe2913ede9f8106e5b1baf92995074901ea2ec4d3",
+    "src/Besm6.Runtime/Loading/ExecutionLoop.cs": "29f0ee1fd823c00bfc1db17293a9dae6de9612ed84f5e38391fb9a6282f3e6c2",
+    "src/Besm6.Runtime/SimulationClock.cs": "a98c6be23904be413f225ffae824546f2db09a5b87e690f9366facb6269d14de"
+  },
+  "performance_status": "completed; repeat and combined max series within 5%; original tempo passed",
+  "limitations": [
+    "Direct physical addressing; page assignment/protection not connected",
+    "No privileged register encoding or historical supervisor sequence",
+    "Host coherent loading and hosted CTX are functional contracts",
+    "No background BRZ writeback timing, BRCh or AU queues",
+    "Memory control signals propagate separately from Dubna guest faults",
+    "Software initialization does not define hardware cold reset"
+  ],
+  "performance": {
+    "default_model": "Dubna",
+    "speed": "max",
+    "threshold_regression_percent": 5,
+    "warmups_per_series": 1,
+    "measured_repeats_per_series": 5,
+    "sequential_alternating_variants": true,
+    "benchmarks": {
+      "runtime": {
+        "path": "reports/memory-models-runtime-benchmark.json",
+        "sha256": "f38c63bc3d36305735ab227f83d684ca7409677ff7510daa1a934e1741f503ba"
+      },
+      "cli_first": {
+        "path": "reports/memory-models-cli-first-benchmark.json",
+        "sha256": "79274ebb979df3626e950dae86b3e5ba5b00eb6f417891f3552ba91ac941aa29"
+      },
+      "cli_repeat": {
+        "path": "reports/memory-models-cli-repeat-benchmark.json",
+        "sha256": "8dfa51ca38ebf132f2164dbc09e036f9a64360e21c6010d1676d05b5f25958e2"
+      },
+      "original": {
+        "path": "reports/memory-models-original-benchmark.json",
+        "sha256": "b18f0dc6cdd54c10a016ed3a8062dd8fa881bccda7f7ba3b8a4f10018ee4e458"
+      }
+    },
+    "comparisons": [
+      {
+        "scope": "RunLoaded",
+        "job": "dh5000",
+        "samples_per_variant": 5,
+        "baseline_seconds": 0.5736154,
+        "current_seconds": 0.5666585,
+        "regression_percent": -1.212816113374926,
+        "within_5_percent": true
+      },
+      {
+        "scope": "CLI_combined",
+        "job": "dh5000",
+        "samples_per_variant": 10,
+        "baseline_seconds": 1.0511297499760985,
+        "current_seconds": 1.0697027000132948,
+        "regression_percent": 1.7669512291530687,
+        "within_5_percent": true
+      },
+      {
+        "scope": "RunLoaded",
+        "job": "dh10000",
+        "samples_per_variant": 5,
+        "baseline_seconds": 0.8231274,
+        "current_seconds": 0.8288142,
+        "regression_percent": 0.6908772566676769,
+        "within_5_percent": true
+      },
+      {
+        "scope": "CLI_combined",
+        "job": "dh10000",
+        "samples_per_variant": 10,
+        "baseline_seconds": 1.2775613500270993,
+        "current_seconds": 1.2277758000418544,
+        "regression_percent": -3.8969204871600716,
+        "within_5_percent": true
+      },
+      {
+        "scope": "RunLoaded",
+        "job": "mp1",
+        "samples_per_variant": 5,
+        "baseline_seconds": 0.2668408,
+        "current_seconds": 0.262446,
+        "regression_percent": -1.6469745256347479,
+        "within_5_percent": true
+      },
+      {
+        "scope": "CLI_combined",
+        "job": "mp1",
+        "samples_per_variant": 10,
+        "baseline_seconds": 0.615807400085032,
+        "current_seconds": 0.6372997998259962,
+        "regression_percent": 3.490117159682793,
+        "within_5_percent": true
+      },
+      {
+        "scope": "RunLoaded",
+        "job": "mp2",
+        "samples_per_variant": 5,
+        "baseline_seconds": 0.3830773,
+        "current_seconds": 0.3756044,
+        "regression_percent": -1.9507551086947683,
+        "within_5_percent": true
+      },
+      {
+        "scope": "CLI_combined",
+        "job": "mp2",
+        "samples_per_variant": 10,
+        "baseline_seconds": 0.7814492501784116,
+        "current_seconds": 0.8202757500112057,
+        "regression_percent": 4.968524804896757,
+        "within_5_percent": true
+      },
+      {
+        "scope": "RunLoaded",
+        "job": "mp3",
+        "samples_per_variant": 5,
+        "baseline_seconds": 0.8474008,
+        "current_seconds": 0.8355433,
+        "regression_percent": -1.3992788300412284,
+        "within_5_percent": true
+      },
+      {
+        "scope": "CLI_combined",
+        "job": "mp3",
+        "samples_per_variant": 10,
+        "baseline_seconds": 1.2182022002525628,
+        "current_seconds": 1.2162986998446286,
+        "regression_percent": -0.15625488178724334,
+        "within_5_percent": true
+      }
+    ],
+    "all_compared_states_matched": true,
+    "cli_first_series_passed_threshold": false,
+    "cli_repeat_series_passed_threshold": true,
+    "cli_combined_all_samples_passed_threshold": true,
+    "first_series_limitation": "High process-time spread; MP1 median exceeded 5%. All samples retained, no filtering.",
+    "original_tempo_status": "passed for all ten measured samples",
+    "original_tempo_checks": [
+      {
+        "job": "dh10000",
+        "samples": 5,
+        "model_seconds": 4.2349906,
+        "median_loop_seconds": 4.2407364,
+        "maximum_absolute_error_ms": 8.162800000000026,
+        "tolerance_ms": 84.699812,
+        "all_samples_passed": true
+      },
+      {
+        "job": "mp3",
+        "samples": 5,
+        "model_seconds": 5.1127036,
+        "median_loop_seconds": 5.1157255,
+        "maximum_absolute_error_ms": 8.191800000000526,
+        "tolerance_ms": 102.25407200000001,
+        "all_samples_passed": true
+      }
+    ]
+  }
+}

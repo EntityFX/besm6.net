@@ -17,6 +17,9 @@ namespace Besm6.Runtime
     public class MachineCore
     {
         public IMemory Memory { get; }
+        public MemoryModel MemoryModel { get; }
+        /// <summary>Present only for the opt-in functional buffered memory backend.</summary>
+        public BufferedMemoryBackend1967? BufferedMemory { get; }
         public Processor Cpu { get; }
         public DeviceManager Devices { get; }
         public Puncher Puncher { get; }
@@ -110,8 +113,28 @@ namespace Besm6.Runtime
         }
 
         public MachineCore(uint memorySize = 32768, string? puncherOutputDir = null)
+            : this(MemoryModel.Dubna, memorySize, puncherOutputDir) { }
+
+        public MachineCore(MemoryModel memoryModel, uint memorySize = 32768, string? puncherOutputDir = null)
         {
-            var coreMemory = new CoreMemory(memorySize);
+            IMemory cpuMemory;
+            IMemory hostMemory;
+            MemoryModel = memoryModel;
+            switch (memoryModel)
+            {
+                case MemoryModel.Dubna:
+                    cpuMemory = hostMemory = new CoreMemory(memorySize);
+                    break;
+                case MemoryModel.Buffered1967:
+                    if (memorySize != PhysicalMemory1967.WordCount)
+                        throw new ArgumentOutOfRangeException(nameof(memorySize), "Buffered1967 requires 32768 words.");
+                    BufferedMemory = new BufferedMemoryBackend1967();
+                    cpuMemory = BufferedMemory;
+                    hostMemory = BufferedMemory.HostMemory;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(memoryModel));
+            }
             Devices = new DeviceManager();
 
             // Регистрируем стандартные устройства.
@@ -121,10 +144,11 @@ namespace Besm6.Runtime
             Devices.RegisterDevice(0x4000, new TeletypeDevice(1));
 
             // Используем системную шину для маршрутизации между памятью и устройствами.
-            Memory = new SystemBus(coreMemory, Devices);
+            Memory = new SystemBus(hostMemory, Devices);
 
-            // SystemBus forwards every address to this same memory; avoid an extra interface hop.
-            Cpu = new Processor(coreMemory);
+            // The buffered backend separates CPU access from coherent host loading/observation.
+            // Dubna still uses the original direct CoreMemory path without a bus hop.
+            Cpu = new Processor(cpuMemory);
             Puncher = new Puncher(Memory, puncherOutputDir);
             Plotter = new Plotter();
 
