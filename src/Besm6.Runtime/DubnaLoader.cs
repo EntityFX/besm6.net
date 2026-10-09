@@ -114,6 +114,7 @@ namespace Besm6.Runtime
 
         public LoadResult RunScript(string path)
         {
+            _machine.EnsureExecutionAllowed();
             var job = JobParser.ParseFile(path);
             return RunJob(job, File.ReadAllLines(path));
         }
@@ -140,12 +141,14 @@ namespace Besm6.Runtime
 
         public LoadResult RunLoaded()
         {
+            _machine.EnsureExecutionAllowed();
             _exec.InstallHook();
             return _exec.Run();
         }
 
         public LoadResult RunJob(DubJob job, IEnumerable<string> rawLines)
         {
+            _machine.EnsureExecutionAllowed();
             _machine.Reset();
 
             if (job.RawWords.Count > 0)
@@ -160,6 +163,7 @@ namespace Besm6.Runtime
 
         public LoadResult RunRawWords(DubJob job)
         {
+            _machine.EnsureExecutionAllowed();
             _programLoader.LoadRawWords(job);
             _exec.InstallHook();
             return _exec.Run();
@@ -167,6 +171,7 @@ namespace Besm6.Runtime
 
         public LoadResult RunAssem(DubJob job)
         {
+            _machine.EnsureExecutionAllowed();
             _programLoader.LoadAssembler(job);
             _exec.InstallHook();
             return _exec.Run();
@@ -174,6 +179,7 @@ namespace Besm6.Runtime
 
         public LoadResult BootAndRun(DubJob job)
         {
+            _machine.EnsureExecutionAllowed();
             _tapes.MountScriptTapes(job);
             _mons.Boot();
             _exec.InstallHook();

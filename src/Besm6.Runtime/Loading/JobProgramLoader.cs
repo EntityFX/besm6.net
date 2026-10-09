@@ -80,7 +80,7 @@ namespace Besm6.Runtime
                 int addr = (baseAddr + i) & 0x7FFF;
                 _machine.Memory.Write((uint)addr, new Word48((ulong)job.RawWords[i]));
             }
-            _machine.Cpu.SetK((uint)baseAddr);
+            _machine.Cpu.StartAt((uint)baseAddr);
             LoadedBase = baseAddr;
             if (_verboseLog != null)
                 _verboseLog($"Loaded {job.RawWords.Count} raw words at 0{baseAddr:X}, start K=0{baseAddr:X}");
@@ -118,7 +118,7 @@ namespace Besm6.Runtime
                 _machine.Memory.Write((uint)addr, new Word48((ulong)val));
             }
 
-            _machine.Cpu.SetK((uint)baseAddr);
+            _machine.Cpu.StartAt((uint)baseAddr);
             LoadedBase = baseAddr;
             if (_verboseLog != null)
                 _verboseLog($"Assembled {asmResult.Words.Count} words at 0{baseAddr:X}, start K=0{baseAddr:X}");

@@ -23,6 +23,7 @@ namespace Besm6.Runtime
     public sealed class SimulationClock : ISimulationClock
     {
         private ulong _tick;
+        internal bool AdvancementProhibited { get; set; }
 
         public SimulationClock(ulong initialTick = 0)
         {
@@ -35,6 +36,7 @@ namespace Besm6.Runtime
         /// <summary>Сдвинуть модельное время вперёд на <paramref name="delta"/> тиков.</summary>
         public void Advance(ulong delta)
         {
+            EnsureAdvancementAllowed();
             _tick += delta;
         }
 
@@ -44,10 +46,17 @@ namespace Besm6.Runtime
         /// </summary>
         public void AdvanceTo(ulong tick)
         {
+            EnsureAdvancementAllowed();
             if (tick < _tick)
                 throw new InvalidOperationException(
                     $"Simulation time cannot move backward (current {_tick}, requested {tick}).");
             _tick = tick;
+        }
+
+        private void EnsureAdvancementAllowed()
+        {
+            if (AdvancementProhibited)
+                throw new InvalidOperationException("Clock advancement inside a scheduler callback is not allowed.");
         }
     }
 }
