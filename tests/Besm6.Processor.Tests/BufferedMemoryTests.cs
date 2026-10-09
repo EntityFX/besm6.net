@@ -16,7 +16,7 @@ public sealed class BufferedMemoryTests
         entries.Select(e => e.PhysicalAddress).ToArray();
 
     [TestMethod]
-    public void StoreForwardsOperandButInstructionStillSeesMozu()
+    public void StoreForwardsOperandButInstructionStillSeesMram()
     {
         var memory = MemoryWithWords(100, 1);
         var buffers = new BufferedMemory(memory);
@@ -214,7 +214,7 @@ public sealed class BufferedMemoryTests
         Assert.IsTrue(buffers.GetOperandSnapshot().All(e => !e.PendingWrite));
         CollectionAssert.AreEqual(order, Addresses(buffers.GetOperandSnapshot()));
         for (uint address = 100; address < 108; address++) Assert.AreEqual(address + 1000UL, memory.LoadOperand(address).Value);
-        memory.Store(100, new(2000), true, true); // explicit MOZU-only host update
+        memory.Store(100, new(2000), true, true); // explicit MRAM-only host update
         Assert.AreEqual(1100UL, buffers.LoadOperand(100).Value);
         buffers.WriteBackPendingOperands();
         Assert.AreEqual(2000UL, memory.LoadOperand(100).Value); // clean registers are not written again
@@ -225,7 +225,7 @@ public sealed class BufferedMemoryTests
     }
 
     [TestMethod]
-    public void EvictingCleanOperandRegisterDoesNotOverwriteDirectMozuUpdate()
+    public void EvictingCleanOperandRegisterDoesNotOverwriteDirectMramUpdate()
     {
         var memory = MemoryWithWords(100, 9);
         var buffers = new BufferedMemory(memory);

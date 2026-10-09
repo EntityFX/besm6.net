@@ -40,7 +40,7 @@ public sealed class BufferedMemory
 
     /// <summary>
     /// Explicit coherent host replacement for loaders and hosted extracodes.
-    /// Replaces MOZU and discards matching BRZ/BRS copies, including a pending store.
+    /// Replaces MRAM and discards matching BRZ/BRS copies, including a pending store.
     /// This is not a hardware bus transfer or a privileged instruction sequence.
     /// </summary>
     public void ReplaceFromHost(uint physicalAddress, MemoryWord50 word)
@@ -69,7 +69,7 @@ public sealed class BufferedMemory
             _operands.ReplaceAndTouch(index, new(physicalAddress, word, true));
     }
 
-    /// <summary>Only stores populate BRZ. A read miss goes to MOZU without allocating a register.</summary>
+    /// <summary>Only stores populate BRZ. A read miss goes to MRAM without allocating a register.</summary>
     public Word48 LoadOperand(uint physicalAddress)
     {
         ValidateAddress(physicalAddress);
@@ -80,7 +80,7 @@ public sealed class BufferedMemory
         return word.Data;
     }
 
-    /// <summary>Commands come from BRS or MOZU, never from BRZ; only the selected half is checked.</summary>
+    /// <summary>Commands come from BRS or MRAM, never from BRZ; only the selected half is checked.</summary>
     public Word48 FetchInstruction(uint physicalAddress, bool rightHalf)
     {
         ValidateAddress(physicalAddress);

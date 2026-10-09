@@ -167,7 +167,7 @@ public sealed class MappedMemoryBackend : IInstructionMemory
     }
 
     /// <summary>
-    /// Hosted Dubna CTX contract: command control, actual MOZU publication and coherent
+    /// Hosted Dubna CTX contract: command control, actual MRAM publication and coherent
     /// next fetch. Not an implementation of the historical supervisor subroutine.
     /// </summary>
     public void StoreCommand(uint address, Word48 word)
