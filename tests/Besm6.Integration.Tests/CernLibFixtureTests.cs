@@ -40,6 +40,58 @@ namespace Besm6.Tests
         // Раздельные каталоги артефактов: lib1/x и lib2/x не конфликтуют
         // -------------------------------------------------------------------
         [TestMethod]
+        public void CaseDirectory_PrefersCompleteCommittedPair()
+        {
+            using var tr = new TempRoot(lib1Source: "old source", lib1Expect: "old expected");
+            string committed = System.IO.Path.Combine(tr.Path, "examples", "cernlib", "lib1");
+            Directory.CreateDirectory(committed);
+            File.WriteAllText(System.IO.Path.Combine(committed, "t1.f"), "current source");
+            File.WriteAllText(System.IO.Path.Combine(committed, "expect_t1.txt"), "current expected");
+
+            var fx = new CernLibFixture(tr.Path);
+            Assert.AreEqual(committed, fx.ResolveCaseDirectory(1, "t1"));
+            Assert.AreEqual(System.IO.Path.Combine(tr.Path, "ref", "tests", "lib1"),
+                fx.ResolveCaseDirectory(1, "other"));
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void CaseDirectory_DoesNotMixIncompleteCommittedPairWithReference(bool sourceOnly)
+        {
+            using var tr = new TempRoot(lib1Source: "old source", lib1Expect: "old expected");
+            string committed = System.IO.Path.Combine(tr.Path, "examples", "cernlib", "lib1");
+            Directory.CreateDirectory(committed);
+            File.WriteAllText(System.IO.Path.Combine(committed, sourceOnly ? "t1.f" : "expect_t1.txt"), "partial");
+
+            Assert.AreEqual(System.IO.Path.Combine(tr.Path, "ref", "tests", "lib1"),
+                new CernLibFixture(tr.Path).ResolveCaseDirectory(1, "t1"));
+        }
+
+        [TestMethod]
+        public void CaseDirectory_ExplicitDatasetWinsIncludingMissingCases()
+        {
+            using var tr = new TempRoot(lib1Source: "source", lib1Expect: "expected");
+            string committed = System.IO.Path.Combine(tr.Path, "examples", "cernlib", "lib1");
+            Directory.CreateDirectory(committed);
+            File.WriteAllText(System.IO.Path.Combine(committed, "t1.f"), "committed source");
+            File.WriteAllText(System.IO.Path.Combine(committed, "expect_t1.txt"), "committed expected");
+            string explicitData = System.IO.Path.Combine(tr.Path, "explicit");
+            Directory.CreateDirectory(explicitData);
+            string? saved = Environment.GetEnvironmentVariable("BESM6_CERN_DATA");
+            try
+            {
+                Environment.SetEnvironmentVariable("BESM6_CERN_DATA", explicitData);
+                Assert.AreEqual(System.IO.Path.Combine(explicitData, "lib1"),
+                    new CernLibFixture(tr.Path).ResolveCaseDirectory(1, "t1"));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("BESM6_CERN_DATA", saved);
+            }
+        }
+
+        [TestMethod]
         public void ArtifactDir_SeparatePerLibraryAndName()
         {
             using var tr = new TempRoot();
