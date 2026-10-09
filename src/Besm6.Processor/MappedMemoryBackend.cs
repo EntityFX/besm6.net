@@ -45,6 +45,16 @@ public sealed class MappedMemoryBackend : IInstructionMemory
 
     public AddressedMemoryBufferEntry[] GetOperandSnapshot() => _operands.Snapshot();
     public AddressedMemoryBufferEntry[] GetInstructionSnapshot() => _instructions.Snapshot();
+    /// <summary>
+    /// Explicit host bridge for the two operand-memory controls. Other M17 flags,
+    /// supervisor mode and store parity are independent; no guest instruction runs.
+    /// </summary>
+    public void ApplyControlStatus(ControlUnitStatus status)
+    {
+        AssignmentBlocked = status.AssignmentBlocked;
+        ProtectionBlocked = status.ProtectionBlocked;
+    }
+
     public void ClearFault() => LastFault = null;
     public void ClearInstructionBuffer() => _instructions.Clear();
 
