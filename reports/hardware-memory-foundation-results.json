@@ -1,0 +1,131 @@
+{
+  "stage": 3,
+  "milestone": "physical storage and address resolution foundation",
+  "stage_complete": false,
+  "baseline_commit": "fc3c0a5700c1a399752eca4df4528d4d8787aa2c",
+  "configuration": "TO-8 revision 1-67, 32K words, 8 banks, 32 mathematical and physical pages",
+  "cpu_connected": false,
+  "hardware_cli_profile": false,
+  "sources": [
+    {
+      "title": "TO-8 instruction system, revision 1-67",
+      "url": "https://www.besm6.org/doc/БЭСМ6-ТО-IX-описание-системы-команд.pdf",
+      "sha256": "7412b2c1c90195e029fe5b0067e859ce6c6f846a780062de8ab6ab4f96b6c113",
+      "visually_checked_pdf_pages": [
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109
+      ]
+    },
+    {
+      "title": "TO-4 MOZU, revision 1-66",
+      "url": "https://www.besm6.org/doc/БЭСМ6-ТО-V-МОЗУ.pdf",
+      "sha256": "01556ed62c5ce973707374a2798138e4e6b8416b192e1accbadb87f5e00956b3",
+      "visually_checked_pdf_pages": [
+        3,
+        4,
+        5
+      ]
+    }
+  ],
+  "tests": {
+    "configuration": "Release net8.0",
+    "new_hardware_memory_cases": 73,
+    "suites": [
+      {
+        "suite": "Besm6.Architecture.Tests",
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.Assembler.Tests",
+        "passed": 29,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.BitVisualizer.Tests",
+        "passed": 57,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.BitVisualizer.WinForms.Tests",
+        "passed": 19,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.Cli.Tests",
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.Integration.Tests",
+        "passed": 426,
+        "failed": 0,
+        "skipped": 3
+      },
+      {
+        "suite": "Besm6.Processor.Tests",
+        "passed": 895,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.Runtime.Tests",
+        "passed": 281,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "Besm6.Tui.Tests",
+        "passed": 44,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "passed": 1788,
+    "failed": 0,
+    "existing_skipped": 3,
+    "cern_active": 397,
+    "cern_passed": 397,
+    "golden": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "by_status": {
+        "OK": 3
+      }
+    }
+  },
+  "unchanged_execution_sources_sha256_lf": {
+    "src/Besm6.Processor/Processor.cs": "f2ea433cb71cfd46466c03bf6dd18e760a594a20bce812cdcfbca2c66cd4e50e",
+    "src/Besm6.Processor/ProcessorMemoryAccess.cs": "dec3e6143a98aeefaa896318959ed6774d5f787e31f0107a65fc76fe06ae6c11",
+    "src/Besm6.Processor/MemoryInstructionExecutor.cs": "970ad0ce24b649118a35e4bc167a3224f0e04506efc10446cdd3bbed6a0aa79f",
+    "src/Besm6.Processor/CoreMemory.cs": "b6afd9f9ea4510c8cafb82601a6fc7ac891cd457fb507bf0c346a9030626c889",
+    "src/Besm6.Runtime/MachineCore.cs": "a9af1607856b71cac076119a4d63c7d9419ce64399e51783f308b32447b38653",
+    "src/Besm6.Runtime/Loading/ExecutionLoop.cs": "29f0ee1fd823c00bfc1db17293a9dae6de9612ed84f5e38391fb9a6282f3e6c2",
+    "src/Besm6.Runtime/DubnaLoader.cs": "c39104988abfbf8cad411e281ca42c27454a35e4e4836ae944c91355641dc42d",
+    "src/Besm6.Processor/Alu.cs": "022604dbb08d759a772b30e31866893061c937520d02e9aee7f16d6f22c57f4a"
+  },
+  "new_benchmarks_run": false,
+  "performance_evidence": "reports/execution-lifecycle-results.json",
+  "limitations": [
+    "No CPU adapter, hardware buffers or timing",
+    "No privileged register encoding or command integration",
+    "No ATX/CTX buffer visibility integration",
+    "No hardware interrupt delivery or fault-state commitment",
+    "Only the base 32K configuration; no extension inferred",
+    "Zero-filled data structures do not define hardware reset state"
+  ]
+}
