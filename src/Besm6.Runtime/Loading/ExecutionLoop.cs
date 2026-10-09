@@ -11,15 +11,21 @@ namespace Besm6.Runtime
     internal sealed class ExecutionLoop
     {
         private readonly MachineCore _machine;
-        private readonly ExtracodeHandler _extracode;
+        private readonly ExtracodeHandler? _extracode;
         private readonly Action<string>? _verboseLog;
         private readonly Action<string>? _output;
         private readonly Action<string>? _progressOutput;
 
         private CanonicalTraceWriter? _canonicalTraceWriter;
         private DiagnosticTraceWriter? _diagnosticTraceWriter;
+        private Action<InstructionTraceRecord>? _attachedTypedInstructionTrace;
+        private Action<int, ulong>? _attachedInstructionTrace;
+        private Action<uint, bool, uint, uint>? _attachedCppInstructionTrace;
+        private Action<string, ulong>? _attachedRegisterTrace;
 
         public long InstructionLimit { get; set; } = 1_000_000_000L;
+        /// <summary>Optional host safety bound, independent of successfully completed guest commands.</summary>
+        public long? StepAttemptLimit { get; set; }
         public long WallClockLimitMs { get; set; } = 0;
         public bool LoopDetect { get; set; } = false;
         private long _instructionsExecuted;
@@ -62,29 +68,33 @@ namespace Besm6.Runtime
             _progressOutput = progressOutput;
         }
 
-        public void InstallHook() => _machine.Cpu.ExtracodeDispatch = _extracode.Handle;
+        internal ExecutionLoop(MachineCore machine) => _machine = machine;
+
+        public void InstallHook() => _machine.Cpu.ExtracodeDispatch =
+            (_extracode ?? throw new InvalidOperationException("No hosted extracode handler.")).Handle;
 
         public LoadResult Run()
         {
+            if (StepAttemptLimit is < 1) throw new ArgumentOutOfRangeException(nameof(StepAttemptLimit));
             Statistics = null;
             _completedInstructions = 0;
             _totalCycles = 0;
             bool countCycles = Speed == ExecutionSpeed.Original || CollectStatistics;
             Action<Opcode>? counter = countCycles ? ObserveExecuted : null;
             Action<Opcode>? observer = InstructionExecuted;
+            bool counterAttached = false, observerAttached = false;
             var stopwatch = countCycles || WallClockLimitMs > 0 ? new Stopwatch() : null;
             long allocatedBefore = CollectStatistics ? GC.GetAllocatedBytesForCurrentThread() : 0;
             int gen0Before = CollectStatistics ? GC.CollectionCount(0) : 0;
-            var previousStepTrace = _machine.StepTrace;
-            var previousCpuTrace = _machine.Cpu.TraceInstruction;
-            var previousRegisterTrace = _machine.RegisterTrace;
             bool previousInstructionCache = _machine.Cpu.InstructionCacheEnabled;
             try
             {
                 _machine.Cpu.InstructionCacheEnabled = Speed == ExecutionSpeed.Max;
                 AttachFileTraceWriters();
                 _machine.Cpu.InstructionExecuted += counter;
+                counterAttached = true;
                 _machine.Cpu.InstructionExecuted += observer;
+                observerAttached = true;
                 return RunCore(stopwatch);
             }
             finally
@@ -95,13 +105,21 @@ namespace Besm6.Runtime
                         stopwatch!.Elapsed.TotalSeconds,
                         CollectStatistics ? GC.GetAllocatedBytesForCurrentThread() - allocatedBefore : 0,
                         CollectStatistics ? GC.CollectionCount(0) - gen0Before : 0);
-                _machine.Cpu.InstructionExecuted -= counter;
-                _machine.Cpu.InstructionExecuted -= observer;
-                _machine.StepTrace = previousStepTrace;
-                _machine.Cpu.TraceInstruction = previousCpuTrace;
-                _machine.RegisterTrace = previousRegisterTrace;
+                if (counterAttached) _machine.Cpu.InstructionExecuted -= counter;
+                if (observerAttached) _machine.Cpu.InstructionExecuted -= observer;
+                // Remove only this loop's subscriptions. Scheduler callbacks may
+                // deliberately install, replace or remove the caller's hooks.
+                if (_attachedInstructionTrace is not null)
+                    _machine.StepTrace -= _attachedInstructionTrace;
+                if (_attachedCppInstructionTrace is not null)
+                    _machine.Cpu.TraceInstruction -= _attachedCppInstructionTrace;
+                if (_attachedRegisterTrace is not null)
+                    _machine.RegisterTrace -= _attachedRegisterTrace;
+                _attachedInstructionTrace = null;
+                _attachedCppInstructionTrace = null;
+                _attachedRegisterTrace = null;
                 _machine.Cpu.InstructionCacheEnabled = previousInstructionCache;
-                try { _extracode.FinishOutput(); }
+                try { _extracode?.FinishOutput(); }
                 finally { DetachFileTraceWriters(); }
             }
         }
@@ -130,6 +148,7 @@ namespace Besm6.Runtime
             {
                 // Профайлер опкодов (Runtime/Profiling): только наблюдение, не влияет на семантику.
                 _machine.Cpu.InstructionTrace += TypedInstructionTrace;
+                _attachedTypedInstructionTrace = TypedInstructionTrace;
             }
 
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BESM6_INSTR_TRACE")))
@@ -143,9 +162,10 @@ namespace Besm6.Runtime
 
         private void DetachFileTraceWriters()
         {
-            if (TypedInstructionTrace is not null)
+            if (_attachedTypedInstructionTrace is not null)
             {
-                _machine.Cpu.InstructionTrace -= TypedInstructionTrace;
+                _machine.Cpu.InstructionTrace -= _attachedTypedInstructionTrace;
+                _attachedTypedInstructionTrace = null;
             }
 
             if (_canonicalTraceWriter is not null)
@@ -175,7 +195,9 @@ namespace Besm6.Runtime
             HaltedByStop = false;
             long lastReport = 0;
             var progressOutput = ProgressEnabled ? _progressOutput : null;
-            bool executeBlocks = Speed == ExecutionSpeed.Max && !LoopDetect && progressOutput is null;
+            long? attemptLimit = StepAttemptLimit;
+            long stepAttempts = 0;
+            bool executeBlocks = Speed == ExecutionSpeed.Max && !LoopDetect && progressOutput is null && attemptLimit is null;
 
             const int LoopWindow = 20_000;
             const int LoopRange = 16;
@@ -185,21 +207,24 @@ namespace Besm6.Runtime
             if (InstructionTrace != null)
             {
                 _machine.StepTrace += InstructionTrace;
+                _attachedInstructionTrace = InstructionTrace;
             }
 
             if (CppInstructionTrace != null)
             {
                 _machine.Cpu.TraceInstruction += CppInstructionTrace;
+                _attachedCppInstructionTrace = CppInstructionTrace;
             }
 
             if (RegisterTrace != null)
             {
                 _machine.BeginRegisterTrace();
                 _machine.RegisterTrace += RegisterTrace;
+                _attachedRegisterTrace = RegisterTrace;
             }
 
             wallStopwatch?.Start();
-            while (InstructionsExecuted < limit)
+            while (InstructionsExecuted < limit && (attemptLimit is null || stepAttempts < attemptLimit.Value))
             {
                 try
                 {
@@ -215,6 +240,7 @@ namespace Besm6.Runtime
                     }
                     else
                     {
+                        stepAttempts++;
                         stopped = _machine.Step(ref _instructionsExecuted);
                     }
                     if (pacer is not null && (stopped || _totalCycles >= nextCheckpoint))
@@ -272,8 +298,9 @@ namespace Besm6.Runtime
                 }
                 catch (ProcessorException ex)
                 {
+                    if (_machine.Cpu.Profile == ProcessorProfile.Supervisor) throw;
                     _machine.Cpu.StackCorrection();
-                    _extracode.FinishOutput();
+                    _extracode?.FinishOutput();
 
                     if (string.IsNullOrEmpty(ex.Message))
                     {

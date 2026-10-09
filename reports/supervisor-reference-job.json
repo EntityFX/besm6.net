@@ -1,0 +1,60 @@
+{
+  "reference_source_revision": "9e318d16a203a3efae3420ea3f5700a8d7e3bec3",
+  "regex_dependency_revision": "23a18160eedde1716a69ad753b3c106a54144f06",
+  "regex_dependency": "PCRE8.45 portable static, upstream HAVE_PCREPOSIX_H build feature",
+  "memory_words": 524288,
+  "literal_input_verified": true,
+  "literal_expect_verified": true,
+  "guest_flags_modified": false,
+  "guest_prime_values": [
+    9433,
+    19081,
+    29147,
+    39631,
+    50359,
+    61297,
+    72467,
+    83701,
+    95101
+  ],
+  "expected_prime_values": [
+    9433,
+    19081,
+    29147,
+    39631,
+    50359,
+    61297,
+    72467,
+    83701,
+    95101
+  ],
+  "prime_values_match": true,
+  "independent_prime_total": 9424,
+  "total_is_printed_by_guest": false,
+  "guest_completed": true,
+  "expect_script_completed": true,
+  "exit_code": 0,
+  "guest_reported_seconds": 1,
+  "printer_sha256": "531d3cd6b42ad4293e68304e66ea424c8a31698f2d2b06982d69a80ea923c769",
+  "console_sha256": "7c917456da7432e16cc3ab07ee3ae6f6a743e01e86d3622bbdd124a271979559",
+  "binary_sha256": "7dab67afda8ce5764d4bba6787da2bf9d090c04d3f51a4085e1a2626c2e05536",
+  "source_inputs": {
+    "expect.ini": "398f76c843a3ca4cb5f18a5b040e1e2630e00c3703adb9fae82421806a3b119d",
+    "input.txt": "80f1ffa7298610026c7ed91752c91c808a3e645dc8d145c63ac16063457826e9",
+    "dispak.ini": "c1e4a71342a534eccb37a2995b0df498823d795c36310d3c52e0f06961680923",
+    "boot_dispak.b6": "a09a284778dee7a491b579dc4f8e9ca4c906174da1314582bab51afc8524cdfb"
+  },
+  "limitations": [
+    "Pinned guest program prints each1000th prime, not total9424;9424 verified independently from unchanged source bounds1001..100000.",
+    "Reference guest timing is not hardware timing evidence.",
+    "This is independent SIMH512 reference, not proof that current simulator passes the same OS/job gate."
+  ],
+  "simh_builtin_operator_bootstrap": {
+    "source": "BESM6/besm6_cpu.c:check_initial_setup, revision9e318d16a203a3efae3420ea3f5700a8d7e3bec3",
+    "behavior": [
+      "automatic front-panel СМЕ and ВРЕ requests once OS permits setup",
+      "direct host-date write into guest physical YEAR0221"
+    ],
+    "limitation": "Reference readiness/job proof includes these upstream host conveniences; it does not prove readiness with hardware CPU alone and no operator setup."
+  }
+}

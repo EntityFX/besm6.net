@@ -1,0 +1,181 @@
+{
+  "schema": "besm6-supervisor-source-audit-v1",
+  "scope": "Selected operating-system generation and physical-memory evidence; not stage4 acceptance.",
+  "selected_configuration": {
+    "name": "Classical32K",
+    "role": "Unchanged default historical configuration",
+    "physical_words": 32768,
+    "unsupported_rp_extension_policy": "reject; do not mask unsupported bits",
+    "hardware_os_gate_passed": false,
+    "compatible_32k_or_64k_generation_confirmed": false,
+    "historical_512k_register_and_bank_specification_confirmed": false
+  },
+  "experimental_boot_configuration": {
+    "name": "Simh512K",
+    "physical_words": 524288,
+    "physical_pages": 512,
+    "mathematical_pages": 32,
+    "request_address_bits": 15,
+    "translated_physical_address_bits": 19,
+    "selection": "Explicit supervisor API parameter; default constructors remain Classical32K",
+    "rp_semantics": "Pinned SIMH mmu_setrp: four5bit fields plus interleaved extension bits; page mask511 discards the tenth encoded page bit",
+    "rp_source_url": "https://github.com/simh/simh/blob/9e318d16a203a3efae3420ea3f5700a8d7e3bec3/BESM6/besm6_mmu.c#L691",
+    "historical_bank_wiring_or_timing_claimed": false,
+    "project_os_gate_passed": true,
+    "acceptance_status": "Not inferred from implementation or independent SIMH readiness; requires project guest-job evidence and original/max comparison",
+    "rp_source_sha256": "56038f1bd2ede750ae197d5b3c7c1b9734d7958ee89972dcbf2c0f3954df31b6",
+    "rp_source_bytes": 25641,
+    "project_os_gate_evidence": "supervisor-os-gate.json; unchanged bootstrap/media, actual Fortran job, exact original/max state and event parity"
+  },
+  "revisions": {
+    "simh": "9e318d16a203a3efae3420ea3f5700a8d7e3bec3",
+    "media_archive": "c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320",
+    "generation_catalogue": "f21ea8780dad397b436151f2328ead4f8e617494"
+  },
+  "selected_boot_assets": [
+    {
+      "name": "boot_dispak.b6",
+      "bytes": 27442,
+      "sha256": "a09a284778dee7a491b579dc4f8e9ca4c906174da1314582bab51afc8524cdfb",
+      "url": "https://raw.githubusercontent.com/simh/simh/9e318d16a203a3efae3420ea3f5700a8d7e3bec3/BESM6/boot_dispak.b6"
+    },
+    {
+      "name": "input.txt",
+      "bytes": 1343,
+      "sha256": "80f1ffa7298610026c7ed91752c91c808a3e645dc8d145c63ac16063457826e9",
+      "url": "https://raw.githubusercontent.com/simh/simh/9e318d16a203a3efae3420ea3f5700a8d7e3bec3/BESM6/input.txt"
+    },
+    {
+      "name": "expect.ini",
+      "bytes": 736,
+      "sha256": "398f76c843a3ca4cb5f18a5b040e1e2630e00c3703adb9fae82421806a3b119d",
+      "url": "https://raw.githubusercontent.com/simh/simh/9e318d16a203a3efae3420ea3f5700a8d7e3bec3/BESM6/expect.ini"
+    },
+    {
+      "name": "dispak.ini",
+      "bytes": 2795,
+      "sha256": "93d0833af58616f8ab8a757dbf607deb5e922766fa90c19f5ce4337a716f8627",
+      "url": "https://raw.githubusercontent.com/simh/simh/9e318d16a203a3efae3420ea3f5700a8d7e3bec3/BESM6/dispak.ini"
+    },
+    {
+      "name": "sbor2048.bin",
+      "bytes": 8379840,
+      "sha256": "844919c089de8afad8f2adbf428a2013f780b2679f377e9506f834d03433dc51",
+      "url": "https://raw.githubusercontent.com/besm6/besm6.github.io/c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320/download/disks/sbor2048.bin"
+    },
+    {
+      "name": "sbor2053.bin",
+      "bytes": 8379840,
+      "sha256": "a9bdbbdd0f0eaf517fd09c86b30ad1917c41c06f9986cb9d50c3704fd9c60342",
+      "url": "https://raw.githubusercontent.com/besm6/besm6.github.io/c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320/download/disks/sbor2053.bin"
+    },
+    {
+      "name": "krab2063.bin",
+      "bytes": 8379840,
+      "sha256": "e3bb28e4bb816eefac2b2513758d843c05ef6bd4b66e447f11e637c7c7d3f6fc",
+      "url": "https://raw.githubusercontent.com/besm6/besm6.github.io/c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320/download/disks/krab2063.bin"
+    },
+    {
+      "name": "svs2048.bin",
+      "bytes": 8379840,
+      "sha256": "75617c04fee7d90dfce12d7ea82fe8c5ae88897825508094313f970ace59b69b",
+      "url": "https://raw.githubusercontent.com/besm6/besm6.github.io/c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320/download/disks/svs2048.bin"
+    },
+    {
+      "name": "alt2048.bin",
+      "bytes": 33024000,
+      "sha256": "45ecfa45bb6d75829ec0690c6b47994aabbb238778a6714375044dab8c220a80",
+      "url": "https://raw.githubusercontent.com/besm6/besm6.github.io/c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320/download/disks/alt2048.bin"
+    }
+  ],
+  "media_redistribution_license": "not established; do not include images in source control",
+  "references": [
+    {
+      "id": "serp-generation-catalogue",
+      "url": "https://raw.githubusercontent.com/besm6/dispak/f21ea8780dad397b436151f2328ead4f8e617494/tests/serp-gens-ogl/output.txt",
+      "revision": "f21ea8780dad397b436151f2328ead4f8e617494",
+      "sha256": "0a2542ab3fe72334b04f9be85b1df7e8805af08c4f12896f785816cf0f120f1c",
+      "bytes": 2176,
+      "kind": "Pinned software test fixture; hosted user-level emulator output",
+      "observed": "SERP15 dated 23.02.88 lists M1V1, M2V1, M3V1..M3V4 with OZU512K.",
+      "limits": "Proves catalogue content only. Matching to the selected image is not established; no hardware RP encoding or bank geometry is specified."
+    },
+    {
+      "id": "dispak-simulator-scope",
+      "url": "https://raw.githubusercontent.com/besm6/dispak/f21ea8780dad397b436151f2328ead4f8e617494/README.md",
+      "revision": "f21ea8780dad397b436151f2328ead4f8e617494",
+      "sha256": "dedde3f76e8c800ef0f3f77566d4e9688851542a08e2cae61fcd4933d412596b",
+      "bytes": 1261,
+      "kind": "Primary software project documentation",
+      "observed": "Describes user-level execution and simulated operating-system extracodes.",
+      "limits": "Hosted tests do not constitute a hardware operating-system boot."
+    },
+    {
+      "id": "memory-monograph-1969",
+      "url": "https://raw.githubusercontent.com/besm6/besm6.github.io/c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320/doc/%D0%9E%D0%BF%D0%B5%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%B0%D1%8F-%D0%BF%D0%B0%D0%BC%D1%8F%D1%82%D1%8C-%D0%AD%D0%A6%D0%92%D0%9C-%D0%91%D0%AD%D0%A1%D0%9C6.pdf",
+      "revision": "c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320",
+      "sha256": "03bd572d052d0ec77167c3dee0b32483c95e23b3c80a4747b4d6719ab78201bb",
+      "bytes": 1383784,
+      "kind": "Historical technical monograph, title and abstract inspected",
+      "observed": "ITMiVT, Moscow1969; describes one 4K52bit magnetic-core memory unit, 2 microsecond cycle.",
+      "limits": "No verified 512K RP-extension specification established from this source."
+    },
+    {
+      "id": "dispak-user-volume-1973",
+      "url": "https://raw.githubusercontent.com/besm6/besm6.github.io/c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320/doc/%D0%9E%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D0%B0%D1%8F-%D1%81%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D0%B0-%D0%94%D0%98%D0%A1%D0%9F%D0%90%D0%9A.pdf",
+      "revision": "c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320",
+      "sha256": "351700d85543e8192c96db8cff0dbf6f8895671806af36e3507060e75e6ca1a5",
+      "bytes": 2008301,
+      "kind": "Historical user documentation, title and table of contents inspected",
+      "observed": "DISPAK for BESM6, user volume1, Moscow1973.",
+      "limits": "Not a recovered executable OS generation or a hardware boot configuration."
+    },
+    {
+      "id": "archival-gens",
+      "url": "https://raw.githubusercontent.com/besm6/besm6.github.io/c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320/sources/dispak-svs/%D0%B3%D0%B5%D0%BD%D1%81.bemsh",
+      "revision": "c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320",
+      "sha256": "c48313fae035a05de765bba3750fb4202531f193e08b6f59382613bc442fec71",
+      "bytes": 44366,
+      "kind": "Archived operating-system assembler source",
+      "observed": "Located in the dispak-svs source collection; includes later configuration and terminal mechanisms.",
+      "limits": "Not demonstrated to match the selected boot binary or provide a reproducible 32K generation."
+    },
+    {
+      "id": "archival-gens1",
+      "url": "https://raw.githubusercontent.com/besm6/besm6.github.io/c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320/sources/dispak-svs/%D0%B3%D0%B5%D0%BD%D1%811.bemsh",
+      "revision": "c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320",
+      "sha256": "7b2666960c0715b7d596976ad88cc038289c47aa819ce59b7e01800a16c9efa5",
+      "bytes": 45839,
+      "kind": "Archived operating-system assembler source",
+      "observed": "Located in the dispak-svs source collection; includes later configuration and terminal mechanisms.",
+      "limits": "Not demonstrated to match the selected boot binary or provide a reproducible 32K generation."
+    },
+    {
+      "id": "archival-gens2",
+      "url": "https://raw.githubusercontent.com/besm6/besm6.github.io/c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320/sources/dispak-svs/%D0%B3%D0%B5%D0%BD%D1%812.bemsh",
+      "revision": "c30c14eb7bb7d56de477c8aaa3c1d6be9d10a320",
+      "sha256": "0c263767b296030f417603b6ab8d6f9c5ccf2e4a9cace9dda0e42d199569a780",
+      "bytes": 19975,
+      "kind": "Archived operating-system assembler source",
+      "observed": "Located in the dispak-svs source collection; includes later configuration and terminal mechanisms.",
+      "limits": "Not demonstrated to match the selected boot binary or provide a reproducible 32K generation."
+    },
+    {
+      "id": "developers-recollection-2023",
+      "url": "https://www.computer-museum.ru/document/trudy_sorucom_2023.pdf",
+      "revision": null,
+      "sha256": "c670d5776079f1a7e21cf00dd104e16e2d01737df652dcb079bd926c631eb703",
+      "bytes": 50423905,
+      "kind": "First-person historical paper by operating-system developers",
+      "observed": "Printed page46 (zero-based PDF page47) states subsequent physical-memory expansion to128pages.",
+      "limits": "No RP bit packing or physical bank configuration specification. URL is not revision-pinned; SHA256 fixes the inspected bytes."
+    }
+  ],
+  "interpretation": [
+    "An old generation string embedded in an image is not proof that the active bootstrap executes that generation.",
+    "The software catalogue uses512K; that is not sufficient evidence of historical RP hardware semantics.",
+    "A recollection of128pages does not specify the bit layout or memory bank wiring required by an implementation.",
+    "No guest state or boot parameters were altered to force operating-system readiness during this audit.",
+    "Memory expansion requires an explicit configuration choice and independently specified control vectors."
+  ]
+}

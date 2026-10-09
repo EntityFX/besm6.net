@@ -12,8 +12,8 @@ public readonly record struct AddressedMemoryBufferEntry(MemoryRequestAddress Re
 
 /// <summary>
 /// Untimed mathematical-address memory, with host-controlled mode bits and RP/RZ.
-/// Shares the ordinary Processor instruction handlers. Supervisor instructions,
-/// interrupt delivery, in-flight requests and prefetch belong to later stages.
+/// Shares ordinary instruction handlers; the supervisor profile attaches admission
+/// callbacks. In-flight memory requests and prefetch timing remain a later stage.
 /// </summary>
 public sealed class MappedMemoryBackend : IInstructionMemory
 {
@@ -21,11 +21,21 @@ public sealed class MappedMemoryBackend : IInstructionMemory
     private readonly AddressBuffer _instructions = new(4);
     private readonly MemoryWord50[] _panel = new MemoryWord50[8];
     private int _panelStores;
+    private bool _reserveOperandSlot;
 
-    public PhysicalMemory PhysicalMemory { get; } = new();
-    public PageAssignment Assignment { get; } = new();
+    /// <summary>Serial settled boundary of TO-2 §4.19; the oldest write is published
+    /// when the last free BRZ is filled. Untimed host Mapped retains its eight slots.</summary>
+    internal void EnableSupervisorWritePublication()
+    {
+        if (_operands.Count == 8)
+            throw new InvalidOperationException("Publish pending writes before attaching the supervisor CPU.");
+        _reserveOperandSlot = true;
+    }
+
+    public PhysicalMemory PhysicalMemory { get; }
+    public PageAssignment Assignment { get; }
     public IMemory HostMemory { get; }
-    public int Size => (int)PhysicalMemory.WordCount;
+    public int Size => (int)PhysicalMemory.CapacityWords;
     // Software bootstrap defaults, not hardware cold-reset semantics or CPU M17.
     public bool Supervisor { get; set; } = true;
     public bool AssignmentBlocked { get; set; } = true;
@@ -35,9 +45,13 @@ public sealed class MappedMemoryBackend : IInstructionMemory
     public MemoryFault? LastFault { get; private set; }
     public int PendingWriteCount => _operands.Count;
 
-    public MappedMemoryBackend()
+    public MappedMemoryBackend() : this(MemoryConfiguration.Classical32K) { }
+
+    public MappedMemoryBackend(MemoryConfiguration configuration)
     {
-        for (uint address = 0; address < PhysicalMemory.WordCount; address++)
+        PhysicalMemory = new PhysicalMemory(configuration);
+        Assignment = new PageAssignment(configuration);
+        for (uint address = 0; address < PhysicalMemory.CapacityWords; address++)
             PhysicalMemory.Store(address, Word48.Zero, true, true);
         for (int i = 1; i < 8; i++) _panel[i] = MemoryWord50.Form(Word48.Zero, false, false);
         HostMemory = new HostView(this);
@@ -45,6 +59,13 @@ public sealed class MappedMemoryBackend : IInstructionMemory
 
     public AddressedMemoryBufferEntry[] GetOperandSnapshot() => _operands.Snapshot();
     public AddressedMemoryBufferEntry[] GetInstructionSnapshot() => _instructions.Snapshot();
+    /// <summary>Physical BRZ storage, independent of its current recency/tag validity.</summary>
+    public MemoryWord50 ReadOperandBufferRegister(int register) => _operands.ReadRegister(register);
+    public void WriteOperandBufferRegister(int register, Word48 value) => _operands.WriteRegister(register,
+        MemoryWord50.Form(value, InvertLeftStoreControl, InvertRightStoreControl));
+    public int FindOperandBufferRegister(MemoryRequestAddress request) => _operands.FindRegister(request);
+    internal Action<MemoryRequestAddress, bool>? OperandAccessAdmitted { get; set; }
+    internal Action<MemoryRequestAddress, bool>? InstructionAccessAdmitted { get; set; }
     /// <summary>
     /// Explicit host bridge for the two operand-memory controls. Other M17 flags,
     /// supervisor mode and store parity are independent; no guest instruction runs.
@@ -66,6 +87,7 @@ public sealed class MappedMemoryBackend : IInstructionMemory
         var request = new MemoryRequestAddress(address, AssignmentBlocked);
         var resolved = AdmitOperand(request, false);
         if (resolved.Kind == MemoryAddressKind.ZeroOperand) return Word48.Zero;
+        OperandAccessAdmitted?.Invoke(request, false);
         if (resolved.Kind == MemoryAddressKind.PanelRegister)
             return CheckOperand(request, _panel[address], address, MemoryFaultSource.Panel);
         int index = _operands.Find(request);
@@ -79,6 +101,7 @@ public sealed class MappedMemoryBackend : IInstructionMemory
         var request = new MemoryRequestAddress(address, AssignmentBlocked);
         var resolved = AdmitOperand(request, true);
         if (resolved.Kind == MemoryAddressKind.ZeroOperand) return;
+        OperandAccessAdmitted?.Invoke(request, true);
         if (resolved.Kind == MemoryAddressKind.PanelRegister)
         {
             // Untimed publication sequence: first store starts the sequence, next
@@ -91,6 +114,7 @@ public sealed class MappedMemoryBackend : IInstructionMemory
         int index = _operands.Find(request);
         if (index < 0 && _operands.IsFull) FlushOldest();
         _operands.Put(new(request, MemoryWord50.Form(word, InvertLeftStoreControl, InvertRightStoreControl)), index);
+        if (_reserveOperandSlot && _operands.IsFull) FlushOldest();
     }
 
     public Word48 FetchInstruction(uint address, bool rightHalf)
@@ -100,6 +124,7 @@ public sealed class MappedMemoryBackend : IInstructionMemory
         ResolvedMemoryAddress resolved;
         try { resolved = Assignment.ResolveInstruction(address, Supervisor, rightHalf); }
         catch (MemoryProtectionException) { LastFault = new(request, access, MemoryFaultSource.Protection, null); throw; }
+        InstructionAccessAdmitted?.Invoke(request, rightHalf);
         int index = _instructions.Find(request);
         AddressedMemoryBufferEntry entry;
         MemoryFaultSource source;
@@ -129,14 +154,14 @@ public sealed class MappedMemoryBackend : IInstructionMemory
     public void SetPhysicalPage(uint mathematicalPage, uint physicalPage)
     {
         if (mathematicalPage >= PageAssignment.PageCount) throw new ArgumentOutOfRangeException(nameof(mathematicalPage));
-        if (physicalPage >= PageAssignment.PageCount) throw new ArgumentOutOfRangeException(nameof(physicalPage));
+        if (physicalPage >= Assignment.PhysicalPageCount) throw new ArgumentOutOfRangeException(nameof(physicalPage));
         FlushOperands();
         Assignment.SetPhysicalPage(mathematicalPage, physicalPage);
     }
 
     public void ImportAssignmentGroup(uint group, Word48 accumulator)
     {
-        PageAssignment.ValidateAssignmentGroup(group, accumulator);
+        Assignment.ValidateImportAssignmentGroup(group, accumulator);
         FlushOperands();
         Assignment.ImportAssignmentGroup(group, accumulator);
     }
@@ -216,7 +241,7 @@ public sealed class MappedMemoryBackend : IInstructionMemory
         public int Size => backend.Size;
         public Word48 Read(uint address)
         {
-            if (address >= PhysicalMemory.WordCount) throw new ArgumentOutOfRangeException(nameof(address));
+            if (address >= backend.PhysicalMemory.CapacityWords) throw new ArgumentOutOfRangeException(nameof(address));
             return backend.PeekPhysical(address);
         }
         public void Write(uint address, Word48 word) => backend.ReplacePhysicalFromHost(address, MemoryWord50.Form(word, false, false));
@@ -225,6 +250,8 @@ public sealed class MappedMemoryBackend : IInstructionMemory
     private sealed class AddressBuffer(int capacity)
     {
         private readonly AddressedMemoryBufferEntry[] _entries = new AddressedMemoryBufferEntry[capacity];
+        private readonly int[] _slots = new int[capacity];
+        private readonly MemoryWord50[] _registers = new MemoryWord50[capacity];
         public int Count { get; private set; }
         public bool IsFull => Count == capacity;
         public AddressedMemoryBufferEntry At(int index) => _entries[index];
@@ -241,17 +268,49 @@ public sealed class MappedMemoryBackend : IInstructionMemory
         }
         public void Put(AddressedMemoryBufferEntry entry, int index)
         {
+            int slot = index < 0 ? FreeSlot() : _slots[index];
             int shifted = index < 0 ? Math.Min(Count, capacity - 1) : index;
             Array.Copy(_entries, 0, _entries, 1, shifted);
+            Array.Copy(_slots, 0, _slots, 1, shifted);
             _entries[0] = entry;
+            _slots[0] = slot;
+            _registers[slot] = entry.Word;
             if (index < 0 && !IsFull) Count++;
         }
         public void RemoveAt(int index)
         {
             Array.Copy(_entries, index + 1, _entries, index, Count - index - 1);
+            Array.Copy(_slots, index + 1, _slots, index, Count - index - 1);
             _entries[--Count] = default;
         }
         public void Clear() { Array.Clear(_entries); Count = 0; }
         public AddressedMemoryBufferEntry[] Snapshot() => _entries.AsSpan(0, Count).ToArray();
+        private int FreeSlot()
+        {
+            for (int slot = 0; slot < capacity; slot++)
+            {
+                bool used = false;
+                for (int i = 0; i < Count; i++) if (_slots[i] == slot) { used = true; break; }
+                if (!used) return slot;
+            }
+            return _slots[Count - 1];
+        }
+        public int FindRegister(MemoryRequestAddress request)
+        {
+            int index = Find(request);
+            return index < 0 ? -1 : _slots[index];
+        }
+        public MemoryWord50 ReadRegister(int register)
+        {
+            if ((uint)register >= capacity) throw new ArgumentOutOfRangeException(nameof(register));
+            return _registers[register];
+        }
+        public void WriteRegister(int register, MemoryWord50 word)
+        {
+            if ((uint)register >= capacity) throw new ArgumentOutOfRangeException(nameof(register));
+            _registers[register] = word;
+            for (int i = 0; i < Count; i++)
+                if (_slots[i] == register) _entries[i] = _entries[i] with { Word = word };
+        }
     }
 }

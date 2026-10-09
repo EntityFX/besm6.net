@@ -28,6 +28,12 @@ namespace Besm6.Core
             _sequence = 0;
         }
 
+        internal void CancelPending()
+        {
+            _pending = null;
+            _pendingOpcode = null;
+        }
+
         internal void Begin(Word48 rawWord, uint rawInstruction, DecodedInstruction instruction)
         {
             _pendingOpcode = InstructionExecuted is null ? null : instruction.Opcode;
