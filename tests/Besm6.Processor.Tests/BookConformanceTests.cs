@@ -126,10 +126,15 @@ public sealed class BookConformanceTests
     public void BufferedOriginalAndMaxPreserveBookArithmetic(string id, ExecutionSpeed speed, JsonElement v)
         => CheckLoadedArithmetic(id, speed, v, MemoryModel.Buffered);
 
+    [TestMethod]
+    [DynamicData(nameof(LoadedVectors), DynamicDataDisplayName = nameof(CaseName))]
+    public void MappedOriginalAndMaxPreserveBookArithmetic(string id, ExecutionSpeed speed, JsonElement v)
+        => CheckLoadedArithmetic(id, speed, v, MemoryModel.Mapped);
+
     private static void CheckLoadedArithmetic(string id, ExecutionSpeed speed, JsonElement v, MemoryModel memoryModel)
     {
         var machine = new MachineCore(memoryModel: memoryModel);
-        Load(v, machine.Cpu, machine.Memory);
+        Load(v, machine.Cpu, LoaderMemory(machine));
         var loader = new DubnaLoader(machine) { Speed = speed, InstructionLimit = 10, Output = _ => { } };
         Assert.IsTrue(loader.RunLoaded().Success, id);
         Assert.IsTrue(loader.HaltedByStop, id);
@@ -150,11 +155,17 @@ public sealed class BookConformanceTests
     public void BufferedAvostStateAndInterceptionMatchBetweenSpeeds(string id, ExecutionSpeed speed, bool intercept, JsonElement v)
         => CheckLoadedFault(id, speed, intercept, v, MemoryModel.Buffered);
 
+    [TestMethod]
+    [DynamicData(nameof(FaultVectors), DynamicDataDisplayName = nameof(CaseName))]
+    public void MappedAvostStateAndInterceptionMatchBetweenSpeeds(string id, ExecutionSpeed speed, bool intercept, JsonElement v)
+        => CheckLoadedFault(id, speed, intercept, v, MemoryModel.Mapped);
+
     private static void CheckLoadedFault(string id, ExecutionSpeed speed, bool intercept, JsonElement v, MemoryModel memoryModel)
     {
         var machine = new MachineCore(memoryModel: memoryModel);
-        Load(v, machine.Cpu, machine.Memory);
-        machine.Memory.Write(16, new Word48(0x0D80000D8000)); // STOP in both halves
+        IMemory loaderMemory = LoaderMemory(machine);
+        Load(v, machine.Cpu, loaderMemory);
+        loaderMemory.Write(16, new Word48(0x0D80000D8000)); // STOP in both halves
         machine.Cpu.InterceptCount = intercept ? 1 : 0;
         machine.Cpu.InterceptAddr = 16;
         var loader = new DubnaLoader(machine) { Speed = speed, InstructionLimit = 10, Output = _ => { } };
@@ -175,6 +186,21 @@ public sealed class BookConformanceTests
             Assert.AreEqual(v.GetProperty("expected").GetProperty("error").GetString(), result.ErrorMessage, id);
             AssertState(v, machine.Cpu, checkPosition: true);
         }
+    }
+
+    private static IMemory LoaderMemory(MachineCore machine)
+    {
+        if (machine.MappedMemory is not { } memory) return machine.Memory;
+        memory.Supervisor = memory.AssignmentBlocked = memory.ProtectionBlocked = false;
+        for (uint page = 0; page < 32; page++) memory.Assignment.SetPhysicalPage(page, (page + 1) % 32);
+        return new MathematicalLoader(memory);
+    }
+
+    private sealed class MathematicalLoader(MappedMemoryBackend memory) : IMemory
+    {
+        public int Size => memory.Size;
+        public Word48 Read(uint address) => memory.HostMemory.Read(memory.Assignment.TranslateRequest(new(address, false)));
+        public void Write(uint address, Word48 word) => memory.HostMemory.Write(memory.Assignment.TranslateRequest(new(address, false)), word);
     }
 
     private static void AssertState(JsonElement v, Processor cpu, bool checkPosition)

@@ -27,6 +27,7 @@ public sealed class MemoryModelTests
     {
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new MachineCore(memoryModel: (MemoryModel)99));
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new MachineCore(memoryModel: MemoryModel.Buffered, memorySize: 65536));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new MachineCore(memoryModel: MemoryModel.Mapped, memorySize: 65536));
         Assert.AreEqual(16, new MachineCore(16).Memory.Size);
     }
 
@@ -50,6 +51,8 @@ public sealed class MemoryModelTests
     [DataRow(MemoryModel.Dubna, true)]
     [DataRow(MemoryModel.Buffered, false)]
     [DataRow(MemoryModel.Buffered, true)]
+    [DataRow(MemoryModel.Mapped, false)]
+    [DataRow(MemoryModel.Mapped, true)]
     public void OriginalAndMaxPreserveFullStateWithinEachMemoryModel(MemoryModel model, bool trace)
     {
         var original = Run(model, ExecutionSpeed.Original, trace);
@@ -75,11 +78,19 @@ public sealed class MemoryModelTests
                 Assert.AreEqual(original.Machine.BufferedMemory.PhysicalMemory.ReadRaw(address),
                     max.Machine.BufferedMemory.PhysicalMemory.ReadRaw(address));
         }
+        if (model == MemoryModel.Mapped)
+        {
+            CollectionAssert.AreEqual(original.Machine.MappedMemory!.GetOperandSnapshot(), max.Machine.MappedMemory!.GetOperandSnapshot());
+            CollectionAssert.AreEqual(original.Machine.MappedMemory.GetInstructionSnapshot(), max.Machine.MappedMemory.GetInstructionSnapshot());
+            for (uint address = 0; address < 32768; address++)
+                Assert.AreEqual(original.Machine.MappedMemory.PhysicalMemory.ReadRaw(address), max.Machine.MappedMemory.PhysicalMemory.ReadRaw(address));
+        }
     }
 
     [TestMethod]
     [DataRow(MemoryModel.Dubna, 7u)]
     [DataRow(MemoryModel.Buffered, 3u)]
+    [DataRow(MemoryModel.Mapped, 3u)]
     public void SelfModificationShowsTheSelectedMemoryVisibility(MemoryModel model, uint expected)
     {
         var machine = new MachineCore(memoryModel: model);
@@ -186,6 +197,7 @@ public sealed class MemoryModelTests
     [TestMethod]
     [DataRow(MemoryModel.Dubna)]
     [DataRow(MemoryModel.Buffered)]
+    [DataRow(MemoryModel.Mapped)]
     public void HostedCtxPublishesCommandAndRefreshesNextFetch(MemoryModel model)
     {
         var machine = new MachineCore(memoryModel: model);
