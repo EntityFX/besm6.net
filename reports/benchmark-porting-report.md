@@ -431,7 +431,7 @@ Simulation did not terminate (instruction limit reached).
 6. Система команд БЭСМ-6. Руководство. Разделы 3.4, 3.7 (`book/03-instruction-set.md` в составе дистрибутива ОС «Дубна»).
 7. Черемных С. В., Гиглавый А. В., Поляк Ю. Е. От микропроцессоров к персональным компьютерам. М.: Радио и связь, 1988.
 8. CIA. Soviet Computer Performance Estimates. 1980s.
-9. Фортран-ГДР на БЭСМ-6: синтаксис и ограничения. `docs/fortran-gdr.md`.
+9. Фортран-ГДР на БЭСМ-6: синтаксис и ограничения. `docs/dubna-languages.md`.
 10. Портирование MP-MFLOPS на БЭСМ-6. См. раздел этого же отчёта.
 
 ---
@@ -614,7 +614,7 @@ VAX MIPS rating:                    2.1881
 | Файл | Назначение |
 |:---|:---|
 | `examples/dhrystone-baseline-ftn.dub` | порт на Фортран-ГДР, вариант `NUMBER = 0` (baseline) |
-| `docs/fortran-gdr.md` | справочник по синтаксису и ограничениям Фортран-ГДР |
+| `docs/dubna-languages.md` | справочник по синтаксису и ограничениям Фортран-ГДР |
 
 Ядро эмулятора и профайлер не изменялись: оба порта используют существующий read-only хук.
 
@@ -1084,7 +1084,7 @@ Whetstone портирован на БЭСМ-6 двумя независимым
 2. H. Curnow. The Whetstone Benchmark. CCTA, 1972.
 3. B. J. Wichmann. Whetstone. NPL, 1960-е.
 4. R. Longbottom. Whetstone Benchmark in C/C++. 1996. — файл `whets.c`, каталог `anybench/src/benchmarks/generic/whetstone`.
-5. Документация ограничений трансляторов: `docs/fortran-gdr.md`, `docs/dubna-languages.md` репозитория.
+5. Документация ограничений трансляторов: `docs/dubna-languages.md` репозитория.
 6. Копытов М.А. ЭВМ БЭСМ-6 и ее программное обеспечение. — М.: РАН. — URL: https://www.ras.ru/ph/0005/QD9ZTSY1.pdf
 7. BESM-6 — Wikipedia. — URL: https://en.wikipedia.org/wiki/BESM-6
 8. Сборка и запуск эмулятора БЭСМ-6. — URL: https://www.besm6.org/wiki/Building
@@ -1600,7 +1600,7 @@ STREAM портирован на БЭСМ-6 двумя независимыми 
 1. Симулятор БЭСМ-6 / ОС «Дубна» `besm6.net` — исходные тексты и документация репозитория.
 2. STREAM Run Rules — http://www.cs.virginia.edu/stream/ref.html
 3. J. D. McCalpin. STREAM: Sustainable Memory Bandwidth and Sustained Performance. — исходные тексты `stream.c`, `stream.f` версии 5.6.
-4. Документация Фортрана-ГДР и ограничения трансляторов: `docs/fortran-gdr.md` репозитория.
+4. Документация Фортрана-ГДР и ограничения трансляторов: `docs/dubna-languages.md` репозитория.
 5. Сопоставление языков ОС «Дубна»: `docs/dubna-languages.md` репозитория.
 
 ---

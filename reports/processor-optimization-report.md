@@ -260,7 +260,7 @@ dotnet build Besm6.sln -c Release
 python tools/benchmark_speed.py --baseline-dll tmp/besm6-speed/baseline/besm6.dll --output tests-run/speed-final
 ```
 
-[Настройка и CLI](../docs/execution-speed.md).
+[Настройка и CLI](../docs/besm6-machine.md).
 [Полные результаты и параметры среды](../tests-run/speed-final/results.json),
 [таблица CSV](../tests-run/speed-final/results.csv),
 [исходный вывод](../tests-run/speed-final/logs/).
@@ -821,8 +821,8 @@ RunLoaded включает гостевую компиляцию, выполне
 после STOP находятся вне секундомера. Полный CLI приведён отдельно.
 
 Код принят в `092634f`; подробный разбор архитектуры и реализации:
-[машина БЭСМ-6](../docs/besm6-machine-analysis.md),
-[исполнение на C#](../docs/besm6-csharp-analysis.md).
+[машина БЭСМ-6](../docs/besm6-machine.md),
+[исполнение на C#](../docs/besm6-machine.md).
 
 ### Что изменено
 
