@@ -8,17 +8,24 @@ internal sealed partial class HardwareProcessorModel
     private bool _arithmeticBindingTransition;
     private HardwareEventToken _boundCompletionEvent;
     private ArithmeticCommandWord? _boundCommandWord;
+    private bool _boundAutomaticCompletion;
     internal ArithmeticCommandWord? LastIssuedArithmeticCommand { get; private set; }
 
-    /// <summary>UU formation uses the shared immediate resolver; memory control supplies its allocated BRUS slot.</summary>
+    /// <summary>
+    /// UU formation uses the shared immediate resolver; memory control supplies
+    /// its allocated BRUS slot. Optional automatic completion admits only the
+    /// implemented fixed logical sequences, before taking CPU operand effects.
+    /// </summary>
     internal ArithmeticCommandHandle BindArithmeticInstruction(HardwareInstructionHandle instruction,
-        HardwareDuration cycle, bool operandReady, ArithmeticOperandBuffer? buffer = null)
+        HardwareDuration cycle, bool operandReady, ArithmeticOperandBuffer? buffer = null,
+        bool automaticCompletion = false)
     {
         EnsureBindableArithmetic(in instruction);
         var opcode = instruction.Instruction!.Value.Opcode;
         byte operand = ArithmeticCommandEncoding.IsImmediate(opcode)
             ? _processor.GetPreparedImmediateOperand(_pendingInstruction!.Value) : (byte)0;
-        return BindArithmeticInstruction(instruction, ArithmeticCommandEncoding.Encode(opcode, operand, buffer), cycle, operandReady);
+        return BindArithmeticInstruction(instruction, ArithmeticCommandEncoding.Encode(opcode, operand, buffer),
+            cycle, operandReady, automaticCompletion);
     }
 
     private void EnsureBindableArithmetic(in HardwareInstructionHandle instruction)
@@ -33,6 +40,8 @@ internal sealed partial class HardwareProcessorModel
     internal HardwareEventToken ScheduleBoundArithmeticCompletionAt(HardwareInstructionHandle instruction,
         HardwareInstant time)
     {
+        if (_boundAutomaticCompletion)
+            throw new InvalidOperationException("The controller owns the automatic arithmetic completion deadline.");
         if (!IsCurrent(in instruction) || _boundArithmetic is not { } controller ||
             _completionReady || _cancellationRequested || _capturingOperand || _publishingInstruction)
             throw new InvalidOperationException("No waiting arithmetic binding owns this completion signal.");
@@ -62,7 +71,7 @@ internal sealed partial class HardwareProcessorModel
 
     /// <summary>Use the documented AU interface source; encoding from a guest instruction is a separate UU responsibility.</summary>
     internal ArithmeticCommandHandle BindArithmeticInstruction(HardwareInstructionHandle instruction,
-        ArithmeticCommandWord command, HardwareDuration cycle, bool operandReady)
+        ArithmeticCommandWord command, HardwareDuration cycle, bool operandReady, bool automaticCompletion = false)
     {
         EnsureBindableArithmetic(in instruction);
         var route = command.Source switch
@@ -82,14 +91,17 @@ internal sealed partial class HardwareProcessorModel
         }
         else if (!Enum.IsDefined((ArithmeticOperandBufferKind)(command.Raw & 0x38)))
             throw new ArgumentException("Mixed AU buffer-class flags have no assigned control priority.", nameof(command));
-        var handle = BindArithmeticInstructionCore(instruction, command.Raw, cycle, operandReady, route);
+        HardwareDuration? delay = automaticCompletion ? ArithmeticFixedCompletionTiming.Duration(opcode, cycle) : null;
+        var handle = BindArithmeticInstructionCore(instruction, command.Raw, cycle, operandReady, route, delay);
         _boundCommandWord = command;
+        _boundAutomaticCompletion = automaticCompletion;
         LastIssuedArithmeticCommand = command;
         return handle;
     }
 
     private ArithmeticCommandHandle BindArithmeticInstructionCore(HardwareInstructionHandle instruction,
-        uint code, HardwareDuration cycle, bool operandReady, ArithmeticOperandRoute route)
+        uint code, HardwareDuration cycle, bool operandReady, ArithmeticOperandRoute route,
+        HardwareDuration? completionDelay = null)
     {
         EnsureBindableArithmetic(in instruction);
         bool immediate = instruction.Instruction!.Value.Opcode is Opcode.EPlusN or Opcode.EMinusN;
@@ -97,7 +109,8 @@ internal sealed partial class HardwareProcessorModel
             throw new ArgumentException("The AU operand source does not match the shared CPU instruction.", nameof(route));
         var controller = CreateArithmeticController(cycle);
         if (!controller.TryBind(this, code, () => SampleBoundOperand(instruction), operandReady,
-            _processor.GetA(), _processor.GetY(), transition => AcceptBoundTransition(instruction, transition), out var command, route))
+            _processor.GetA(), _processor.GetY(), transition => AcceptBoundTransition(instruction, transition),
+            out var command, route, completionDelay, () => IsCurrent(in instruction) && !_cancellationRequested))
             throw new InvalidOperationException("The idle arithmetic controller could not receive its CPU command.");
         _boundArithmetic = controller;
         return command;
@@ -146,6 +159,7 @@ internal sealed partial class HardwareProcessorModel
         Timeline.Cancel(_boundCompletionEvent);
         _boundCompletionEvent = default;
         _boundCommandWord = null;
+        _boundAutomaticCompletion = false;
         _boundArithmetic = null;
     }
 }

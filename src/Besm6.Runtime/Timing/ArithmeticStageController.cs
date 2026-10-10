@@ -15,21 +15,24 @@ internal sealed class ArithmeticStageObserverException(ArithmeticStageTransition
 /// <summary>
 /// АУ — арифметическое устройство; БАК — буфер арифметических команд.
 /// Owns the logical selection/PVR/SPOP sequence, using TO-3 §3.7's two
-/// explicitly distinguished buffer-transfer phases. RPK and IZOP remain input
-/// signals: no average instruction duration or opcode-to-17-bit mapping is used.
+/// explicitly distinguished buffer-transfer phases. RPK remains an input signal;
+/// IZOP is explicit by default, or owned by a supplied fixed completion sequence.
+/// No average instruction duration or opcode-to-17-bit mapping is used here.
 /// Operand data is sampled once at PVR, not when the command enters BAK.
 /// The caller must route all changes to the owned unit through this controller.
 /// </summary>
 internal sealed class ArithmeticStageController
 {
     private sealed class Entry(ArithmeticCommandHandle handle, uint code,
-        Func<PreparedArithmeticOperation?> sampleOperand, bool ready, ArithmeticOperandRoute route)
+        Func<PreparedArithmeticOperation?> sampleOperand, bool ready, ArithmeticOperandRoute route,
+        HardwareDuration? completionDelay)
     {
         internal readonly ArithmeticCommandHandle Handle = handle;
         internal readonly uint Code = code;
         internal readonly Func<PreparedArithmeticOperation?> SampleOperand = sampleOperand;
         internal bool Ready = ready;
         internal readonly ArithmeticOperandRoute Route = route;
+        internal readonly HardwareDuration? CompletionDelay = completionDelay;
     }
 
     private readonly HardwareTimeline _timeline;
@@ -39,11 +42,14 @@ internal sealed class ArithmeticStageController
     private readonly Dictionary<ulong, Entry> _live = new();
     private Entry? _selected, _prepared, _active;
     private HardwareEventToken _acceptEvent, _startEvent;
+    private HardwareEventToken _completionEvent;
+    internal HardwareInstant? NextCompletionTime { get; private set; }
     private bool _transferElapsed, _changing;
     private ulong _sequence;
     internal Action<ArithmeticStageTransition>? Transitioned { get; set; }
     private Action<ArithmeticStageTransition>? _boundTransition;
     private object? _bindingOwner;
+    private Func<bool>? _bindingCurrent;
     internal ArithmeticStageTransition? LastTransition { get; private set; }
     internal int QueuedCommands => _waiting.Count;
     internal ArithmeticCommandHandle? PreparedCommand => _prepared?.Handle;
@@ -80,12 +86,14 @@ internal sealed class ArithmeticStageController
     internal bool TryBind(object owner, uint code, Func<PreparedArithmeticOperation?> sampleOperand,
         bool operandReady, Word48 accumulator, Word48 lowRegister,
         Action<ArithmeticStageTransition> transition, out ArithmeticCommandHandle command,
-        ArithmeticOperandRoute route = ArithmeticOperandRoute.Buffered)
+        ArithmeticOperandRoute route = ArithmeticOperandRoute.Buffered, HardwareDuration? completionDelay = null,
+        Func<bool>? bindingCurrent = null)
     {
         ArgumentNullException.ThrowIfNull(owner);
         ArgumentNullException.ThrowIfNull(transition);
         ArgumentNullException.ThrowIfNull(sampleOperand);
         if (!Enum.IsDefined(route)) throw new ArgumentOutOfRangeException(nameof(route));
+        if (completionDelay is { Nanoseconds: 0 }) throw new ArgumentOutOfRangeException(nameof(completionDelay));
         if (_changing || _bindingOwner is not null || _live.Count != 0)
             throw new InvalidOperationException("CPU binding requires an idle unowned arithmetic controller.");
         // Validate before taking ownership or changing the cached register boundary.
@@ -93,8 +101,9 @@ internal sealed class ArithmeticStageController
         if (operandReady && route == ArithmeticOperandRoute.Buffered) _transfer.AcceptFromReadyBuffer(_timeline.Now);
         _unit.SynchronizeIdleRegisters(accumulator, lowRegister);
         _bindingOwner = owner;
+        _bindingCurrent = bindingCurrent;
         _boundTransition = transition;
-        try { return TryEnqueueOperand(code, sampleOperand, operandReady, out command, route); }
+        try { return TryEnqueueOperand(code, sampleOperand, operandReady, out command, route, completionDelay); }
         catch { ReleaseBinding(owner); throw; }
     }
 
@@ -106,6 +115,7 @@ internal sealed class ArithmeticStageController
             if (_live.Count != 0) _unit.DiscardLogicalRequest();
             _timeline.Cancel(_acceptEvent);
             _timeline.Cancel(_startEvent);
+            CancelCompletion();
             _acceptEvent = _startEvent = default;
             _waiting.Clear();
             _live.Clear();
@@ -113,11 +123,13 @@ internal sealed class ArithmeticStageController
             _transferElapsed = false;
             _boundTransition = null;
             _bindingOwner = null;
+            _bindingCurrent = null;
         });
     }
 
     private bool TryEnqueueOperand(uint code, Func<PreparedArithmeticOperation?> sampleOperand,
-        bool operandReady, out ArithmeticCommandHandle command, ArithmeticOperandRoute route = ArithmeticOperandRoute.Buffered)
+        bool operandReady, out ArithmeticCommandHandle command, ArithmeticOperandRoute route = ArithmeticOperandRoute.Buffered,
+        HardwareDuration? completionDelay = null)
     {
         ArithmeticCommandHandle added = default;
         Change(() =>
@@ -127,7 +139,7 @@ internal sealed class ArithmeticStageController
             if (_waiting.Count == 0 && operandReady && route == ArithmeticOperandRoute.Buffered) _transfer.AcceptFromReadyBuffer(_timeline.Now);
             if (!_unit.TryReceiveCommand(code)) return;
             added = new(this, sequence);
-            var entry = new Entry(added, code, sampleOperand, operandReady, route);
+            var entry = new Entry(added, code, sampleOperand, operandReady, route, completionDelay);
             _waiting.Enqueue(entry);
             _live.Add(sequence, entry);
             _sequence = sequence;
@@ -237,7 +249,29 @@ internal sealed class ArithmeticStageController
         _startEvent = _timeline.ScheduleAt(_timeline.Now, () => Change(() =>
         {
             _startEvent = default;
-            if (_prepared is not { } entry || _active is not null || !_unit.TryStartOperation()) return;
+            if (_prepared is not { } entry || _active is not null) return;
+            // Validate and register the owned deadline before changing the AU.
+            // Overflow/registration failure leaves its prepared operand resumable.
+            HardwareInstant? due = entry.CompletionDelay is { } delay ? _timeline.Now + delay : null;
+            HardwareEventToken completion = default;
+            if (due is { } time)
+                completion = _timeline.ScheduleAt(time, () => Change(() =>
+                {
+                    if (_active?.Handle != entry.Handle || _completionEvent != completion) return;
+                    _completionEvent = default;
+                    NextCompletionTime = null;
+                    // A reset/cancel may precede the driver's retirement boundary.
+                    // Consume this stale signal without changing the AU output.
+                    if (_bindingCurrent?.Invoke() == false) return;
+                    CompleteActiveOperation();
+                }));
+            try
+            {
+                if (!_unit.TryStartOperation()) { _timeline.Cancel(completion); return; }
+            }
+            catch { _timeline.Cancel(completion); throw; }
+            _completionEvent = completion;
+            NextCompletionTime = due;
             _prepared = null;
             _active = entry;
             Progress();
@@ -245,8 +279,15 @@ internal sealed class ArithmeticStageController
         }));
     }
 
-    /// <summary>IZOP supplied by a verified operation microsequence, not a tabular timer.</summary>
+    /// <summary>Explicit IZOP for operations without an owned fixed completion sequence.</summary>
     internal void CompleteOperation() => Change(() =>
+    {
+        if (_completionEvent != default)
+            throw new InvalidOperationException("The automatic sequence owns this operation's IZOP.");
+        CompleteActiveOperation();
+    });
+
+    private void CompleteActiveOperation()
     {
         if (_active is not { } entry) throw new InvalidOperationException("IZOP requires an active controller command.");
         uint code = _unit.CompleteOperation();
@@ -256,7 +297,14 @@ internal sealed class ArithmeticStageController
         // Register successor start before notifying: an observer failure cannot lose it.
         Progress();
         Publish(entry, ArithmeticStageTransitionKind.Completed);
-    });
+    }
+
+    private void CancelCompletion()
+    {
+        _timeline.Cancel(_completionEvent);
+        _completionEvent = default;
+        NextCompletionTime = null;
+    }
 
     internal void ApplyGeneralClearSignal() => Change(() =>
     {
@@ -264,6 +312,7 @@ internal sealed class ArithmeticStageController
             throw new InvalidOperationException("A CPU-bound request requires its owner's cancellation boundary.");
         _timeline.Cancel(_acceptEvent);
         _timeline.Cancel(_startEvent);
+        CancelCompletion();
         _acceptEvent = _startEvent = default;
         _waiting.Clear();
         _live.Clear();
