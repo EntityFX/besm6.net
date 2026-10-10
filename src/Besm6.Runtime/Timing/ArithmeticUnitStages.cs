@@ -14,7 +14,9 @@ internal readonly record struct ArithmeticUnitFault(
 /// instruction cost, physical accumulator register layout, or CPU retirement is
 /// inferred here. The §3.28 divisor check is at 2.5 supplied cycles from SPOP;
 /// invalid-divisor UDO follows at three cycles, rather than at host evaluation.
-/// Error-policy recovery and input control checking belong to the subsequent driver.
+/// Error control is optional for the developing driver; default construction
+/// retains the previous Dubna-compatible overflow flag. The physical mode uses
+/// the shared arithmetic cause before OvfDisable delivery suppression.
 /// </summary>
 internal sealed class ArithmeticUnitStages
 {
@@ -26,6 +28,8 @@ internal sealed class ArithmeticUnitStages
     private NormalizedArithmeticResult _completedResult;
     private bool _outputReady = true;
     private bool _divisionInProgress;
+    private bool _invalidDivisorIndicated;
+    private readonly List<HardwareEventToken> _divisionEvents = new();
 
     internal HardwareDuration Cycle { get; }
     internal int QueuedCommands => _control.Commands.Count;
@@ -36,16 +40,18 @@ internal sealed class ArithmeticUnitStages
     internal HardwareInstant? CompletedAt { get; private set; }
     internal HardwareInstant? DivisorCheckedAt { get; private set; }
     internal ArithmeticUnitFault? Fault { get; private set; }
-    internal bool Interrupted => Fault.HasValue;
+    internal ArithmeticErrorControl? Errors { get; }
+    internal bool Interrupted => Errors?.BlocksNextOperation ?? Fault.HasValue;
 
     internal ArithmeticUnitStages(HardwareTimeline timeline, HardwareDuration cycle,
-        Word48 initialAccumulator, Word48 initialLowRegister)
+        Word48 initialAccumulator, Word48 initialLowRegister, ArithmeticErrorPolicy? errorPolicy = null)
     {
         ArgumentNullException.ThrowIfNull(timeline);
         if (cycle.Nanoseconds == 0 || (cycle.Nanoseconds & 1) != 0)
             throw new ArgumentOutOfRangeException(nameof(cycle), "A positive even cycle is required.");
         _timeline = timeline;
         Cycle = cycle;
+        Errors = errorPolicy is { } policy ? new(timeline, cycle, policy) : null;
         _completedResult = new(initialAccumulator, initialLowRegister, false, false);
     }
 
@@ -64,7 +70,7 @@ internal sealed class ArithmeticUnitStages
 
     internal bool TryStartOperation()
     {
-        if (Interrupted || ActiveCommand.HasValue || !_preparedOperation.HasValue) return false;
+        if (Interrupted || ActiveCommand.HasValue || !_preparedOperation.HasValue || !_outputReady) return false;
         var operation = _preparedOperation.Value;
         NormalizedArithmeticResult result = default;
         ProcessorException? failure = null;
@@ -72,7 +78,8 @@ internal sealed class ArithmeticUnitStages
         HardwareInstant? invalidDivisorAt = null;
         if (operation.IsDivision)
             divisorCheckAt = _timeline.Now + new HardwareDuration(checked(Cycle.Nanoseconds * 2 + Cycle.Nanoseconds / 2));
-        try { result = operation.Evaluate(_completedResult.A, _completedResult.Y); }
+        try { result = Errors is null ? operation.Evaluate(_completedResult.A, _completedResult.Y) :
+                operation.EvaluateForErrorControl(_completedResult.A, _completedResult.Y); }
         catch (ProcessorException cause) when (operation.IsDivision)
         {
             // Calculation knows the cause early; the physical indication is later.
@@ -80,18 +87,25 @@ internal sealed class ArithmeticUnitStages
             invalidDivisorAt = _timeline.Now + new HardwareDuration(checked(Cycle.Nanoseconds * 3));
         }
         HardwareEventToken checkToken = default;
+        HardwareEventToken indicationToken = default;
         try
         {
             if (divisorCheckAt is { } checkAt)
                 checkToken = _timeline.ScheduleAt(checkAt, () => DivisorCheckedAt = _timeline.Now);
             if (invalidDivisorAt is { } due)
-                _timeline.ScheduleAt(due, () =>
-                    Fault = new(ArithmeticUnitFaultKind.InvalidDivisor, _timeline.Now, failure));
+                indicationToken = _timeline.ScheduleAt(due, () =>
+                {
+                    _invalidDivisorIndicated = true;
+                    Errors?.IndicateInvalidDivisor();
+                    Fault = new(ArithmeticUnitFaultKind.InvalidDivisor, _timeline.Now, failure);
+                });
+            Errors?.BeginOperation();
         }
         catch
         {
             // Keep the prepared operation intact if registering its events fails.
             _timeline.Cancel(checkToken);
+            _timeline.Cancel(indicationToken);
             throw;
         }
         if (!_control.TryStartOperation())
@@ -101,6 +115,10 @@ internal sealed class ArithmeticUnitStages
         _calculationFailure = failure;
         _outputReady = false;
         _divisionInProgress = operation.IsDivision;
+        _invalidDivisorIndicated = false;
+        _divisionEvents.Clear();
+        if (checkToken != default) _divisionEvents.Add(checkToken);
+        if (indicationToken != default) _divisionEvents.Add(indicationToken);
         DivisorCheckedAt = null;
         StartedAt = _timeline.Now;
         return true;
@@ -111,8 +129,11 @@ internal sealed class ArithmeticUnitStages
     {
         if (_divisionInProgress && !DivisorCheckedAt.HasValue)
             throw new InvalidOperationException("Division completion precedes its divisor check.");
-        if (_calculationFailure is not null && !Fault.HasValue)
+        if (_calculationFailure is not null && !_invalidDivisorIndicated)
             throw new InvalidOperationException("Invalid-divisor completion precedes its error indication.");
+        // Error control validates/schedules its release before retiring the command.
+        if (ActiveCommand is null) throw new InvalidOperationException("IZOP requires an active operation.");
+        Errors?.CompleteOperation(_calculationFailure is null && _calculatedResult.Overflow);
         uint command = _control.CompleteOperation();
         _divisionInProgress = false;
         CompletedAt = _timeline.Now;
@@ -124,6 +145,26 @@ internal sealed class ArithmeticUnitStages
                 Fault = new(ArithmeticUnitFaultKind.Overflow, _timeline.Now, null);
         }
         return command;
+    }
+
+    /// <summary>
+    /// Receives the general-clear signal at the microsequence's chosen instant.
+    /// Clears A/Y and command rings; does not infer the eight-cycle pulse sequence.
+    /// </summary>
+    internal void ApplyGeneralClearSignal()
+    {
+        foreach (var token in _divisionEvents) _timeline.Cancel(token);
+        _divisionEvents.Clear();
+        Errors?.ApplyGeneralClearSignal();
+        _control.ApplyGeneralClearSignal();
+        _preparedOperation = null;
+        _calculationFailure = null;
+        _calculatedResult = default;
+        _completedResult = default;
+        _outputReady = true;
+        _divisionInProgress = _invalidDivisorIndicated = false;
+        StartedAt = CompletedAt = DivisorCheckedAt = null;
+        Fault = null;
     }
 
     /// <summary>

@@ -45,16 +45,24 @@ internal readonly struct PreparedArithmeticOperation
         new(Operation.ChangeSign, Word48.Zero, mode, negateAccumulator);
 
     internal NormalizedArithmeticResult Evaluate(Word48 accumulator, Word48 lowRegister) =>
+        Evaluate(accumulator, lowRegister, _mode);
+
+    // АУ: the physical error controller owns overflow suppression, independently
+    // of Dubna's delivery flag. The same arithmetic is evaluated once.
+    internal NormalizedArithmeticResult EvaluateForErrorControl(Word48 accumulator, Word48 lowRegister) =>
+        Evaluate(accumulator, lowRegister, _mode & ~(uint)RFlags.OvfDisable);
+
+    private NormalizedArithmeticResult Evaluate(Word48 accumulator, Word48 lowRegister, uint mode) =>
         _operation switch
         {
-            Operation.Add => AdditiveOperations.EvaluateAdd(accumulator, lowRegister, _mode,
+            Operation.Add => AdditiveOperations.EvaluateAdd(accumulator, lowRegister, mode,
                 _operand, _negateAccumulator, _negateOperand),
             Operation.Multiply => MultiplicativeOperations.EvaluateMultiply(accumulator, lowRegister,
-                _mode, _operand),
+                mode, _operand),
             Operation.Divide => MultiplicativeOperations.EvaluateDivide(accumulator, lowRegister,
-                _mode, _operand),
-            Operation.AddExponent => AdditiveOperations.EvaluateAddExponent(accumulator, _mode, _exponentDelta),
-            Operation.ChangeSign => AdditiveOperations.EvaluateChangeSign(accumulator, _mode, _negateAccumulator),
+                mode, _operand),
+            Operation.AddExponent => AdditiveOperations.EvaluateAddExponent(accumulator, mode, _exponentDelta),
+            Operation.ChangeSign => AdditiveOperations.EvaluateChangeSign(accumulator, mode, _negateAccumulator),
             _ => throw new InvalidOperationException("Unknown prepared arithmetic operation.")
         };
 }

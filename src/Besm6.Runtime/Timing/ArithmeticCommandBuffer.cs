@@ -60,4 +60,11 @@ public sealed class ArithmeticCommandBuffer
         for (int i = 0; i < result.Length; i++) result[i] = _commands[(_issue + i) % Capacity];
         return result;
     }
+
+    /// <summary>Actual general-clear signal; both rings return to the first register.</summary>
+    internal void ApplyGeneralClearSignal()
+    {
+        Array.Clear(_commands);
+        _receive = _issue = Count = 0;
+    }
 }
