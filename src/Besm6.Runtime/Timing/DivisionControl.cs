@@ -23,11 +23,13 @@ internal sealed class DivisionControl
     private HardwareEventToken _arrival;
     private HardwareInstant? _nextSampleAt;
     private bool _stopped;
+    private bool _sampleShifted;
 
     internal bool PreviousActionWasAdd { get; private set; }
     internal DivisionControlSample? LatestSample { get; private set; }
     internal DivisionControlSample? AvailableMainRemainder { get; private set; }
     internal bool HasPendingMainRemainder => _arrival != default;
+    internal DivisionQuotientParts QuotientParts { get; private set; }
 
     internal DivisionControl(HardwareTimeline timeline, HardwareDuration cycle,
         bool dividendNegative, bool divisorNegative)
@@ -78,9 +80,24 @@ internal sealed class DivisionControl
         _arrival = token;
         _nextSampleAt = nextSampleAt;
         LatestSample = sample;
+        _sampleShifted = false;
         // TO-3 printed sheet 100: shift-only clears the preceding-add latch too.
         PreviousActionWasAdd = action == DivisionAction.AddDivisor;
         return sample;
+    }
+
+    /// <summary>
+    /// Receives the quotient-register shift pulse for the latest decoded action.
+    /// Its physical phase is supplied by the caller, not inferred from arrival
+    /// of the main remainder. At most one shift is accepted for a sample.
+    /// </summary>
+    internal void ShiftQuotientParts()
+    {
+        if (_stopped || LatestSample is not { } sample || _sampleShifted)
+            throw new InvalidOperationException("A quotient shift requires an unconsumed active control sample.");
+        var next = QuotientParts.Shift(sample.Action);
+        QuotientParts = next;
+        _sampleShifted = true;
     }
 
     internal void Stop()
