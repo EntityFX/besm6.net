@@ -41,6 +41,7 @@ internal sealed class ArithmeticUnitStages
     internal HardwareInstant? DivisorCheckedAt { get; private set; }
     internal ArithmeticUnitFault? Fault { get; private set; }
     internal ArithmeticErrorControl? Errors { get; }
+    internal DivisionControl? Division { get; private set; }
     internal bool Interrupted => Errors?.BlocksNextOperation ?? Fault.HasValue;
 
     internal ArithmeticUnitStages(HardwareTimeline timeline, HardwareDuration cycle,
@@ -121,6 +122,8 @@ internal sealed class ArithmeticUnitStages
         if (indicationToken != default) _divisionEvents.Add(indicationToken);
         DivisorCheckedAt = null;
         StartedAt = _timeline.Now;
+        Division = operation.IsDivision ? new(_timeline, Cycle,
+            (_completedResult.A.Value & (1UL << 40)) != 0, operation.DivisionOperandNegative) : null;
         return true;
     }
 
@@ -133,8 +136,11 @@ internal sealed class ArithmeticUnitStages
             throw new InvalidOperationException("Invalid-divisor completion precedes its error indication.");
         // Error control validates/schedules its release before retiring the command.
         if (ActiveCommand is null) throw new InvalidOperationException("IZOP requires an active operation.");
+        if (Division?.HasPendingMainRemainder == true)
+            throw new InvalidOperationException("Division completion precedes a sampled main remainder.");
         Errors?.CompleteOperation(_calculationFailure is null && _calculatedResult.Overflow);
         uint command = _control.CompleteOperation();
+        Division?.Stop();
         _divisionInProgress = false;
         CompletedAt = _timeline.Now;
         if (_calculationFailure is null)
@@ -155,6 +161,8 @@ internal sealed class ArithmeticUnitStages
     {
         foreach (var token in _divisionEvents) _timeline.Cancel(token);
         _divisionEvents.Clear();
+        Division?.Stop();
+        Division = null;
         Errors?.ApplyGeneralClearSignal();
         _control.ApplyGeneralClearSignal();
         _preparedOperation = null;

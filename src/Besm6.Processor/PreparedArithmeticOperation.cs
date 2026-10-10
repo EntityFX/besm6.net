@@ -28,6 +28,9 @@ internal readonly struct PreparedArithmeticOperation
 
     internal bool IsDivision => _operation == Operation.Divide;
 
+    internal bool DivisionOperandNegative => IsDivision ? (_operand.Value & (1UL << 40)) != 0 :
+        throw new InvalidOperationException("A divisor sign requires a division operation.");
+
     internal static PreparedArithmeticOperation Add(Word48 operand, uint mode,
         bool negateAccumulator = false, bool negateOperand = false) =>
         new(Operation.Add, operand, mode, negateAccumulator, negateOperand);
