@@ -38,6 +38,7 @@ namespace Besm6.Runtime
         public const ulong TicksPerInstruction = 1;
 
         private readonly Execution.FunctionalProcessorSimulation _simulation;
+        private readonly Execution.ProcessorExecutionOwnership _executionOwnership;
         private Modeling.HardwareProcessorModel? _hardwareModel;
 
         /// <summary>
@@ -62,18 +63,7 @@ namespace Besm6.Runtime
             {
                 if (_hardwareModel is not null) return _hardwareModel;
                 var model = new Modeling.HardwareProcessorModel(Cpu);
-                model.Timeline.AdvancementProhibited = _simulation.Scheduler.IsAdvancing;
-                model.Timeline.AdvanceStateChanged = active =>
-                {
-                    Cpu.ExecutionProhibited = active;
-                    _simulation.Scheduler.AdvancementProhibited = active || model.IsDriving;
-                    _simulation.Clock.AdvancementProhibited = active || model.IsDriving;
-                };
-                model.ExecutionStateChanged = active =>
-                {
-                    _simulation.Scheduler.AdvancementProhibited = active || model.Timeline.IsAdvancing;
-                    _simulation.Clock.AdvancementProhibited = active || model.Timeline.IsAdvancing;
-                };
+                _executionOwnership.Attach(model);
                 return _hardwareModel = model;
             }
         }
@@ -177,11 +167,7 @@ namespace Besm6.Runtime
 
             // B1: планировщик событий привязан к тем же модельным часам машины.
             _simulation = new(Cpu, Memory);
-            _simulation.Scheduler.AdvanceStateChanged = active =>
-            {
-                Cpu.ExecutionProhibited = active;
-                if (_hardwareModel is { } model) model.Timeline.AdvancementProhibited = active;
-            };
+            _executionOwnership = new(Cpu, _simulation);
             if (Cpu.Supervisor is { } supervisor)
             {
                 SupervisorIo = new SupervisorIoController(MappedMemory!, _simulation.Scheduler, () => { });
