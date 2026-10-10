@@ -29,9 +29,11 @@ internal sealed class ArithmeticUnitStages
     private bool _outputReady = true;
     private bool _divisionInProgress;
     private bool _invalidDivisorIndicated;
+    private bool _controllerAttached;
     private readonly List<HardwareEventToken> _divisionEvents = new();
 
     internal HardwareDuration Cycle { get; }
+    internal HardwareTimeline Timeline => _timeline;
     internal int QueuedCommands => _control.Commands.Count;
     internal uint? ActiveCommand => _control.ActiveCommand;
     internal uint? PreparedCommand => _control.PreparedCommand;
@@ -43,6 +45,13 @@ internal sealed class ArithmeticUnitStages
     internal ArithmeticErrorControl? Errors { get; }
     internal DivisionControl? Division { get; private set; }
     internal bool Interrupted => Errors?.BlocksNextOperation ?? Fault.HasValue;
+
+    internal void AttachController()
+    {
+        if (_controllerAttached || QueuedCommands != 0 || PreparedCommand.HasValue || ActiveCommand.HasValue)
+            throw new InvalidOperationException("The arithmetic controller requires an unowned idle command pipeline.");
+        _controllerAttached = true;
+    }
 
     internal ArithmeticUnitStages(HardwareTimeline timeline, HardwareDuration cycle,
         Word48 initialAccumulator, Word48 initialLowRegister, ArithmeticErrorPolicy? errorPolicy = null)
