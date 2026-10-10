@@ -71,6 +71,36 @@ internal sealed class ArithmeticUnitStages
 
     internal void GrantCommandPermission() => _control.GrantCommandPermission();
 
+    internal bool TryRejectOperand() => _control.TryRejectOperand();
+
+    internal void SynchronizeIdleRegisters(Word48 accumulator, Word48 lowRegister)
+    {
+        if (Errors is not null || QueuedCommands != 0 || PreparedCommand.HasValue || ActiveCommand.HasValue)
+            throw new InvalidOperationException("Register synchronization requires idle Dubna-compatible stages.");
+        _completedResult = new(accumulator, lowRegister, false, false);
+        _outputReady = true;
+        Fault = null;
+    }
+
+    /// <summary>Abandon a host-owned logical request; preserve completed A/Y and external events.</summary>
+    internal void DiscardLogicalRequest()
+    {
+        if (Errors is not null)
+            throw new InvalidOperationException("Physical error control requires its documented cancellation sequence.");
+        foreach (var token in _divisionEvents) _timeline.Cancel(token);
+        _divisionEvents.Clear();
+        Division?.Stop();
+        Division = null;
+        _control.DiscardLogicalRequest();
+        _preparedOperation = null;
+        _calculationFailure = null;
+        _calculatedResult = default;
+        _outputReady = true;
+        _divisionInProgress = _invalidDivisorIndicated = false;
+        StartedAt = CompletedAt = DivisorCheckedAt = null;
+        Fault = null;
+    }
+
     internal bool TryAcceptOperand(PreparedArithmeticOperation operation, bool operandReady)
     {
         if (Interrupted || !_control.TryAcceptOperand(operandReady)) return false;

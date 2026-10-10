@@ -108,6 +108,9 @@ namespace Besm6.Core
             Reset();
         }
 
+        internal bool CanCaptureArithmeticOperand(in InstructionExecutor.PreparedInstruction instruction) =>
+            _executor.CanCaptureArithmeticOperand(in instruction);
+
         public void Reset()
         {
             _executor.InvalidatePreparedInstruction();

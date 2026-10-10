@@ -24,6 +24,10 @@ public sealed partial class InstructionExecutor
         IsPreparedInstructionActive(in instruction) && _arithmeticCaptured &&
         _operandFailure is null && _arithmeticFailure is null && !_arithmeticResult.HasValue;
 
+    internal bool CanCaptureArithmeticOperand(in PreparedInstruction instruction) =>
+        IsPreparedInstructionActive(in instruction) && !_arithmeticCaptured && !_terminalPreparation &&
+        _prepared.ShouldExecute && MemoryInstructionExecutor.CanCaptureArithmetic(_prepared.Instruction.Opcode);
+
     /// <summary>
     /// PVR input: the same opcode/address/stack handler captures a single operand
     /// and mode. A/Y and completion diagnostics remain unpublished. A failed read
