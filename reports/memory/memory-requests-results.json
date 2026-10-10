@@ -1,0 +1,107 @@
+{
+  "stage": 3,
+  "stage_complete": false,
+  "milestone": "Memory request format, late translation and host-coordinated mapping changes",
+  "baseline_commit": "3407eb2",
+  "new_cases": 10,
+  "exhaustive_addresses_per_mode": 32768,
+  "hardware_memory_cases_passed": 340,
+  "passed": 2198,
+  "failed": 0,
+  "existing_skipped": 3,
+  "cern_active": 397,
+  "cern_passed": 397,
+  "golden": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "by_status": {
+      "OK": 3
+    }
+  },
+  "suites": [
+    {
+      "suite": "Besm6.Architecture.Tests",
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.Assembler.Tests",
+      "passed": 29,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.BitVisualizer.Tests",
+      "passed": 57,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.BitVisualizer.WinForms.Tests",
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.Cli.Tests",
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.Integration.Tests",
+      "passed": 426,
+      "failed": 0,
+      "skipped": 3
+    },
+    {
+      "suite": "Besm6.Processor.Tests",
+      "passed": 1288,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.Runtime.Tests",
+      "passed": 298,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.Tui.Tests",
+      "passed": 44,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "sources": [
+    {
+      "file": "control.pdf",
+      "sha256": "33521aab235c4a252f00c963a22d340138ec8990ddec38e22c81a89a6553bd74"
+    },
+    {
+      "file": "control-part2.pdf",
+      "sha256": "762f7b20a826a3bb94cd82c563c0533ea7edced8e46732dbc17870c052e60002"
+    },
+    {
+      "file": "instructions.pdf",
+      "sha256": "7412b2c1c90195e029fe5b0067e859ce6c6f846a780062de8ab6ab4f96b6c113"
+    }
+  ],
+  "unchanged_active_sources_sha256_lf": {
+    "src/Besm6.Processor/ProcessorMemoryAccess.cs": "0062a47775975ce9f2f1ef59893b598d97c1696c5115d3843198dbc5fdd4c899",
+    "src/Besm6.Processor/InstructionExecutor.cs": "2f254e3c2327a7609eff7ecf16df91b14958d476e7c3ed7adde14306b0109028",
+    "src/Besm6.Processor/BufferedMemory.cs": "4f17d556216e8242e4bdf0bde3ceb4df2eae536143354f675604c586d890498c",
+    "src/Besm6.Processor/BufferedMemoryBackend.cs": "8274134f242ab2ee0f71af72a864c4e3989292a072d6c34bc623f6dc9181d626",
+    "src/Besm6.Runtime/Loading/ExecutionLoop.cs": "29f0ee1fd823c00bfc1db17293a9dae6de9612ed84f5e38391fb9a6282f3e6c2"
+  },
+  "performance_remeasured": false,
+  "limitations": [
+    "CPU request path not connected",
+    "Physical BRZ/BRS backend preserved",
+    "MemoryRequestAddress does not define every BAZ/BAS comparison key",
+    "Host writeback coordinator does not implement AU serialization or privileged ZpR",
+    "1965 and 1967 queue details not merged into an inferred configuration"
+  ]
+}

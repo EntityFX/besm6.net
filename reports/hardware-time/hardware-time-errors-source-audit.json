@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-10",
+  "base_commit": "b3a259b",
+  "source": "TO-3 edition 1-65, section 3.28, sheets 64-68; general-clear sequence remains separate",
+  "pdf_sha256": "d5328d38db6485bf22bc2ccaf7f60051471e5715686fcf6a3b01a40764af1751",
+  "scans": [
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-34.png",
+      "sha256": "4260c809424c7faecdcd6460c55d4908bbf938a1ae7984b6e28efb29ae233a05"
+    },
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-35.png",
+      "sha256": "49eed975b47cb5800686f129272d5ef45f144f915792911e036a3ac9f660c04e"
+    },
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-36.png",
+      "sha256": "89d0db017056d88ca36a966cb12eaf653458fa1e4a93fe627a2a0e0c4a2c6ee2"
+    }
+  ],
+  "confirmed": [
+    "Input folding takes 1.5 cycles from the arrival of the input code",
+    "Input-error permission is enabled 2 cycles after the operation starts",
+    "Positive overflow is indicated at IZOP; the input-control interruption inhibits that indication",
+    "The source distinguishes four error modes and separate blocking of arithmetic causes",
+    "In continuing/reporting mode UDO ends at IZOP, AVP and UPr one cycle later",
+    "PSb/UOZ permits continuation after a held completed operation without general clear"
+  ],
+  "not_proven_or_not_implemented": [
+    "Electrical changes during input folding and all combined gate conditions",
+    "The eight-cycle general-clear microsequence and initial RPK chain",
+    "The physical output of invalid division in continuing modes",
+    "Physical BRUS cause-bit encoding, transfer and IU interrupt entry",
+    "Operand-dependent operation durations and CPU hardware retirement"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-10",
+  "base_commit": "0a9ccf1",
+  "files": [
+    {
+      "path": "src/Besm6.Runtime/Timing/ArithmeticStageController.cs",
+      "sha256": "da71435f20128ef966868a35c1f20f28533587c33002f31ee62a9acda196426f"
+    },
+    {
+      "path": "src/Besm6.Runtime/Timing/ArithmeticUnitStages.cs",
+      "sha256": "cacbc72154917892f1d6657dd901cb2b4461be4140238566b94d2a772cf8608e"
+    },
+    {
+      "path": "src/Besm6.Runtime/Modeling/HardwareProcessorModel.cs",
+      "sha256": "edcd904b1d9033e8ac9e95b889fe9505611daf88ce4ccf809db269272716b080"
+    },
+    {
+      "path": "tests/Besm6.Runtime.Tests/ArithmeticStageControllerTests.cs",
+      "sha256": "056c6e60355b7aaf320c4b1e37fd43dba94368216821d713fb3143d17698583e"
+    }
+  ],
+  "primary_evidence": {
+    "path": "docs/sources/hardware-time/arithmetic-pdf-20.png",
+    "sha256": "87e337d5408e3c0a095607fab87429de30778ee3c8d5b73568eb76581c1ea2f3",
+    "document": "TO-3 edition 1-65, section 3.7, sheet 37; PDF page 20",
+    "inspection": "local source spread visually inspected"
+  },
+  "boundaries": [
+    "Three cycles start at logical command selection with a ready buffer, not at late RPK.",
+    "One and a half cycles start at explicit release of the selected buffer-wait phase.",
+    "Unselected readiness is remembered; later selection starts the ready-buffer phase.",
+    "Logical PVR/SPOP dependencies use existing ArithmeticUnitStages; no electrical pulse reconstruction claimed.",
+    "Operand is sampled at PVR inside the unit pipeline; CPU still evaluates its own operand at instruction completion.",
+    "This is the read-from-buffer transfer path, not timing for immediate/index/write operations.",
+    "RPK/IZOP generation, automatic opcode decode, memory/device stages and full hardware profile remain incomplete."
+  ]
+}

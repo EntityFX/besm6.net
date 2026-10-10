@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-10",
+  "base_commit": "31e09c8",
+  "source": "TO-3 edition 1-65, section 4.16, printed sheets 93-96/100-102",
+  "pdf_sha256": "d5328d38db6485bf22bc2ccaf7f60051471e5715686fcf6a3b01a40764af1751",
+  "scans": [
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-48.png",
+      "sha256": "0d225a77f201c2531b2b23b68f4cabced7ff382f200252ebdd59fb6fd22845d4"
+    },
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-49.png",
+      "sha256": "28af8aa2d112dd547938e333960d99f25f1ed66f4bfd5c5808cb7031d513247b"
+    },
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-50.png",
+      "sha256": "51211d0461f9625deed4d28febdb35bf9318a318494060c422308129abd62450"
+    },
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-52.png",
+      "sha256": "605de85894b46dca320469dade0afc49a5e0063174d509e529e26bac56288efd"
+    },
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-53.png",
+      "sha256": "1a349ed7f2207e13e36c0eed36751d53944850cc01b1fa002ac13cbb3bb8d91c"
+    }
+  ],
+  "confirmed": [
+    "Subtraction writes the positive quotient component; addition writes the negative component",
+    "Both components shift on every explicit digit pulse, including shift-only",
+    "The source specifies 41 formation bits and one additional rounding bit per component",
+    "Correction is zero if both first main bits are zero, otherwise +1 for positive additional bit one, -1 for zero",
+    "Minus-one correction suppresses complement conversion unit; plus-one adds a separate unit"
+  ],
+  "not_implemented": [
+    "Full remainder rows and formation-adder wiring",
+    "Counter preset 40 and pipeline relationship to 42 digit pulses",
+    "Rounding permission gates, final carry propagation and normalization",
+    "Automatic duration, IZOP and CPU hardware retirement"
+  ]
+}

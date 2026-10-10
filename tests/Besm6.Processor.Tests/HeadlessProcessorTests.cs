@@ -5,7 +5,7 @@ namespace Besm6.Tests
 {
     /// <summary>
     /// Headless-проверка: процессор БЭСМ-6 из сборки Besm6.Processor
-    /// работает без MachineCore/Loader (plans/refactor.md, критерий готовности).
+    /// работает без MachineCore/Loader (plans/SuperPlan.md, приложение Phase 1, критерий готовности).
     /// </summary>
     [TestClass]
     public sealed class HeadlessProcessorTests

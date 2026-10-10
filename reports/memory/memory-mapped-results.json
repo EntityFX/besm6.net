@@ -1,0 +1,450 @@
+{
+  "stage": 3,
+  "scope": "Functional 32K memory connected to shared Dubna CPU; hardware supervisor and timing remain stages 4/5",
+  "source_base_commit": "6ae8755e0e7a832f4a2f674d5ed4892055966053",
+  "baseline_binary_revision": "3407eb2fee8ef782551beeed001e593f538e79f8",
+  "new_cases": 162,
+  "suites": [
+    {
+      "suite": "Besm6.Architecture.Tests",
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.Assembler.Tests",
+      "passed": 29,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.BitVisualizer.Tests",
+      "passed": 57,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.BitVisualizer.WinForms.Tests",
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.Cli.Tests",
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.Integration.Tests",
+      "passed": 426,
+      "failed": 0,
+      "skipped": 3
+    },
+    {
+      "suite": "Besm6.Processor.Tests",
+      "passed": 1439,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.Runtime.Tests",
+      "passed": 309,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "Besm6.Tui.Tests",
+      "passed": 44,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "cern_active": 397,
+  "cern_passed": 397,
+  "existing_skips": [
+    "DumpAtDivergence",
+    "TraceAlgol_Last30Instructions",
+    "W303_LoopsForever"
+  ],
+  "passed": 2360,
+  "failed": 0,
+  "skipped": 3,
+  "golden": {
+    "summary": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "by_status": {
+        "OK": 3
+      }
+    },
+    "cases": [
+      {
+        "file": "examples\\algol.dub",
+        "status": "OK",
+        "instrs": "787665",
+        "secs": 0.4,
+        "rc": 0,
+        "timed_out": false
+      },
+      {
+        "file": "examples\\bemsh.dub",
+        "status": "OK",
+        "instrs": "1042999",
+        "secs": 0.4,
+        "rc": 0,
+        "timed_out": false
+      },
+      {
+        "file": "examples\\name.dub",
+        "status": "OK",
+        "instrs": "209176",
+        "secs": 0.3,
+        "rc": 0,
+        "timed_out": false
+      }
+    ]
+  },
+  "tools_tests_passed": 66,
+  "sources": [
+    {
+      "file": "instructions.pdf",
+      "sha256": "7412b2c1c90195e029fe5b0067e859ce6c6f846a780062de8ab6ab4f96b6c113"
+    },
+    {
+      "file": "memory.pdf",
+      "sha256": "01556ed62c5ce973707374a2798138e4e6b8416b192e1accbadb87f5e00956b3"
+    },
+    {
+      "file": "control.pdf",
+      "sha256": "33521aab235c4a252f00c963a22d340138ec8990ddec38e22c81a89a6553bd74"
+    },
+    {
+      "file": "control-part2.pdf",
+      "sha256": "762f7b20a826a3bb94cd82c563c0533ea7edced8e46732dbc17870c052e60002"
+    }
+  ],
+  "simh": {
+    "revision": "9e318d16a203a3efae3420ea3f5700a8d7e3bec3",
+    "verification": "Pinned source review; no comparative SIMH execution",
+    "files": [
+      {
+        "file": "besm6_mmu.c",
+        "sha256": "56038f1bd2ede750ae197d5b3c7c1b9734d7958ee89972dcbf2c0f3954df31b6"
+      },
+      {
+        "file": "besm6_cpu.c",
+        "sha256": "a9d33d7e696c3a163c1c914feec236c21ef776dca325c504920eed90cab3160f"
+      },
+      {
+        "file": "besm6_defs.h",
+        "sha256": "b8c762a9fa2de04017b053ef04a1b6ee4c9c5cd2041ea9399fa3d34378a1d13b"
+      }
+    ]
+  },
+  "performance": [
+    {
+      "scope": "RunLoaded",
+      "job": "dh5000",
+      "samples_per_variant": 5,
+      "baseline_seconds": 0.5639483,
+      "current_seconds": 0.5633888,
+      "regression_percent": -0.09921122202157795,
+      "within_5_percent": true
+    },
+    {
+      "scope": "CLI_combined",
+      "job": "dh5000",
+      "samples_per_variant": 10,
+      "baseline_seconds": 1.008473350200802,
+      "current_seconds": 0.9567852998152375,
+      "regression_percent": -5.125375933362319,
+      "within_5_percent": true
+    },
+    {
+      "scope": "RunLoaded",
+      "job": "dh10000",
+      "samples_per_variant": 5,
+      "baseline_seconds": 0.8121675,
+      "current_seconds": 0.8219536,
+      "regression_percent": 1.2049361738803777,
+      "within_5_percent": true
+    },
+    {
+      "scope": "CLI_combined",
+      "job": "dh10000",
+      "samples_per_variant": 15,
+      "baseline_seconds": 1.1791671002283692,
+      "current_seconds": 1.191849899943918,
+      "regression_percent": 1.0755727252814706,
+      "within_5_percent": true
+    },
+    {
+      "scope": "RunLoaded",
+      "job": "mp1",
+      "samples_per_variant": 5,
+      "baseline_seconds": 0.2677695,
+      "current_seconds": 0.2637733,
+      "regression_percent": -1.4924029809220252,
+      "within_5_percent": true
+    },
+    {
+      "scope": "CLI_combined",
+      "job": "mp1",
+      "samples_per_variant": 10,
+      "baseline_seconds": 0.6017569000832736,
+      "current_seconds": 0.6108600501902401,
+      "regression_percent": 1.5127620648316187,
+      "within_5_percent": true
+    },
+    {
+      "scope": "RunLoaded",
+      "job": "mp2",
+      "samples_per_variant": 5,
+      "baseline_seconds": 0.3866061,
+      "current_seconds": 0.3743046,
+      "regression_percent": -3.1819208232875873,
+      "within_5_percent": true
+    },
+    {
+      "scope": "CLI_combined",
+      "job": "mp2",
+      "samples_per_variant": 10,
+      "baseline_seconds": 0.8136665001511574,
+      "current_seconds": 0.7850758500862867,
+      "regression_percent": -3.5138044960139503,
+      "within_5_percent": true
+    },
+    {
+      "scope": "RunLoaded",
+      "job": "mp3",
+      "samples_per_variant": 5,
+      "baseline_seconds": 1.0370016,
+      "current_seconds": 0.9176235,
+      "regression_percent": -11.511853019320306,
+      "within_5_percent": true
+    },
+    {
+      "scope": "CLI_combined",
+      "job": "mp3",
+      "samples_per_variant": 10,
+      "baseline_seconds": 1.3844032497145236,
+      "current_seconds": 1.241013850318268,
+      "regression_percent": -10.357487923105047,
+      "within_5_percent": true
+    }
+  ],
+  "performance_within_5_percent": true,
+  "individual_cli_series": {
+    "cli": {
+      "main_jobs": [
+        {
+          "job": "dh5000",
+          "regression_percent": -14.551665941139547,
+          "within_5_percent": true
+        },
+        {
+          "job": "dh10000",
+          "regression_percent": 7.973851733951132,
+          "within_5_percent": false
+        },
+        {
+          "job": "mp1",
+          "regression_percent": -4.358924140299969,
+          "within_5_percent": true
+        },
+        {
+          "job": "mp2",
+          "regression_percent": -0.4973814944349675,
+          "within_5_percent": true
+        },
+        {
+          "job": "mp3",
+          "regression_percent": 12.817443077335389,
+          "within_5_percent": false
+        }
+      ]
+    },
+    "cli-repeat": {
+      "main_jobs": [
+        {
+          "job": "dh5000",
+          "regression_percent": 7.128140854137843,
+          "within_5_percent": false
+        },
+        {
+          "job": "dh10000",
+          "regression_percent": -1.3010197055314698,
+          "within_5_percent": true
+        },
+        {
+          "job": "mp1",
+          "regression_percent": -2.36454794251173,
+          "within_5_percent": true
+        },
+        {
+          "job": "mp2",
+          "regression_percent": 2.1249385912524676,
+          "within_5_percent": true
+        },
+        {
+          "job": "mp3",
+          "regression_percent": -3.117394221927261,
+          "within_5_percent": true
+        }
+      ]
+    },
+    "cli-dhrystone-repeat": {
+      "main_jobs": [
+        {
+          "job": "dh10000",
+          "regression_percent": -2.634291638057007,
+          "within_5_percent": true
+        }
+      ]
+    }
+  },
+  "tempo": {
+    "dh10000": {
+      "model_seconds": 4.2349906,
+      "max_error_seconds": 0.00366730000000004,
+      "accepted": true
+    },
+    "mp3": {
+      "model_seconds": 5.1127036,
+      "max_error_seconds": 0.006762600000000063,
+      "accepted": true
+    }
+  },
+  "mapped_probe": {
+    "accepted": true,
+    "instructions": 4260298,
+    "cycles": 19170714,
+    "state_sha256": "1B60B4561CC6831739DD3A3FE47509E69C426E00B745D3123CD05DF362596F88",
+    "measurements": [
+      {
+        "mode": "max-bare",
+        "loop_seconds": 0.546814,
+        "process_seconds": 0.8877940000966191,
+        "model_seconds": 1.9170714,
+        "max_tempo_error_seconds": 1.4179576,
+        "tempo_met": null
+      },
+      {
+        "mode": "max",
+        "loop_seconds": 0.5880573,
+        "process_seconds": 0.8951499001123011,
+        "model_seconds": 1.9170714,
+        "max_tempo_error_seconds": 1.3574888,
+        "tempo_met": null
+      },
+      {
+        "mode": "original",
+        "loop_seconds": 1.9235897,
+        "process_seconds": 2.22975239995867,
+        "model_seconds": 1.9170714,
+        "max_tempo_error_seconds": 0.010786799999999985,
+        "tempo_met": true
+      }
+    ]
+  },
+  "workload_metrics": {
+    "dh5000:baseline": {
+      "unit": "DMIPS",
+      "workload_model_cycles": 15311449,
+      "model_score": 1.858582958328354,
+      "host_process_workload_seconds": 0.2588923000730574,
+      "host_process_score": 10.99206047096928,
+      "host_loop_workload_seconds": 0.27823749999999997,
+      "host_loop_score": 10.22780832156475
+    },
+    "dh5000:mapped": {
+      "unit": "DMIPS",
+      "workload_model_cycles": 15311449,
+      "model_score": 1.858582958328354,
+      "host_process_workload_seconds": 0.2473457003943622,
+      "host_process_score": 11.50519217974745,
+      "host_loop_workload_seconds": 0.27083890000000005,
+      "host_loop_score": 10.507204902513529
+    },
+    "dh10000:baseline": {
+      "unit": "DMIPS",
+      "workload_model_cycles": 30621779,
+      "model_score": 1.8586508758170919,
+      "host_process_workload_seconds": 0.5063061001710594,
+      "host_process_score": 11.241262220265211,
+      "host_loop_workload_seconds": 0.5264567,
+      "host_loop_score": 10.81099288078724
+    },
+    "dh10000:mapped": {
+      "unit": "DMIPS",
+      "workload_model_cycles": 30621779,
+      "model_score": 1.8586508758170919,
+      "host_process_workload_seconds": 0.4977998002432287,
+      "host_process_score": 11.433350581823907,
+      "host_loop_workload_seconds": 0.5294037,
+      "host_loop_score": 10.75081197154977
+    },
+    "mp1:baseline": {
+      "unit": "MFLOPS",
+      "workload_model_cycles": 8618448,
+      "model_score": 0.6265629264108805,
+      "host_process_workload_seconds": 0.11209840001538396,
+      "host_process_score": 4.817196319714577,
+      "host_loop_workload_seconds": 0.12958509999999998,
+      "host_loop_score": 4.167145759813436
+    },
+    "mp1:mapped": {
+      "unit": "MFLOPS",
+      "workload_model_cycles": 8618448,
+      "model_score": 0.6265629264108805,
+      "host_process_workload_seconds": 0.12109360005706549,
+      "host_process_score": 4.4593603604610355,
+      "host_loop_workload_seconds": 0.1244219,
+      "host_loop_score": 4.340071964822913
+    },
+    "mp2:baseline": {
+      "unit": "MFLOPS",
+      "workload_model_cycles": 16178623,
+      "model_score": 1.335095081948569,
+      "host_process_workload_seconds": 0.2317582997493446,
+      "host_process_score": 9.320054566917872,
+      "host_loop_workload_seconds": 0.2484217,
+      "host_loop_score": 8.694892595936668
+    },
+    "mp2:mapped": {
+      "unit": "MFLOPS",
+      "workload_model_cycles": 16178623,
+      "model_score": 1.335095081948569,
+      "host_process_workload_seconds": 0.2339420998468995,
+      "host_process_score": 9.233053825769646,
+      "host_loop_workload_seconds": 0.2349532,
+      "host_loop_score": 9.193320201640157
+    },
+    "mp3:baseline": {
+      "unit": "MFLOPS",
+      "workload_model_cycles": 46418828,
+      "model_score": 1.8613136893503648,
+      "host_process_workload_seconds": 0.9573332001455128,
+      "host_process_score": 9.025070893484878,
+      "host_loop_workload_seconds": 0.8988172,
+      "host_loop_score": 9.61263313608151
+    },
+    "mp3:mapped": {
+      "unit": "MFLOPS",
+      "workload_model_cycles": 46418828,
+      "model_score": 1.8613136893503648,
+      "host_process_workload_seconds": 0.8393872999586165,
+      "host_process_score": 10.293222211517818,
+      "host_loop_workload_seconds": 0.7782721,
+      "host_loop_score": 11.101515780920323
+    }
+  },
+  "acceptance_passed": true,
+  "raw_output": {
+    "file": "memory-mapped-output.json.gz",
+    "records": 354,
+    "uncompressed_sha256": "43031a61e632352a83814bc18d5bba81e91d54f40b156f078eb1f3fb4fbb1c95"
+  }
+}

@@ -22,7 +22,7 @@ Besm6.Processor Besm6.Assembler
 
 **Spec:** Архитектурные требования сохранены в разделах «Структура решения»,
 «Разбиение крупных классов», «CLI и TUI», «Тестирование и критерии приёмки» этого
-файла; `plans/refactor.md` используется только как исторический Phase 1 reference,
+файла; приложение Phase 1 в `plans/SuperPlan.md` используется только как исторический Phase 1 reference,
 а не как инструкция к выполнению полного плана.
 
 ## Структура решения
@@ -1592,7 +1592,7 @@ CI path или live source link не содержит старого layout.
 py -3 -m unittest discover -s tools/tests
 py -3 tools/check_architecture.py --solution Besm6.sln
 dotnet test Besm6.sln -c Release
-git add .github/workflows/ci.yml tools docs book tapes reports tests/golden plans/SuperPlan.md plans/refactor.md
+git add .github/workflows/ci.yml tools docs book tapes reports tests/golden plans/SuperPlan.md
 git diff --cached --check
 git commit -m "Update tooling for decomposed BESM-6 solution"
 ```
