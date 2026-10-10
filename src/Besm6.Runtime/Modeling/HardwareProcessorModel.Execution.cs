@@ -49,6 +49,7 @@ internal sealed partial class HardwareProcessorModel
     private bool _completionReady;
     private bool _cancellationRequested;
     private bool _publishingInstruction;
+    private bool _capturingOperand;
     private ulong _sequence;
     internal bool IsDriving { get; private set; }
     internal Action<bool>? ExecutionStateChanged { get; set; }
@@ -62,7 +63,7 @@ internal sealed partial class HardwareProcessorModel
 
     private void EnsureDriverAllowed()
     {
-        if (IsDriving || Timeline.IsAdvancing || _processor.ExecutionProhibited)
+        if (IsDriving || _capturingOperand || Timeline.IsAdvancing || _processor.ExecutionProhibited)
             throw new InvalidOperationException("Nested hardware processor execution is not allowed.");
     }
 
@@ -128,14 +129,46 @@ internal sealed partial class HardwareProcessorModel
     // signal inside a calendar callback; the CPU itself runs only after it returns.
     internal bool TryIndicateCompletionReady(in HardwareInstructionHandle instruction)
     {
-        if (!IsCurrent(in instruction) || _completionReady || _cancellationRequested) return false;
+        if (!IsCurrent(in instruction) || _completionReady || _cancellationRequested || _capturingOperand ||
+            _processor.RequiresArithmeticResult(_pendingInstruction!.Value)) return false;
+        _completionReady = true;
+        return true;
+    }
+
+    internal PreparedArithmeticOperation? CaptureArithmeticOperand(HardwareInstructionHandle instruction)
+    {
+        if (!IsCurrent(in instruction) || _completionReady || _cancellationRequested || _publishingInstruction ||
+            _capturingOperand || (_processor.ExecutionProhibited && !Timeline.IsAdvancing))
+            throw new InvalidOperationException("No waiting model command can accept this operand.");
+        bool prohibited = Timeline.AdvancementProhibited;
+        _capturingOperand = true;
+        Timeline.AdvancementProhibited = true;
+        try
+        {
+            ExecutionStateChanged?.Invoke(true);
+            return _processor.CaptureArithmeticOperand(_pendingInstruction!.Value);
+        }
+        finally
+        {
+            Timeline.AdvancementProhibited = prohibited;
+            _capturingOperand = false;
+            ExecutionStateChanged?.Invoke(IsDriving);
+        }
+    }
+
+    internal bool TryIndicateArithmeticCompletion(HardwareInstructionHandle instruction,
+        NormalizedArithmeticResult? result, ProcessorException? failure = null)
+    {
+        if (!IsCurrent(in instruction) || _completionReady || _cancellationRequested || _publishingInstruction ||
+            _capturingOperand || (_processor.ExecutionProhibited && !Timeline.IsAdvancing)) return false;
+        _processor.SupplyArithmeticResult(_pendingInstruction!.Value, result, failure);
         _completionReady = true;
         return true;
     }
 
     internal bool TryRequestCancellation(in HardwareInstructionHandle instruction)
     {
-        if (!IsCurrent(in instruction) || _cancellationRequested || _publishingInstruction) return false;
+        if (!IsCurrent(in instruction) || _cancellationRequested || _publishingInstruction || _capturingOperand) return false;
         _cancellationRequested = true;
         return true;
     }

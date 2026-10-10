@@ -32,12 +32,20 @@ public sealed partial class InstructionExecutor
 
     private bool HandleSupervisorFailure(SupervisorControl supervisor, Exception exception, uint start, bool right)
     {
+        var fault = DescribeSupervisorFailure(exception, start, right);
+        return InterruptFailedStep(supervisor, fault.Signal, fault.ReturnWord, fault.Flags);
+    }
+
+    private readonly record struct SupervisorFailureDescription(ulong Signal, uint ReturnWord, uint Flags);
+
+    private SupervisorFailureDescription DescribeSupervisorFailure(Exception exception, uint start, bool right)
+    {
         switch (exception)
         {
             case HardwareWatchException failure:
             {
                 bool command = failure.Signal == (1UL << 11);
-                return InterruptFailedStep(supervisor, failure.Signal,
+                return new(failure.Signal,
                     command && !right ? start : ArchitectureConstants.NormalizeAddress(start + 1),
                     command ? (right ? 0x200u : 0x300u) : (right ? 0x300u : 0x200u));
             }
@@ -46,7 +54,7 @@ public sealed partial class InstructionExecutor
                 bool command = failure.AccessKind is MemoryAccessKind.InstructionLeft or MemoryAccessKind.InstructionRight;
                 ulong signal = command ? 1UL << 13 : (1UL << 19) | ((ulong)failure.MathematicalPage << 4);
                 uint saved = command ? (right ? 0x200u : 0x300u) : (right ? 0x300u : 0x200u);
-                return InterruptFailedStep(supervisor, signal,
+                return new(signal,
                     command && !right ? start : ArchitectureConstants.NormalizeAddress(start + 1), saved);
             }
             case MemoryControlException failure:
@@ -61,14 +69,14 @@ public sealed partial class InstructionExecutor
                     (ulong)backend.FindOperandBufferRegister(fault!.Value.Request) : 8UL | (failure.PhysicalAddress & 7);
                 ulong signal = command ? 1UL << 14 : (1UL << 20) |
                     detail;
-                return InterruptFailedStep(supervisor, signal, right ? ArchitectureConstants.NormalizeAddress(start + 1) : start,
+                return new(signal, right ? ArchitectureConstants.NormalizeAddress(start + 1) : start,
                     right ? 0u : 0x100u);
             }
             case ProcessorException failure:
             {
                 ulong signal = failure.Message == "Division by zero" ? 7UL << 20 :
                     failure.Message == "Arithmetic overflow" ? 3UL << 20 : 1UL << 12;
-                return InterruptFailedStep(supervisor, signal, right ? ArchitectureConstants.NormalizeAddress(start + 1) : start,
+                return new(signal, right ? ArchitectureConstants.NormalizeAddress(start + 1) : start,
                     right ? 0u : 0x100u);
             }
             default: throw new InvalidOperationException("Not a supervisor guest failure.", exception);

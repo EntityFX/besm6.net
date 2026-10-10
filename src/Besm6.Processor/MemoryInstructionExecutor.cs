@@ -51,8 +51,34 @@ namespace Besm6.Core
             }
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
         private InstructionOutcome ExecuteOther(ref ExecutionFrame frame)
+        {
+            var execution = new ImmediateArithmeticInstructionExecution(_alu);
+            return ExecuteOther(ref frame, ref execution);
+        }
+
+        internal static bool CanCaptureArithmetic(Opcode opcode) => opcode is
+            Opcode.APlusX or Opcode.AMinusX or Opcode.XMinusA or Opcode.Amx or
+            Opcode.Avx or Opcode.ADivX or Opcode.AMulX or Opcode.EPlusX or
+            Opcode.EMinusX or Opcode.EPlusN or Opcode.EMinusN;
+
+        internal CapturedArithmeticInstructionExecution CaptureArithmetic(ref ExecutionFrame frame)
+        {
+            var execution = new CapturedArithmeticInstructionExecution(_state.R);
+            ExecuteOther(ref frame, ref execution);
+            return execution;
+        }
+
+        internal void PublishArithmetic(ref ExecutionFrame frame, NormalizedArithmeticResult result, bool additive)
+        {
+            _alu.PublishPreparedResult(result);
+            var execution = new ImmediateArithmeticInstructionExecution(_alu);
+            execution.Finish(ref frame, _state, additive);
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
+        private InstructionOutcome ExecuteOther<TExecution>(ref ExecutionFrame frame, ref TExecution arithmetic)
+            where TExecution : struct, IArithmeticInstructionExecution
         {
             int reg = frame.Instruction.Register;
             uint addr = frame.Address;
@@ -81,30 +107,26 @@ namespace Besm6.Core
                 case Opcode.APlusX:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    _alu.Add(LoadWord(ref frame), false, false);
-                    UseAluResult(ref frame);
-                    _state.SetAdditive();
+                    arithmetic.Add(LoadWord(ref frame), false, false);
+                    arithmetic.Finish(ref frame, _state, true);
                     break;
                 case Opcode.AMinusX:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    _alu.Add(LoadWord(ref frame), false, true);
-                    UseAluResult(ref frame);
-                    _state.SetAdditive();
+                    arithmetic.Add(LoadWord(ref frame), false, true);
+                    arithmetic.Finish(ref frame, _state, true);
                     break;
                 case Opcode.XMinusA:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    _alu.Add(LoadWord(ref frame), true, false);
-                    UseAluResult(ref frame);
-                    _state.SetAdditive();
+                    arithmetic.Add(LoadWord(ref frame), true, false);
+                    arithmetic.Finish(ref frame, _state, true);
                     break;
                 case Opcode.Amx:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    _alu.Add(LoadWord(ref frame), true, true);
-                    UseAluResult(ref frame);
-                    _state.SetAdditive();
+                    arithmetic.Add(LoadWord(ref frame), true, true);
+                    arithmetic.Finish(ref frame, _state, true);
                     break;
                 case Opcode.Aax:
                     PrepareStack(addr, reg);
@@ -131,9 +153,8 @@ namespace Besm6.Core
                 case Opcode.Avx:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    _alu.ChangeSign(((_memory.MemLoad(frame.EffectiveAddress) >> 40) & 1u) != 0);
-                    UseAluResult(ref frame);
-                    _state.SetAdditive();
+                    arithmetic.ChangeSign(((_memory.MemLoad(frame.EffectiveAddress) >> 40) & 1u) != 0);
+                    arithmetic.Finish(ref frame, _state, true);
                     break;
                 case Opcode.Aox:
                     PrepareStack(addr, reg);
@@ -145,16 +166,14 @@ namespace Besm6.Core
                 case Opcode.ADivX:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    _alu.Divide(LoadWord(ref frame));
-                    UseAluResult(ref frame);
-                    _state.SetMultiplicative();
+                    arithmetic.Divide(LoadWord(ref frame));
+                    arithmetic.Finish(ref frame, _state, false);
                     break;
                 case Opcode.AMulX:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    _alu.Multiply(LoadWord(ref frame));
-                    UseAluResult(ref frame);
-                    _state.SetMultiplicative();
+                    arithmetic.Multiply(LoadWord(ref frame));
+                    arithmetic.Finish(ref frame, _state, false);
                     break;
                 case Opcode.Apx:
                     PrepareStack(addr, reg);
@@ -197,10 +216,10 @@ namespace Besm6.Core
                     _state.SetLogical();
                     break;
                 case Opcode.EPlusX:
-                    ExecuteExponentFromMemory(ref frame, 1);
+                    ExecuteExponentFromMemory(ref frame, 1, ref arithmetic);
                     break;
                 case Opcode.EMinusX:
-                    ExecuteExponentFromMemory(ref frame, -1);
+                    ExecuteExponentFromMemory(ref frame, -1, ref arithmetic);
                     break;
                 case Opcode.Asx:
                     PrepareStack(addr, reg);
@@ -238,10 +257,10 @@ namespace Besm6.Core
                 case Opcode.Op33:
                     throw new ProcessorException("Illegal instruction 033 счп");
                 case Opcode.EPlusN:
-                    ExecuteExponentImmediate(ref frame, (int)(Addr(addr + m[reg]) & 0x7Fu) - 64);
+                    ExecuteExponentImmediate(ref frame, (int)(Addr(addr + m[reg]) & 0x7Fu) - 64, ref arithmetic);
                     break;
                 case Opcode.EMinusN:
-                    ExecuteExponentImmediate(ref frame, 64 - (int)(Addr(addr + m[reg]) & 0x7Fu));
+                    ExecuteExponentImmediate(ref frame, 64 - (int)(Addr(addr + m[reg]) & 0x7Fu), ref arithmetic);
                     break;
                 case Opcode.Asn:
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
@@ -255,24 +274,24 @@ namespace Besm6.Core
             return InstructionOutcome.Continue;
         }
 
-        private void ExecuteExponentFromMemory(ref ExecutionFrame frame, int direction)
+        private void ExecuteExponentFromMemory<TExecution>(ref ExecutionFrame frame, int direction, ref TExecution arithmetic)
+            where TExecution : struct, IArithmeticInstructionExecution
         {
             uint addr = frame.Address;
             int reg = frame.Instruction.Register;
             PrepareStack(addr, reg);
             SetEffectiveAddress(ref frame, Addr(addr + _state.M[reg]));
             int exponent = (int)(_memory.MemLoad(frame.EffectiveAddress) >> 41);
-            _alu.AddExponent(direction > 0 ? exponent - 64 : 64 - exponent);
-            UseAluResult(ref frame);
-            _state.SetMultiplicative();
+            arithmetic.AddExponent(direction > 0 ? exponent - 64 : 64 - exponent);
+            arithmetic.Finish(ref frame, _state, false);
         }
 
-        private void ExecuteExponentImmediate(ref ExecutionFrame frame, int delta)
+        private void ExecuteExponentImmediate<TExecution>(ref ExecutionFrame frame, int delta, ref TExecution arithmetic)
+            where TExecution : struct, IArithmeticInstructionExecution
         {
             SetEffectiveAddress(ref frame, Addr(frame.Address + _state.M[frame.Instruction.Register]));
-            _alu.AddExponent(delta);
-            UseAluResult(ref frame);
-            _state.SetMultiplicative();
+            arithmetic.AddExponent(delta);
+            arithmetic.Finish(ref frame, _state, false);
         }
 
         private Word48 LoadWord(ref ExecutionFrame frame) =>

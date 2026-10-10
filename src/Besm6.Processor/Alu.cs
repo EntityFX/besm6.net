@@ -10,6 +10,8 @@ namespace Besm6.Core
     public class Alu
     {
         private readonly NormalizationAndRounding _normalizer;
+
+        internal void PublishPreparedResult(NormalizedArithmeticResult result) => _normalizer.Publish(result);
         private readonly AdditiveOperations _additive;
         private readonly MultiplicativeOperations _multiplicative;
         private readonly ShiftOperations _shift;
