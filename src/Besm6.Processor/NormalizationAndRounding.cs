@@ -27,9 +27,24 @@ namespace Besm6.Core
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
         internal void NormalizeAndRound(MantissaExponent a, ulong y, bool roundFlag)
         {
+            var result = Evaluate(a, y, roundFlag, _state.R, _state.Y);
+            _state.A = result.A;
+            _state.Y = result.Y;
+            if (result.Overflow)
+                throw new ProcessorException("Arithmetic overflow");
+        }
+
+        /// <summary>
+        /// Computes the same result without changing processor registers. The
+        /// caller owns publication and fault delivery; no hardware time is inferred.
+        /// </summary>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization |
+            System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        internal static NormalizedArithmeticResult Evaluate(MantissaExponent a, ulong y,
+            bool roundFlag, uint r, Word48 previousY)
+        {
             ulong rr = 0;
             ulong normalizedBits;
-            ulong r = _state.R;
 
             if ((r & R_NORM_DISABLE) != 0)
                 goto chk_rnd;
@@ -103,25 +118,21 @@ namespace Besm6.Core
             if ((a.Exponent & 0x8000u) != 0)
                 goto zero;
 
-            if ((r & R_ROUND_DISABLE) == 0 && roundFlag)
+            bool roundOnOutput = (r & R_ROUND_DISABLE) == 0 && roundFlag;
+            long unroundedMantissa = a.Mantissa;
+            if (roundOnOutput)
                 a.Mantissa |= 1;
 
             if (a.Mantissa == 0 && (r & R_NORM_DISABLE) == 0)
                 goto zero;
 
-            _state.A = Word48.FromInt48((((ulong)a.Exponent & 0x7Fu) << 41) | ((ulong)a.Mantissa & BITS41));
-            _state.Y = Word48.FromInt48(y & BITS40);
-
-            if ((a.Exponent & 0x80u) != 0)
-            {
-                if ((r & R_OVF_DISABLE) == 0)
-                    throw new ProcessorException("Arithmetic overflow");
-            }
-            return;
+            return new(
+                Word48.FromInt48((((ulong)a.Exponent & 0x7Fu) << 41) | ((ulong)unroundedMantissa & BITS41)),
+                Word48.FromInt48(y & BITS40), roundOnOutput,
+                (a.Exponent & 0x80u) != 0 && (r & R_OVF_DISABLE) == 0);
 
         zero:
-            _state.A = Word48.Zero;
-            _state.Y = Word48.FromInt48(_state.Y.Value & ~BITS40);
+            return new(Word48.Zero, Word48.FromInt48(previousY.Value & ~BITS40), false, false);
         }
     }
 }
