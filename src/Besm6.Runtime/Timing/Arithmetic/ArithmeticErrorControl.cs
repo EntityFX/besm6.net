@@ -127,7 +127,7 @@ internal sealed class ArithmeticErrorControl
         Raise(signals);
     }
 
-    internal void CompleteOperation(bool positiveOverflow)
+    internal ArithmeticInterruptionSample? CompleteOperation(bool positiveOverflow)
     {
         if (!OperationActive) throw new InvalidOperationException("IZOP requires an active operation.");
         bool inputError = (Signals & ArithmeticErrorSignals.InputControl) != 0;
@@ -165,13 +165,15 @@ internal sealed class ArithmeticErrorControl
                 signals |= ArithmeticErrorSignals.Interruption;
             Raise(signals);
         }
+        ArithmeticInterruptionSample? sample = null;
         if ((Signals & ArithmeticErrorSignals.Interruption) != 0)
         {
             var outgoing = Signals;
             if (Policy.Mode == ArithmeticErrorMode.InputControlOnly)
                 outgoing &= ~(ArithmeticErrorSignals.PositiveOverflow | ArithmeticErrorSignals.InvalidDivisor);
-            LastInterruptSample = new(_timeline.Now, outgoing,
+            sample = new(_timeline.Now, outgoing,
                 (Signals & ArithmeticErrorSignals.InputControl) != 0 ? _latchedInputSource : _inputSource);
+            LastInterruptSample = sample;
         }
         _timeline.Cancel(_permission);
         _permission = default;
@@ -179,6 +181,7 @@ internal sealed class ArithmeticErrorControl
         OperationActive = false;
         CompletionHeld = hold;
         if (!hold) Signals &= ~ArithmeticErrorSignals.InvalidDivisor; // UDO ends at IZOP.
+        return sample;
     }
 
     /// <summary>PSb/UOZ: release held interruption/overflow after the operation ends.</summary>

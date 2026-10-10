@@ -88,13 +88,7 @@ public sealed partial class InstructionExecutor
     {
         _processor.CancelInstructionTrace();
         _processor.LastStepCompleted = false;
-        bool arithmetic = (signal & (3UL << 21)) != 0;
-        bool control = (signal & ((1UL << 20) | (1UL << 14))) != 0;
-        ControlUnitFlags stop = arithmetic ? ControlUnitFlags.StopOnInternalInterrupt | ControlUnitFlags.StopOnControlInterrupt :
-            control ? ControlUnitFlags.StopOnControlInterrupt : ControlUnitFlags.StopOnInternalInterrupt;
-        if ((!arithmetic || !supervisor.ArithmeticStopBlocked) && (supervisor.Status.Flags & stop) != 0)
-            throw new SupervisorHaltException(signal);
-        supervisor.EnterInternal(signal, returnWord, flags);
+        supervisor.AcceptInternalInterrupt(signal, returnWord, flags);
         return false;
     }
 

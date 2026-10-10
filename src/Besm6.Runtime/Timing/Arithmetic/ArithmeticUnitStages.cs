@@ -22,6 +22,7 @@ internal sealed class ArithmeticUnitStages
 {
     private readonly HardwareTimeline _timeline;
     private readonly ArithmeticPipelineControl _control = new();
+    private readonly ArithmeticInterruptionPort? _interruptions;
     private PreparedArithmeticOperation? _preparedOperation;
     private NormalizedArithmeticResult _calculatedResult;
     private ProcessorException? _calculationFailure;
@@ -54,11 +55,15 @@ internal sealed class ArithmeticUnitStages
     }
 
     internal ArithmeticUnitStages(HardwareTimeline timeline, HardwareDuration cycle,
-        Word48 initialAccumulator, Word48 initialLowRegister, ArithmeticErrorPolicy? errorPolicy = null)
+        Word48 initialAccumulator, Word48 initialLowRegister, ArithmeticErrorPolicy? errorPolicy = null,
+        ArithmeticInterruptionPort? interruptions = null)
     {
         ArgumentNullException.ThrowIfNull(timeline);
         if (cycle.Nanoseconds == 0 || (cycle.Nanoseconds & 1) != 0)
             throw new ArgumentOutOfRangeException(nameof(cycle), "A positive even cycle is required.");
+        if (interruptions is not null && errorPolicy is null)
+            throw new ArgumentException("An interruption port requires physical error control.", nameof(interruptions));
+        _interruptions = interruptions;
         _timeline = timeline;
         Cycle = cycle;
         Errors = errorPolicy is { } policy ? new(timeline, cycle, policy) : null;
@@ -177,7 +182,7 @@ internal sealed class ArithmeticUnitStages
         if (ActiveCommand is null) throw new InvalidOperationException("IZOP requires an active operation.");
         if (Division?.HasPendingMainRemainder == true)
             throw new InvalidOperationException("Division completion precedes a sampled main remainder.");
-        Errors?.CompleteOperation(_calculationFailure is null && _calculatedResult.Overflow);
+        var interruption = Errors?.CompleteOperation(_calculationFailure is null && _calculatedResult.Overflow);
         uint command = _control.CompleteOperation();
         Division?.Stop();
         _divisionInProgress = false;
@@ -189,6 +194,7 @@ internal sealed class ArithmeticUnitStages
             if (_calculatedResult.Overflow)
                 Fault = new(ArithmeticUnitFaultKind.Overflow, _timeline.Now, null);
         }
+        if (interruption is { } sample) _interruptions?.Receive(sample);
         return command;
     }
 

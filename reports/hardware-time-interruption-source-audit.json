@@ -1,0 +1,86 @@
+{
+  "base_commit": "69b6da0",
+  "files": [
+    {
+      "path": "src/Besm6.Processor/Execution/InstructionExecutor.Supervisor.cs",
+      "sha256": "fe43ec46932c6937f0164e5891b0ab45a2cdd405911a45ff81135d0a5ce14c58"
+    },
+    {
+      "path": "src/Besm6.Processor/Supervisor/SupervisorControl.cs",
+      "sha256": "38bdaf37b63d9c3712dcd40caf507671922ca0d835f6318997a95ece3a8e7212"
+    },
+    {
+      "path": "src/Besm6.Runtime/Modeling/HardwareProcessorModel.cs",
+      "sha256": "b100fef27bd297253d92be1fb2716b7016d59160ae70d677a68bcc2acffa4aba"
+    },
+    {
+      "path": "src/Besm6.Runtime/Modeling/HardwareProcessorModel.Execution.cs",
+      "sha256": "0a785b2643c24a911c10f34719f36d35e46c90b95197ad4e73ca2202a3451f5f"
+    },
+    {
+      "path": "src/Besm6.Runtime/Modeling/HardwareProcessorModel.Interruptions.cs",
+      "sha256": "473a5315d13f564c53285870f763d193abc013bd7ff428ee9f6e5e5059d0ef75"
+    },
+    {
+      "path": "src/Besm6.Runtime/Timing/Arithmetic/ArithmeticErrorControl.cs",
+      "sha256": "b2f44867f496c10266ac5c54e2449bfe9a58037a21aefd1e1c152de2253f5d9f"
+    },
+    {
+      "path": "src/Besm6.Runtime/Timing/Arithmetic/ArithmeticUnitStages.cs",
+      "sha256": "b75d2e36fe338a8f6b093b0efef657d22018be92358ab6099be7db6421ed0257"
+    },
+    {
+      "path": "src/Besm6.Runtime/Timing/Arithmetic/ArithmeticInterruptionPort.cs",
+      "sha256": "a670cafdeaf6720fcf602433a50bbb6309d3a1ee0e610ae37e735c2a60f9e254"
+    },
+    {
+      "path": "tests/Besm6.Runtime.Tests/HardwareArithmeticInterruptionTests.cs",
+      "sha256": "6e21688a987f6e3860fcb907516e95c5063211b2ffa9a1cddfe42b3202ca4c96"
+    }
+  ],
+  "sources": [
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-35.png",
+      "sha256": "49eed975b47cb5800686f129272d5ef45f144f915792911e036a3ac9f660c04e",
+      "visual_checked": true
+    },
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-36.png",
+      "sha256": "89d0db017056d88ca36a966cb12eaf653458fa1e4a93fe627a2a0e0c4a2c6ee2",
+      "visual_checked": true
+    },
+    {
+      "path": "docs/sources/hardware-time/instructions-pdf-116.png",
+      "sha256": "7a448d85728b2ed7f134e597552e8b57f3e9be361fc124945f183dae9df4c095",
+      "visual_checked": true
+    },
+    {
+      "path": "docs/sources/hardware-time/instructions-pdf-117.png",
+      "sha256": "d3670995045f65523ce9d2dece8de81837ebf74e7517f5e2e1a1ef0871732805",
+      "visual_checked": true
+    },
+    {
+      "path": "docs/sources/hardware-time/instructions-pdf-119.png",
+      "sha256": "138ae62361c07ec559b57025158f03c9c4420ad9367a3e67d09a648f73e3fba2",
+      "visual_checked": true
+    },
+    {
+      "path": "docs/sources/hardware-time/instructions-pdf-120.png",
+      "sha256": "54bf932834c44bb9d98db74c54484cc87ef78b8416269f1eea74c4b0d190e813",
+      "visual_checked": true
+    }
+  ],
+  "books": {
+    "arithmetic_pdf_sha256": "d5328d38db6485bf22bc2ccaf7f60051471e5715686fcf6a3b01a40764af1751",
+    "instructions_pdf_sha256": "7412b2c1c90195e029fe5b0067e859ce6c6f846a780062de8ab6ab4f96b6c113"
+  },
+  "boundaries": [
+    "TO-3 section3.28: AU cause is transferred at IZOP independently of local release.",
+    "TO-8 section6.12: bits21/22/23 represent interruption/positive overflow/invalid divisor; source bits1–4 for input control.",
+    "TO-8 sections6.16/6.20: vector00500 and saved UU position; no inferred exact failed AU address.",
+    "The model receives causes in the shared supervisor register and requires explicit UU acceptance outside a CPU lease/callback.",
+    "OR-latch semantics are shared with the existing supervisor; simultaneous source priority/overlapped UU remains incomplete.",
+    "Physical error-policy binding to staged guest arithmetic and invalid-divisor physical results remain incomplete.",
+    "Functional CERN/golden/performance validate compatibility, not a full hardware OS run."
+  ]
+}
