@@ -8,15 +8,17 @@ namespace Besm6.Core;
 /// </summary>
 internal readonly struct PreparedArithmeticOperation
 {
-    private enum Operation { Add, Multiply, Divide, AddExponent, ChangeSign }
+    private enum Operation { Add, Multiply, Divide, AddExponent, ChangeSign, Logical }
     private readonly Operation _operation;
     private readonly Word48 _operand;
     private readonly uint _mode;
     private readonly bool _negateAccumulator, _negateOperand;
     private readonly int _exponentDelta;
+    private readonly LogicalArithmeticOperation _logicalOperation;
 
     private PreparedArithmeticOperation(Operation operation, Word48 operand, uint mode,
-        bool negateAccumulator = false, bool negateOperand = false, int exponentDelta = 0)
+        bool negateAccumulator = false, bool negateOperand = false, int exponentDelta = 0,
+        LogicalArithmeticOperation logicalOperation = default)
     {
         _operation = operation;
         _operand = operand;
@@ -24,6 +26,7 @@ internal readonly struct PreparedArithmeticOperation
         _negateAccumulator = negateAccumulator;
         _negateOperand = negateOperand;
         _exponentDelta = exponentDelta;
+        _logicalOperation = logicalOperation;
     }
 
     internal bool IsDivision => _operation == Operation.Divide;
@@ -47,6 +50,9 @@ internal readonly struct PreparedArithmeticOperation
     internal static PreparedArithmeticOperation ChangeSign(bool negateAccumulator, uint mode) =>
         new(Operation.ChangeSign, Word48.Zero, mode, negateAccumulator);
 
+    internal static PreparedArithmeticOperation Logical(Word48 operand, LogicalArithmeticOperation operation) =>
+        new(Operation.Logical, operand, 0, logicalOperation: operation);
+
     internal NormalizedArithmeticResult Evaluate(Word48 accumulator, Word48 lowRegister) =>
         Evaluate(accumulator, lowRegister, _mode);
 
@@ -66,6 +72,7 @@ internal readonly struct PreparedArithmeticOperation
                 mode, _operand),
             Operation.AddExponent => AdditiveOperations.EvaluateAddExponent(accumulator, mode, _exponentDelta),
             Operation.ChangeSign => AdditiveOperations.EvaluateChangeSign(accumulator, mode, _negateAccumulator),
+            Operation.Logical => LogicalArithmeticOperations.Evaluate(accumulator, _operand, _logicalOperation),
             _ => throw new InvalidOperationException("Unknown prepared arithmetic operation.")
         };
 }

@@ -21,6 +21,9 @@ public sealed class ArithmeticCommandEncodingTests
     [DataRow("e-x 10", Opcode.EMinusX, 0x2A0Au)]
     [DataRow("e+n 101", Opcode.EPlusN, 0x3941u)]
     [DataRow("e-n 101", Opcode.EMinusN, 0x3B41u)]
+    [DataRow("aax 10", Opcode.Aax, 0x120Au)]
+    [DataRow("aex 10", Opcode.Aex, 0x140Au)]
+    [DataRow("aox 10", Opcode.Aox, 0x1A0Au)]
     public void AutomaticallyIssuedWordsMatchIndependentBitsAndSerialExecution(string instruction, Opcode opcode, uint expected)
     {
         foreach (bool right in new[] { false, true })

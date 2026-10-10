@@ -7,7 +7,7 @@ public sealed partial class InstructionExecutor
     private bool _arithmeticCaptured;
     private ExecutionFrame _arithmeticFrame;
     private uint _arithmeticPosition;
-    private bool _arithmeticRightHalf, _arithmeticAdditive;
+    private bool _arithmeticRightHalf, _arithmeticAdditive, _arithmeticLogical;
     private ExceptionDispatchInfo? _operandFailure, _arithmeticFailure;
     private NormalizedArithmeticResult? _arithmeticResult;
     private SupervisorFailureDescription? _operandSupervisorFailure;
@@ -65,6 +65,7 @@ public sealed partial class InstructionExecutor
             {
                 var captured = _memoryInstructions.CaptureArithmetic(ref _arithmeticFrame);
                 _arithmeticAdditive = captured.Additive;
+                _arithmeticLogical = captured.IsLogical;
                 return captured.Operation;
             }
             catch (Exception failure)
@@ -97,7 +98,7 @@ public sealed partial class InstructionExecutor
         {
             _operandFailure?.Throw();
             _arithmeticFailure?.Throw();
-            _memoryInstructions.PublishArithmetic(ref _arithmeticFrame, _arithmeticResult!.Value, _arithmeticAdditive);
+            _memoryInstructions.PublishArithmetic(ref _arithmeticFrame, _arithmeticResult!.Value, _arithmeticAdditive, _arithmeticLogical);
         }
         catch (ProcessorException failure) when (string.IsNullOrEmpty(failure.Message))
         {
@@ -111,6 +112,7 @@ public sealed partial class InstructionExecutor
     private void ClearArithmeticPreparation()
     {
         _arithmeticCaptured = false;
+        _arithmeticLogical = false;
         _arithmeticFrame = default;
         _operandFailure = _arithmeticFailure = null;
         _arithmeticResult = null;
