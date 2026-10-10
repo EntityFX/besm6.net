@@ -142,8 +142,8 @@ Upstream-коммит
 подобранное по константе Диспака. Само техническое описание здесь ещё
 не прочитано и независимо не проверено.
 
-[Аудит JSON](../reports/division-version-audit.json) и
-[CSV](../reports/division-version-audit.csv) сохраняют все 200 исходных
+[Аудит JSON](../reports/hardware-time/division-version-audit.json) и
+[CSV](../reports/hardware-time/division-version-audit.csv) сохраняют все 200 исходных
 операндов, ожидаемое кандидатом частное, текущее частное, Y и исключение.
 149 совпадают, 51 отличается; исключений в этой таблице нет.
 Разности машинных кодов candidate−current: +1 (21 случай), −1 (19),
@@ -435,7 +435,7 @@ Simh512K, как в закреплённом SIMH; Classical32K отклоняе
 
 Выбранный комплект закреплён по ревизиям SIMH и архива носителей;
 URL, размеры и SHA256 перечислены в
-[`reports/supervisor-source-audit.json`](../reports/supervisor-source-audit.json).
+[`reports/supervisor/supervisor-source-audit.json`](../reports/supervisor/supervisor-source-audit.json).
 Наличие текста старой генерации внутри образа не подтверждает, что загрузчик
 исполняет именно эту генерацию.
 

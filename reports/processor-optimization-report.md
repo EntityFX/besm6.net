@@ -799,7 +799,7 @@ SHA-256 текущего Processor совпал со снимком control:
 
 Компактная копия среды, хешей сборок, измерений, контрольного состояния,
 профиля и итогов проверок сохранена в репозитории:
-[processor-hot-path-results.json](processor-hot-path-results.json).
+[processor/processor-hot-path-results.json](processor/processor-hot-path-results.json).
 Исходные логи, полные JSON/CSV и .nettrace остаются в локальном tests-run.
 
 ```powershell
@@ -966,7 +966,7 @@ Windows 10 19045, Intel Core i7-2600 3,40 ГГц (4 ядра/8 потоков),
 Её хеш и хеши исходной/предыдущей сборок записаны в JSON; повторная
 сборка после коммита может иметь другой хеш из-за метаданных версии.
 
-[Закоммиченные результаты и диапазоны](processor-tier1-results.json).
+[Закоммиченные результаты и диапазоны](processor/processor-tier1-results.json).
 
 Локальные полные данные с выводом и CSV:
 [RunLoaded](../tests-run/tier1-final-runtime/results.json),
@@ -1124,7 +1124,7 @@ watchpoints и интерфейсного чтения. Изменение вр�
 Результаты с разбросом сохранены, а не заменены лучшим запуском.
 
 Компактные доказательства, параметры, хеши и калибровочное состояние
-закоммичены в [processor-followup-experiments.json](processor-followup-experiments.json).
+закоммичены в [processor/processor-followup-experiments.json](processor/processor-followup-experiments.json).
 До следующего эксперимента принятое ускорение составляло ×2,56–2,93
 по [контрольной серии предыдущего этапа](#продолжение-оптимизации-общего-пути-процессора).
 
@@ -1141,4 +1141,4 @@ Execute индексной группы, затем для Add, Multiply и Norm
 сравнены непосредственно. Подтверждено ×3,10–3,81 по RunLoaded.
 Полный CLI измерен отдельно и пока не даёт минимум ×3 на всех заданиях.
 Код принят в `092634f`; [итоговый отчёт](#итоговое-ускорение-оптимизированный-jit-для-общих-обработчиков),
-[закоммиченные доказательства](processor-tier1-results.json).
+[закоммиченные доказательства](processor/processor-tier1-results.json).

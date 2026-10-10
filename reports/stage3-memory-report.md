@@ -37,8 +37,8 @@ Processor — 895, Runtime — 281, CLI — 15, Integration — 426.
 `TraceAlgol_Last30Instructions`. Эталоны и сравнения не изменены.
 
 Компактные результаты без имён хоста, учётки и путей профиля:
-[JSON](hardware-memory-foundation-results.json),
-[CSV](hardware-memory-foundation-results.csv).
+[JSON](memory/hardware-memory-foundation-results.json),
+[CSV](memory/hardware-memory-foundation-results.csv).
 Сохранены только разрешённые поля итогов тестов; полные TRX в отчёт
 не копируются. Исходные прогоны находятся в игнорируемых `TestResults`
 и `tests-run/stage3-golden`.
@@ -117,7 +117,7 @@ SHA-256 и проверено совпадение исходников с `fc3c
 конструктора общий корпус запущен повторно для окончательной сборки.
 
 Итоги общей проверки и производительности приведены в
-[JSON](memory-models-results.json) и [CSV](memory-models-results.csv).
+[JSON](memory/memory-models-results.json) и [CSV](memory/memory-models-results.csv).
 Отчёты сохраняют только разрешённые поля результатов, без имён хоста,
 учётки и путей профиля. Полные исходные TRX и выводы остаются в
 игнорируемых каталогах `TestResults` и `tests-run`.
@@ -162,11 +162,11 @@ Release: **1961 passed, 0 failed, 3 прежних пропуска**. CERN: **3
 Все десять измерений original проходят max(20 мс, 2%). Таблица тактов,
 единицы SimulationClock и алгоритм pacing не изменялись.
 
-Исходные результаты: [RunLoaded](memory-models-runtime-benchmark.json),
-[CLI первая серия](memory-models-cli-first-benchmark.json),
-[CLI повтор](memory-models-cli-repeat-benchmark.json),
-[original](memory-models-original-benchmark.json).
-Для каждого сохранён CSV; [сводное сравнение](memory-models-performance.csv)
+Исходные результаты: [RunLoaded](memory/memory-models-runtime-benchmark.json),
+[CLI первая серия](memory/memory-models-cli-first-benchmark.json),
+[CLI повтор](memory/memory-models-cli-repeat-benchmark.json),
+[original](memory/memory-models-original-benchmark.json).
+Для каждого сохранён CSV; [сводное сравнение](memory/memory-models-performance.csv)
 содержит время обеих сборок и число измерений.
 
 ### Границы оставшейся работы
@@ -287,10 +287,10 @@ mp3 — модель5,112704с, ошибка **6,76мс**. Все пять из�
 
 ### Артефакты
 
-- [Итоги JSON](memory-mapped-results.json), [тесты CSV](memory-mapped-results.csv), [скорость CSV](memory-mapped-performance.csv).
-- [RunLoaded](memory-mapped-runtime-benchmark.json), [CLI](memory-mapped-cli-benchmark.json), [повтор CLI](memory-mapped-cli-repeat-benchmark.json), [дополнительный Dhrystone](memory-mapped-cli-dhrystone-repeat-benchmark.json); каждому соответствует CSV.
-- [Original](memory-mapped-original-benchmark.json), [переводимый цикл](memory-mapped-translated-benchmark.json), оба с CSV.
-- `memory-mapped-output.json.gz`: 354 исходных вывода и SHA-256 каждого. Заголовки TRX с именами хоста/учётки не включены. Проверено отсутствие частных идентификаторов в отчётах и архиве.
+- [Итоги JSON](memory/memory-mapped-results.json), [тесты CSV](memory/memory-mapped-results.csv), [скорость CSV](memory/memory-mapped-performance.csv).
+- [RunLoaded](memory/memory-mapped-runtime-benchmark.json), [CLI](memory/memory-mapped-cli-benchmark.json), [повтор CLI](memory/memory-mapped-cli-repeat-benchmark.json), [дополнительный Dhrystone](memory/memory-mapped-cli-dhrystone-repeat-benchmark.json); каждому соответствует CSV.
+- [Original](memory/memory-mapped-original-benchmark.json), [переводимый цикл](memory/memory-mapped-translated-benchmark.json), оба с CSV.
+- `memory-mapped-output`: 354 исходных вывода и SHA-256 каждого. Сводные результаты JSON/CSV сохранены в каталоге `memory/`; объёмные «сырые» выводы тестов не хранятся в репозитории. Заголовки TRX с именами хоста/учётки не включены.
 
 Команды повторения:
 
@@ -328,7 +328,7 @@ python tools/benchmark_mapped_memory.py --dll src/Besm6.Cli/bin/Release/net8.0/b
 артефакты, их контрольные суммы и измерения не переписаны.
 
 Release и CERN проверены повторно; численные итоги закреплены в
-[JSON](memory-names-results.json). Golden: 3/3 с прежними счётчиками.
+[JSON](memory/memory-names-results.json). Golden: 3/3 с прежними счётчиками.
 Новые результаты производительности не заявляются.
 
 ## Этап 3: формат РП и РЗ
@@ -364,7 +364,7 @@ python tools/run_all_examples.py --dll src/Besm6.Cli/bin/Release/net8.0/besm6.dl
 Результаты предыдущей серии остаются в [отчёте моделей памяти](#этап-3-буферы-и-выбор-модели-памяти).
 Новый выигрыш или новый результат бенчмарка не заявляется.
 
-[JSON](memory-registers-results.json) и [CSV](memory-registers-results.csv)
+[JSON](memory/memory-registers-results.json) и [CSV](memory/memory-registers-results.csv)
 содержат обезличенные результаты. Полные TRX остаются в игнорируемых каталогах.
 Этап 3 ещё не завершён.
 
@@ -410,10 +410,10 @@ python tools/run_all_examples.py --dll src/Besm6.Cli/bin/Release/net8.0/besm6.dl
 Производительность не перемерялась: новые API не вызываются на активном
 пути CPU. Источники выборки, исполнения, буферов и RunLoaded совпадают
 с 3407eb2 после нормализации переводов строк; хеши сохранены в
-[JSON](memory-requests-results.json). Предыдущие измерения сохранены
+[JSON](memory/memory-requests-results.json). Предыдущие измерения сохранены
 отдельно, новый прирост скорости не заявляется.
 
-[CSV](memory-requests-results.csv) содержит результаты по наборам.
+[CSV](memory/memory-requests-results.csv) содержит результаты по наборам.
 Отчёты обезличены; полные TRX остаются в игнорируемых каталогах.
 Следующий блок — подтверждение ключей БАЗ/БАС и подключение проверенной
 математической адресации и защиты к пути CPU. Этап 3 не завершён.

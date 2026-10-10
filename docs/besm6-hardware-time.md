@@ -11,7 +11,7 @@
 [247](../book/fortran-1976/original/page-247.png),
 [248](../book/fortran-1976/original/page-248.png),
 [249](../book/fortran-1976/original/page-249.png).
-SHA256 и границы утверждений: [аудит](../reports/hardware-time-source-audit.json).
+SHA256 и границы утверждений: [аудит](../reports/hardware-time/hardware-time-source-audit.json).
 
 `BookTimingSpecification` хранит 47 опубликованных строк: времена УУ
 и отдельные minimum/average/maximum АУ. Книжный такт этого источника —
@@ -146,7 +146,7 @@ CPU ещё не реализованы.
 [PDF 3](sources/hardware-time/arithmetic-pdf-03.png) содержит лист 3,
 §1.1; [PDF 4](sources/hardware-time/arithmetic-pdf-04.png) — листы 4/5,
 таблицу 1.1. Номер страницы PDF и номер печатного листа различаются.
-Файлы PDF закреплены SHA256 в [аудите](../reports/hardware-time-sequence-audit.json);
+Файлы PDF закреплены SHA256 в [аудите](../reports/hardware-time/hardware-time-sequence-audit.json);
 в репозитории сохранены проверенные развороты.
 
 ### Подтверждённые ограничения

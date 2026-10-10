@@ -9,7 +9,7 @@
 сохраняет отдельные времена УУ и диапазоны АУ для 47 команд;
 статистическое среднее не используется как длительность исполнения.
 Сканы проверены визуально, хеши закреплены в
-[аудите](hardware-time-source-audit.json).
+[аудите](hardware-time/hardware-time-source-audit.json).
 
 Новая инфраструктура пока не подключена к CPU, памяти или устройствам.
 Семантика команд, существующий `SimulationClock`, таблица `Besm6Timing`
@@ -36,8 +36,8 @@ python tools/run_all_examples.py --dll src/Besm6.Cli/bin/Release/net8.0/besm6.dl
 Синтетическое перекрытие ресурсов проверяет календарь, а не историческую
 машину.
 
-[JSON](hardware-time-foundation-results.json) содержит исходы всех
-397 CERN-случаев и SHA256 локальных TRX; [CSV](hardware-time-foundation-results.csv)
+[JSON](hardware-time/hardware-time-foundation-results.json) содержит исходы всех
+397 CERN-случаев и SHA256 локальных TRX; [CSV](hardware-time/hardware-time-foundation-results.csv)
 содержит сводку проектов. Заголовки TRX с идентификаторами хоста не включены.
 
 Новый замер скорости в этом блоке не проводился: горячий путь CPU
@@ -73,7 +73,7 @@ python tools/run_all_examples.py --dll src/Besm6.Cli/bin/Release/net8.0/besm6.dl
 название МОЗУ в источниках и URL сохраняется.
 
 Первичные развороты ТО-3/ТО-4 проверены визуально и сохранены.
-Хеши PDF и разворотов: [аудит](hardware-time-sequence-audit.json).
+Хеши PDF и разворотов: [аудит](hardware-time/hardware-time-sequence-audit.json).
 Правила и ограничения: [спецификация](../docs/besm6-hardware-time.md).
 ТО-4 указывает возврат данных приблизительно:900 нс не объявлены точной
 калибровкой. Геометрия Simh512K не получает выдуманную задержку банков.
@@ -90,8 +90,8 @@ dotnet test Besm6.sln -c Release --no-restore --logger "trx;LogFileName=stage5-m
 python tools/run_all_examples.py --dll src/Besm6.Cli/bin/Release/net8.0/besm6.dll --suite fast --output tests-run/stage5-control-golden
 ```
 
-[JSON](hardware-time-control-results.json) содержит исходы CERN и хеши TRX,
-[CSV](hardware-time-control-results.csv) — сводку проектов.
+[JSON](hardware-time/hardware-time-control-results.json) содержит исходы CERN и хеши TRX,
+[CSV](hardware-time/hardware-time-control-results.csv) — сводку проектов.
 Идентификаторы хоста и профиля из исходных TRX не перенесены в отчёты.
 
 Горячий путь исполнения не изменён; новые компоненты пока не подключены
@@ -170,19 +170,19 @@ RunLoaded дополнительно сравнивает конечные ре�
 Этот блок меняет владение календарём и защиту исполнения, а не АУ.
 
 Серии с прогревом, калибровкой, хешами сборок и всеми измерениями:
-[RunLoaded JSON](hardware-time-machine-runtime-results.json),
-[CSV](hardware-time-machine-runtime-results.csv),
-[CLI JSON](hardware-time-machine-cli-results.json),
-[CSV](hardware-time-machine-cli-results.csv). Все210 исходных выводов
-сохранены в [ZIP](hardware-time-machine-logs.zip), каталоги `runtime` и `cli`.
+[RunLoaded JSON](hardware-time/hardware-time-machine-runtime-results.json),
+[CSV](hardware-time/hardware-time-machine-runtime-results.csv),
+[CLI JSON](hardware-time/hardware-time-machine-cli-results.json),
+[CSV](hardware-time/hardware-time-machine-cli-results.csv). Все210 исходных выводов
+сведены в JSON/CSV выше; объёмные «сырые» логи (`runtime`, `cli`) в репозиторий не помещаются.
 
 `original`: Dhrystone10000 — медиана исполнительного цикла4,237685 с
 при модельных4,234991 с; MPMFLOPS3 —5,112914 с при5,112704 с.
 Все пять измерений каждого задания прошли допуск `max(20мс,2%)`;
 наибольшая абсолютная ошибка —5,133 мс. Это подтверждение прежнего
 табличного pacing, не новая аппаратная длительность команд.
-[JSON](hardware-time-machine-tempo-results.json),
-[CSV](hardware-time-machine-tempo-results.csv); исходные выводы —
+[JSON](hardware-time/hardware-time-machine-tempo-results.json),
+[CSV](hardware-time/hardware-time-machine-tempo-results.csv); исходные выводы —
 каталог `tempo` того же ZIP.
 
 ### Оставшаяся работа
@@ -255,16 +255,16 @@ dh0/mp0 сохранены как baseline. Сверяются STOP, код во
 `max(20мс,2%)`; максимальная ошибка6.666 мс.
 Это проверка прежнего табличного pacing, а не новой длительности АУ.
 
-[Итог JSON](hardware-time-unit-results.json), [CSV](hardware-time-unit-results.csv),
-[RunLoaded](hardware-time-unit-runtime-results.json),
-[CLI](hardware-time-unit-cli-results.json), [original](hardware-time-unit-tempo-results.json).
+[Итог JSON](hardware-time/hardware-time-unit-results.json), [CSV](hardware-time/hardware-time-unit-results.csv),
+[RunLoaded](hardware-time/hardware-time-unit-runtime-results.json),
+[CLI](hardware-time/hardware-time-unit-cli-results.json), [original](hardware-time/hardware-time-unit-tempo-results.json).
 Исходные выводы хранятся локально в игнорируемом `tests-run/`, без архива в Git;
-размеры и SHA-256 — в [манифесте](hardware-time-unit-local-outputs.json).
+размеры и SHA-256 — в [манифесте](hardware-time/hardware-time-unit-local-outputs.json).
 Имена хоста, учётки и пользовательского профиля в отчёты не включены.
 
 ### Граница следующего блока
 
-[Скан и аудит источника](hardware-time-unit-source-audit.json) закрепляют
+[Скан и аудит источника](hardware-time/hardware-time-unit-source-audit.json) закрепляют
 раздельные сроки проверки делителя и УДО. Длительности целых команд из
 количества итераций хостового деления не выводятся.
 
@@ -360,7 +360,7 @@ Original проверен на Dhrystone10000 и MPMFLOPS3, по пять изм
 
 ### Источник и оставшаяся работа
 
-В [аудите ТО-3](hardware-time-arithmetic-source-audit.json) закреплены
+В [аудите ТО-3](hardware-time/hardware-time-arithmetic-source-audit.json) закреплены
 развороты §4.16. Счётчик деления начинается с101000, отсчитывает40 сдвигов,
 затем образуется частное. Двухрядный остаток и ранние управляющие разряды
 не представлены целым числом в C#-цикле NrDiv. Его быстрые выходы сохраняют
@@ -372,13 +372,13 @@ Original проверен на Dhrystone10000 и MPMFLOPS3, по пять изм
 прерывания, original/max нового профиля и независимая приёмка выбранной ОС.
 [Матрица завершения](../docs/besm6-readiness.md) сохраняет полный объём.
 
-Артефакты: [тесты JSON](hardware-time-arithmetic-results.json),
-[CSV](hardware-time-arithmetic-results.csv),
-[RunLoaded](hardware-time-arithmetic-accepted-runtime-results.json),
-[CLI](hardware-time-arithmetic-accepted-cli-results.json),
-[original](hardware-time-arithmetic-tempo-results.json),
-[исходные выводы и JIT](hardware-time-arithmetic-logs.zip).
-Все неудачные варианты также сохранены в JSON/CSV и ZIP.
+Артефакты: [тесты JSON](hardware-time/hardware-time-arithmetic-results.json),
+[CSV](hardware-time/hardware-time-arithmetic-results.csv),
+[RunLoaded](hardware-time/hardware-time-arithmetic-accepted-runtime-results.json),
+[CLI](hardware-time/hardware-time-arithmetic-accepted-cli-results.json),
+[original](hardware-time/hardware-time-arithmetic-tempo-results.json).
+Все неудачные варианты также сохранены в JSON/CSV; объёмные «сырые» выводы и JIT-логи
+в репозиторий не помещаются.
 Идентификаторы машины, учётки и профиля в отчёты не включены.
 
 ## Этап 5: вычисление результата АУ и публикация
@@ -396,7 +396,7 @@ Original проверен на Dhrystone10000 и MPMFLOPS3, по пять изм
 ТО-3 §3.23, лист61, различает наложение округления на выдаваемый код
 и физическую запись младшего бита. Разделение позволяет будущему драйверу
 управлять публикацией, не создавая второй алгоритм арифметики.
-[Аудит источника](hardware-time-output-source-audit.json) закрепляет скан
+[Аудит источника](hardware-time/hardware-time-output-source-audit.json) закрепляет скан
 и границы утверждений. Представление результата не является полной копией
 физических регистров АУ и не задаёт срок сигналов ИЗОП/СПОП.
 
@@ -462,13 +462,13 @@ CLI-серии увеличение1,51%. Эта серия сохранена, 
 Наибольшая абсолютная ошибка исполнительного цикла —6,861 мс.
 Это темп прежней таблицы, не новая аппаратная калибровка.
 
-Артефакты: [тесты JSON](hardware-time-output-results.json),
-[CSV](hardware-time-output-results.csv),
-[первая серия RunLoaded](hardware-time-output-split-runtime-results.json),
-[три варианта RunLoaded](hardware-time-output-inlined-runtime-results.json),
-[CLI](hardware-time-output-inlined-cli-results.json),
-[original](hardware-time-output-tempo-results.json),
-[357 исходных выводов](hardware-time-output-logs.zip).
+Артефакты: [тесты JSON](hardware-time/hardware-time-output-results.json),
+[CSV](hardware-time/hardware-time-output-results.csv),
+[первая серия RunLoaded](hardware-time/hardware-time-output-split-runtime-results.json),
+[три варианта RunLoaded](hardware-time/hardware-time-output-inlined-runtime-results.json),
+[CLI](hardware-time/hardware-time-output-inlined-cli-results.json),
+[original](hardware-time/hardware-time-output-tempo-results.json).
+357 исходных выводов сведены в JSON/CSV выше; объёмные «сырые» логи в репозиторий не помещаются.
 
 ### Незавершённый этап
 
@@ -546,16 +546,16 @@ dh0/mp0 сохранены как baseline. Сверяются STOP, код во
 `max(20мс,2%)`; максимальная ошибка8.460 мс.
 Это проверка прежнего табличного pacing, а не новой длительности АУ.
 
-[Итог JSON](hardware-time-errors-results.json), [CSV](hardware-time-errors-results.csv),
-[RunLoaded](hardware-time-errors-runtime-results.json),
-[CLI](hardware-time-errors-cli-results.json), [original](hardware-time-errors-tempo-results.json).
+[Итог JSON](hardware-time/hardware-time-errors-results.json), [CSV](hardware-time/hardware-time-errors-results.csv),
+[RunLoaded](hardware-time/hardware-time-errors-runtime-results.json),
+[CLI](hardware-time/hardware-time-errors-cli-results.json), [original](hardware-time/hardware-time-errors-tempo-results.json).
 Исходные выводы хранятся локально в игнорируемом `tests-run/`, без архива в Git;
-размеры и SHA-256 — в [манифесте](hardware-time-errors-local-outputs.json).
+размеры и SHA-256 — в [манифесте](hardware-time/hardware-time-errors-local-outputs.json).
 Имена хоста, учётки и пользовательского профиля в отчёты не включены.
 
 ### Граница следующего блока
 
-[Сканы и аудит источника](hardware-time-errors-source-audit.json) закрепляют
+[Сканы и аудит источника](hardware-time/hardware-time-errors-source-audit.json) закрепляют
 точки контроля и четыре режима. Это логические переходы, не электрическая
 модель изменений входного кода во время свёртки или всех совместных условий
 сигналов по схемам.
@@ -615,10 +615,10 @@ dh0/mp0 сохранены как baseline. Сверяются STOP, код во
 `max(20мс,2%)`; максимальная ошибка9.000 мс.
 Это проверка прежнего табличного pacing, не новой длительности деления.
 
-[Итог JSON](hardware-time-division-results.json), [CSV](hardware-time-division-results.csv),
-[RunLoaded](hardware-time-division-runtime-results.json), [CLI](hardware-time-division-cli-results.json),
-[original](hardware-time-division-tempo-results.json), [источники](hardware-time-division-source-audit.json).
-Исходные выводы локальны в игнорируемом `tests-run/`; [манифест SHA-256](hardware-time-division-local-outputs.json).
+[Итог JSON](hardware-time/hardware-time-division-results.json), [CSV](hardware-time/hardware-time-division-results.csv),
+[RunLoaded](hardware-time/hardware-time-division-runtime-results.json), [CLI](hardware-time/hardware-time-division-cli-results.json),
+[original](hardware-time/hardware-time-division-tempo-results.json), [источники](hardware-time/hardware-time-division-source-audit.json).
+Исходные выводы локальны в игнорируемом `tests-run/`; [манифест SHA-256](hardware-time/hardware-time-division-local-outputs.json).
 Архивов в коммите нет; идентификаторы хоста и учётки исключены.
 
 Следующие части: полные ряды остатка, физическое образование частного,
@@ -667,15 +667,15 @@ dh0/mp0 сохранены как baseline. Сверяются STOP, код во
 6.65% регрессии и была отклонена. Повторён только этот случай
 с теми же хешами сборок, одним прогревом и пятью измерениями; исходная серия
 сохранена. Причина первого отклонения не установлена.
-[Повтор MPMFLOPS1](hardware-time-quotient-cli-mp1-repeat-results.json).
+[Повтор MPMFLOPS1](hardware-time/hardware-time-quotient-cli-mp1-repeat-results.json).
 Ускорение не заявляется. Все пять измерений original
 Dhrystone10000 и MPMFLOPS3 прошли max(20мс,2%); максимальная ошибка
 8.845 мс. Это проверка прежнего табличного pacing.
 
-[Итог JSON](hardware-time-quotient-results.json), [CSV](hardware-time-quotient-results.csv),
-[RunLoaded](hardware-time-quotient-runtime-results.json), [CLI](hardware-time-quotient-cli-results.json),
-[original](hardware-time-quotient-tempo-results.json), [источники](hardware-time-quotient-source-audit.json).
-Исходные выводы — локально в игнорируемом tests-run; [манифест](hardware-time-quotient-local-outputs.json).
+[Итог JSON](hardware-time/hardware-time-quotient-results.json), [CSV](hardware-time/hardware-time-quotient-results.csv),
+[RunLoaded](hardware-time/hardware-time-quotient-runtime-results.json), [CLI](hardware-time/hardware-time-quotient-cli-results.json),
+[original](hardware-time/hardware-time-quotient-tempo-results.json), [источники](hardware-time/hardware-time-quotient-source-audit.json).
+Исходные выводы — локально в игнорируемом tests-run; [манифест](hardware-time/hardware-time-quotient-local-outputs.json).
 Архивов в коммите нет; идентификаторы хоста и учётки исключены.
 
 Остаются физические ряды остатка/сумматора, связь42 импульсов со счётчиком40,
@@ -727,10 +727,10 @@ baseline dh0/mp0, отдельные RunLoaded и CLI. Проверены воз
 все измерения Dhrystone10000/MPMFLOPS3 выдержали max(20мс,2%).
 Это прежний табличный темп; автоматическое модельное время не заявляется.
 
-[JSON](hardware-time-separation-results.json), [CSV](hardware-time-separation-results.csv),
-[RunLoaded](hardware-time-separation-runtime-results.json), [CLI](hardware-time-separation-cli-results.json),
-[original](hardware-time-separation-tempo-results.json), [аудит кода](hardware-time-separation-source-audit.json).
-Исходные выводы — локально в игнорируемом tests-run; [манифест](hardware-time-separation-local-outputs.json).
+[JSON](hardware-time/hardware-time-separation-results.json), [CSV](hardware-time/hardware-time-separation-results.csv),
+[RunLoaded](hardware-time/hardware-time-separation-runtime-results.json), [CLI](hardware-time/hardware-time-separation-cli-results.json),
+[original](hardware-time/hardware-time-separation-tempo-results.json), [аудит кода](hardware-time/hardware-time-separation-source-audit.json).
+Исходные выводы — локально в игнорируемом tests-run; [манифест](hardware-time/hardware-time-separation-local-outputs.json).
 Архивов и идентификаторов хоста/учётки в отчёте нет.
 
 Уточнённая цель пользователя: полноценная логическая модель машины без
@@ -790,17 +790,17 @@ Baseline проверен по хешам предыдущей принятой 
 запрета reset/cancel внутри диагностического callback дал5.38%
 для dh5000; повтор всех семи заданий той ранней сборки дал3,03%.
 Причина разброса не установлена. Данные сохранены отдельно:
-[ранний CLI](hardware-time-preparation-cli-first-results.json),
-[его повтор](hardware-time-preparation-cli-earlier-repeat-results.json).
+[ранний CLI](hardware-time/hardware-time-preparation-cli-first-results.json),
+[его повтор](hardware-time/hardware-time-preparation-cli-earlier-repeat-results.json).
 Итоговая сборка заново прошла тесты, golden, RunLoaded, CLI и original;
 таблица выше использует только её измерения. Все серии: 1 прогрев+5 измерений.
 Максимальная ошибка original —8.502 мс,
 проверка max(20мс,2%) принята. Это существующий табличный темп.
 
-[JSON](hardware-time-preparation-results.json),[CSV](hardware-time-preparation-results.csv),
-[RunLoaded](hardware-time-preparation-runtime-results.json),[CLI](hardware-time-preparation-cli-results.json),
-[original](hardware-time-preparation-tempo-results.json),[код](hardware-time-preparation-source-audit.json),
-[манифест выводов](hardware-time-preparation-local-outputs.json).
+[JSON](hardware-time/hardware-time-preparation-results.json),[CSV](hardware-time/hardware-time-preparation-results.csv),
+[RunLoaded](hardware-time/hardware-time-preparation-runtime-results.json),[CLI](hardware-time/hardware-time-preparation-cli-results.json),
+[original](hardware-time/hardware-time-preparation-tempo-results.json),[код](hardware-time/hardware-time-preparation-source-audit.json),
+[манифест выводов](hardware-time/hardware-time-preparation-local-outputs.json).
 Сырые выводы и TRX остаются локально в игнорируемых каталогах.
 Архивы и идентификаторы хоста/учётки в отчёт не включены.
 
@@ -858,12 +858,12 @@ Dhrystone N=0/5000/10000, MPMFLOPS kpart=0/1/2/3,9000×30; baseline подтве
 не установлена. Обе серии и её CLI-замер сохранены отдельно; итоговая сборка
 заново прошла тесты, golden, RunLoaded, CLI и original. Таблица использует итоговые данные.
 
-[JSON](hardware-time-driver-results.json), [CSV](hardware-time-driver-results.csv),
-[RunLoaded](hardware-time-driver-runtime-results.json), [CLI](hardware-time-driver-cli-results.json),
-[original](hardware-time-driver-tempo-results.json), [код](hardware-time-driver-source-audit.json),
-[первая серия](hardware-time-driver-runtime-first-results.json),
-[её повтор](hardware-time-driver-runtime-earlier-repeat-results.json),
-[манифест исходных выводов](hardware-time-driver-local-outputs.json).
+[JSON](hardware-time/hardware-time-driver-results.json), [CSV](hardware-time/hardware-time-driver-results.csv),
+[RunLoaded](hardware-time/hardware-time-driver-runtime-results.json), [CLI](hardware-time/hardware-time-driver-cli-results.json),
+[original](hardware-time/hardware-time-driver-tempo-results.json), [код](hardware-time/hardware-time-driver-source-audit.json),
+[первая серия](hardware-time/hardware-time-driver-runtime-first-results.json),
+[её повтор](hardware-time/hardware-time-driver-runtime-earlier-repeat-results.json),
+[манифест исходных выводов](hardware-time/hardware-time-driver-local-outputs.json).
 Выводы/TRX локальные и игнорируемые; архивов и идентификаторов хоста/учётки нет.
 
 Остаток оценки разработки186−8=178 человеко-часов, не времени агента.
@@ -929,10 +929,10 @@ Original: максимальная ошибка 6.599 мс, допуск max(20 
 диапазон baseline в этой серии 1,060–1,532 с, текущий 1,064–1,145 с.
 Причина разброса не установлена; исходные измерения сохранены полностью.
 
-[JSON](hardware-time-controller-results.json), [CSV](hardware-time-controller-results.csv),
-[RunLoaded](hardware-time-controller-runtime-results.json), [CLI](hardware-time-controller-cli-results.json),
-[original](hardware-time-controller-tempo-results.json), [источник и код](hardware-time-controller-source-audit.json),
-[манифест исходных выводов](hardware-time-controller-local-outputs.json).
+[JSON](hardware-time/hardware-time-controller-results.json), [CSV](hardware-time/hardware-time-controller-results.csv),
+[RunLoaded](hardware-time/hardware-time-controller-runtime-results.json), [CLI](hardware-time/hardware-time-controller-cli-results.json),
+[original](hardware-time/hardware-time-controller-tempo-results.json), [источник и код](hardware-time/hardware-time-controller-source-audit.json),
+[манифест исходных выводов](hardware-time/hardware-time-controller-local-outputs.json).
 Исходные выводы/TRX локальны и игнорируются; архивов и идентификаторов хоста нет.
 
 Остаток разработки: 178−8=170 оценочных человеко-часов; в блоке АУ осталось 40 ч.
@@ -1005,10 +1005,10 @@ Baseline подтверждён хешами принятой сборки. Пл
 Original: максимальная ошибка 7.551 мс; допуск max(20 мс, 2%) принят.
 Таблица проверяет сохранение скорости, не доказывает устойчивое ускорение.
 
-[JSON](hardware-time-publication-results.json), [CSV](hardware-time-publication-results.csv),
-[RunLoaded](hardware-time-publication-runtime-results.json), [CLI](hardware-time-publication-cli-results.json),
-[original](hardware-time-publication-tempo-results.json), [код](hardware-time-publication-source-audit.json),
-[манифест исходных выводов](hardware-time-publication-local-outputs.json).
+[JSON](hardware-time/hardware-time-publication-results.json), [CSV](hardware-time/hardware-time-publication-results.csv),
+[RunLoaded](hardware-time/hardware-time-publication-runtime-results.json), [CLI](hardware-time/hardware-time-publication-cli-results.json),
+[original](hardware-time/hardware-time-publication-tempo-results.json), [код](hardware-time/hardware-time-publication-source-audit.json),
+[манифест исходных выводов](hardware-time/hardware-time-publication-local-outputs.json).
 Ранние три серии до защиты считывателя и фиксации деталей авоста сохранены
 отдельно: earlier-runtime/earlier-cli/earlier-tempo. Их исходные файлы содержат
 относительные пути прежнего каталога; манифест указывает фактическое локальное
@@ -1080,9 +1080,9 @@ Original: максимальная ошибка 7.225 мс, допуск max(20�
 MRAM/буферы, устройства/DMA/прерывания, публичный выбор исполнения и полная
 приёмка профиля×скорость, CERN/ОС. Полная цель остаётся активной.
 
-[JSON](hardware-time-binding-results.json), [CSV](hardware-time-binding-results.csv),
-[код и база](hardware-time-binding-source-audit.json),
-[исходные выводы](hardware-time-binding-local-outputs.json),
+[JSON](hardware-time/hardware-time-binding-results.json), [CSV](hardware-time/hardware-time-binding-results.csv),
+[код и база](hardware-time/hardware-time-binding-source-audit.json),
+[исходные выводы](hardware-time/hardware-time-binding-local-outputs.json),
 [план](../docs/besm6-readiness.md). Сырые логи/TRX локальны;
 архивов и идентификаторов машины в поставке нет.
 
@@ -1144,9 +1144,9 @@ Original: максимальная ошибка 6.723 мс, допуск max(20�
 устройства/DMA/прерывания, выбор исполнения и полная профильная приёмка.
 Полная цель остаётся активной.
 
-[JSON](hardware-time-command-source-results.json), [CSV](hardware-time-command-source-results.csv),
-[код и источники](hardware-time-command-source-source-audit.json),
-[исходные выводы](hardware-time-command-source-local-outputs.json),
+[JSON](hardware-time/hardware-time-command-source-results.json), [CSV](hardware-time/hardware-time-command-source-results.csv),
+[код и источники](hardware-time/hardware-time-command-source-source-audit.json),
+[исходные выводы](hardware-time/hardware-time-command-source-local-outputs.json),
 [спецификация](../docs/besm6-hardware-time.md). Сырые логи/TRX локальны;
 архивы и идентификаторы машины не включены. Проверенные развороты:
 [лист38/39](../docs/sources/hardware-time/arithmetic-pdf-21.png),
@@ -1201,9 +1201,9 @@ Original: максимальная ошибка 0.409 мс, допуск max(20�
 последовательности АУ/УУ, MRAM/буферы, устройства и полная профильная приёмка.
 Полная цель остаётся активной.
 
-[JSON](hardware-time-command-encoding-results.json), [CSV](hardware-time-command-encoding-results.csv),
-[код/источники](hardware-time-command-encoding-source-audit.json),
-[выводы](hardware-time-command-encoding-local-outputs.json),
+[JSON](hardware-time/hardware-time-command-encoding-results.json), [CSV](hardware-time/hardware-time-command-encoding-results.csv),
+[код/источники](hardware-time/hardware-time-command-encoding-source-audit.json),
+[выводы](hardware-time/hardware-time-command-encoding-local-outputs.json),
 [спецификация](../docs/besm6-hardware-time.md).
 Сырые выводы и TRX локальны; архивы и идентификаторы хоста не включены.
 
@@ -1253,9 +1253,9 @@ Original: ошибка до 8.760 мс, допуск max(20мс,2%) принят
 27% уточнённого этапа5. Автоматические временные последовательности остаются
 следующим шагом; общий вход команд — их необходимая подготовка.
 
-[JSON](hardware-time-logical-input-results.json), [CSV](hardware-time-logical-input-results.csv),
-[код/источники](hardware-time-logical-input-source-audit.json),
-[выводы](hardware-time-logical-input-local-outputs.json).
+[JSON](hardware-time/hardware-time-logical-input-results.json), [CSV](hardware-time/hardware-time-logical-input-results.csv),
+[код/источники](hardware-time/hardware-time-logical-input-source-audit.json),
+[выводы](hardware-time/hardware-time-logical-input-local-outputs.json).
 Сырые логи/TRX локальны; архивы и идентификаторы хоста не включены.
 
 ## Автоматические фиксированные последовательности АУ
@@ -1307,9 +1307,9 @@ Original: максимальная ошибка 8.384 мс, допуск max(20�
 29,5% уточнённого этапа5. Остаются переменные сроки АУ/УУ и доставка ошибок,
 MRAM/буферы/арбитраж, устройства/DMA/прерывания, профили и аппаратный ОС-гейт.
 
-[JSON](hardware-time-fixed-sequences-results.json), [CSV](hardware-time-fixed-sequences-results.csv),
-[источники](hardware-time-fixed-sequences-source-audit.json),
-[выводы](hardware-time-fixed-sequences-local-outputs.json).
+[JSON](hardware-time/hardware-time-fixed-sequences-results.json), [CSV](hardware-time/hardware-time-fixed-sequences-results.csv),
+[источники](hardware-time/hardware-time-fixed-sequences-source-audit.json),
+[выводы](hardware-time/hardware-time-fixed-sequences-local-outputs.json).
 Сырые логи/TRX сохранены локально; архивы и идентификаторы хоста не включены.
 
 ## Доставка причин АУ в УУ
@@ -1369,8 +1369,8 @@ Original: максимальная ошибка 8.024 мс, допуск max(20�
 Остаток141−6=135 оценочных человеко-часов, АУ5 ч;65/200 ч —32,5%
 уточнённого этапа5. Часы отражают плановую трудоёмкость, не время агента.
 
-[JSON](hardware-time-interruption-results.json), [CSV](hardware-time-interruption-results.csv),
-[источники](hardware-time-interruption-source-audit.json), [выводы](hardware-time-interruption-local-outputs.json).
+[JSON](hardware-time/hardware-time-interruption-results.json), [CSV](hardware-time/hardware-time-interruption-results.csv),
+[источники](hardware-time/hardware-time-interruption-source-audit.json), [выводы](hardware-time/hardware-time-interruption-local-outputs.json).
 Сырые логи локальны. Архивов и идентификаторов хоста нет.
 
 ## Подключение физического контроля АУ к общему CPU
@@ -1393,4 +1393,4 @@ baseline Dhrystone/MPMFLOPS; исходный вывод хранится лок
 
 Принято 5 оценочных часов интеграции драйвера: остаток 135 → 130 ч, этап 5 — 70/200 ч (35%).
 Впереди: переменное время АУ, MRAM/буферы, устройства/прерывания, единый драйвер/CLI и общая приёмка.
-[Данные и манифест](hardware-time-physical-binding-results.json).
+[Данные и манифест](hardware-time/hardware-time-physical-binding-results.json).

@@ -23,8 +23,8 @@
 
 Полная спецификация и ограничения:
 [besm6-commands.md](../docs/besm6-commands.md).
-Результаты: [JSON](book-conformance-results.json),
-[CSV векторов](book-conformance-results.csv).
+Результаты: [JSON](commands/book-conformance-results.json),
+[CSV векторов](commands/book-conformance-results.csv).
 
 ### Проверки
 
@@ -54,7 +54,7 @@ TRX, исходный вывод golden и исследовательские з
 
 Из закреплённой 200-строчной таблицы нового upstream **149 совпадают,
 51 отличаются**. Различия сохранены построчно в
-[JSON](division-version-audit.json) / [CSV](division-version-audit.csv).
+[JSON](hardware-time/division-version-audit.json) / [CSV](hardware-time/division-version-audit.csv).
 Результат сравнивается с программным кандидатом, не с измерениями АУ.
 
 Автор [upstream-коммита](https://github.com/besm6/dubna/commit/1d73a86ae71ac8d6a9d1a56a487007e5a240f8ba)
@@ -104,7 +104,7 @@ ATX/CTX, физические адреса, приписка и защита. Д
 22 новых проверки. После изменения пройдены полные наборы
 Architecture40, Processor1439, Runtime313 и CLI15:
 **1807 passed, 0 failed, 0 skipped**.
-[JSON](control-status-results.json), [CSV](control-status-results.csv).
+[JSON](commands/control-status-results.json), [CSV](commands/control-status-results.csv).
 TRX содержит частные идентификаторы и в отчёт не включён; сохранены
 только разрешённые поля счётчиков и названия наборов.
 

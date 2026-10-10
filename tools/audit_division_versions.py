@@ -17,7 +17,7 @@ from xml.sax.saxutils import escape
 ROOT = Path(__file__).resolve().parents[1]
 COMMIT = "1d73a86ae71ac8d6a9d1a56a487007e5a240f8ba"
 TABLE_SHA256 = "cc24a9678a5b2541b1cbd7790bd04f8189a5d69a168e0fe0edbfbd7e93185158"
-REPORT = ROOT / "reports/division-version-audit.json"
+REPORT = ROOT / "reports/hardware-time/division-version-audit.json"
 PROBE = r'''
 using System;
 using System.Linq;

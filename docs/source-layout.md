@@ -39,4 +39,4 @@ Processor/Runtime, Processor — от Runtime; Runtime связывает ком
 коммитам и сохраняют старые пути.
 
 Приёмка: 2932 теста Release, CERN 397/397, golden 3/3; три прежних пропуска.
-[Карта переносов и результаты](../reports/source-layout-results.json).
+[Карта переносов и результаты](../reports/misc/source-layout-results.json).

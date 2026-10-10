@@ -63,7 +63,7 @@ Processor — 294, Runtime — 281, CLI — 15; остальные провер�
 
 TRX находятся в `tests/*/TestResults/stage1-accepted.trx`, golden-вывод —
 в `tests-run/stage1-golden-final`. Счётчики, имена пропусков и SHA-256 TRX
-сохранены в [JSON](execution-lifecycle-results.json).
+сохранены в [JSON](execution/execution-lifecycle-results.json).
 
 ### Производительность
 
@@ -99,7 +99,7 @@ TRX находятся в `tests/*/TestResults/stage1-accepted.trx`, golden-вы
 High_perf, Python 3.12.5, .NET SDK 9.0.202, target net8.0/runtime 8.0.24.
 JSON содержит параметры запуска и хеши обеих сборок. Текущая сборка измерена
 до коммита; SHA-256 исходников с нормализованными LF закрепляет проверенный код.
-[Табличные результаты CSV](execution-lifecycle-results.csv).
+[Табличные результаты CSV](execution/execution-lifecycle-results.csv).
 
 ### Original
 
@@ -143,8 +143,8 @@ JSON содержит параметры запуска и хеши обеих �
 
 Полная спецификация и ограничения:
 [besm6-commands.md](../docs/besm6-commands.md).
-Результаты: [JSON](book-conformance-results.json),
-[CSV векторов](book-conformance-results.csv).
+Результаты: [JSON](commands/book-conformance-results.json),
+[CSV векторов](commands/book-conformance-results.csv).
 
 ### Проверки
 
@@ -174,7 +174,7 @@ TRX, исходный вывод golden и исследовательские з
 
 Из закреплённой 200-строчной таблицы нового upstream **149 совпадают,
 51 отличаются**. Различия сохранены построчно в
-[JSON](division-version-audit.json) / [CSV](division-version-audit.csv).
+[JSON](hardware-time/division-version-audit.json) / [CSV](hardware-time/division-version-audit.csv).
 Результат сравнивается с программным кандидатом, не с измерениями АУ.
 
 Автор [upstream-коммита](https://github.com/besm6/dubna/commit/1d73a86ae71ac8d6a9d1a56a487007e5a240f8ba)
