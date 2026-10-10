@@ -37,14 +37,34 @@ internal sealed partial class HardwareProcessorModel
     /// </summary>
     internal ArithmeticCommandHandle BindArithmeticInstruction(HardwareInstructionHandle instruction,
         uint code, HardwareDuration cycle, bool operandReady)
+        => BindArithmeticInstructionCore(instruction, code, cycle, operandReady, ArithmeticOperandRoute.Buffered);
+
+    /// <summary>Use the documented AU interface source; encoding from a guest instruction is a separate UU responsibility.</summary>
+    internal ArithmeticCommandHandle BindArithmeticInstruction(HardwareInstructionHandle instruction,
+        ArithmeticCommandWord command, HardwareDuration cycle, bool operandReady)
+    {
+        var route = command.Source switch
+        {
+            ArithmeticCommandSource.Immediate => ArithmeticOperandRoute.Direct,
+            ArithmeticCommandSource.BufferRead => ArithmeticOperandRoute.Buffered,
+            _ => throw new ArgumentException("This arithmetic binding does not yet execute the selected AU input source.", nameof(command))
+        };
+        return BindArithmeticInstructionCore(instruction, command.Raw, cycle, operandReady, route);
+    }
+
+    private ArithmeticCommandHandle BindArithmeticInstructionCore(HardwareInstructionHandle instruction,
+        uint code, HardwareDuration cycle, bool operandReady, ArithmeticOperandRoute route)
     {
         EnsureDriverAllowed();
         if (!IsCurrent(in instruction) || _completionReady || _cancellationRequested ||
             _boundArithmetic is not null || !_processor.CanCaptureArithmeticOperand(_pendingInstruction!.Value))
             throw new InvalidOperationException("No uncaptured arithmetic CPU lease can be bound.");
+        bool immediate = instruction.Instruction!.Value.Opcode is Opcode.EPlusN or Opcode.EMinusN;
+        if (immediate != (route == ArithmeticOperandRoute.Direct))
+            throw new ArgumentException("The AU operand source does not match the shared CPU instruction.", nameof(route));
         var controller = CreateArithmeticController(cycle);
         if (!controller.TryBind(this, code, () => SampleBoundOperand(instruction), operandReady,
-            _processor.GetA(), _processor.GetY(), transition => AcceptBoundTransition(instruction, transition), out var command))
+            _processor.GetA(), _processor.GetY(), transition => AcceptBoundTransition(instruction, transition), out var command, route))
             throw new InvalidOperationException("The idle arithmetic controller could not receive its CPU command.");
         _boundArithmetic = controller;
         return command;
