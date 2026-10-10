@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-10",
+  "base_commit": "2a95211",
+  "files": [
+    {
+      "path": "src/Besm6.Processor/InstructionExecutor.cs",
+      "sha256": "faa051719b910e3f41a88580409ed4d1c87d33ca6aad878449b33447463e5864"
+    },
+    {
+      "path": "src/Besm6.Processor/InstructionExecutor.Supervisor.cs",
+      "sha256": "636073dbd224fb6ea95ebfcf208f41e4a5e24b71a56ad5fc8151ed6307857809"
+    },
+    {
+      "path": "src/Besm6.Processor/InstructionExecutor.Preparation.cs",
+      "sha256": "2efbd3e9954c31e4e539781d3e3c84e4cbfcdea057e4b7a640e055be720cbb4a"
+    },
+    {
+      "path": "src/Besm6.Processor/Processor.cs",
+      "sha256": "6c9298da8fb2913524b04279a1c50867a0a3c107c609172213d9f794a9f5bb67"
+    },
+    {
+      "path": "src/Besm6.Runtime/Execution/FunctionalProcessorSimulation.cs",
+      "sha256": "ae67d7e680ef12e26027177b2292c079900789f6a15e2aec96a14286916033c6"
+    },
+    {
+      "path": "tests/Besm6.Processor.Tests/PreparedInstructionTests.cs",
+      "sha256": "4c0c4fb4eaf12e0ddc9ba318e537ee0680dfb0dc66c555d49ec09314a1d2b3ec"
+    },
+    {
+      "path": "tests/Besm6.Runtime.Tests/PreparedProcessorOwnershipTests.cs",
+      "sha256": "2d4134fa09b942858ec20bd6d416e46889ba5f2e0b5bfe891abc673cb3d78df9"
+    }
+  ],
+  "evidence": "Current interpreter shared fetch/dispatch/finalize and supervisor fault policy; differential state/trace tests. No new historical timing assumptions.",
+  "boundaries": [
+    "Operands/effects execute at completion; no operand latch timing implemented.",
+    "Supervisor fetch failure delivery remains at preparation, matching the serial policy.",
+    "Automatic hardware driver, profile selector and physical retirement timing remain incomplete."
+  ]
+}

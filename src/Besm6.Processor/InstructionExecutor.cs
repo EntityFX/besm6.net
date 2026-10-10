@@ -51,6 +51,7 @@ namespace Besm6.Core
         /// <summary>Выполняет одну инструкцию; true означает команду STOP.</summary>
         public bool Execute()
         {
+            EnsureNoPreparedInstruction();
             _processor.LastStepCompleted = true;
             try
             {
@@ -63,6 +64,12 @@ namespace Besm6.Core
         }
 
         private bool ExecuteCore()
+        {
+            var fetched = FetchInstruction();
+            return ExecuteFetchedInstruction(in fetched);
+        }
+
+        private FetchedInstruction FetchInstruction()
         {
             _state.StackCorrection = 0;
             _state.K = ArchitectureConstants.NormalizeAddress(_state.K);
@@ -93,7 +100,7 @@ namespace Besm6.Core
                 instruction = InstructionCodec.DecodeHalf(rawInstruction);
             uint opcode = (uint)instruction.Opcode;
             if (_state.DebugFetchArmed && !_state.IsRightHalf && _processor.DebugCheckFetch(_state.K, opcode))
-                return false;
+                return new(_state.K, _state.IsRightHalf, rawWord, rawInstruction, instruction, false);
 
             _processor.TraceInstruction?.Invoke(
                 _state.K,
@@ -102,6 +109,13 @@ namespace Besm6.Core
                 opcode);
             _processor.CanonPre(rawWord, rawInstruction, instruction);
 
+            return new(_state.K, _state.IsRightHalf, rawWord, rawInstruction, instruction, true);
+        }
+
+        private bool ExecuteFetchedInstruction(in FetchedInstruction fetched)
+        {
+            if (!fetched.ShouldExecute) return false;
+            DecodedInstruction instruction = fetched.Instruction;
             var frame = new ExecutionFrame
             {
                 Instruction = instruction,
@@ -160,6 +174,7 @@ namespace Besm6.Core
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
         internal bool ExecuteUnobservedBlock(int count, ref long completed, ref ulong tick)
         {
+            EnsureNoPreparedInstruction();
             var state = _state;
             var cache = _decodeCache;
             for (int i = 0; i < count; i++)

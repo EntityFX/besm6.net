@@ -110,6 +110,7 @@ namespace Besm6.Core
 
         public void Reset()
         {
+            _executor.InvalidatePreparedInstruction();
             _state.Reset();
             _traceController.Reset();
             _debugWatch.Reset();
@@ -289,12 +290,20 @@ namespace Besm6.Core
         }
 
         internal bool CanExecuteUnobservedBlock =>
+            !_executor.HasPreparedInstruction &&
             _memoryAccess.IsPlainCoreMemory && TraceInstruction is null &&
             !_traceController.IsEnabled && !_traceController.HasPending &&
             !_state.DebugFetchArmed && !_state.DebugMemoryArmed;
 
         internal bool ExecuteUnobservedBlock(int count, ref long completed, ref ulong tick) =>
             _executor.ExecuteUnobservedBlock(count, ref completed, ref tick);
+
+        internal InstructionExecutor.PreparedInstruction PrepareInstruction() => _executor.PrepareInstruction();
+        internal bool HasPreparedInstruction => _executor.HasPreparedInstruction;
+        internal bool CompleteInstruction(in InstructionExecutor.PreparedInstruction instruction) =>
+            _executor.CompleteInstruction(in instruction);
+        internal void CancelInstruction(in InstructionExecutor.PreparedInstruction instruction) =>
+            _executor.CancelInstruction(in instruction);
 
         #region Typed trace bridge
 
