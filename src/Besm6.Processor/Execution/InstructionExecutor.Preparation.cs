@@ -59,36 +59,60 @@ public sealed partial class InstructionExecutor
             throw new InvalidOperationException("CPU execution inside a scheduler callback is not allowed.");
     }
 
-    internal PreparedInstruction PrepareInstruction()
+    private bool _fetchPending;
+
+    internal PreparedInstruction BeginInstructionFetch()
     {
-        EnsurePreparationAllowed();
-        EnsureNoPreparedInstruction();
+        EnsurePreparationAllowed(); EnsureNoPreparedInstruction();
         ulong generation = checked(_preparationGeneration + 1);
-        _preparationGeneration = generation;
-        _preparationActive = true;
+        _preparationGeneration = generation; _preparationActive = _fetchPending = true;
         _preparationTransition = true;
-        _terminalPreparation = false;
-        _preparationFailure = null;
+        _terminalPreparation = false; _preparationFailure = null; _prepared = default;
         _processor.LastStepCompleted = true;
         try
         {
             var supervisor = _processor.Supervisor;
-            // Interrupts are accepted once, at the same boundary as serial Step.
-            // An interrupt arriving while this lease waits belongs to the next one.
             if (supervisor?.Io is { PendingExternalInterrupts: not 0 } &&
                 (supervisor.Status.Flags & ControlUnitFlags.ExternalInterruptsBlocked) == 0)
                 supervisor.EnterExternal();
-            _preparationStart = _state.K;
-            _preparationRight = _state.IsRightHalf;
+            _preparationStart = _state.K; _preparationRight = _state.IsRightHalf;
+            _processor.LastStepCompleted = false;
+            return new(this, generation, ArchitectureConstants.NormalizeAddress(_preparationStart), _preparationRight, null);
+        }
+        catch { _preparationActive = _fetchPending = false; throw; }
+        finally { _preparationTransition = false; }
+    }
+
+    internal PreparedInstruction PrepareInstruction()
+    {
+        var lease = BeginInstructionFetch();
+        return AcceptInstructionFetch(in lease, null, null);
+    }
+
+    internal PreparedInstruction AcceptInstructionFetch(in PreparedInstruction lease, Word48? word, Exception? failure)
+    {
+        ValidatePreparation(in lease);
+        if (!_fetchPending) throw new InvalidOperationException("The CPU fetch has already been accepted.");
+        if (ArchitectureConstants.NormalizeAddress(_state.K) != lease.Address || _state.IsRightHalf != lease.RightHalf)
+            throw new InvalidOperationException("The CPU fetch position changed during its transfer.");
+        _preparationTransition = true; _processor.LastStepCompleted = true;
+        var supervisor = _processor.Supervisor;
+        try
+        {
             try
             {
-                _prepared = FetchInstruction();
+                if (failure is not null)
+                {
+                    _state.StackCorrection = 0; _state.K = ArchitectureConstants.NormalizeAddress(_state.K);
+                    throw failure;
+                }
+                _prepared = FetchInstruction(word);
             }
-            catch (Exception failure) when (supervisor is not null && IsSupervisorGuestFailure(failure))
+            catch (Exception fetchFailure) when (supervisor is not null && IsSupervisorGuestFailure(fetchFailure))
             {
                 // A model fetch records the guest cause. Delivering its interrupt
                 // belongs to the completion boundary, not the host fetch call.
-                _preparationFailure = failure;
+                _preparationFailure = fetchFailure;
                 _terminalPreparation = true;
             }
             catch (Processor.DebugWatchAbortException)
@@ -97,21 +121,12 @@ public sealed partial class InstructionExecutor
                 _terminalCompleted = _processor.LastStepCompleted;
                 _terminalPreparation = true;
             }
-            if (!_preparationActive || generation != _preparationGeneration)
-                throw new InvalidOperationException("CPU preparation was invalidated during fetch.");
-            _processor.LastStepCompleted = false;
-            return new(this, generation, ArchitectureConstants.NormalizeAddress(_preparationStart), _preparationRight,
+            _fetchPending = false; _processor.LastStepCompleted = false;
+            return new(this, _preparationGeneration, lease.Address, lease.RightHalf,
                 _terminalPreparation ? null : _prepared.Instruction);
         }
-        catch
-        {
-            if (generation == _preparationGeneration) _preparationActive = false;
-            throw;
-        }
-        finally
-        {
-            _preparationTransition = false;
-        }
+        catch { _preparationActive = _fetchPending = false; throw; }
+        finally { _preparationTransition = false; }
     }
 
     private void ValidatePreparation(in PreparedInstruction instruction)
@@ -126,6 +141,7 @@ public sealed partial class InstructionExecutor
     internal bool CompleteInstruction(in PreparedInstruction instruction)
     {
         ValidatePreparation(in instruction);
+        if (_fetchPending) throw new InvalidOperationException("The CPU command is waiting for its fetched word.");
         if (RequiresArithmeticResult(in instruction))
             throw new InvalidOperationException("The captured CPU command is still waiting for its arithmetic result.");
         _preparationTransition = true;
@@ -188,7 +204,7 @@ public sealed partial class InstructionExecutor
     {
         if (_preparationTransition)
             throw new InvalidOperationException("CPU reset during instruction preparation or completion is not allowed.");
-        _preparationActive = false;
+        _preparationActive = _fetchPending = false;
         _prepared = default;
         _terminalPreparation = false;
         _preparationFailure = null;

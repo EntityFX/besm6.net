@@ -196,6 +196,13 @@ internal sealed partial class HardwareProcessorModel
             HardwareInstructionOutcome? outcome = RetireInvalidatedPreparation();
             if (!_pendingInstruction.HasValue && _processor.HasPreparedInstruction)
                 throw new InvalidOperationException("The pending CPU command belongs to another execution owner.");
+            if (_timedFetchWaiting && HasPendingInstruction)
+            {
+                Timeline.AdvanceUntil(time, () => _timedFetchReply.HasValue || _cancellationRequested || !HasPendingInstruction);
+                if (HasPendingInstruction && !_cancellationRequested && _timedFetchReply is { } reply)
+                    AcceptTimedInstructionFetch(reply);
+                else if (HasPendingInstruction && !_cancellationRequested) return null;
+            }
             if (_pendingInstruction is { } instruction)
             {
                 Timeline.AdvanceUntil(time, () => _completionReady || _cancellationRequested || !HasPendingInstruction);
@@ -276,6 +283,7 @@ internal sealed partial class HardwareProcessorModel
 
     private void ClearPendingInstruction()
     {
+        ReleaseTimedMemory();
         ReleaseArithmeticBinding();
         Timeline.Cancel(_readyEvent);
         _readyEvent = default;

@@ -12,6 +12,7 @@ public sealed partial class MappedMemoryBackend
     private ulong _hardwareReadEpoch;
     /// <summary>Logical host barrier. False clears outstanding reads; true also abandons writeback leases.</summary>
     internal event Action<bool>? HardwareRequestsInvalidated;
+    internal void GuestAssignmentChanging() => InvalidateHardwareRequests(false);
     private void InvalidateHardwareRequests(bool writes)
     {
         HardwareRequestsInvalidated?.Invoke(writes);

@@ -302,6 +302,13 @@ namespace Besm6.Core
             _executor.ExecuteUnobservedBlock(count, ref completed, ref tick);
 
         internal InstructionExecutor.PreparedInstruction PrepareInstruction() => _executor.PrepareInstruction();
+        internal InstructionExecutor.PreparedInstruction BeginInstructionFetch() => _executor.BeginInstructionFetch();
+        internal InstructionExecutor.PreparedInstruction AcceptInstructionFetch(in InstructionExecutor.PreparedInstruction lease,
+            Word48 word, Exception? failure) => _executor.AcceptInstructionFetch(in lease, word, failure);
+        internal uint GetPreparedMemoryOperandAddress(in InstructionExecutor.PreparedInstruction instruction) =>
+            _executor.GetPreparedMemoryOperandAddress(in instruction);
+        internal PreparedArithmeticOperation? CaptureTransferredArithmeticOperand(in InstructionExecutor.PreparedInstruction instruction,
+            uint address, Word48 word, Exception? failure) => _executor.CaptureArithmeticOperand(in instruction, address, word, failure);
         internal bool HasPreparedInstruction => _executor.HasPreparedInstruction;
         internal PreparedArithmeticOperation? CaptureArithmeticOperand(in InstructionExecutor.PreparedInstruction instruction) =>
             _executor.CaptureArithmeticOperand(in instruction);

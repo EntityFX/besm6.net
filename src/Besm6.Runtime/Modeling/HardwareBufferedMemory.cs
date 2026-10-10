@@ -34,6 +34,7 @@ internal sealed class HardwareBufferedMemory
     private ulong _nextId = 1;
     private Pending? _writeback;
     internal HardwareDuration BufferHitLatency { get; }
+    internal event Action<HardwareBufferedMemoryToken>? RequestCancelled;
     internal int PendingRequests => _pending.Count;
 
     internal HardwareBufferedMemory(MappedMemoryBackend backend, HardwareTimeline timeline,
@@ -93,6 +94,7 @@ internal sealed class HardwareBufferedMemory
         if (!token.BelongsTo(this) || !_pending.Remove(token.Id, out var pending)) return false;
         _timeline.Cancel(pending.LocalEvent); _port.Cancel(pending.MemoryToken);
         if (ReferenceEquals(_writeback, pending)) _writeback = null;
+        RequestCancelled?.Invoke(token);
         return true;
     }
 

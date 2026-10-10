@@ -9,6 +9,8 @@ internal sealed partial class HardwareProcessorModel
     private HardwareEventToken _boundCompletionEvent;
     private ArithmeticCommandWord? _boundCommandWord;
     private bool _boundAutomaticCompletion;
+    private ArithmeticCommandHandle _boundArithmeticCommand;
+    private bool _boundOperandInitiallyReady;
     internal ArithmeticCommandWord? LastIssuedArithmeticCommand { get; private set; }
 
     /// <summary>
@@ -114,7 +116,8 @@ internal sealed partial class HardwareProcessorModel
             _processor.GetA(), _processor.GetY(), transition => AcceptBoundTransition(instruction, transition),
             out var command, route, completionDelay, () => IsCurrent(in instruction) && !_cancellationRequested))
             throw new InvalidOperationException("The idle arithmetic controller could not receive its CPU command.");
-        _boundArithmetic = controller;
+        _boundArithmetic = controller; _boundArithmeticCommand = command;
+        _boundOperandInitiallyReady = operandReady;
         return command;
     }
 
@@ -127,7 +130,15 @@ internal sealed partial class HardwareProcessorModel
             command.ImmediateOperand != _processor.GetPreparedImmediateOperand(_pendingInstruction!.Value))
             throw new InvalidOperationException("The issued immediate AU operand changed before acceptance.");
         _arithmeticBindingTransition = true;
-        try { return CaptureArithmeticOperand(instruction); }
+        try
+        {
+            if (_timedOperandRequested)
+            {
+                var transfer = _timedOperandTransfer ?? throw new InvalidOperationException("The accepted memory operand is missing.");
+                return CaptureTransferredOperand(instruction, transfer);
+            }
+            return CaptureArithmeticOperand(instruction);
+        }
         finally { _arithmeticBindingTransition = false; }
     }
 

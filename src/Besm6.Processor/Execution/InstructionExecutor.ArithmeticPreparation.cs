@@ -40,13 +40,24 @@ public sealed partial class InstructionExecutor
             ModifiedInstructionAddress(_prepared.Instruction.Address), _prepared.Instruction.Register) & 0x7F);
     }
 
+    internal uint GetPreparedMemoryOperandAddress(in PreparedInstruction instruction)
+    {
+        ValidateArithmeticAccess(in instruction);
+        if (!CanCaptureArithmeticOperand(in instruction) ||
+            _prepared.Instruction.Opcode is Opcode.EPlusN or Opcode.EMinusN)
+            throw new InvalidOperationException("No waiting memory arithmetic operand.");
+        return _memoryInstructions.ResolveMemoryOperandAddress(
+            ModifiedInstructionAddress(_prepared.Instruction.Address), _prepared.Instruction.Register);
+    }
+
     /// <summary>
     /// PVR input: the same opcode/address/stack handler captures a single operand
     /// and mode. A/Y and completion diagnostics remain unpublished. A failed read
     /// is latched for the completion boundary, never thrown from the calendar.
     /// Accepted address/stack effects are not rolled back by lease cancellation.
     /// </summary>
-    internal PreparedArithmeticOperation? CaptureArithmeticOperand(in PreparedInstruction instruction)
+    internal PreparedArithmeticOperation? CaptureArithmeticOperand(in PreparedInstruction instruction,
+        uint? transferredAddress = null, Word48 transferredWord = default, Exception? transferredFailure = null)
     {
         ValidateArithmeticAccess(in instruction);
         if (_arithmeticCaptured || _terminalPreparation || !_prepared.ShouldExecute ||
@@ -63,7 +74,9 @@ public sealed partial class InstructionExecutor
             _arithmeticCaptured = true;
             try
             {
-                var captured = _memoryInstructions.CaptureArithmetic(ref _arithmeticFrame);
+                var captured = transferredAddress is { } address
+                    ? _memoryInstructions.CaptureTransferredArithmetic(ref _arithmeticFrame, address, transferredWord, transferredFailure)
+                    : _memoryInstructions.CaptureArithmetic(ref _arithmeticFrame);
                 _arithmeticAdditive = captured.Additive;
                 _arithmeticLogical = captured.IsLogical;
                 return captured.Operation;

@@ -231,6 +231,8 @@ public sealed class SupervisorControl
         if (register is >= 0x10 and <= 0x17)
         {
             // Guest software must publish BRZ before changing RP (TO-8 §4.24).
+            _memory.Assignment.ValidateImportAssignmentGroup(register & 7, value);
+            _memory.GuestAssignmentChanging();
             _memory.Assignment.ImportAssignmentGroup(register & 7, value);
             return;
         }

@@ -69,6 +69,14 @@ namespace Besm6.Core
             return execution;
         }
 
+        internal uint ResolveMemoryOperandAddress(uint address, byte register) =>
+            Addr(address + (address == 0 && register == 15 ? Addr(_state.M[15] - 1) : _state.M[register]));
+
+        internal CapturedArithmeticInstructionExecution CaptureTransferredArithmetic(ref ExecutionFrame frame,
+            uint address, Word48 word, Exception? failure) =>
+            new MemoryInstructionExecutor(_state, _memory.WithTransferredOperand(address, word, failure), _alu)
+                .CaptureArithmetic(ref frame);
+
         internal void PublishArithmetic(ref ExecutionFrame frame, NormalizedArithmeticResult result, bool additive, bool logical)
         {
             if (logical)

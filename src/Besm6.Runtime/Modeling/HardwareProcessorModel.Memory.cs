@@ -21,7 +21,9 @@ internal sealed partial class HardwareProcessorModel
             CreateMemoryPort(configuration);
             return existing;
         }
-        return _bufferedMemory = new(_mappedMemory, Timeline, CreateMemoryPort(configuration), hitLatency);
+        var buffers = new HardwareBufferedMemory(_mappedMemory, Timeline, CreateMemoryPort(configuration), hitLatency);
+        buffers.RequestCancelled += TimedMemoryCancelled;
+        return _bufferedMemory = buffers;
     }
 
     internal MramMemoryPort CreateMemoryPort(MramPortConfiguration configuration)

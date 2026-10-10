@@ -69,12 +69,12 @@ namespace Besm6.Core
             return ExecuteFetchedInstruction(in fetched);
         }
 
-        private FetchedInstruction FetchInstruction()
+        private FetchedInstruction FetchInstruction(Word48? transferredWord = null)
         {
             _state.StackCorrection = 0;
             _state.K = ArchitectureConstants.NormalizeAddress(_state.K);
 
-            ulong rawWord = _memory.MemFetch(_state.K, _state.IsRightHalf);
+            ulong rawWord = transferredWord is { } transfer ? _memory.AcceptTransferredFetch(_state.K, transfer) : _memory.MemFetch(_state.K, _state.IsRightHalf);
             uint rawInstruction = _state.IsRightHalf
                 ? (uint)rawWord
                 : (uint)(rawWord >> 24);

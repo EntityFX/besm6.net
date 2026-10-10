@@ -8,7 +8,7 @@ namespace Besm6.Core
     /// Доступ процессора к памяти: чтение команды (fetch), чтение и запись данных,
     /// с проверкой memory-watchpoints. Вынесено из Processor.cs (Этап 4 рефакторинга).
     /// </summary>
-    internal sealed class ProcessorMemoryAccess
+    internal sealed partial class ProcessorMemoryAccess
     {
         private readonly ProcessorDebugWatch _debugWatch;
         private readonly IMemory _memory;
