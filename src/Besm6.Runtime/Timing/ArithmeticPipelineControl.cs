@@ -52,4 +52,20 @@ public sealed class ArithmeticPipelineControl
         ActiveCommand = PreparedCommand = null;
         CommandPermission = false; // RPK must be supplied by its documented chain.
     }
+
+    internal bool TryRejectOperand()
+    {
+        if (!CommandPermission || PreparedCommand.HasValue || !Commands.TryPeek(out _)) return false;
+        Commands.AcceptOperand();
+        CommandPermission = false;
+        return true;
+    }
+
+    // Host cancellation of an exclusively owned logical request, not a hardware pulse.
+    internal void DiscardLogicalRequest()
+    {
+        while (Commands.TryPeek(out _)) Commands.AcceptOperand();
+        ActiveCommand = PreparedCommand = null;
+        CommandPermission = false;
+    }
 }

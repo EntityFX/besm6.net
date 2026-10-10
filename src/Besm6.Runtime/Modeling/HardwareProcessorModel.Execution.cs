@@ -129,6 +129,7 @@ internal sealed partial class HardwareProcessorModel
     // signal inside a calendar callback; the CPU itself runs only after it returns.
     internal bool TryIndicateCompletionReady(in HardwareInstructionHandle instruction)
     {
+        if (_boundArithmetic is not null && !_arithmeticBindingTransition) return false;
         if (!IsCurrent(in instruction) || _completionReady || _cancellationRequested || _capturingOperand ||
             _processor.RequiresArithmeticResult(_pendingInstruction!.Value)) return false;
         _completionReady = true;
@@ -137,6 +138,8 @@ internal sealed partial class HardwareProcessorModel
 
     internal PreparedArithmeticOperation? CaptureArithmeticOperand(HardwareInstructionHandle instruction)
     {
+        if (_boundArithmetic is not null && !_arithmeticBindingTransition)
+            throw new InvalidOperationException("The arithmetic binding owns this operand transition.");
         if (!IsCurrent(in instruction) || _completionReady || _cancellationRequested || _publishingInstruction ||
             _capturingOperand || (_processor.ExecutionProhibited && !Timeline.IsAdvancing))
             throw new InvalidOperationException("No waiting model command can accept this operand.");
@@ -159,6 +162,7 @@ internal sealed partial class HardwareProcessorModel
     internal bool TryIndicateArithmeticCompletion(HardwareInstructionHandle instruction,
         NormalizedArithmeticResult? result, ProcessorException? failure = null)
     {
+        if (_boundArithmetic is not null && !_arithmeticBindingTransition) return false;
         if (!IsCurrent(in instruction) || _completionReady || _cancellationRequested || _publishingInstruction ||
             _capturingOperand || (_processor.ExecutionProhibited && !Timeline.IsAdvancing)) return false;
         _processor.SupplyArithmeticResult(_pendingInstruction!.Value, result, failure);
@@ -259,6 +263,7 @@ internal sealed partial class HardwareProcessorModel
 
     private void ClearPendingInstruction()
     {
+        ReleaseArithmeticBinding();
         Timeline.Cancel(_readyEvent);
         _readyEvent = default;
         _pendingInstruction = null;

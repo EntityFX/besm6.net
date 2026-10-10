@@ -1,7 +1,7 @@
 namespace Besm6.Runtime.Timing;
 
 internal readonly record struct ArithmeticCommandHandle(object? Owner, ulong Sequence);
-internal enum ArithmeticStageTransitionKind { OperandAccepted, Started, Completed }
+internal enum ArithmeticStageTransitionKind { OperandAccepted, OperandRejected, Started, Completed }
 internal readonly record struct ArithmeticStageTransition(ArithmeticCommandHandle Command,
     uint Code, ArithmeticStageTransitionKind Kind, HardwareInstant Time,
     NormalizedArithmeticResult? Output, ArithmeticUnitFault? Fault);
@@ -23,11 +23,11 @@ internal sealed class ArithmeticStageObserverException(ArithmeticStageTransition
 internal sealed class ArithmeticStageController
 {
     private sealed class Entry(ArithmeticCommandHandle handle, uint code,
-        Func<PreparedArithmeticOperation> sampleOperand, bool ready)
+        Func<PreparedArithmeticOperation?> sampleOperand, bool ready)
     {
         internal readonly ArithmeticCommandHandle Handle = handle;
         internal readonly uint Code = code;
-        internal readonly Func<PreparedArithmeticOperation> SampleOperand = sampleOperand;
+        internal readonly Func<PreparedArithmeticOperation?> SampleOperand = sampleOperand;
         internal bool Ready = ready;
     }
 
@@ -41,6 +41,8 @@ internal sealed class ArithmeticStageController
     private bool _transferElapsed, _changing;
     private ulong _sequence;
     internal Action<ArithmeticStageTransition>? Transitioned { get; set; }
+    private Action<ArithmeticStageTransition>? _boundTransition;
+    private object? _bindingOwner;
     internal ArithmeticStageTransition? LastTransition { get; private set; }
     internal int QueuedCommands => _waiting.Count;
     internal ArithmeticCommandHandle? PreparedCommand => _prepared?.Handle;
@@ -70,6 +72,50 @@ internal sealed class ArithmeticStageController
         bool operandReady, out ArithmeticCommandHandle command)
     {
         ArgumentNullException.ThrowIfNull(sampleOperand);
+        if (_bindingOwner is not null) throw new InvalidOperationException("The CPU owns this arithmetic controller.");
+        return TryEnqueueOperand(code, () => sampleOperand(), operandReady, out command);
+    }
+
+    internal bool TryBind(object owner, uint code, Func<PreparedArithmeticOperation?> sampleOperand,
+        bool operandReady, Word48 accumulator, Word48 lowRegister,
+        Action<ArithmeticStageTransition> transition, out ArithmeticCommandHandle command)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+        ArgumentNullException.ThrowIfNull(transition);
+        ArgumentNullException.ThrowIfNull(sampleOperand);
+        if (_changing || _bindingOwner is not null || _live.Count != 0)
+            throw new InvalidOperationException("CPU binding requires an idle unowned arithmetic controller.");
+        // Validate before taking ownership or changing the cached register boundary.
+        if ((code & ~ArithmeticCommandBuffer.CommandMask) != 0) throw new ArgumentOutOfRangeException(nameof(code));
+        if (operandReady) _transfer.AcceptFromReadyBuffer(_timeline.Now);
+        _unit.SynchronizeIdleRegisters(accumulator, lowRegister);
+        _bindingOwner = owner;
+        _boundTransition = transition;
+        try { return TryEnqueueOperand(code, sampleOperand, operandReady, out command); }
+        catch { ReleaseBinding(owner); throw; }
+    }
+
+    internal void ReleaseBinding(object owner)
+    {
+        if (!ReferenceEquals(owner, _bindingOwner)) throw new InvalidOperationException("Foreign arithmetic binding.");
+        Change(() =>
+        {
+            if (_live.Count != 0) _unit.DiscardLogicalRequest();
+            _timeline.Cancel(_acceptEvent);
+            _timeline.Cancel(_startEvent);
+            _acceptEvent = _startEvent = default;
+            _waiting.Clear();
+            _live.Clear();
+            _selected = _prepared = _active = null;
+            _transferElapsed = false;
+            _boundTransition = null;
+            _bindingOwner = null;
+        });
+    }
+
+    private bool TryEnqueueOperand(uint code, Func<PreparedArithmeticOperation?> sampleOperand,
+        bool operandReady, out ArithmeticCommandHandle command)
+    {
         ArithmeticCommandHandle added = default;
         Change(() =>
         {
@@ -136,7 +182,18 @@ internal sealed class ArithmeticStageController
         {
             // A failing sampler leaves BAK and the PVR prerequisites unchanged.
             var operation = entry.SampleOperand();
-            if (!_unit.TryAcceptOperand(operation, true))
+            if (!operation.HasValue)
+            {
+                if (!_unit.TryRejectOperand())
+                    throw new InvalidOperationException("Rejected arithmetic operand and command control disagree.");
+                _waiting.Dequeue();
+                _selected = null;
+                _live.Remove(entry.Handle.Sequence);
+                Progress();
+                Publish(entry, ArithmeticStageTransitionKind.OperandRejected);
+                return;
+            }
+            if (!_unit.TryAcceptOperand(operation.Value, true))
                 throw new InvalidOperationException("Arithmetic command control and operand queue disagree.");
             _waiting.Dequeue();
             _selected = null;
@@ -178,6 +235,8 @@ internal sealed class ArithmeticStageController
 
     internal void ApplyGeneralClearSignal() => Change(() =>
     {
+        if (_bindingOwner is not null)
+            throw new InvalidOperationException("A CPU-bound request requires its owner's cancellation boundary.");
         _timeline.Cancel(_acceptEvent);
         _timeline.Cancel(_startEvent);
         _acceptEvent = _startEvent = default;
@@ -195,7 +254,7 @@ internal sealed class ArithmeticStageController
         var transition = new ArithmeticStageTransition(entry.Handle, entry.Code, kind,
             _timeline.Now, output, _unit.Fault);
         LastTransition = transition;
-        try { Transitioned?.Invoke(transition); }
+        try { _boundTransition?.Invoke(transition); Transitioned?.Invoke(transition); }
         catch (Exception cause) { throw new ArithmeticStageObserverException(transition, cause); }
     }
 }
