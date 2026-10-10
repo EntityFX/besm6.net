@@ -60,7 +60,7 @@ namespace Besm6.Core
         internal static bool CanCaptureArithmetic(Opcode opcode) => opcode is
             Opcode.APlusX or Opcode.AMinusX or Opcode.XMinusA or Opcode.Amx or
             Opcode.Avx or Opcode.ADivX or Opcode.AMulX or Opcode.EPlusX or
-            Opcode.EMinusX or Opcode.EPlusN or Opcode.EMinusN;
+            Opcode.EMinusX or Opcode.EPlusN or Opcode.EMinusN or Opcode.Aax or Opcode.Aex or Opcode.Aox;
 
         internal CapturedArithmeticInstructionExecution CaptureArithmetic(ref ExecutionFrame frame)
         {
@@ -69,8 +69,15 @@ namespace Besm6.Core
             return execution;
         }
 
-        internal void PublishArithmetic(ref ExecutionFrame frame, NormalizedArithmeticResult result, bool additive)
+        internal void PublishArithmetic(ref ExecutionFrame frame, NormalizedArithmeticResult result, bool additive, bool logical)
         {
+            if (logical)
+            {
+                frame.A = result.A.Value;
+                frame.Y = result.Y.Value;
+                _state.SetLogical();
+                return;
+            }
             _alu.PublishPreparedResult(result);
             var execution = new ImmediateArithmeticInstructionExecution(_alu);
             execution.Finish(ref frame, _state, additive);
@@ -131,16 +138,14 @@ namespace Besm6.Core
                 case Opcode.Aax:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    frame.A &= _memory.MemLoad(frame.EffectiveAddress);
-                    frame.Y = 0;
-                    _state.SetLogical();
+                    arithmetic.Logical(ref frame, LoadWord(ref frame), LogicalArithmeticOperation.And);
+                    arithmetic.FinishLogical(_state);
                     break;
                 case Opcode.Aex:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    frame.Y = frame.A;
-                    frame.A ^= _memory.MemLoad(frame.EffectiveAddress);
-                    _state.SetLogical();
+                    arithmetic.Logical(ref frame, LoadWord(ref frame), LogicalArithmeticOperation.Xor);
+                    arithmetic.FinishLogical(_state);
                     break;
                 case Opcode.Arx:
                     PrepareStack(addr, reg);
@@ -159,9 +164,8 @@ namespace Besm6.Core
                 case Opcode.Aox:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    frame.A |= _memory.MemLoad(frame.EffectiveAddress);
-                    frame.Y = 0;
-                    _state.SetLogical();
+                    arithmetic.Logical(ref frame, LoadWord(ref frame), LogicalArithmeticOperation.Or);
+                    arithmetic.FinishLogical(_state);
                     break;
                 case Opcode.ADivX:
                     PrepareStack(addr, reg);
