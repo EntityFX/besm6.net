@@ -118,6 +118,8 @@ internal sealed class FunctionalProcessorSimulation
     {
         if (Cpu.ExecutionProhibited)
         throw new InvalidOperationException("Machine execution inside a scheduler callback is not allowed.");
+        if (Cpu.HasPreparedInstruction)
+        throw new InvalidOperationException("The model owns a pending CPU instruction.");
     }
 
     private void DeliverCurrentEvents()

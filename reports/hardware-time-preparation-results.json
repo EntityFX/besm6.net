@@ -1,0 +1,148 @@
+{
+  "date": "2026-10-10",
+  "base_commit": "2a95211",
+  "scope": "Shared CPU fetch/completion lease for separate functional/model drivers; no automatic hardware execution yet",
+  "projects": [
+    {
+      "project": "Besm6.Architecture.Tests",
+      "passed": 40,
+      "failed": 0,
+      "skipped": 0,
+      "trx_sha256": "44bcb4dac65de4b439565aed4e242d7157d43273d964905e38a5161b4829b5f4"
+    },
+    {
+      "project": "Besm6.Assembler.Tests",
+      "passed": 29,
+      "failed": 0,
+      "skipped": 0,
+      "trx_sha256": "c8ad042b3132a46091fd7446d1ca857bc24fc807fc1b7ad226c969c4bc0d87f2"
+    },
+    {
+      "project": "Besm6.BitVisualizer.Tests",
+      "passed": 57,
+      "failed": 0,
+      "skipped": 0,
+      "trx_sha256": "ac16c020cf165eb72c3d2b10599b868f1d35da6eab15e77f2a689323381070f4"
+    },
+    {
+      "project": "Besm6.BitVisualizer.WinForms.Tests",
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0,
+      "trx_sha256": "af85cad582ebf2a9fea5e2a72e5ac1db3698142e05be198f3214953c81b1758a"
+    },
+    {
+      "project": "Besm6.Cli.Tests",
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "trx_sha256": "9eae0a7a7aedc7b44679f7b872ca4421c8c79498ead0044ff731aaa4910d535b"
+    },
+    {
+      "project": "Besm6.Integration.Tests",
+      "passed": 426,
+      "failed": 0,
+      "skipped": 3,
+      "trx_sha256": "45c505dfcbb57d7450960b2219ab3ec403cd48533df789a7d1ee9146e591a9ff"
+    },
+    {
+      "project": "Besm6.Processor.Tests",
+      "passed": 1587,
+      "failed": 0,
+      "skipped": 0,
+      "trx_sha256": "e1043da55c38114a6d053ff03e2d8516d3d21fb8749a231202c37adb2aa27c8a"
+    },
+    {
+      "project": "Besm6.Runtime.Tests",
+      "passed": 548,
+      "failed": 0,
+      "skipped": 0,
+      "trx_sha256": "206f0e3b8e63f30576b5f27b32a223c9f1d488b4b6ca0ea6425d319e86b05a7f"
+    },
+    {
+      "project": "Besm6.Tui.Tests",
+      "passed": 44,
+      "failed": 0,
+      "skipped": 0,
+      "trx_sha256": "8dc9d3739f0f870816c9fdc1139497a9b2792b2590db8152a967ad017cec99d7"
+    }
+  ],
+  "tests": {
+    "passed": 2765,
+    "failed": 0,
+    "existing_skips": 3,
+    "new_processor_cases": 35,
+    "new_runtime_cases": 10
+  },
+  "cern": {
+    "active": 397,
+    "passed": 397,
+    "comparison_policy": "unchanged"
+  },
+  "golden": {
+    "passed": 3,
+    "failed": 0
+  },
+  "performance": {
+    "comparisons": [
+      {
+        "job": "dh5000",
+        "runtime_time_change_percent": -0.7762896367567662,
+        "cli_time_change_percent": -0.1415303560713621
+      },
+      {
+        "job": "dh10000",
+        "runtime_time_change_percent": 1.2655778325595168,
+        "cli_time_change_percent": -0.08619738862896131
+      },
+      {
+        "job": "mp1",
+        "runtime_time_change_percent": -0.4973619588268474,
+        "cli_time_change_percent": 0.2638256861465571
+      },
+      {
+        "job": "mp2",
+        "runtime_time_change_percent": 0.055196209382391004,
+        "cli_time_change_percent": -2.254081614316239
+      },
+      {
+        "job": "mp3",
+        "runtime_time_change_percent": -0.2840126002473409,
+        "cli_time_change_percent": 0.14051380815898185
+      }
+    ],
+    "worst_runtime_time_change_percent": 1.2655778325595168,
+    "worst_cli_time_change_percent": 0.2638256861465571,
+    "maximum_original_error_seconds": 0.008502400000000243,
+    "regression_limit_percent": 5
+  },
+  "targeted_fixture_repairs": {
+    "initial_runtime_passed": 3,
+    "initial_runtime_failed": 7,
+    "reason": "Initial fixtures read unsupported/write-only modifiers and did not enable the external interrupt mask. Corrected to readable registers and explicit mask/vector setup.",
+    "initial_trx_sha256": "1702ee51b3c1e42a0b4ae250628a3a12d032d405e9f7656e4953739a0c6f2cc4",
+    "fixed_passed": 10,
+    "fixed_failed": 0
+  },
+  "raw_output": {
+    "storage": "local_ignored",
+    "manifest": "hardware-time-preparation-local-outputs.json",
+    "files": 412
+  },
+  "initial_cli": {
+    "worst_time_change_percent": 5.37878626695818,
+    "performance_accepted": false,
+    "cause": "unknown",
+    "repeated_full_cli_series": true,
+    "earlier_build_before_transition_guard": true,
+    "final_acceptance_uses_final_build": true
+  },
+  "full_stage5_complete": false,
+  "hours": {
+    "previous_remaining": 192,
+    "closed_subblock": 6,
+    "remaining": 186,
+    "profile_driver_remaining": 18,
+    "kind": "estimated_development_hours_not_agent_elapsed_time"
+  }
+}

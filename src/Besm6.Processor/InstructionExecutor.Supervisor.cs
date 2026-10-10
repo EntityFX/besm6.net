@@ -17,46 +17,64 @@ public sealed partial class InstructionExecutor
             supervisor.CompletedInstruction();
             return stopped;
         }
-        catch (HardwareWatchException failure)
+        catch (Exception failure) when (IsSupervisorGuestFailure(failure))
         {
-            bool command = failure.Signal == (1UL << 11);
-            return InterruptFailedStep(supervisor, failure.Signal,
-                command && !right ? start : ArchitectureConstants.NormalizeAddress(start + 1),
-                command ? (right ? 0x200u : 0x300u) : (right ? 0x300u : 0x200u));
-        }
-        catch (MemoryProtectionException failure)
-        {
-            bool command = failure.AccessKind is MemoryAccessKind.InstructionLeft or MemoryAccessKind.InstructionRight;
-            ulong signal = command ? 1UL << 13 : (1UL << 19) | ((ulong)failure.MathematicalPage << 4);
-            uint saved = command ? (right ? 0x200u : 0x300u) : (right ? 0x300u : 0x200u);
-            return InterruptFailedStep(supervisor, signal,
-                command && !right ? start : ArchitectureConstants.NormalizeAddress(start + 1), saved);
-        }
-        catch (MemoryControlException failure)
-        {
-            bool command = failure.AccessKind is MemoryAccessKind.InstructionLeft or MemoryAccessKind.InstructionRight;
-            bool registerRead = ((Opcode)((_state.RawInstruction >> 12) & 0x3F)) == Opcode.Mod &&
-                (_state.EffectiveAddress & 0x7F) < 8;
-            var backend = _memory.MappedBackend!;
-            var fault = backend.LastFault;
-            bool buffered = !registerRead && fault is { Source: MemoryFaultSource.OperandBuffer };
-            ulong detail = registerRead ? failure.PhysicalAddress & 7 : buffered ?
-                (ulong)backend.FindOperandBufferRegister(fault!.Value.Request) : 8UL | (failure.PhysicalAddress & 7);
-            ulong signal = command ? 1UL << 14 : (1UL << 20) |
-                detail;
-            return InterruptFailedStep(supervisor, signal, right ? ArchitectureConstants.NormalizeAddress(start + 1) : start,
-                right ? 0u : 0x100u);
-        }
-        catch (ProcessorException failure) when (failure.Message.StartsWith("Illegal instruction", StringComparison.Ordinal) ||
-            failure.Message.StartsWith("Unknown instruction", StringComparison.Ordinal) ||
-            failure.Message == "Division by zero" || failure.Message == "Arithmetic overflow")
-        {
-            ulong signal = failure.Message == "Division by zero" ? 7UL << 20 :
-                failure.Message == "Arithmetic overflow" ? 3UL << 20 : 1UL << 12;
-            return InterruptFailedStep(supervisor, signal, right ? ArchitectureConstants.NormalizeAddress(start + 1) : start,
-                right ? 0u : 0x100u);
+            return HandleSupervisorFailure(supervisor, failure, start, right);
         }
     }
+
+    private static bool IsSupervisorGuestFailure(Exception failure) => failure is
+        HardwareWatchException or MemoryProtectionException or MemoryControlException ||
+        failure is ProcessorException cpuFailure &&
+        (cpuFailure.Message.StartsWith("Illegal instruction", StringComparison.Ordinal) ||
+         cpuFailure.Message.StartsWith("Unknown instruction", StringComparison.Ordinal) ||
+         cpuFailure.Message == "Division by zero" || cpuFailure.Message == "Arithmetic overflow");
+
+    private bool HandleSupervisorFailure(SupervisorControl supervisor, Exception exception, uint start, bool right)
+    {
+        switch (exception)
+        {
+            case HardwareWatchException failure:
+            {
+                bool command = failure.Signal == (1UL << 11);
+                return InterruptFailedStep(supervisor, failure.Signal,
+                    command && !right ? start : ArchitectureConstants.NormalizeAddress(start + 1),
+                    command ? (right ? 0x200u : 0x300u) : (right ? 0x300u : 0x200u));
+            }
+            case MemoryProtectionException failure:
+            {
+                bool command = failure.AccessKind is MemoryAccessKind.InstructionLeft or MemoryAccessKind.InstructionRight;
+                ulong signal = command ? 1UL << 13 : (1UL << 19) | ((ulong)failure.MathematicalPage << 4);
+                uint saved = command ? (right ? 0x200u : 0x300u) : (right ? 0x300u : 0x200u);
+                return InterruptFailedStep(supervisor, signal,
+                    command && !right ? start : ArchitectureConstants.NormalizeAddress(start + 1), saved);
+            }
+            case MemoryControlException failure:
+            {
+                bool command = failure.AccessKind is MemoryAccessKind.InstructionLeft or MemoryAccessKind.InstructionRight;
+                bool registerRead = ((Opcode)((_state.RawInstruction >> 12) & 0x3F)) == Opcode.Mod &&
+                    (_state.EffectiveAddress & 0x7F) < 8;
+                var backend = _memory.MappedBackend!;
+                var fault = backend.LastFault;
+                bool buffered = !registerRead && fault is { Source: MemoryFaultSource.OperandBuffer };
+                ulong detail = registerRead ? failure.PhysicalAddress & 7 : buffered ?
+                    (ulong)backend.FindOperandBufferRegister(fault!.Value.Request) : 8UL | (failure.PhysicalAddress & 7);
+                ulong signal = command ? 1UL << 14 : (1UL << 20) |
+                    detail;
+                return InterruptFailedStep(supervisor, signal, right ? ArchitectureConstants.NormalizeAddress(start + 1) : start,
+                    right ? 0u : 0x100u);
+            }
+            case ProcessorException failure:
+            {
+                ulong signal = failure.Message == "Division by zero" ? 7UL << 20 :
+                    failure.Message == "Arithmetic overflow" ? 3UL << 20 : 1UL << 12;
+                return InterruptFailedStep(supervisor, signal, right ? ArchitectureConstants.NormalizeAddress(start + 1) : start,
+                    right ? 0u : 0x100u);
+            }
+            default: throw new InvalidOperationException("Not a supervisor guest failure.", exception);
+        }
+    }
+
 
     private bool InterruptFailedStep(SupervisorControl supervisor, ulong signal, uint returnWord, uint flags)
     {
