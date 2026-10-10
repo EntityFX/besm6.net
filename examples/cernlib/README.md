@@ -21,7 +21,7 @@ The three printing cases are pinned directly to upstream commit
 The pinned sources are identical to the local reference sources. Expected files
 include the GOST decimal exponent symbol `⏨` and the reference's corrected E64
 rounding. They were not generated from C# output. See
-[the evidence and documentation](../../reports/cernlib-golden-refresh.md) and
+[the evidence and documentation](../../reports/cernlib-report.md#исправление-трёх-ложных-отказов-cernlib) and
 [SHA-256 checksums](../../reports/cernlib-golden-refresh.json).
 
 ## How tests find the data

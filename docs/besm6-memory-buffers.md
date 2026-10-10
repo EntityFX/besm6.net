@@ -100,4 +100,4 @@ dotnet test tests/Besm6.Processor.Tests/Besm6.Processor.Tests.csproj -c Release 
 операции выбранной конфигурации. После этого подключить память к CPU,
 развести ATX/CTX и проверить программу через весь процессор в original/max.
 Результаты этой части и подключения:
-[отчёт](../reports/memory-models-report.md).
+[отчёт](../reports/stage3-memory-report.md#этап-3-буферы-и-выбор-модели-памяти).

@@ -6,7 +6,7 @@ using System.Reflection;
 namespace Besm6.Architecture.Tests
 {
     /// <summary>
-    /// Границы сборок этапа 1 (plans/refactor.md) и финальная модель (plans/SuperPlan.md):
+    /// Границы сборок этапа 1 (plans/SuperPlan.md, приложение Phase 1) и финальная модель (plans/SuperPlan.md):
     /// Architecture изолирована; Processor -> Architecture; Assembler -> Architecture+Processor;
     /// Runtime -> Architecture+Processor+Assembler (без CLI/TUI); CLI и TUI — независимые
     /// executables; граф зависимостей не содержит циклов.

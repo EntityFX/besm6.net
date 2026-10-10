@@ -125,4 +125,4 @@ dotnet test tests/Besm6.Processor.Tests/Besm6.Processor.Tests.csproj -c Release 
 ```
 
 Результаты общей проверки сохраняются в
-[отчёте первой части этапа 3](../reports/hardware-memory-foundation-report.md).
+[отчёте первой части этапа 3](../reports/stage3-memory-report.md#этап-3-физическая-память-и-адресация).

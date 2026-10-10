@@ -520,7 +520,7 @@ K, половину, эффективный адрес или регистры �
 [Таблица](sources/hardware-time/arithmetic-pdf-04.png),
 [начало/конец](sources/hardware-time/arithmetic-pdf-17.png),
 [разборка §4.25](sources/hardware-time/arithmetic-pdf-56.png),
-[приёмка](../reports/hardware-time-fixed-sequences-report.md).
+[приёмка](../reports/stage5-hardware-time-report.md#автоматические-фиксированные-последовательности-ау).
 
 
 ## Передача причины при ИЗОП и принятие УУ
@@ -552,7 +552,7 @@ K, половину, эффективный адрес или регистры �
 [источник](sources/hardware-time/instructions-pdf-117.png),
 [ОпПр1](sources/hardware-time/instructions-pdf-119.png),
 [возврат/границы](sources/hardware-time/instructions-pdf-120.png),
-[приёмка](../reports/hardware-time-interruption-report.md).
+[приёмка](../reports/stage5-hardware-time-report.md#доставка-причин-ау-в-уу).
 
 
 ### Физическая политика в связанной команде CPU
@@ -568,4 +568,4 @@ K, половину, эффективный адрес или регистры �
 Синхронизация регистров разрешена лишь при простое, известном выходе и без
 удержанного прерывания. Переменные IZOP/RPK,50-битный вход памяти и перекрытие
 не добавлены этим блоком.
-[Приёмка](../reports/hardware-time-physical-binding-report.md).
+[Приёмка](../reports/stage5-hardware-time-report.md#подключение-физического-контроля-ау-к-общему-cpu).

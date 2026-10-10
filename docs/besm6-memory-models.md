@@ -98,4 +98,4 @@ var loader = new DubnaLoader(buffered) { Speed = ExecutionSpeed.Max };
 30 новыми тестами буферов это 173 проверки сверх первой части этапа 3.
 
 Общая приёмка и сравнение скорости старого режима:
-[отчёт](../reports/memory-models-report.md).
+[отчёт](../reports/stage3-memory-report.md#этап-3-буферы-и-выбор-модели-памяти).
