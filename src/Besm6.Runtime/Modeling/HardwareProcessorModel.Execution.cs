@@ -91,6 +91,8 @@ internal sealed partial class HardwareProcessorModel
                 throw new InvalidOperationException("A CPU command is already prepared.");
             // Device/control events at the current instant precede the next fetch.
             Timeline.AdvanceTo(Timeline.Now);
+            if (_processor.Supervisor is not null && PendingArithmeticInterruption != 0)
+                throw new InvalidOperationException("The UU must accept the pending arithmetic interruption before the next fetch.");
             ulong sequence = checked(_sequence + 1);
             var instruction = _processor.PrepareInstruction();
             _pendingInstruction = instruction;

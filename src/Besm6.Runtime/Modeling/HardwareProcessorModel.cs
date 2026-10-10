@@ -14,6 +14,7 @@ internal sealed partial class HardwareProcessorModel
     private readonly Processor _processor;
     private ArithmeticUnitStages? _arithmeticUnitStages;
     private ArithmeticStageController? _arithmeticController;
+    private ArithmeticInterruptionPort? _arithmeticInterruptions;
     internal HardwareTimeline Timeline { get; } = new();
 
     internal HardwareProcessorModel(Processor processor) => _processor = processor;
@@ -36,7 +37,10 @@ internal sealed partial class HardwareProcessorModel
             throw new InvalidOperationException("This machine's arithmetic configuration is already selected.");
             return existing;
         }
-        return _arithmeticUnitStages = new(Timeline, cycle, _processor.GetA(), _processor.GetY(), errorPolicy);
+        var interruptions = errorPolicy.HasValue ? new ArithmeticInterruptionPort(_processor.Supervisor) : null;
+        var unit = new ArithmeticUnitStages(Timeline, cycle, _processor.GetA(), _processor.GetY(), errorPolicy, interruptions);
+        _arithmeticInterruptions = interruptions;
+        return _arithmeticUnitStages = unit;
     }
 
 }

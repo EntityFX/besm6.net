@@ -166,9 +166,25 @@ public sealed class SupervisorControl
         Enter(0x141, SupervisorMode.Interrupt);
     }
 
+    // РГПр — главный регистр прерывания. Cause storage is distinct from UU acceptance.
+    internal void LatchInternalCause(ulong interruptFlags) =>
+        InternalInterrupts |= interruptFlags & Word48.Mask48;
+
+    // УУ — устройство управления. Shared stop policy for serial faults and hardware input.
+    internal void AcceptInternalInterrupt(ulong signal, uint returnWord, uint savedFlags)
+    {
+        bool arithmetic = (signal & (3UL << 21)) != 0;
+        bool control = (signal & ((1UL << 20) | (1UL << 14))) != 0;
+        ControlUnitFlags stop = arithmetic ? ControlUnitFlags.StopOnInternalInterrupt | ControlUnitFlags.StopOnControlInterrupt :
+            control ? ControlUnitFlags.StopOnControlInterrupt : ControlUnitFlags.StopOnInternalInterrupt;
+        if ((!arithmetic || !ArithmeticStopBlocked) && (Status.Flags & stop) != 0)
+            throw new SupervisorHaltException(signal);
+        EnterInternal(signal, returnWord, savedFlags);
+    }
+
     public void EnterInternal(ulong interruptFlags, uint returnWord, uint savedFlags)
     {
-        InternalInterrupts |= interruptFlags & Word48.Mask48;
+        LatchInternalCause(interruptFlags);
         _special[23] = (CaptureFlags() & ~(SavedRightHalf | SavedNextInstruction)) |
             (savedFlags & (SavedRightHalf | SavedNextInstruction | 0x30u));
         _special[27] = returnWord & 0x7FFF;
