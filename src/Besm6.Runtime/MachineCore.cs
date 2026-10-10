@@ -9,10 +9,11 @@ namespace Besm6.Runtime
     /// Главный класс симулятора БЭСМ-6.
     /// Объединяет все компоненты в единую систему.
     ///
-    /// Единственный исполнительный движок — <see cref="Processor"/> (точный порт
+    /// Функциональный исполнительный движок — <see cref="Processor"/> (точный порт
     /// dubna/processor.cpp). Устаревший конвейер ControlUnit/ArithmeticUnit
     /// удалён из активного пути. Память и устройства используются как
-    /// инфраструктура для загрузки программ и I/O.
+    /// инфраструктура для загрузки программ и I/O. Функциональная симуляция
+    /// и физическая модель процессора изолированы, ресурсы машины общие.
     /// </summary>
     public class MachineCore
     {
@@ -36,10 +37,8 @@ namespace Besm6.Runtime
         /// <summary>Документированная стоимость одной CPU-инструкции в модельных тиках.</summary>
         public const ulong TicksPerInstruction = 1;
 
-        private readonly SimulationClock _clock = new();
-        private readonly EventScheduler _scheduler;
-        private Timing.HardwareTimeline? _hardwareTimeline;
-        private Timing.ArithmeticUnitStages? _arithmeticUnitStages;
+        private readonly Execution.FunctionalProcessorSimulation _simulation;
+        private Modeling.HardwareProcessorModel? _hardwareModel;
 
         /// <summary>
         /// Internal staged АУ (арифметическое устройство) attached to this calendar.
@@ -51,13 +50,27 @@ namespace Besm6.Runtime
         {
             if (cycle.Nanoseconds == 0 || (cycle.Nanoseconds & 1) != 0)
                 throw new ArgumentOutOfRangeException(nameof(cycle), "A positive even cycle is required.");
-            if (_arithmeticUnitStages is { } existing)
+            return HardwareModel.CreateArithmeticUnitStages(cycle, errorPolicy);
+        }
+
+        internal Execution.FunctionalProcessorSimulation Simulation => _simulation;
+        internal Modeling.HardwareProcessorModel? ExistingHardwareModel => _hardwareModel;
+
+        internal Modeling.HardwareProcessorModel HardwareModel
+        {
+            get
             {
-                if (existing.Cycle != cycle || existing.Errors?.Policy != errorPolicy)
-                    throw new InvalidOperationException("This machine's arithmetic configuration is already selected.");
-                return existing;
+                if (_hardwareModel is not null) return _hardwareModel;
+                var model = new Modeling.HardwareProcessorModel(Cpu);
+                model.Timeline.AdvancementProhibited = _simulation.Scheduler.IsAdvancing;
+                model.Timeline.AdvanceStateChanged = active =>
+                {
+                    Cpu.ExecutionProhibited = active;
+                    _simulation.Scheduler.AdvancementProhibited = active;
+                    _simulation.Clock.AdvancementProhibited = active;
+                };
+                return _hardwareModel = model;
             }
-            return _arithmeticUnitStages = new(HardwareTimeline, cycle, Cpu.GetA(), Cpu.GetY(), errorPolicy);
         }
 
         /// <summary>
@@ -65,100 +78,24 @@ namespace Besm6.Runtime
         /// advancement only; instruction ticks and existing pacing are unchanged.
         /// CPU reset preserves this calendar and its pending operations.
         /// </summary>
-        public Timing.HardwareTimeline HardwareTimeline
-        {
-            get
-            {
-                if (_hardwareTimeline is not null) return _hardwareTimeline;
-                var timeline = new Timing.HardwareTimeline
-                {
-                    AdvancementProhibited = _scheduler.IsAdvancing,
-                    AdvanceStateChanged = active =>
-                    {
-                        Cpu.ExecutionProhibited = active;
-                        _scheduler.AdvancementProhibited = active;
-                        _clock.AdvancementProhibited = active;
-                    }
-                };
-                _hardwareTimeline = timeline;
-                return timeline;
-            }
-        }
+        public Timing.HardwareTimeline HardwareTimeline => HardwareModel.Timeline;
 
         /// <summary>Модельные часы (read-only вид уровня B).</summary>
-        public ISimulationClock Clock => _clock;
+        public ISimulationClock Clock => _simulation.Clock;
 
         /// <summary>Планировщик событий модельного времени (уровень B).</summary>
-        public IEventScheduler Scheduler => _scheduler;
+        public IEventScheduler Scheduler => _simulation.Scheduler;
 
         // Свойство-мост для совместимости с существующим Debugger.
         public Processor Processor => Cpu;
 
-        /// <summary>Хук трассировки: вызывается после каждой инструкции. null = трассировка выключена.</summary>
-        public Action<int, ulong>? StepTrace { get; set; }
+        public Action<int, ulong>? StepTrace
+        { get => _simulation.StepTrace; set => _simulation.StepTrace = value; }
 
-        /// <summary>
-        /// Хук трассировки ИЗМЕНЕНИЙ регистров после каждого шага — точный аналог
-        /// регистра ("A", "Y", "M0".."M17" в восьмеричной записи, "R", "C"
-        /// или "CLEARC") и его
-        /// значением. Печатает только изменённые регистры (сравнение с prev-состоянием),
-        /// </summary>
-        public Action<string, ulong>? RegisterTrace { get; set; }
+        public Action<string, ulong>? RegisterTrace
+        { get => _simulation.RegisterTrace; set => _simulation.RegisterTrace = value; }
 
-        private bool _rtActive;
-        private ulong _rtA, _rtY, _rtR;
-        private uint _rtC;
-        private readonly uint[] _rtM = new uint[16];
-        private bool _rtApplyC;
-
-        /// <summary>Зафиксировать текущее состояние как базу сравнения (вызывать до цикла шагов).</summary>
-        public void BeginRegisterTrace()
-        {
-            _rtActive = true;
-            _rtA = Cpu.GetA().Value;
-            _rtY = Cpu.GetY().Value;
-            _rtR = Cpu.GetR();
-            _rtC = Cpu.C;
-            _rtApplyC = Cpu.ApplyC;
-            for (int index = 0; index < 16; index++)
-                _rtM[index] = Cpu.GetM(index);
-        }
-
-        private void EmitRegisterTrace()
-        {
-            Action<string, ulong>? sink = RegisterTrace;
-            if (sink is null)
-                return;
-            if (!_rtActive)
-            {
-                BeginRegisterTrace();
-                return;
-            }
-
-            ulong a = Cpu.GetA().Value;
-            ulong y = Cpu.GetY().Value;
-            uint r = Cpu.GetR();
-            uint c = Cpu.C;
-            bool applyC = Cpu.ApplyC;
-            if (a != _rtA) sink("A", a);
-            if (y != _rtY) sink("Y", y);
-            for (int index = 0; index < 16; index++)
-            {
-                uint value = Cpu.GetM(index);
-                if (value != _rtM[index])
-                    sink("M" + Convert.ToString(index, 8), value);
-            }
-            if (r != _rtR) sink("R", r);
-            if (applyC != _rtApplyC) sink(applyC ? "C" : "CLEARC", c);
-
-            _rtA = a;
-            _rtY = y;
-            _rtR = r;
-            _rtC = c;
-            _rtApplyC = applyC;
-            for (int index = 0; index < 16; index++)
-                _rtM[index] = Cpu.GetM(index);
-        }
+        public void BeginRegisterTrace() => _simulation.BeginRegisterTrace();
 
         public MachineCore(uint memorySize = 32768, string? puncherOutputDir = null)
             : this(MemoryModel.Dubna, memorySize, puncherOutputDir) { }
@@ -234,15 +171,15 @@ namespace Besm6.Runtime
             Plotter = new Plotter();
 
             // B1: планировщик событий привязан к тем же модельным часам машины.
-            _scheduler = new EventScheduler(_clock);
-            _scheduler.AdvanceStateChanged = active =>
+            _simulation = new(Cpu, Memory);
+            _simulation.Scheduler.AdvanceStateChanged = active =>
             {
                 Cpu.ExecutionProhibited = active;
-                if (_hardwareTimeline is { } timeline) timeline.AdvancementProhibited = active;
+                if (_hardwareModel is { } model) model.Timeline.AdvancementProhibited = active;
             };
             if (Cpu.Supervisor is { } supervisor)
             {
-                SupervisorIo = new SupervisorIoController(MappedMemory!, _scheduler, () => { });
+                SupervisorIo = new SupervisorIoController(MappedMemory!, _simulation.Scheduler, () => { });
                 supervisor.Io = SupervisorIo;
             }
         }
@@ -292,75 +229,14 @@ namespace Besm6.Runtime
         /// Выполнение одной инструкции.
         /// Возвращает true, когда процессор остановлен (команда СТОП).
         /// </summary>
-        public bool Step()
-        {
-            long completed = 0;
-            return Step(ref completed);
-        }
+        public bool Step() => _simulation.Step();
 
-        internal bool Step(ref long completed)
-        {
-            EnsureExecutionAllowed();
-            DeliverCurrentEvents();
-            bool stopped = Cpu.Step();
-            if (!Cpu.LastStepCompleted) return stopped;
-            // B1: одна выполненная инструкция = TicksPerInstruction тиков модельного времени.
-            // Не влияет на наблюдаемую семантику уровня A (только учёт модельного времени).
-            _clock.Advance(TicksPerInstruction);
-            completed++;
-            if (StepTrace != null)
-            {
-                int k = (int)Cpu.GetK();
-                StepTrace(k, Memory.Read((uint)k).Value);
-            }
-            if (RegisterTrace is not null) EmitRegisterTrace();
-            DeliverCurrentEvents();
-            return stopped;
-        }
+        internal bool Step(ref long completed) => _simulation.Step(ref completed);
 
-        internal void EnsureExecutionAllowed()
-        {
-            if (Cpu.ExecutionProhibited)
-                throw new InvalidOperationException("Machine execution inside a scheduler callback is not allowed.");
-        }
+        internal void EnsureExecutionAllowed() => _simulation.EnsureExecutionAllowed();
 
-        private void DeliverCurrentEvents()
-        {
-            if (_scheduler.NextEventTick is ulong next && next <= _clock.Tick)
-                _scheduler.DeliverCurrentEvents();
-        }
-
-        /// <summary>
-        /// Executes a bounded batch through the same Step path. The counter advances
-        /// only after a successful step, including STOP; exceptions leave it exact.
-        /// </summary>
-        internal bool ExecuteBlock(int count, ref long instructionsExecuted)
-        {
-            EnsureExecutionAllowed();
-            long end = instructionsExecuted + count;
-            while (instructionsExecuted < end)
-            {
-                DeliverCurrentEvents();
-                if (StepTrace is null && RegisterTrace is null && Cpu.CanExecuteUnobservedBlock)
-                {
-                    int batch = (int)(end - instructionsExecuted);
-                    if (_scheduler.NextEventTick is ulong next)
-                        batch = (int)Math.Min((ulong)batch, next - _clock.Tick);
-                    long batchEnd = instructionsExecuted + batch;
-                    bool stopped = Cpu.ExecuteUnobservedBlock(batch,
-                        ref instructionsExecuted, ref _clock.TickReference);
-                    DeliverCurrentEvents();
-                    if (stopped) return true;
-                    if (instructionsExecuted == end) return false;
-                    if (instructionsExecuted == batchEnd) continue;
-                }
-                // Events may have installed hooks or modified the next instruction.
-                // Recheck at the top after a completed batch; an extracode returns
-                // without reaching its requested boundary and needs the ordinary step.
-                if (Step(ref instructionsExecuted)) return true;
-            }
-            return false;
-        }
+        internal bool ExecuteBlock(int count, ref long instructionsExecuted) =>
+            _simulation.ExecuteBlock(count, ref instructionsExecuted);
 
         /// <summary>
         /// Запуск машины до достижения условия остановки.
