@@ -1,6 +1,6 @@
 namespace Besm6.Core;
 
-internal enum LogicalArithmeticOperation { And, Xor, Or }
+internal enum LogicalArithmeticOperation { And, Xor, Or, Pack, Unpack }
 
 // АУ — арифметическое устройство. Shared logical result, without register publication.
 internal static class LogicalArithmeticOperations
@@ -12,6 +12,8 @@ internal static class LogicalArithmeticOperations
         LogicalArithmeticOperation.And => new(new(accumulator.Value & operand.Value), Word48.Zero, false, false),
         LogicalArithmeticOperation.Xor => new(new(accumulator.Value ^ operand.Value), accumulator, false, false),
         LogicalArithmeticOperation.Or => new(new(accumulator.Value | operand.Value), Word48.Zero, false, false),
+        LogicalArithmeticOperation.Pack => new(new(Processor.Besm6Pack(accumulator.Value, operand.Value)), Word48.Zero, false, false),
+        LogicalArithmeticOperation.Unpack => new(new(Processor.Besm6Unpack(accumulator.Value, operand.Value)), Word48.Zero, false, false),
         _ => throw new ArgumentOutOfRangeException(nameof(operation))
     };
 }

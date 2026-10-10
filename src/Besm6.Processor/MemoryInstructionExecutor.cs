@@ -60,7 +60,7 @@ namespace Besm6.Core
         internal static bool CanCaptureArithmetic(Opcode opcode) => opcode is
             Opcode.APlusX or Opcode.AMinusX or Opcode.XMinusA or Opcode.Amx or
             Opcode.Avx or Opcode.ADivX or Opcode.AMulX or Opcode.EPlusX or
-            Opcode.EMinusX or Opcode.EPlusN or Opcode.EMinusN or Opcode.Aax or Opcode.Aex or Opcode.Aox;
+            Opcode.EMinusX or Opcode.EPlusN or Opcode.EMinusN or Opcode.Aax or Opcode.Aex or Opcode.Aox or Opcode.Apx or Opcode.Aux;
 
         internal CapturedArithmeticInstructionExecution CaptureArithmetic(ref ExecutionFrame frame)
         {
@@ -182,16 +182,14 @@ namespace Besm6.Core
                 case Opcode.Apx:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    frame.A = Processor.Besm6Pack(frame.A, _memory.MemLoad(frame.EffectiveAddress));
-                    frame.Y = 0;
-                    _state.SetLogical();
+                    arithmetic.Logical(ref frame, LoadWord(ref frame), LogicalArithmeticOperation.Pack);
+                    arithmetic.FinishLogical(_state);
                     break;
                 case Opcode.Aux:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    frame.A = Processor.Besm6Unpack(frame.A, _memory.MemLoad(frame.EffectiveAddress));
-                    frame.Y = 0;
-                    _state.SetLogical();
+                    arithmetic.Logical(ref frame, LoadWord(ref frame), LogicalArithmeticOperation.Unpack);
+                    arithmetic.FinishLogical(_state);
                     break;
                 case Opcode.Acx:
                     PrepareStack(addr, reg);

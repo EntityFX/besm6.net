@@ -24,7 +24,7 @@ internal readonly record struct ArithmeticOperandBuffer
 
 /// <summary>
 /// УУ — устройство управления. TO-3 table1.1, sheets4/5, gives program and AU
-/// codes; §3.8, sheets38/39, gives the interface fields. Only the fourteen commands
+/// codes; §3.8, sheets38/39, gives the interface fields. Only the sixteen commands
 /// supported by the shared staged arithmetic handler are admitted here.
 /// This is command formation, not another instruction or arithmetic interpreter.
 /// </summary>
@@ -42,6 +42,8 @@ internal static class ArithmeticCommandEncoding
         Opcode.Avx => 0x0C, // 014 octal.
         Opcode.ADivX => 0x0E,
         Opcode.AMulX => 0x0F,
+        Opcode.Apx => 0x10, // 020 octal, packing.
+        Opcode.Aux => 0x11, // 021 octal, unpacking.
         Opcode.EPlusX => 0x14, // 024 octal.
         Opcode.EMinusX => 0x15,
         Opcode.EPlusN => 0x1C, // 034 octal, order correction by address.
