@@ -23,12 +23,13 @@ internal sealed class ArithmeticStageObserverException(ArithmeticStageTransition
 internal sealed class ArithmeticStageController
 {
     private sealed class Entry(ArithmeticCommandHandle handle, uint code,
-        Func<PreparedArithmeticOperation?> sampleOperand, bool ready)
+        Func<PreparedArithmeticOperation?> sampleOperand, bool ready, ArithmeticOperandRoute route)
     {
         internal readonly ArithmeticCommandHandle Handle = handle;
         internal readonly uint Code = code;
         internal readonly Func<PreparedArithmeticOperation?> SampleOperand = sampleOperand;
         internal bool Ready = ready;
+        internal readonly ArithmeticOperandRoute Route = route;
     }
 
     private readonly HardwareTimeline _timeline;
@@ -78,20 +79,22 @@ internal sealed class ArithmeticStageController
 
     internal bool TryBind(object owner, uint code, Func<PreparedArithmeticOperation?> sampleOperand,
         bool operandReady, Word48 accumulator, Word48 lowRegister,
-        Action<ArithmeticStageTransition> transition, out ArithmeticCommandHandle command)
+        Action<ArithmeticStageTransition> transition, out ArithmeticCommandHandle command,
+        ArithmeticOperandRoute route = ArithmeticOperandRoute.Buffered)
     {
         ArgumentNullException.ThrowIfNull(owner);
         ArgumentNullException.ThrowIfNull(transition);
         ArgumentNullException.ThrowIfNull(sampleOperand);
+        if (!Enum.IsDefined(route)) throw new ArgumentOutOfRangeException(nameof(route));
         if (_changing || _bindingOwner is not null || _live.Count != 0)
             throw new InvalidOperationException("CPU binding requires an idle unowned arithmetic controller.");
         // Validate before taking ownership or changing the cached register boundary.
         if ((code & ~ArithmeticCommandBuffer.CommandMask) != 0) throw new ArgumentOutOfRangeException(nameof(code));
-        if (operandReady) _transfer.AcceptFromReadyBuffer(_timeline.Now);
+        if (operandReady && route == ArithmeticOperandRoute.Buffered) _transfer.AcceptFromReadyBuffer(_timeline.Now);
         _unit.SynchronizeIdleRegisters(accumulator, lowRegister);
         _bindingOwner = owner;
         _boundTransition = transition;
-        try { return TryEnqueueOperand(code, sampleOperand, operandReady, out command); }
+        try { return TryEnqueueOperand(code, sampleOperand, operandReady, out command, route); }
         catch { ReleaseBinding(owner); throw; }
     }
 
@@ -114,17 +117,17 @@ internal sealed class ArithmeticStageController
     }
 
     private bool TryEnqueueOperand(uint code, Func<PreparedArithmeticOperation?> sampleOperand,
-        bool operandReady, out ArithmeticCommandHandle command)
+        bool operandReady, out ArithmeticCommandHandle command, ArithmeticOperandRoute route = ArithmeticOperandRoute.Buffered)
     {
         ArithmeticCommandHandle added = default;
         Change(() =>
         {
             ulong sequence = checked(_sequence + 1);
             // Validate the first transfer before admitting the command to BAK.
-            if (_waiting.Count == 0 && operandReady) _transfer.AcceptFromReadyBuffer(_timeline.Now);
+            if (_waiting.Count == 0 && operandReady && route == ArithmeticOperandRoute.Buffered) _transfer.AcceptFromReadyBuffer(_timeline.Now);
             if (!_unit.TryReceiveCommand(code)) return;
             added = new(this, sequence);
-            var entry = new Entry(added, code, sampleOperand, operandReady);
+            var entry = new Entry(added, code, sampleOperand, operandReady, route);
             _waiting.Enqueue(entry);
             _live.Add(sequence, entry);
             _sequence = sequence;
@@ -147,7 +150,8 @@ internal sealed class ArithmeticStageController
         Change(() =>
         {
             if (!ReferenceEquals(command.Owner, this) || !_live.TryGetValue(command.Sequence, out var entry) ||
-                entry.Ready || ReferenceEquals(entry, _prepared) || ReferenceEquals(entry, _active)) return;
+                entry.Route != ArithmeticOperandRoute.Buffered || entry.Ready ||
+                ReferenceEquals(entry, _prepared) || ReferenceEquals(entry, _active)) return;
             if (ReferenceEquals(entry, _selected))
                 ScheduleAcceptance(_transfer.AcceptAfterBufferWait(_timeline.Now));
             entry.Ready = true;
@@ -158,6 +162,26 @@ internal sealed class ArithmeticStageController
     }
 
     internal void Resume() => Change(Progress);
+
+    /// <summary>
+    /// Explicit PVRA/PVRM input-register acceptance (ПВРА/ПВРМ).
+    /// The verified control sequence supplies this instant; BRCh transfer delays
+    /// do not apply to an operand from the command address or index register.
+    /// </summary>
+    internal bool TryAcceptDirectOperand(ArithmeticCommandHandle command)
+    {
+        bool accepted = false;
+        Change(() =>
+        {
+            if (_selected is not { Route: ArithmeticOperandRoute.Direct } entry ||
+                entry.Handle != command || _prepared is not null || _unit.Interrupted || !_unit.CommandPermission) return;
+            entry.Ready = true;
+            _transferElapsed = true;
+            Progress();
+            accepted = true;
+        });
+        return accepted;
+    }
 
     private void ScheduleAcceptance(HardwareInstant time)
     {
@@ -173,7 +197,8 @@ internal sealed class ArithmeticStageController
     {
         if (_selected is null && _waiting.TryPeek(out var next))
         {
-            if (next.Ready) ScheduleAcceptance(_transfer.AcceptFromReadyBuffer(_timeline.Now));
+            if (next.Ready && next.Route == ArithmeticOperandRoute.Buffered)
+                ScheduleAcceptance(_transfer.AcceptFromReadyBuffer(_timeline.Now));
             _selected = next;
             _transferElapsed = false;
         }

@@ -1,0 +1,42 @@
+{
+  "base_commit": "968668a",
+  "files": [
+    {
+      "path": "src/Besm6.Runtime/Timing/ArithmeticCommandWord.cs",
+      "sha256": "d131a9327c135437b65eb5351b82b42226ea6f1e7f6bb7fed52d9159e5641ff6"
+    },
+    {
+      "path": "src/Besm6.Runtime/Timing/ArithmeticStageController.cs",
+      "sha256": "38e4d536cf7a397249f94e93be1d7f12698b73b2dacb2f457f6448b5b4b4474b"
+    },
+    {
+      "path": "src/Besm6.Runtime/Modeling/HardwareProcessorModel.ArithmeticBinding.cs",
+      "sha256": "4dcb954f6ceb7622561cebad41e37d7e4ab7007a16b5a7b2340186fc7e32e764"
+    },
+    {
+      "path": "tests/Besm6.Runtime.Tests/ArithmeticCommandWordTests.cs",
+      "sha256": "b86101b0f8ecb6171b420cfb0378f4ccee6e146492256a88e7983c36a5907849"
+    }
+  ],
+  "sources": [
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-21.png",
+      "sha256": "c5c06676b4a3b4d3df73bed69d2e03b80e6e0dda1b75104a510350cbf5f8b578",
+      "visual_checked": true
+    },
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-22.png",
+      "sha256": "e5e4c97411ca701bc796e269524213a3294fbf9dcb3f1d5b99e5779c1d52e7b7",
+      "visual_checked": true
+    }
+  ],
+  "pdf_sha256": "d5328d38db6485bf22bc2ccaf7f60051471e5715686fcf6a3b01a40764af1751",
+  "source": "TO-3 edition1-65 section3.7/3.8, printed sheets34 and38–40",
+  "boundaries": [
+    "The parsed word is the physical 17-bit AU interface, not a guest instruction.",
+    "Bits17/16/9/8 select external/index/immediate/write/read input paths; unused bits are not reinterpreted.",
+    "The current binding uses the source class only; shared CPU handlers still own operand values and instruction semantics.",
+    "Direct input requires an explicit PVRA/PVRM signal and RPK; no buffer-transfer delay is applied.",
+    "Operation-field mapping, other physical input paths, automatic direct signal deadlines and full IZOP sequences remain incomplete."
+  ]
+}
