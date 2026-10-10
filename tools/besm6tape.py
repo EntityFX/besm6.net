@@ -10,7 +10,7 @@
   python3 tools/besm6tape.py zones   tapes/monsys.9
 
 Таблицы мнемоник и кодирование полуслов соответствуют
-src/Besm6.Assembler/OpcodeTable.cs и src/Besm6.Architecture/InstructionCodec.cs.
+src/Besm6.Assembler/Parsing/OpcodeTable.cs и src/Besm6.Architecture/Isa/InstructionCodec.cs.
 """
 import argparse
 import os

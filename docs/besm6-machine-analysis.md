@@ -138,7 +138,7 @@
 команд декодер сохраняет код в форме `0x80, 0x88, ... 0xF8`; это объясняет
 почему программный enum содержит значения, отличающиеся от компактной
 таблицы длинных команд `22, 23, ... 37` в книге.
-[InstructionCodec](../src/Besm6.Architecture/InstructionCodec.cs).
+[InstructionCodec](../src/Besm6.Architecture/Isa/InstructionCodec.cs).
 
 ### 3.3. Число с плавающей запятой
 
@@ -163,7 +163,7 @@ value = (m / 2^40) × 2^(E − 64)
 Например, `+1` имеет `E=65, m=2^39`, а нормализованное `−1` — `E=64, m=−2^40`.
 [Учебник, § 2](../book/fortran-1976/01-besm6.md#section-2),
 [проверочные битовые примеры архива](https://besm6.github.io/wiki/Numbers),
-[MantissaExponent](../src/Besm6.Architecture/MantissaExponent.cs).
+[MantissaExponent](../src/Besm6.Architecture/Numerics/MantissaExponent.cs).
 
 Диапазон нормализованных значений по учебнику: от `2^-65` до
 `2^63 × (1 − 2^-40)` по модулю; это приблизительно `10^-19..10^19`.
@@ -190,7 +190,7 @@ value = (m / 2^40) × 2^(E − 64)
 `K` в этой реализации не содержит флаг половины в младшем бите. Это
 существенно для отладчика: две разные команды могут иметь один и тот же K.
 Полный адрес точки исполнения — пара `(K, IsRightHalf)`.
-[ProcessorState](../src/Besm6.Processor/ProcessorState.cs).
+[ProcessorState](../src/Besm6.Processor/Cpu/ProcessorState.cs).
 
 Для обычной адресуемой команды исполнительный адрес получается по схеме:
 
@@ -210,8 +210,8 @@ UTC устанавливает C из адреса, WTC — из младших 
 ненулевой C ещё может оставаться в состоянии и не использоваться. Нулевая
 новая модификация сбрасывает признак. STOP сохраняет прежнее состояние
 модификации по специальному флагу кадра.
-[ControlInstructionExecutor](../src/Besm6.Processor/ControlInstructionExecutor.cs),
-[InstructionExecutor](../src/Besm6.Processor/InstructionExecutor.cs).
+[ControlInstructionExecutor](../src/Besm6.Processor/Execution/ControlInstructionExecutor.cs),
+[InstructionExecutor](../src/Besm6.Processor/Execution/InstructionExecutor.cs).
 
 M15 используется для магазинной адресации. При адресе 0 и регистре 15
 некоторые чтения предварительно уменьшают указатель, а записи увеличивают
@@ -239,7 +239,7 @@ M15 используется для магазинной адресации. П�
 устанавливают один групповой признак и снимают два других; NTR/XTR могут
 задавать комбинацию напрямую.
 [Учебник, § 4](../book/fortran-1976/01-besm6.md#section-4),
-[RFlags](../src/Besm6.Architecture/RFlags.cs).
+[RFlags](../src/Besm6.Architecture/State/RFlags.cs).
 
 UZA/U1A не являются универсальным сравнением A с числовым нулём.
 В логической группе проверяется весь код A, в группе сложения — знак
@@ -247,7 +247,7 @@ UZA/U1A не являются универсальным сравнением A 
 команды, изменяющей группу, может изменить последующий переход при
 неизменном A. Текущие обработчики также записывают A в Y перед проверкой:
 принимая оптимизацию, нужно сравнивать Y, а не только выбранную ветвь.
-[ControlInstructionExecutor](../src/Besm6.Processor/ControlInstructionExecutor.cs).
+[ControlInstructionExecutor](../src/Besm6.Processor/Execution/ControlInstructionExecutor.cs).
 
 VLM используется со счётчиком в 15-битном пространстве. Ненулевой
 модификатор увеличивается на 1 и выполняется переход. Обычно начальное
@@ -269,9 +269,9 @@ VLM используется со счётчиком в 15-битном прос
 результат. Умножение собирает точное произведение частями и распределяет
 старшие/младшие разряды. Деление использует собственный алгоритм с проверкой
 делителя; оно не заменено делением `double` хоста.
-[AdditiveOperations](../src/Besm6.Processor/AdditiveOperations.cs),
-[MultiplicativeOperations](../src/Besm6.Processor/MultiplicativeOperations.cs),
-[MantissaExponent.Multiply](../src/Besm6.Architecture/MantissaExponent.cs).
+[AdditiveOperations](../src/Besm6.Processor/Arithmetic/AdditiveOperations.cs),
+[MultiplicativeOperations](../src/Besm6.Processor/Arithmetic/MultiplicativeOperations.cs),
+[MantissaExponent.Multiply](../src/Besm6.Architecture/Numerics/MantissaExponent.cs).
 
 Нормализация предшествует округлению. В C# округляющая ветвь устанавливает
 младший бит мантиссы (`Mantissa |= 1`) при соответствующем признаке. Это
@@ -279,7 +279,7 @@ VLM используется со счётчиком в 15-битном прос
 после формирования A/Y, поэтому исключение может видеть уже изменённые
 регистры. Ветвь машинного нуля имеет своё правило Y. Такое поведение нельзя
 воспроизвести одной общей конверсией из `double`.
-[NormalizationAndRounding](../src/Besm6.Processor/NormalizationAndRounding.cs).
+[NormalizationAndRounding](../src/Besm6.Processor/Arithmetic/NormalizationAndRounding.cs).
 
 У деления в учебнике отдельное правило: дополнительного округления после
 операции нет; точные представимые отношения должны получаться точными.
@@ -309,7 +309,7 @@ VLM используется со счётчиком в 15-битном прос
 очередей банков, вытеснения аппаратных буферов, ожидания 2 мкс и модели
 конфликтов чтения. `GetAccessTimeNs` возвращает константу 900 и не задерживает
 каждое обращение процессора.
-[CoreMemory](../src/Besm6.Processor/CoreMemory.cs).
+[CoreMemory](../src/Besm6.Processor/Memory/CoreMemory.cs).
 
 ## 8. «Дубна», трансляторы и внешние устройства
 
@@ -335,7 +335,7 @@ host-ассемблирование поддерживаемого входа и
 транслятор и программа. Поэтому замер RunLoaded содержит и компиляцию.
 Использование SDK .NET для сборки симулятора не означает компиляцию
 исторического Фортрана современным компилятором хоста.
-[DubnaLoader](../src/Besm6.Runtime/DubnaLoader.cs),
+[DubnaLoader](../src/Besm6.Runtime/Loading/DubnaLoader.cs),
 [JobProgramLoader](../src/Besm6.Runtime/Loading/JobProgramLoader.cs),
 [MonsysBootstrapper](../src/Besm6.Runtime/Loading/MonsysBootstrapper.cs).
 
@@ -346,8 +346,8 @@ host-ассемблирование поддерживаемого входа и
 готовыми вычислениями хоста. При этом утверждение «любая математика всегда
 исполняется только гостевыми командами» тоже неверно: математические
 экстракоды уже используют host-реализации услуг.
-[ExtracodeHandler](../src/Besm6.Runtime/ExtracodeHandler.cs),
-[математические услуги](../src/Besm6.Runtime/ExtracodeHandler.Math.cs).
+[ExtracodeHandler](../src/Besm6.Runtime/Extracodes/ExtracodeHandler.cs),
+[математические услуги](../src/Besm6.Runtime/Extracodes/ExtracodeHandler.Math.cs).
 
 Есть конкретное различие с описанием § 6: книга говорит о сохранении R
 после экстракода, а текущий ExtracodeInstructionExecutor после успешного
@@ -356,7 +356,7 @@ host-dispatch вызывает SetLogical, заменяя групповые п�
 записывает исполнительный адрес в M14 и выравнивает возврат на левую
 команду следующего слова. Различие R требует отдельной сверки версии
 монитора и эталонного поведения; в оптимизации оно не изменялось.
-[Фактический обработчик](../src/Besm6.Processor/ExtracodeInstructionExecutor.cs),
+[Фактический обработчик](../src/Besm6.Processor/Execution/ExtracodeInstructionExecutor.cs),
 [учебник, § 6](../book/fortran-1976/01-besm6.md#section-6).
 
 Обмен внешней памяти в книге организован страницами по 1024 слова;
@@ -367,7 +367,7 @@ host-dispatch вызывает SetLogical, заменяя групповые п�
 Например, [описание некоторых архивных образов](https://besm6.github.io/download/)
 указывает другой контейнер с заголовком зоны. Совместимость формата нужно
 проверять отдельно от совместимости команд.
-[TapeImage](../src/Besm6.Runtime/TapeImage.cs).
+[TapeImage](../src/Besm6.Runtime/Storage/TapeImage.cs).
 
 Печать требует кодировок ГОСТ 10859, КОИ-7, COSY и внутренних форматов
 монитора. Ошибка декодирования вывода не обязательно означает ошибку АЛУ;

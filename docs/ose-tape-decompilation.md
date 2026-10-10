@@ -204,10 +204,10 @@ python3 tools/besm6tape.py info   tapes/monsys.9
 
 ## Литература
 
-1. `src/Besm6.Runtime/TapeImage.cs` — формат образа, адресация зон.
-2. `src/Besm6.Runtime/ExtracodeHandler.Terminal.cs` — E70, чтение диска/барабана.
+1. `src/Besm6.Runtime/Storage/TapeImage.cs` — формат образа, адресация зон.
+2. `src/Besm6.Runtime/Extracodes/ExtracodeHandler.Terminal.cs` — E70, чтение диска/барабана.
 3. `src/Besm6.Runtime/Loading/MonsysBootstrapper.cs` — бутстрап MONSYS.
-4. `src/Besm6.Assembler/Disassembler.cs`, `src/Besm6.Architecture/InstructionCodec.cs` — кодирование ISA.
+4. `src/Besm6.Assembler/Disassembly/Disassembler.cs`, `src/Besm6.Architecture/Isa/InstructionCodec.cs` — кодирование ISA.
 5. `ref/dubna/` — исходники проекта-первоисточника (MIT), включая `machine.cpp` и `gost10859.h`.
 
 ---

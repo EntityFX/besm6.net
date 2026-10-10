@@ -227,6 +227,6 @@ python3 tools/besm6kernel.py listing  /tmp/kernel.img /tmp/trace.txt \
 1. `tools/besm6kernel.py` — анализатор ядра.
 2. `tools/besm6tape.py` — базовый дизассемблер (таблицы мнемоник).
 3. `docs/ose-tape-decompilation.md` — разбор лент, из которого взята методика.
-4. `src/Besm6.Processor/ControlInstructionExecutor.cs` — эталонная семантика
+4. `src/Besm6.Processor/Execution/ControlInstructionExecutor.cs` — эталонная семантика
    переходов (`vjm`, `vlm`, `utc`, `wtc`, `uza`, `u1a`).
-5. `src/Besm6.Processor/InstructionExecutor.cs` — одноразовость регистра C.
+5. `src/Besm6.Processor/Execution/InstructionExecutor.cs` — одноразовость регистра C.
