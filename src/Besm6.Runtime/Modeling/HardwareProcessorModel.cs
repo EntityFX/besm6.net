@@ -17,7 +17,7 @@ internal sealed partial class HardwareProcessorModel
     private ArithmeticInterruptionPort? _arithmeticInterruptions;
     internal HardwareTimeline Timeline { get; } = new();
 
-    internal HardwareProcessorModel(Processor processor) => _processor = processor;
+    internal HardwareProcessorModel(Processor processor, PhysicalMemory? physicalMemory = null) { _processor = processor; _physicalMemory = physicalMemory; }
 
     internal ArithmeticStageController CreateArithmeticController(HardwareDuration cycle,
         ArithmeticErrorPolicy? errorPolicy = null)

@@ -62,7 +62,7 @@ namespace Besm6.Runtime
             get
             {
                 if (_hardwareModel is not null) return _hardwareModel;
-                var model = new Modeling.HardwareProcessorModel(Cpu);
+                var model = new Modeling.HardwareProcessorModel(Cpu, MappedMemory?.PhysicalMemory);
                 _executionOwnership.Attach(model);
                 return _hardwareModel = model;
             }
