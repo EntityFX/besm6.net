@@ -300,6 +300,13 @@ namespace Besm6.Core
 
         internal InstructionExecutor.PreparedInstruction PrepareInstruction() => _executor.PrepareInstruction();
         internal bool HasPreparedInstruction => _executor.HasPreparedInstruction;
+        internal PreparedArithmeticOperation? CaptureArithmeticOperand(in InstructionExecutor.PreparedInstruction instruction) =>
+            _executor.CaptureArithmeticOperand(in instruction);
+        internal bool RequiresArithmeticResult(in InstructionExecutor.PreparedInstruction instruction) =>
+            _executor.RequiresArithmeticResult(in instruction);
+        internal void SupplyArithmeticResult(in InstructionExecutor.PreparedInstruction instruction,
+            NormalizedArithmeticResult? result, ProcessorException? failure) =>
+            _executor.SupplyArithmeticResult(in instruction, result, failure);
         internal bool IsPreparedInstructionActive(in InstructionExecutor.PreparedInstruction instruction) =>
             _executor.IsPreparedInstructionActive(in instruction);
         internal bool CompleteInstruction(in InstructionExecutor.PreparedInstruction instruction) =>

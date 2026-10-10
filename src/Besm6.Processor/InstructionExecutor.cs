@@ -116,18 +116,7 @@ namespace Besm6.Core
         {
             if (!fetched.ShouldExecute) return false;
             DecodedInstruction instruction = fetched.Instruction;
-            var frame = new ExecutionFrame
-            {
-                Instruction = instruction,
-                Address = instruction.Address,
-                EffectiveAddress = _state.EffectiveAddress,
-                A = _state.A.Value,
-                Y = _state.Y.Value,
-            };
-
-            AdvanceInstructionHalf();
-            if (_state.ApplyC)
-                frame.Address = ArchitectureConstants.NormalizeAddress(frame.Address + _state.C);
+            var frame = BeginFetchedInstruction(in fetched);
 
             InstructionOutcome outcome;
             try
@@ -145,6 +134,26 @@ namespace Besm6.Core
                 preserveZeroModification: _processor.Supervisor is not null &&
                     instruction.Opcode is Opcode.Utc or Opcode.Wtc);
             return outcome == InstructionOutcome.Stop;
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private ExecutionFrame BeginFetchedInstruction(in FetchedInstruction fetched)
+        {
+            DecodedInstruction instruction = fetched.Instruction;
+            var frame = new ExecutionFrame
+            {
+                Instruction = instruction,
+                Address = instruction.Address,
+                EffectiveAddress = _state.EffectiveAddress,
+                A = _state.A.Value,
+                Y = _state.Y.Value,
+            };
+
+            AdvanceInstructionHalf();
+            if (_state.ApplyC)
+                frame.Address = ArchitectureConstants.NormalizeAddress(frame.Address + _state.C);
+
+            return frame;
         }
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

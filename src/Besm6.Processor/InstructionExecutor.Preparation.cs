@@ -7,8 +7,9 @@ public sealed partial class InstructionExecutor
 
     /// <summary>
     /// A single-use lease on a fetched command. The model driver may advance its
-    /// calendar before completion; operands and instruction effects are still
-    /// evaluated by the shared handlers at completion, not by a second CPU.
+    /// calendar before completion. Shared handlers either execute at completion
+    /// or accept an arithmetic operand at an explicit PVR boundary; the model
+    /// supplies the common result later. There is no second instruction interpreter.
     /// </summary>
     internal readonly struct PreparedInstruction
     {
@@ -125,6 +126,8 @@ public sealed partial class InstructionExecutor
     internal bool CompleteInstruction(in PreparedInstruction instruction)
     {
         ValidatePreparation(in instruction);
+        if (RequiresArithmeticResult(in instruction))
+            throw new InvalidOperationException("The captured CPU command is still waiting for its arithmetic result.");
         _preparationTransition = true;
         try
         {
@@ -136,7 +139,9 @@ public sealed partial class InstructionExecutor
                 _processor.LastStepCompleted = _terminalCompleted;
                 return _terminalStopped;
             }
-            if (_state.K != _prepared.Address || _state.IsRightHalf != _prepared.RightHalf)
+            if (_operandFailure is null &&
+                (_state.K != (_arithmeticCaptured ? _arithmeticPosition : _prepared.Address) ||
+                 _state.IsRightHalf != (_arithmeticCaptured ? _arithmeticRightHalf : _prepared.RightHalf)))
             {
                 _processor.CancelInstructionTrace();
                 throw new InvalidOperationException("The CPU instruction position changed while preparation was pending.");
@@ -144,12 +149,14 @@ public sealed partial class InstructionExecutor
             _processor.LastStepCompleted = true;
             try
             {
-                bool stopped = ExecuteFetchedInstruction(in _prepared);
+                bool stopped = _arithmeticCaptured ? CompleteCapturedArithmetic() : ExecuteFetchedInstruction(in _prepared);
                 _processor.Supervisor?.CompletedInstruction();
                 return stopped;
             }
             catch (Exception failure) when (_processor.Supervisor is not null && IsSupervisorGuestFailure(failure))
             {
+                if (_operandSupervisorFailure is { } fault && ReferenceEquals(failure, _operandFailure?.SourceException))
+                    return InterruptFailedStep(_processor.Supervisor!, fault.Signal, fault.ReturnWord, fault.Flags);
                 return HandleSupervisorFailure(_processor.Supervisor!, failure,
                     _preparationStart, _preparationRight);
             }
@@ -163,6 +170,7 @@ public sealed partial class InstructionExecutor
             _preparationActive = false;
             _preparationTransition = false;
             _preparationFailure = null;
+            ClearArithmeticPreparation();
         }
     }
 
@@ -184,5 +192,6 @@ public sealed partial class InstructionExecutor
         _prepared = default;
         _terminalPreparation = false;
         _preparationFailure = null;
+        ClearArithmeticPreparation();
     }
 }

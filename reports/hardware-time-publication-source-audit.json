@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-10",
+  "base_commit": "faf5d2f",
+  "files": [
+    {
+      "path": "src/Besm6.Processor/ArithmeticInstructionExecution.cs",
+      "sha256": "ee0092b31c88f918640816a05465997eef09c324651ced9fb9fbcf9ca7fecaf2"
+    },
+    {
+      "path": "src/Besm6.Processor/InstructionExecutor.ArithmeticPreparation.cs",
+      "sha256": "842534633559a3b0999bf6453d4d0796f90da1660419a1844e3ad00f90530544"
+    },
+    {
+      "path": "src/Besm6.Processor/MemoryInstructionExecutor.cs",
+      "sha256": "76f45b2aafdf1cf3d9dfc71490615c291ce0e5b41fbf3088a50252cad20e32fd"
+    },
+    {
+      "path": "src/Besm6.Processor/InstructionExecutor.cs",
+      "sha256": "d0c0cc90a0f227d8f122fdd05341f8ac5036daf6a9a8c4f3190dabb482873343"
+    },
+    {
+      "path": "src/Besm6.Processor/InstructionExecutor.Preparation.cs",
+      "sha256": "557f88a351c2229e760cd67c14d5836019a09a1693b8cdee989eea12c0b5f27b"
+    },
+    {
+      "path": "src/Besm6.Processor/InstructionExecutor.Supervisor.cs",
+      "sha256": "e3a12d311a61818ddc3bd75afde4835b3c03ba9b57bbf2dd4662b61dc2e0a990"
+    },
+    {
+      "path": "src/Besm6.Processor/Processor.cs",
+      "sha256": "58e7bda18bc29c0e9ba0becf54027613178cb4efc616d3047d7d0cea39f12106"
+    },
+    {
+      "path": "src/Besm6.Processor/Alu.cs",
+      "sha256": "2a35dce8b970e0ad3141bedf8f87462ad4aacf723e79740a1fd17c9cfce40f90"
+    },
+    {
+      "path": "src/Besm6.Runtime/Modeling/HardwareProcessorModel.Execution.cs",
+      "sha256": "ab24b8703ccc49e1a2b545e670fa755b799d0548ddbc5a779476912f74c9846e"
+    },
+    {
+      "path": "tests/Besm6.Processor.Tests/CapturedArithmeticInstructionTests.cs",
+      "sha256": "3fad84887bdc72f891c9ae03cc126b2399c15668a195e9b8e7b3ca0e3c9c7da0"
+    },
+    {
+      "path": "tests/Besm6.Runtime.Tests/HardwareArithmeticPublicationTests.cs",
+      "sha256": "89210ecbab8cfd8f0fbc53c8d31a5e6e5a4c3bdbdd19057cc44846ff3ce67731"
+    }
+  ],
+  "evidence": "Existing shared instruction/address/stack handlers and normalization; independent bit vector, immediate/captured state and trace comparisons, single-read and CPU/controller integration tests",
+  "historical_timing_change": "none; the new API uses explicit logical PVR/publication boundaries, not physical K/M signal timings",
+  "boundaries": [
+    "Eleven arithmetic opcodes share one generic instruction handler; no second opcode interpreter.",
+    "PVR applies existing address/stack/half advancement; cancellation does not undo already accepted effects.",
+    "The same normalizer publishes A/Y before overflow and updates the final arithmetic mode only on success.",
+    "Operand read failures retain their cause and are delivered at completion; legacy watchpoint accounting is preserved.",
+    "CPU capture and result supply may run inside the owned hardware calendar; dispatch/completion still cannot.",
+    "The fault description is latched at operand failure, not rebuilt from a later global LastFault.",
+    "Automatic controller binding, read failure microsequence, full timing decode, memory/devices, profiles and OS gate remain incomplete."
+  ]
+}
