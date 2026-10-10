@@ -68,7 +68,8 @@ public sealed class ArithmeticCommandWordTests
         machine.LoadProgram([new(Besm6.Asm.Assembler.Asm(opcode + ", stop"))], 1);
         machine.Cpu.SetA(Word48.FromDouble(1).Value);
         var model = machine.HardwareModel; var cpu = model.PrepareNextInstruction();
-        var command = model.BindArithmeticInstruction(cpu, new ArithmeticCommandWord(0x141), new(100), true);
+        uint code = opcode.StartsWith("e+n", StringComparison.Ordinal) ? 0x3941u : 0x3B41u;
+        var command = model.BindArithmeticInstruction(cpu, new ArithmeticCommandWord(code), new(100), true);
         var controller = model.CreateArithmeticController(new(100));
         Assert.IsFalse(controller.TryAcceptDirectOperand(command)); // RPK has not arrived.
         controller.GrantCommandPermission();

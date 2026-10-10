@@ -257,10 +257,10 @@ namespace Besm6.Core
                 case Opcode.Op33:
                     throw new ProcessorException("Illegal instruction 033 счп");
                 case Opcode.EPlusN:
-                    ExecuteExponentImmediate(ref frame, (int)(Addr(addr + m[reg]) & 0x7Fu) - 64, ref arithmetic);
+                    ExecuteExponentImmediate(ref frame, false, ref arithmetic);
                     break;
                 case Opcode.EMinusN:
-                    ExecuteExponentImmediate(ref frame, 64 - (int)(Addr(addr + m[reg]) & 0x7Fu), ref arithmetic);
+                    ExecuteExponentImmediate(ref frame, true, ref arithmetic);
                     break;
                 case Opcode.Asn:
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
@@ -286,11 +286,15 @@ namespace Besm6.Core
             arithmetic.Finish(ref frame, _state, false);
         }
 
-        private void ExecuteExponentImmediate<TExecution>(ref ExecutionFrame frame, int delta, ref TExecution arithmetic)
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        internal uint ResolveImmediateAddress(uint address, byte register) => Addr(address + _state.M[register]);
+
+        private void ExecuteExponentImmediate<TExecution>(ref ExecutionFrame frame, bool subtract, ref TExecution arithmetic)
             where TExecution : struct, IArithmeticInstructionExecution
         {
-            SetEffectiveAddress(ref frame, Addr(frame.Address + _state.M[frame.Instruction.Register]));
-            arithmetic.AddExponent(delta);
+            SetEffectiveAddress(ref frame, ResolveImmediateAddress(frame.Address, frame.Instruction.Register));
+            int exponent = (int)(frame.EffectiveAddress & 0x7F);
+            arithmetic.AddExponent(subtract ? 64 - exponent : exponent - 64);
             arithmetic.Finish(ref frame, _state, false);
         }
 

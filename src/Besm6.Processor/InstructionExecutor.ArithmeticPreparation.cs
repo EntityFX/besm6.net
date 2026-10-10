@@ -28,6 +28,18 @@ public sealed partial class InstructionExecutor
         IsPreparedInstructionActive(in instruction) && !_arithmeticCaptured && !_terminalPreparation &&
         _prepared.ShouldExecute && MemoryInstructionExecutor.CanCaptureArithmetic(_prepared.Instruction.Opcode);
 
+    /// <summary>Read-only UU operand formation; uses the same C/index resolver as execution.</summary>
+    internal byte GetPreparedImmediateOperand(in PreparedInstruction instruction)
+    {
+        ValidateArithmeticAccess(in instruction);
+        if (!CanCaptureArithmeticOperand(in instruction) ||
+            _prepared.Instruction.Opcode is not (Opcode.EPlusN or Opcode.EMinusN) ||
+            _state.K != _prepared.Address || _state.IsRightHalf != _prepared.RightHalf)
+            throw new InvalidOperationException("No uncaptured immediate arithmetic command can form its operand.");
+        return (byte)(_memoryInstructions.ResolveImmediateAddress(
+            ModifiedInstructionAddress(_prepared.Instruction.Address), _prepared.Instruction.Register) & 0x7F);
+    }
+
     /// <summary>
     /// PVR input: the same opcode/address/stack handler captures a single operand
     /// and mode. A/Y and completion diagnostics remain unpublished. A failed read
