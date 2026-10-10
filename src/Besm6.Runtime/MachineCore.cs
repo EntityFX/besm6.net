@@ -39,6 +39,25 @@ namespace Besm6.Runtime
         private readonly SimulationClock _clock = new();
         private readonly EventScheduler _scheduler;
         private Timing.HardwareTimeline? _hardwareTimeline;
+        private Timing.ArithmeticUnitStages? _arithmeticUnitStages;
+
+        /// <summary>
+        /// Internal staged АУ (арифметическое устройство) attached to this calendar.
+        /// Explicit construction for the developing driver; ordinary CPU execution
+        /// neither creates it nor reads its state. CPU reset preserves it.
+        /// </summary>
+        internal Timing.ArithmeticUnitStages CreateArithmeticUnitStages(Timing.HardwareDuration cycle)
+        {
+            if (cycle.Nanoseconds == 0 || (cycle.Nanoseconds & 1) != 0)
+                throw new ArgumentOutOfRangeException(nameof(cycle), "A positive even cycle is required.");
+            if (_arithmeticUnitStages is { } existing)
+            {
+                if (existing.Cycle != cycle)
+                    throw new InvalidOperationException("This machine's arithmetic cycle is already selected.");
+                return existing;
+            }
+            return _arithmeticUnitStages = new(HardwareTimeline, cycle, Cpu.GetA(), Cpu.GetY());
+        }
 
         /// <summary>
         /// Lazily created nanosecond calendar owned by this machine. Explicit

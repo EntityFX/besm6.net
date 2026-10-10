@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-10",
+  "base_commit": "9b0ddd7",
+  "source": "TO-3 edition 1-65, section 3.28, sheets 64-65; control dependencies in section 3.2 and output in sections 3.22-3.23",
+  "pdf_sha256": "d5328d38db6485bf22bc2ccaf7f60051471e5715686fcf6a3b01a40764af1751",
+  "scans": [
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-34.png",
+      "sha256": "4260c809424c7faecdcd6460c55d4908bbf938a1ae7984b6e28efb29ae233a05"
+    }
+  ],
+  "confirmed": [
+    "The divisor check occurs 2.5 cycles after division starts",
+    "Invalid-divisor UDO is indicated 3 cycles after the operation starts",
+    "Unnormalized divisors, including zero, produce the invalid-divisor cause",
+    "The interruption indication blocks the next SPOP and operand acceptance"
+  ],
+  "implementation_consequence": "Represent divisor checking and UDO as distinct timeline events, keeping host evaluation, logical output publication and guest causes separate from host callback failures",
+  "not_implemented": [
+    "Input control checking and its precedence over overflow",
+    "The four TO-3 error policies and their recovery sequences",
+    "Raw hardware overflow independent of the shared Dubna overflow delivery flag",
+    "Full operand-dependent operation duration or the CPU retirement driver",
+    "Physical 17-bit BAK decoding and 43-bit accumulator register layout"
+  ]
+}
