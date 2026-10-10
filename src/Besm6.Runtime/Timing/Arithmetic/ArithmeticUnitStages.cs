@@ -80,8 +80,10 @@ internal sealed class ArithmeticUnitStages
 
     internal void SynchronizeIdleRegisters(Word48 accumulator, Word48 lowRegister)
     {
-        if (Errors is not null || QueuedCommands != 0 || PreparedCommand.HasValue || ActiveCommand.HasValue)
-            throw new InvalidOperationException("Register synchronization requires idle Dubna-compatible stages.");
+        bool physicalBlocked = Errors is { } errors &&
+            (errors.OperationActive || errors.BlocksNextOperation || !_outputReady);
+        if (physicalBlocked || QueuedCommands != 0 || PreparedCommand.HasValue || ActiveCommand.HasValue)
+            throw new InvalidOperationException("Register synchronization requires idle stages with a verified output and no held interruption.");
         _completedResult = new(accumulator, lowRegister, false, false);
         _outputReady = true;
         Fault = null;
@@ -90,8 +92,7 @@ internal sealed class ArithmeticUnitStages
     /// <summary>Abandon a host-owned logical request; preserve completed A/Y and external events.</summary>
     internal void DiscardLogicalRequest()
     {
-        if (Errors is not null)
-            throw new InvalidOperationException("Physical error control requires its documented cancellation sequence.");
+        Errors?.DiscardLogicalRequest();
         foreach (var token in _divisionEvents) _timeline.Cancel(token);
         _divisionEvents.Clear();
         Division?.Stop();

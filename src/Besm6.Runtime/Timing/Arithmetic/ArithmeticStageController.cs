@@ -44,6 +44,7 @@ internal sealed class ArithmeticStageController
     private HardwareEventToken _acceptEvent, _startEvent;
     private HardwareEventToken _completionEvent;
     internal HardwareInstant? NextCompletionTime { get; private set; }
+    internal ArithmeticErrorControl? Errors => _unit.Errors;
     private bool _transferElapsed, _changing;
     private ulong _sequence;
     internal Action<ArithmeticStageTransition>? Transitioned { get; set; }
