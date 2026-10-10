@@ -46,17 +46,18 @@ namespace Besm6.Runtime
         /// Explicit construction for the developing driver; ordinary CPU execution
         /// neither creates it nor reads its state. CPU reset preserves it.
         /// </summary>
-        internal Timing.ArithmeticUnitStages CreateArithmeticUnitStages(Timing.HardwareDuration cycle)
+        internal Timing.ArithmeticUnitStages CreateArithmeticUnitStages(Timing.HardwareDuration cycle,
+            Timing.ArithmeticErrorPolicy? errorPolicy = null)
         {
             if (cycle.Nanoseconds == 0 || (cycle.Nanoseconds & 1) != 0)
                 throw new ArgumentOutOfRangeException(nameof(cycle), "A positive even cycle is required.");
             if (_arithmeticUnitStages is { } existing)
             {
-                if (existing.Cycle != cycle)
-                    throw new InvalidOperationException("This machine's arithmetic cycle is already selected.");
+                if (existing.Cycle != cycle || existing.Errors?.Policy != errorPolicy)
+                    throw new InvalidOperationException("This machine's arithmetic configuration is already selected.");
                 return existing;
             }
-            return _arithmeticUnitStages = new(HardwareTimeline, cycle, Cpu.GetA(), Cpu.GetY());
+            return _arithmeticUnitStages = new(HardwareTimeline, cycle, Cpu.GetA(), Cpu.GetY(), errorPolicy);
         }
 
         /// <summary>

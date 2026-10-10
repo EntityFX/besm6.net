@@ -45,4 +45,11 @@ public sealed class ArithmeticPipelineControl
         ActiveCommand = null;
         return command;
     }
+
+    internal void ApplyGeneralClearSignal()
+    {
+        Commands.ApplyGeneralClearSignal();
+        ActiveCommand = PreparedCommand = null;
+        CommandPermission = false; // RPK must be supplied by its documented chain.
+    }
 }
