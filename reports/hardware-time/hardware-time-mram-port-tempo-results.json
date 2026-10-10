@@ -1,0 +1,816 @@
+{
+  "environment": {
+    "platform": "Windows-10-AMD64",
+    "python": "3.12.5",
+    "dotnet": {
+      "sdk": "9.0.202",
+      "net8_runtimes": [
+        {
+          "framework": "Microsoft.AspNetCore.App",
+          "version": "8.0.24"
+        },
+        {
+          "framework": "Microsoft.NETCore.App",
+          "version": "8.0.24"
+        },
+        {
+          "framework": "Microsoft.WindowsDesktop.App",
+          "version": "8.0.24"
+        }
+      ]
+    },
+    "arguments": {
+      "dll": "src/Besm6.Cli/bin/Release/net8.0/besm6.dll",
+      "baseline_dll": null,
+      "output": "tests-run/stage5-mram-port-tempo",
+      "jobs": [
+        "dh10000",
+        "mp3"
+      ],
+      "modes": [
+        "original"
+      ],
+      "repeats": 5,
+      "warmups": 1,
+      "limit": 100000000,
+      "timeout": 120
+    }
+  },
+  "calibration": {
+    "dh10000:original": {
+      "halt_instructions": 25799834,
+      "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+      "report": {
+        "statistics": {
+          "speed": "original",
+          "completedInstructions": 25799835,
+          "modelCycles": 42349906,
+          "elapsedSeconds": 4.2351889,
+          "allocatedBytes": 1383192,
+          "gen0Collections": 1,
+          "modelSeconds": 4.2349906,
+          "instructionsPerSecond": 6091779.046738624,
+          "modelToWallRatio": 0.9999531780034652,
+          "originalTempoMet": true
+        },
+        "finalState": {
+          "k": 280,
+          "isRightHalf": false,
+          "a": 0,
+          "y": 0,
+          "r": 6,
+          "c": 994,
+          "applyC": false,
+          "effectiveAddress": 0,
+          "interceptCount": 1,
+          "interceptAddress": 16,
+          "m": [
+            0,
+            91,
+            1,
+            0,
+            1,
+            0,
+            953,
+            1183,
+            4845,
+            0,
+            15912,
+            4648,
+            4939,
+            279,
+            0,
+            22273
+          ],
+          "clockTicks": 25799834
+        },
+        "memorySha256": "65A390AD43F8DCD6B2941047FD54D4CC521D7C9EB912773C80A1FF5994F82295"
+      },
+      "runtime": null,
+      "process_seconds": 4.587642900180072
+    },
+    "mp3:original": {
+      "halt_instructions": 20295024,
+      "program_sha256": "8d375af9e9c4268da5a9748982038c82783f66fae5ffa770c75dc95bf149808d",
+      "report": {
+        "statistics": {
+          "speed": "original",
+          "completedInstructions": 20295025,
+          "modelCycles": 51127036,
+          "elapsedSeconds": 5.1142418,
+          "allocatedBytes": 1050048,
+          "gen0Collections": 1,
+          "modelSeconds": 5.1127036,
+          "instructionsPerSecond": 3968335.052128352,
+          "modelToWallRatio": 0.9996992320542997,
+          "originalTempoMet": true
+        },
+        "finalState": {
+          "k": 280,
+          "isRightHalf": false,
+          "a": 0,
+          "y": 0,
+          "r": 6,
+          "c": 666,
+          "applyC": false,
+          "effectiveAddress": 0,
+          "interceptCount": 1,
+          "interceptAddress": 16,
+          "m": [
+            0,
+            9000,
+            450,
+            954,
+            61,
+            0,
+            953,
+            739,
+            10621,
+            0,
+            0,
+            10424,
+            10704,
+            279,
+            0,
+            22273
+          ],
+          "clockTicks": 20295024
+        },
+        "memorySha256": "5C7A7438E0066F73A83F773F42AAE86EC59A9B733AFE67DA1F46715102B792CA"
+      },
+      "runtime": null,
+      "process_seconds": 5.467293300200254
+    }
+  },
+  "samples": {
+    "dh10000:original": [
+      {
+        "warmup": true,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": {
+          "statistics": {
+            "speed": "original",
+            "completedInstructions": 25799835,
+            "modelCycles": 42349906,
+            "elapsedSeconds": 4.235181,
+            "allocatedBytes": 1383088,
+            "gen0Collections": 1,
+            "modelSeconds": 4.2349906,
+            "instructionsPerSecond": 6091790.409902198,
+            "modelToWallRatio": 0.9999550432437244,
+            "originalTempoMet": true
+          },
+          "finalState": {
+            "k": 280,
+            "isRightHalf": false,
+            "a": 0,
+            "y": 0,
+            "r": 6,
+            "c": 994,
+            "applyC": false,
+            "effectiveAddress": 0,
+            "interceptCount": 1,
+            "interceptAddress": 16,
+            "m": [
+              0,
+              91,
+              1,
+              0,
+              1,
+              0,
+              953,
+              1183,
+              4845,
+              0,
+              15912,
+              4648,
+              4939,
+              279,
+              0,
+              22273
+            ],
+            "clockTicks": 25799834
+          },
+          "memorySha256": "65A390AD43F8DCD6B2941047FD54D4CC521D7C9EB912773C80A1FF5994F82295"
+        },
+        "runtime": null,
+        "process_seconds": 4.567630399949849
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": {
+          "statistics": {
+            "speed": "original",
+            "completedInstructions": 25799835,
+            "modelCycles": 42349906,
+            "elapsedSeconds": 4.2352616,
+            "allocatedBytes": 1383088,
+            "gen0Collections": 1,
+            "modelSeconds": 4.2349906,
+            "instructionsPerSecond": 6091674.478856276,
+            "modelToWallRatio": 0.9999360133976138,
+            "originalTempoMet": true
+          },
+          "finalState": {
+            "k": 280,
+            "isRightHalf": false,
+            "a": 0,
+            "y": 0,
+            "r": 6,
+            "c": 994,
+            "applyC": false,
+            "effectiveAddress": 0,
+            "interceptCount": 1,
+            "interceptAddress": 16,
+            "m": [
+              0,
+              91,
+              1,
+              0,
+              1,
+              0,
+              953,
+              1183,
+              4845,
+              0,
+              15912,
+              4648,
+              4939,
+              279,
+              0,
+              22273
+            ],
+            "clockTicks": 25799834
+          },
+          "memorySha256": "65A390AD43F8DCD6B2941047FD54D4CC521D7C9EB912773C80A1FF5994F82295"
+        },
+        "runtime": null,
+        "process_seconds": 4.5751251000911
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": {
+          "statistics": {
+            "speed": "original",
+            "completedInstructions": 25799835,
+            "modelCycles": 42349906,
+            "elapsedSeconds": 4.2351903,
+            "allocatedBytes": 1383088,
+            "gen0Collections": 1,
+            "modelSeconds": 4.2349906,
+            "instructionsPerSecond": 6091777.033017855,
+            "modelToWallRatio": 0.9999528474552842,
+            "originalTempoMet": true
+          },
+          "finalState": {
+            "k": 280,
+            "isRightHalf": false,
+            "a": 0,
+            "y": 0,
+            "r": 6,
+            "c": 994,
+            "applyC": false,
+            "effectiveAddress": 0,
+            "interceptCount": 1,
+            "interceptAddress": 16,
+            "m": [
+              0,
+              91,
+              1,
+              0,
+              1,
+              0,
+              953,
+              1183,
+              4845,
+              0,
+              15912,
+              4648,
+              4939,
+              279,
+              0,
+              22273
+            ],
+            "clockTicks": 25799834
+          },
+          "memorySha256": "65A390AD43F8DCD6B2941047FD54D4CC521D7C9EB912773C80A1FF5994F82295"
+        },
+        "runtime": null,
+        "process_seconds": 4.5749766998924315
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": {
+          "statistics": {
+            "speed": "original",
+            "completedInstructions": 25799835,
+            "modelCycles": 42349906,
+            "elapsedSeconds": 4.2352134,
+            "allocatedBytes": 1383088,
+            "gen0Collections": 1,
+            "modelSeconds": 4.2349906,
+            "instructionsPerSecond": 6091743.806817384,
+            "modelToWallRatio": 0.999947393441851,
+            "originalTempoMet": true
+          },
+          "finalState": {
+            "k": 280,
+            "isRightHalf": false,
+            "a": 0,
+            "y": 0,
+            "r": 6,
+            "c": 994,
+            "applyC": false,
+            "effectiveAddress": 0,
+            "interceptCount": 1,
+            "interceptAddress": 16,
+            "m": [
+              0,
+              91,
+              1,
+              0,
+              1,
+              0,
+              953,
+              1183,
+              4845,
+              0,
+              15912,
+              4648,
+              4939,
+              279,
+              0,
+              22273
+            ],
+            "clockTicks": 25799834
+          },
+          "memorySha256": "65A390AD43F8DCD6B2941047FD54D4CC521D7C9EB912773C80A1FF5994F82295"
+        },
+        "runtime": null,
+        "process_seconds": 4.638517400249839
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": {
+          "statistics": {
+            "speed": "original",
+            "completedInstructions": 25799835,
+            "modelCycles": 42349906,
+            "elapsedSeconds": 4.2392869,
+            "allocatedBytes": 1383088,
+            "gen0Collections": 1,
+            "modelSeconds": 4.2349906,
+            "instructionsPerSecond": 6085890.2944266405,
+            "modelToWallRatio": 0.9989865512522873,
+            "originalTempoMet": true
+          },
+          "finalState": {
+            "k": 280,
+            "isRightHalf": false,
+            "a": 0,
+            "y": 0,
+            "r": 6,
+            "c": 994,
+            "applyC": false,
+            "effectiveAddress": 0,
+            "interceptCount": 1,
+            "interceptAddress": 16,
+            "m": [
+              0,
+              91,
+              1,
+              0,
+              1,
+              0,
+              953,
+              1183,
+              4845,
+              0,
+              15912,
+              4648,
+              4939,
+              279,
+              0,
+              22273
+            ],
+            "clockTicks": 25799834
+          },
+          "memorySha256": "65A390AD43F8DCD6B2941047FD54D4CC521D7C9EB912773C80A1FF5994F82295"
+        },
+        "runtime": null,
+        "process_seconds": 4.573657799977809
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 25799834,
+        "program_sha256": "bc7a1343e443414dc025d73fb600d8d73c2051f76962fa0503fe53ef05d6a0aa",
+        "report": {
+          "statistics": {
+            "speed": "original",
+            "completedInstructions": 25799835,
+            "modelCycles": 42349906,
+            "elapsedSeconds": 4.235184,
+            "allocatedBytes": 1383088,
+            "gen0Collections": 1,
+            "modelSeconds": 4.2349906,
+            "instructionsPerSecond": 6091786.094771797,
+            "modelToWallRatio": 0.999954334923819,
+            "originalTempoMet": true
+          },
+          "finalState": {
+            "k": 280,
+            "isRightHalf": false,
+            "a": 0,
+            "y": 0,
+            "r": 6,
+            "c": 994,
+            "applyC": false,
+            "effectiveAddress": 0,
+            "interceptCount": 1,
+            "interceptAddress": 16,
+            "m": [
+              0,
+              91,
+              1,
+              0,
+              1,
+              0,
+              953,
+              1183,
+              4845,
+              0,
+              15912,
+              4648,
+              4939,
+              279,
+              0,
+              22273
+            ],
+            "clockTicks": 25799834
+          },
+          "memorySha256": "65A390AD43F8DCD6B2941047FD54D4CC521D7C9EB912773C80A1FF5994F82295"
+        },
+        "runtime": null,
+        "process_seconds": 4.563035300001502
+      }
+    ],
+    "mp3:original": [
+      {
+        "warmup": true,
+        "halt_instructions": 20295024,
+        "program_sha256": "8d375af9e9c4268da5a9748982038c82783f66fae5ffa770c75dc95bf149808d",
+        "report": {
+          "statistics": {
+            "speed": "original",
+            "completedInstructions": 20295025,
+            "modelCycles": 51127036,
+            "elapsedSeconds": 5.1229838,
+            "allocatedBytes": 1049944,
+            "gen0Collections": 1,
+            "modelSeconds": 5.1127036,
+            "instructionsPerSecond": 3961563.376405758,
+            "modelToWallRatio": 0.9979933178785378,
+            "originalTempoMet": true
+          },
+          "finalState": {
+            "k": 280,
+            "isRightHalf": false,
+            "a": 0,
+            "y": 0,
+            "r": 6,
+            "c": 666,
+            "applyC": false,
+            "effectiveAddress": 0,
+            "interceptCount": 1,
+            "interceptAddress": 16,
+            "m": [
+              0,
+              9000,
+              450,
+              954,
+              61,
+              0,
+              953,
+              739,
+              10621,
+              0,
+              0,
+              10424,
+              10704,
+              279,
+              0,
+              22273
+            ],
+            "clockTicks": 20295024
+          },
+          "memorySha256": "5C7A7438E0066F73A83F773F42AAE86EC59A9B733AFE67DA1F46715102B792CA"
+        },
+        "runtime": null,
+        "process_seconds": 5.440768599975854
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 20295024,
+        "program_sha256": "8d375af9e9c4268da5a9748982038c82783f66fae5ffa770c75dc95bf149808d",
+        "report": {
+          "statistics": {
+            "speed": "original",
+            "completedInstructions": 20295025,
+            "modelCycles": 51127036,
+            "elapsedSeconds": 5.1129021,
+            "allocatedBytes": 1049944,
+            "gen0Collections": 1,
+            "modelSeconds": 5.1127036,
+            "instructionsPerSecond": 3969374.8487771745,
+            "modelToWallRatio": 0.9999611766476028,
+            "originalTempoMet": true
+          },
+          "finalState": {
+            "k": 280,
+            "isRightHalf": false,
+            "a": 0,
+            "y": 0,
+            "r": 6,
+            "c": 666,
+            "applyC": false,
+            "effectiveAddress": 0,
+            "interceptCount": 1,
+            "interceptAddress": 16,
+            "m": [
+              0,
+              9000,
+              450,
+              954,
+              61,
+              0,
+              953,
+              739,
+              10621,
+              0,
+              0,
+              10424,
+              10704,
+              279,
+              0,
+              22273
+            ],
+            "clockTicks": 20295024
+          },
+          "memorySha256": "5C7A7438E0066F73A83F773F42AAE86EC59A9B733AFE67DA1F46715102B792CA"
+        },
+        "runtime": null,
+        "process_seconds": 5.444105600006878
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 20295024,
+        "program_sha256": "8d375af9e9c4268da5a9748982038c82783f66fae5ffa770c75dc95bf149808d",
+        "report": {
+          "statistics": {
+            "speed": "original",
+            "completedInstructions": 20295025,
+            "modelCycles": 51127036,
+            "elapsedSeconds": 5.1191668,
+            "allocatedBytes": 1049944,
+            "gen0Collections": 1,
+            "modelSeconds": 5.1127036,
+            "instructionsPerSecond": 3964517.2335466775,
+            "modelToWallRatio": 0.9987374507898432,
+            "originalTempoMet": true
+          },
+          "finalState": {
+            "k": 280,
+            "isRightHalf": false,
+            "a": 0,
+            "y": 0,
+            "r": 6,
+            "c": 666,
+            "applyC": false,
+            "effectiveAddress": 0,
+            "interceptCount": 1,
+            "interceptAddress": 16,
+            "m": [
+              0,
+              9000,
+              450,
+              954,
+              61,
+              0,
+              953,
+              739,
+              10621,
+              0,
+              0,
+              10424,
+              10704,
+              279,
+              0,
+              22273
+            ],
+            "clockTicks": 20295024
+          },
+          "memorySha256": "5C7A7438E0066F73A83F773F42AAE86EC59A9B733AFE67DA1F46715102B792CA"
+        },
+        "runtime": null,
+        "process_seconds": 5.46991840004921
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 20295024,
+        "program_sha256": "8d375af9e9c4268da5a9748982038c82783f66fae5ffa770c75dc95bf149808d",
+        "report": {
+          "statistics": {
+            "speed": "original",
+            "completedInstructions": 20295025,
+            "modelCycles": 51127036,
+            "elapsedSeconds": 5.1155767,
+            "allocatedBytes": 1049944,
+            "gen0Collections": 1,
+            "modelSeconds": 5.1127036,
+            "instructionsPerSecond": 3967299.52265206,
+            "modelToWallRatio": 0.9994383624430848,
+            "originalTempoMet": true
+          },
+          "finalState": {
+            "k": 280,
+            "isRightHalf": false,
+            "a": 0,
+            "y": 0,
+            "r": 6,
+            "c": 666,
+            "applyC": false,
+            "effectiveAddress": 0,
+            "interceptCount": 1,
+            "interceptAddress": 16,
+            "m": [
+              0,
+              9000,
+              450,
+              954,
+              61,
+              0,
+              953,
+              739,
+              10621,
+              0,
+              0,
+              10424,
+              10704,
+              279,
+              0,
+              22273
+            ],
+            "clockTicks": 20295024
+          },
+          "memorySha256": "5C7A7438E0066F73A83F773F42AAE86EC59A9B733AFE67DA1F46715102B792CA"
+        },
+        "runtime": null,
+        "process_seconds": 5.5679493001662195
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 20295024,
+        "program_sha256": "8d375af9e9c4268da5a9748982038c82783f66fae5ffa770c75dc95bf149808d",
+        "report": {
+          "statistics": {
+            "speed": "original",
+            "completedInstructions": 20295025,
+            "modelCycles": 51127036,
+            "elapsedSeconds": 5.112904,
+            "allocatedBytes": 1049944,
+            "gen0Collections": 1,
+            "modelSeconds": 5.1127036,
+            "instructionsPerSecond": 3969373.3737226436,
+            "modelToWallRatio": 0.9999608050532534,
+            "originalTempoMet": true
+          },
+          "finalState": {
+            "k": 280,
+            "isRightHalf": false,
+            "a": 0,
+            "y": 0,
+            "r": 6,
+            "c": 666,
+            "applyC": false,
+            "effectiveAddress": 0,
+            "interceptCount": 1,
+            "interceptAddress": 16,
+            "m": [
+              0,
+              9000,
+              450,
+              954,
+              61,
+              0,
+              953,
+              739,
+              10621,
+              0,
+              0,
+              10424,
+              10704,
+              279,
+              0,
+              22273
+            ],
+            "clockTicks": 20295024
+          },
+          "memorySha256": "5C7A7438E0066F73A83F773F42AAE86EC59A9B733AFE67DA1F46715102B792CA"
+        },
+        "runtime": null,
+        "process_seconds": 5.440472699701786
+      },
+      {
+        "warmup": false,
+        "halt_instructions": 20295024,
+        "program_sha256": "8d375af9e9c4268da5a9748982038c82783f66fae5ffa770c75dc95bf149808d",
+        "report": {
+          "statistics": {
+            "speed": "original",
+            "completedInstructions": 20295025,
+            "modelCycles": 51127036,
+            "elapsedSeconds": 5.1128911,
+            "allocatedBytes": 1049944,
+            "gen0Collections": 1,
+            "modelSeconds": 5.1127036,
+            "instructionsPerSecond": 3969383.3885881123,
+            "modelToWallRatio": 0.9999633279887381,
+            "originalTempoMet": true
+          },
+          "finalState": {
+            "k": 280,
+            "isRightHalf": false,
+            "a": 0,
+            "y": 0,
+            "r": 6,
+            "c": 666,
+            "applyC": false,
+            "effectiveAddress": 0,
+            "interceptCount": 1,
+            "interceptAddress": 16,
+            "m": [
+              0,
+              9000,
+              450,
+              954,
+              61,
+              0,
+              953,
+              739,
+              10621,
+              0,
+              0,
+              10424,
+              10704,
+              279,
+              0,
+              22273
+            ],
+            "clockTicks": 20295024
+          },
+          "memorySha256": "5C7A7438E0066F73A83F773F42AAE86EC59A9B733AFE67DA1F46715102B792CA"
+        },
+        "runtime": null,
+        "process_seconds": 5.432573999743909
+      }
+    ]
+  },
+  "measurements": [
+    {
+      "job": "dh10000",
+      "variant": "original",
+      "process_seconds": 4.5749766998924315,
+      "loop_seconds": 4.2352134,
+      "model_seconds": 4.2349906,
+      "model_cycles": 42349906,
+      "halt_instructions": 25799834,
+      "host_loop_mips": 6.091743806817385,
+      "allocated_bytes": 1383088,
+      "original_tempo_met": true
+    },
+    {
+      "job": "mp3",
+      "variant": "original",
+      "process_seconds": 5.444105600006878,
+      "loop_seconds": 5.112904,
+      "model_seconds": 5.1127036,
+      "model_cycles": 51127036,
+      "halt_instructions": 20295024,
+      "host_loop_mips": 3.9693733737226435,
+      "allocated_bytes": 1049944,
+      "original_tempo_met": true
+    }
+  ],
+  "accepted": true,
+  "model_metrics": {},
+  "performance_comparison": {}
+}
