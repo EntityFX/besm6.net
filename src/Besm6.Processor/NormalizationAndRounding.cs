@@ -24,10 +24,27 @@ namespace Besm6.Core
         }
 
         /// <summary>Нормализует мантиссу, применяет округление и записывает A/Y.</summary>
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
+        // Keep this call boundary: inlining the small publication wrapper into
+        // each arithmetic operation can prevent Evaluate itself from inlining.
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization |
+            System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         internal void NormalizeAndRound(MantissaExponent a, ulong y, bool roundFlag)
+            => Publish(Evaluate(a, y, roundFlag, _state.R, _state.Y));
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        internal void PublishZero()
         {
-            var result = Evaluate(a, y, roundFlag, _state.R, _state.Y);
+            _state.A = Word48.Zero;
+            _state.Y = Word48.FromInt48(_state.Y.Value & ~BITS40);
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        internal void ClearLowRegister() => _state.Y = Word48.Zero;
+
+        /// <summary>Legacy publication: A/Y are written before overflow is delivered.</summary>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        internal void Publish(NormalizedArithmeticResult result)
+        {
             _state.A = result.A;
             _state.Y = result.Y;
             if (result.Overflow)

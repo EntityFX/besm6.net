@@ -21,10 +21,32 @@ namespace Besm6.Core
         }
 
         /// <summary>Сложение/вычитание операнда с аккумулятором A (регистры АЛУ A/Y).</summary>
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
+        // Preserve the original dispatcher call boundary despite the small wrapper.
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization |
+            System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         internal void Add(Word48 val, bool negateA, bool negateVal)
         {
-            MantissaExponent a = new MantissaExponent(new Word48(_state.A.Value));
+            var sink = new ImmediateArithmeticResultSink(_normalizer);
+            ComputeAdd(_state.A, val, negateA, negateVal, ref sink);
+        }
+
+        /// <summary>Shared arithmetic calculation; no architectural state is changed.</summary>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization |
+            System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        internal static NormalizedArithmeticResult EvaluateAdd(Word48 accumulator, Word48 previousY,
+            uint mode, Word48 val, bool negateA, bool negateVal)
+        {
+            var sink = new PreparedArithmeticResultSink(mode, previousY);
+            ComputeAdd(accumulator, val, negateA, negateVal, ref sink);
+            return sink.Result;
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization |
+            System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private static void ComputeAdd<TSink>(Word48 accumulator, Word48 val,
+            bool negateA, bool negateVal, ref TSink sink) where TSink : struct, IArithmeticResultSink
+        {
+            MantissaExponent a = new MantissaExponent(accumulator);
             MantissaExponent word = new MantissaExponent(val);
 
             if (!negateA)
@@ -101,30 +123,64 @@ namespace Besm6.Core
                 a.NormalizeToTheRight();
             }
 
-            _normalizer.NormalizeAndRound(a, y.Value, roundFlag);
+            sink.Normalize(a, y.Value, roundFlag);
         }
 
         /// <summary>Прибавляет к экспоненте A заданное значение (Э50: добавление к порядку).</summary>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         internal void AddExponent(int val)
         {
-            MantissaExponent a = new MantissaExponent(_state.A);
+            var sink = new ImmediateArithmeticResultSink(_normalizer);
+            ComputeAddExponent(_state.A, val, ref sink);
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        internal static NormalizedArithmeticResult EvaluateAddExponent(Word48 accumulator, uint mode, int val)
+        {
+            var sink = new PreparedArithmeticResultSink(mode, Word48.Zero);
+            ComputeAddExponent(accumulator, val, ref sink);
+            return sink.Result;
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private static void ComputeAddExponent<TSink>(Word48 accumulator, int val, ref TSink sink)
+            where TSink : struct, IArithmeticResultSink
+        {
+            MantissaExponent a = new MantissaExponent(accumulator);
             a.Exponent += (uint)val;
-            _state.Y = Word48.Zero;
-            _normalizer.NormalizeAndRound(a, 0, false);
+            sink.ClearLowRegister();
+            sink.Normalize(a, 0, false);
         }
 
         /// <summary>Изменение знака аккумулятора A (прямое или через операнд).</summary>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         internal void ChangeSign(bool negateA)
         {
-            MantissaExponent a = new MantissaExponent(_state.A);
+            var sink = new ImmediateArithmeticResultSink(_normalizer);
+            ComputeChangeSign(_state.A, negateA, ref sink);
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        internal static NormalizedArithmeticResult EvaluateChangeSign(Word48 accumulator, uint mode, bool negateA)
+        {
+            var sink = new PreparedArithmeticResultSink(mode, Word48.Zero);
+            ComputeChangeSign(accumulator, negateA, ref sink);
+            return sink.Result;
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private static void ComputeChangeSign<TSink>(Word48 accumulator, bool negateA, ref TSink sink)
+            where TSink : struct, IArithmeticResultSink
+        {
+            MantissaExponent a = new MantissaExponent(accumulator);
             if (negateA)
             {
                 a.Negate();
                 if (a.IsDenormal())
                     a.NormalizeToTheRight();
             }
-            _state.Y = Word48.Zero;
-            _normalizer.NormalizeAndRound(a, 0, false);
+            sink.ClearLowRegister();
+            sink.Normalize(a, 0, false);
         }
     }
 }
