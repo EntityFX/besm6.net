@@ -7,6 +7,27 @@ internal sealed partial class HardwareProcessorModel
     private ArithmeticStageController? _boundArithmetic;
     private bool _arithmeticBindingTransition;
     private HardwareEventToken _boundCompletionEvent;
+    private ArithmeticCommandWord? _boundCommandWord;
+    internal ArithmeticCommandWord? LastIssuedArithmeticCommand { get; private set; }
+
+    /// <summary>UU formation uses the shared immediate resolver; memory control supplies its allocated BRUS slot.</summary>
+    internal ArithmeticCommandHandle BindArithmeticInstruction(HardwareInstructionHandle instruction,
+        HardwareDuration cycle, bool operandReady, ArithmeticOperandBuffer? buffer = null)
+    {
+        EnsureBindableArithmetic(in instruction);
+        var opcode = instruction.Instruction!.Value.Opcode;
+        byte operand = ArithmeticCommandEncoding.IsImmediate(opcode)
+            ? _processor.GetPreparedImmediateOperand(_pendingInstruction!.Value) : (byte)0;
+        return BindArithmeticInstruction(instruction, ArithmeticCommandEncoding.Encode(opcode, operand, buffer), cycle, operandReady);
+    }
+
+    private void EnsureBindableArithmetic(in HardwareInstructionHandle instruction)
+    {
+        EnsureDriverAllowed();
+        if (!IsCurrent(in instruction) || _completionReady || _cancellationRequested ||
+            _boundArithmetic is not null || !_processor.CanCaptureArithmeticOperand(_pendingInstruction!.Value))
+            throw new InvalidOperationException("No uncaptured arithmetic CPU lease can be bound.");
+    }
 
     /// <summary>Register an explicit microsequence permission; stale/cancelled requests cannot execute it.</summary>
     internal HardwareEventToken ScheduleBoundArithmeticCompletionAt(HardwareInstructionHandle instruction,
@@ -43,22 +64,34 @@ internal sealed partial class HardwareProcessorModel
     internal ArithmeticCommandHandle BindArithmeticInstruction(HardwareInstructionHandle instruction,
         ArithmeticCommandWord command, HardwareDuration cycle, bool operandReady)
     {
+        EnsureBindableArithmetic(in instruction);
         var route = command.Source switch
         {
             ArithmeticCommandSource.Immediate => ArithmeticOperandRoute.Direct,
             ArithmeticCommandSource.BufferRead => ArithmeticOperandRoute.Buffered,
             _ => throw new ArgumentException("This arithmetic binding does not yet execute the selected AU input source.", nameof(command))
         };
-        return BindArithmeticInstructionCore(instruction, command.Raw, cycle, operandReady, route);
+        var opcode = instruction.Instruction!.Value.Opcode;
+        if (command.OperationCode != ArithmeticCommandEncoding.OperationCode(opcode))
+            throw new ArgumentException("The physical AU code does not match its shared CPU instruction.", nameof(command));
+        if (route == ArithmeticOperandRoute.Direct)
+        {
+            if (!ArithmeticCommandEncoding.IsImmediate(opcode) ||
+                command.ImmediateOperand != _processor.GetPreparedImmediateOperand(_pendingInstruction!.Value))
+                throw new ArgumentException("The direct AU operand does not match the shared CPU address formation.", nameof(command));
+        }
+        else if (!Enum.IsDefined((ArithmeticOperandBufferKind)(command.Raw & 0x38)))
+            throw new ArgumentException("Mixed AU buffer-class flags have no assigned control priority.", nameof(command));
+        var handle = BindArithmeticInstructionCore(instruction, command.Raw, cycle, operandReady, route);
+        _boundCommandWord = command;
+        LastIssuedArithmeticCommand = command;
+        return handle;
     }
 
     private ArithmeticCommandHandle BindArithmeticInstructionCore(HardwareInstructionHandle instruction,
         uint code, HardwareDuration cycle, bool operandReady, ArithmeticOperandRoute route)
     {
-        EnsureDriverAllowed();
-        if (!IsCurrent(in instruction) || _completionReady || _cancellationRequested ||
-            _boundArithmetic is not null || !_processor.CanCaptureArithmeticOperand(_pendingInstruction!.Value))
-            throw new InvalidOperationException("No uncaptured arithmetic CPU lease can be bound.");
+        EnsureBindableArithmetic(in instruction);
         bool immediate = instruction.Instruction!.Value.Opcode is Opcode.EPlusN or Opcode.EMinusN;
         if (immediate != (route == ArithmeticOperandRoute.Direct))
             throw new ArgumentException("The AU operand source does not match the shared CPU instruction.", nameof(route));
@@ -75,6 +108,9 @@ internal sealed partial class HardwareProcessorModel
         // A direct CPU reset may invalidate the lease before the driver is resumed.
         // Its stale transfer must not read memory or publish into the restarted CPU.
         if (!IsCurrent(in instruction) || _cancellationRequested) return null;
+        if (_boundCommandWord is { Source: ArithmeticCommandSource.Immediate } command &&
+            command.ImmediateOperand != _processor.GetPreparedImmediateOperand(_pendingInstruction!.Value))
+            throw new InvalidOperationException("The issued immediate AU operand changed before acceptance.");
         _arithmeticBindingTransition = true;
         try { return CaptureArithmeticOperand(instruction); }
         finally { _arithmeticBindingTransition = false; }
@@ -109,6 +145,7 @@ internal sealed partial class HardwareProcessorModel
         controller.ReleaseBinding(this);
         Timeline.Cancel(_boundCompletionEvent);
         _boundCompletionEvent = default;
+        _boundCommandWord = null;
         _boundArithmetic = null;
     }
 }

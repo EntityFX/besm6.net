@@ -307,6 +307,8 @@ namespace Besm6.Core
             _executor.CaptureArithmeticOperand(in instruction);
         internal bool RequiresArithmeticResult(in InstructionExecutor.PreparedInstruction instruction) =>
             _executor.RequiresArithmeticResult(in instruction);
+        internal byte GetPreparedImmediateOperand(in InstructionExecutor.PreparedInstruction instruction) =>
+            _executor.GetPreparedImmediateOperand(in instruction);
         internal void SupplyArithmeticResult(in InstructionExecutor.PreparedInstruction instruction,
             NormalizedArithmeticResult? result, ProcessorException? failure) =>
             _executor.SupplyArithmeticResult(in instruction, result, failure);

@@ -150,11 +150,14 @@ namespace Besm6.Core
             };
 
             AdvanceInstructionHalf();
-            if (_state.ApplyC)
-                frame.Address = ArchitectureConstants.NormalizeAddress(frame.Address + _state.C);
+            frame.Address = ModifiedInstructionAddress(frame.Address);
 
             return frame;
         }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private uint ModifiedInstructionAddress(uint address) => _state.ApplyC
+            ? ArchitectureConstants.NormalizeAddress(address + _state.C) : address;
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private InstructionOutcome Dispatch(ref ExecutionFrame frame)
@@ -222,8 +225,7 @@ namespace Besm6.Core
                     Y = state.Y.Value,
                 };
                 AdvanceInstructionHalf();
-                if (state.ApplyC)
-                    frame.Address = ArchitectureConstants.NormalizeAddress(frame.Address + state.C);
+                frame.Address = ModifiedInstructionAddress(frame.Address);
                 InstructionOutcome outcome = Dispatch(ref frame);
                 FinalizeInstruction(ref frame, updateRegistersAndModification: true, observe: false);
                 tick++;
