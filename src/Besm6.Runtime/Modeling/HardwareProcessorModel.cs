@@ -5,10 +5,11 @@ namespace Besm6.Runtime.Modeling;
 /// <summary>
 /// Physical processor model: owns its nanosecond timeline and staged АУ
 /// (арифметическое устройство). The Processor is the machine's shared register
-/// and arithmetic source. This component never calls Step or performs hosted
-/// execution. An automatic physical instruction driver is still being built.
+/// and arithmetic source. Completion is driven by explicit stage permission,
+/// through the shared prepared-command protocol, never by Processor.Step or an
+/// average opcode cost. Automatic decoding of stage timings is still being built.
 /// </summary>
-internal sealed class HardwareProcessorModel
+internal sealed partial class HardwareProcessorModel
 {
     private readonly Processor _processor;
     private ArithmeticUnitStages? _arithmeticUnitStages;

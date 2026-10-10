@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-10",
+  "base_commit": "2d44aef",
+  "files": [
+    {
+      "path": "src/Besm6.Processor/InstructionExecutor.Preparation.cs",
+      "sha256": "6e62417adef0ca9a1176a90e19031f0e63c258375645ba6e73144c03aea7d464"
+    },
+    {
+      "path": "src/Besm6.Processor/Processor.cs",
+      "sha256": "98cd7d9459f229f23caa46e8949671167849911a3eec183f1af6765248ebd91d"
+    },
+    {
+      "path": "src/Besm6.Runtime/Timing/HardwareTimeline.cs",
+      "sha256": "202f2d3565a38ae7bccfd06edb2e085d13aba7e3a05191b924ab97103a4f9fce"
+    },
+    {
+      "path": "src/Besm6.Runtime/MachineCore.cs",
+      "sha256": "c71a0cdcafaad2f5ccff87af5443171ed9c3fde4e5e462d1499632b4b68ae1fa"
+    },
+    {
+      "path": "src/Besm6.Runtime/Modeling/HardwareProcessorModel.cs",
+      "sha256": "4bdc45b57eb405ba415100fc36d54fd7feb64c2728f67f5b9f4970fa95209a6d"
+    },
+    {
+      "path": "src/Besm6.Runtime/Modeling/HardwareProcessorModel.Execution.cs",
+      "sha256": "3be46a2ee68188d14e289d42d08e4287c479b26b3a333d6e8189609b21787e7b"
+    },
+    {
+      "path": "tests/Besm6.Runtime.Tests/HardwareProcessorDriverTests.cs",
+      "sha256": "285a3677c531c8174c7d04cbed9a35b412d09cb46712d4812eaec397735e9239"
+    },
+    {
+      "path": "tests/Besm6.Runtime.Tests/HardwareTimelineBoundaryTests.cs",
+      "sha256": "2185d5c82275d30980fcedcc25868905ac170d9d0c149d100f805b2d68acf1b8"
+    }
+  ],
+  "evidence": "Shared prepared CPU protocol, existing calendar registration order, independent execution-boundary tests; BookTimingSpecification envelopes are not used as execution deadlines.",
+  "historical_timing_change": "none; all new integration permission instants are explicitly synthetic",
+  "boundaries": [
+    "CPU operands/effects still execute at permission, not a timed operand latch.",
+    "Supervisor fetch causes are latched until permission; serial Step retains the original immediate exception policy.",
+    "Controller must supply completion permission; unsupported timings do not fall back to averages.",
+    "Automatic AU/memory/device timing, overlap, profile/speed integration and hardware OS acceptance remain incomplete."
+  ]
+}
