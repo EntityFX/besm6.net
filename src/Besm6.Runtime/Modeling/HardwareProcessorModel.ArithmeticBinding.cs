@@ -18,14 +18,14 @@ internal sealed partial class HardwareProcessorModel
     /// </summary>
     internal ArithmeticCommandHandle BindArithmeticInstruction(HardwareInstructionHandle instruction,
         HardwareDuration cycle, bool operandReady, ArithmeticOperandBuffer? buffer = null,
-        bool automaticCompletion = false)
+        bool automaticCompletion = false, ArithmeticErrorPolicy? errorPolicy = null)
     {
         EnsureBindableArithmetic(in instruction);
         var opcode = instruction.Instruction!.Value.Opcode;
         byte operand = ArithmeticCommandEncoding.IsImmediate(opcode)
             ? _processor.GetPreparedImmediateOperand(_pendingInstruction!.Value) : (byte)0;
         return BindArithmeticInstruction(instruction, ArithmeticCommandEncoding.Encode(opcode, operand, buffer),
-            cycle, operandReady, automaticCompletion);
+            cycle, operandReady, automaticCompletion, errorPolicy);
     }
 
     private void EnsureBindableArithmetic(in HardwareInstructionHandle instruction)
@@ -61,8 +61,8 @@ internal sealed partial class HardwareProcessorModel
     /// Attach the single shared CPU lease to АУ (арифметическое устройство).
     /// The caller still supplies the verified 17-bit command code, RPK and IZOP;
     /// this binding derives neither physical decoding nor operation deadlines.
-    /// Dubna-compatible data policy is used until physical interruption delivery
-    /// is integrated. Register synchronization is a logical execution boundary,
+    /// This legacy overload keeps Dubna delivery; typed binding may choose physical
+    /// error control explicitly. Register synchronization is a logical boundary,
     /// not a hardware general-clear pulse.
     /// </summary>
     internal ArithmeticCommandHandle BindArithmeticInstruction(HardwareInstructionHandle instruction,
@@ -71,7 +71,7 @@ internal sealed partial class HardwareProcessorModel
 
     /// <summary>Use the documented AU interface source; encoding from a guest instruction is a separate UU responsibility.</summary>
     internal ArithmeticCommandHandle BindArithmeticInstruction(HardwareInstructionHandle instruction,
-        ArithmeticCommandWord command, HardwareDuration cycle, bool operandReady, bool automaticCompletion = false)
+        ArithmeticCommandWord command, HardwareDuration cycle, bool operandReady, bool automaticCompletion = false, ArithmeticErrorPolicy? errorPolicy = null)
     {
         EnsureBindableArithmetic(in instruction);
         var route = command.Source switch
@@ -92,7 +92,7 @@ internal sealed partial class HardwareProcessorModel
         else if (!Enum.IsDefined((ArithmeticOperandBufferKind)(command.Raw & 0x38)))
             throw new ArgumentException("Mixed AU buffer-class flags have no assigned control priority.", nameof(command));
         HardwareDuration? delay = automaticCompletion ? ArithmeticFixedCompletionTiming.Duration(opcode, cycle) : null;
-        var handle = BindArithmeticInstructionCore(instruction, command.Raw, cycle, operandReady, route, delay);
+        var handle = BindArithmeticInstructionCore(instruction, command.Raw, cycle, operandReady, route, delay, errorPolicy);
         _boundCommandWord = command;
         _boundAutomaticCompletion = automaticCompletion;
         LastIssuedArithmeticCommand = command;
@@ -101,13 +101,15 @@ internal sealed partial class HardwareProcessorModel
 
     private ArithmeticCommandHandle BindArithmeticInstructionCore(HardwareInstructionHandle instruction,
         uint code, HardwareDuration cycle, bool operandReady, ArithmeticOperandRoute route,
-        HardwareDuration? completionDelay = null)
+        HardwareDuration? completionDelay = null, ArithmeticErrorPolicy? errorPolicy = null)
     {
         EnsureBindableArithmetic(in instruction);
+        if (errorPolicy.HasValue && _processor.Supervisor is null)
+            throw new InvalidOperationException("Physical CPU arithmetic binding requires the supervisor profile.");
         bool immediate = instruction.Instruction!.Value.Opcode is Opcode.EPlusN or Opcode.EMinusN;
         if (immediate != (route == ArithmeticOperandRoute.Direct))
             throw new ArgumentException("The AU operand source does not match the shared CPU instruction.", nameof(route));
-        var controller = CreateArithmeticController(cycle);
+        var controller = CreateArithmeticController(cycle, errorPolicy);
         if (!controller.TryBind(this, code, () => SampleBoundOperand(instruction), operandReady,
             _processor.GetA(), _processor.GetY(), transition => AcceptBoundTransition(instruction, transition),
             out var command, route, completionDelay, () => IsCurrent(in instruction) && !_cancellationRequested))
@@ -145,7 +147,22 @@ internal sealed partial class HardwareProcessorModel
                 // Overflow has an output and is delivered by the shared normalizer;
                 // invalid division supplies its original cause instead of an output.
                 var failure = transition.Fault?.Cause;
-                if (!TryIndicateArithmeticCompletion(instruction, failure is null ? transition.Output : null, failure))
+                var output = transition.Output;
+                if (_boundArithmetic!.Errors is not null)
+                {
+                    if (failure is not null)
+                    {
+                        if (PendingArithmeticInterruption == 0)
+                            throw new NotSupportedException("Invalid-divisor continuation with suppressed signals needs a verified physical result.");
+                        _physicalArithmeticFailure = failure;
+                        _completionReady = true;
+                        return;
+                    }
+                    // AU error control already owns indication and delivery. Preserve
+                    // the exact common A/Y/rounding, without raising a Dubna avost again.
+                    if (output is { } result) output = result with { Overflow = false };
+                }
+                if (!TryIndicateArithmeticCompletion(instruction, failure is null ? output : null, failure))
                     throw new InvalidOperationException("Arithmetic completion lost its CPU execution owner.");
             }
         }

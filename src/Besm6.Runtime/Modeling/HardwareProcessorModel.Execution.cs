@@ -47,6 +47,7 @@ internal sealed partial class HardwareProcessorModel
     private HardwareInstructionHandle _pendingHandle;
     private HardwareEventToken _readyEvent;
     private bool _completionReady;
+    private ProcessorException? _physicalArithmeticFailure;
     private bool _cancellationRequested;
     private bool _publishingInstruction;
     private bool _capturingOperand;
@@ -229,6 +230,16 @@ internal sealed partial class HardwareProcessorModel
         _publishingInstruction = true;
         try
         {
+            if (_physicalArithmeticFailure is { } arithmeticFailure)
+            {
+                // No numeric result exists. Release the CPU lease with its accepted
+                // address/stack effects, without publishing A/Y or guessing UU return.
+                _processor.CancelInstruction(in instruction);
+                outcome = new(_pendingHandle, Timeline.Now, HardwareInstructionStatus.GuestFault, false);
+                ClearPendingInstruction();
+                NotifyCompleted(outcome, arithmeticFailure);
+                return outcome;
+            }
             bool stopped;
             try { stopped = _processor.CompleteInstruction(in instruction); }
             catch (Exception failure)
@@ -271,6 +282,7 @@ internal sealed partial class HardwareProcessorModel
         _pendingInstruction = null;
         _pendingHandle = default;
         _completionReady = _cancellationRequested = false;
+        _physicalArithmeticFailure = null;
     }
 
     private void NotifyCompleted(HardwareInstructionOutcome outcome, Exception? executionFailure = null)

@@ -184,6 +184,20 @@ internal sealed class ArithmeticErrorControl
         return sample;
     }
 
+    /// <summary>Abandon a host-owned request, not a physical clear or PSb pulse.</summary>
+    internal void DiscardLogicalRequest()
+    {
+        _timeline.Cancel(_permission);
+        foreach (var token in _inputChecks) _timeline.Cancel(token);
+        _permission = default;
+        _inputChecks.Clear();
+        OperationActive = InputControlPermission = _inputMismatch = false;
+        _inputSource = 0;
+        if ((Signals & ArithmeticErrorSignals.InputControl) == 0) _latchedInputSource = 0;
+        // Latched indications, completion hold, previous release events and the
+        // receiving register survive. The owner must request physical recovery.
+    }
+
     /// <summary>PSb/UOZ: release held interruption/overflow after the operation ends.</summary>
     internal void ReleaseSingleOperation()
     {
