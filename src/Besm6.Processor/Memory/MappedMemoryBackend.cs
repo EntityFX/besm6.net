@@ -15,7 +15,7 @@ public readonly record struct AddressedMemoryBufferEntry(MemoryRequestAddress Re
 /// Shares ordinary instruction handlers; the supervisor profile attaches admission
 /// callbacks. In-flight memory requests and prefetch timing remain a later stage.
 /// </summary>
-public sealed class MappedMemoryBackend : IInstructionMemory
+public sealed partial class MappedMemoryBackend : IInstructionMemory
 {
     private readonly AddressBuffer _operands = new(8);
     private readonly AddressBuffer _instructions = new(4);
@@ -77,7 +77,7 @@ public sealed class MappedMemoryBackend : IInstructionMemory
     }
 
     public void ClearFault() => LastFault = null;
-    public void ClearInstructionBuffer() => _instructions.Clear();
+    public void ClearInstructionBuffer() { InvalidateHardwareRequests(false); _instructions.Clear(); }
 
     public MemoryWord50 GetPanel(uint address) { ValidatePanel(address); return _panel[address]; }
     public void SetPanel(uint address, MemoryWord50 word) { ValidatePanel(address); _panel[address] = word; }
@@ -155,6 +155,7 @@ public sealed class MappedMemoryBackend : IInstructionMemory
     {
         if (mathematicalPage >= PageAssignment.PageCount) throw new ArgumentOutOfRangeException(nameof(mathematicalPage));
         if (physicalPage >= Assignment.PhysicalPageCount) throw new ArgumentOutOfRangeException(nameof(physicalPage));
+        InvalidateHardwareRequests(true);
         FlushOperands();
         Assignment.SetPhysicalPage(mathematicalPage, physicalPage);
     }
@@ -162,6 +163,7 @@ public sealed class MappedMemoryBackend : IInstructionMemory
     public void ImportAssignmentGroup(uint group, Word48 accumulator)
     {
         Assignment.ValidateImportAssignmentGroup(group, accumulator);
+        InvalidateHardwareRequests(true);
         FlushOperands();
         Assignment.ImportAssignmentGroup(group, accumulator);
     }
@@ -205,6 +207,8 @@ public sealed class MappedMemoryBackend : IInstructionMemory
     private void FlushOldest()
     {
         if (_operands.Count == 0) return;
+        // A synchronous host/legacy flush is a barrier against an older delayed write.
+        if (HardwareRequestsInvalidated is not null) InvalidateHardwareRequests(true);
         var entry = _operands.At(_operands.Count - 1);
         PhysicalMemory.WriteRaw(Assignment.TranslateRequest(entry.Request), entry.Word);
         _operands.RemoveAt(_operands.Count - 1);
@@ -223,7 +227,9 @@ public sealed class MappedMemoryBackend : IInstructionMemory
 
     private void ReplacePhysicalFromHost(uint address, MemoryWord50 word)
     {
-        PhysicalMemory.WriteRaw(address, word); // Validates before changing either buffer.
+        _ = PhysicalMemory.ReadRaw(address); // Validate before cancelling any admitted transfer.
+        InvalidateHardwareRequests(true);
+        PhysicalMemory.WriteRaw(address, word);
         for (int i = _operands.Count - 1; i >= 0; i--)
             if (Assignment.TranslateRequest(_operands.At(i).Request) == address) _operands.RemoveAt(i);
         for (int i = _instructions.Count - 1; i >= 0; i--)
@@ -252,6 +258,7 @@ public sealed class MappedMemoryBackend : IInstructionMemory
         private readonly AddressedMemoryBufferEntry[] _entries = new AddressedMemoryBufferEntry[capacity];
         private readonly int[] _slots = new int[capacity];
         private readonly MemoryWord50[] _registers = new MemoryWord50[capacity];
+        private readonly ulong[] _versions = new ulong[capacity];
         public int Count { get; private set; }
         public bool IsFull => Count == capacity;
         public AddressedMemoryBufferEntry At(int index) => _entries[index];
@@ -263,10 +270,10 @@ public sealed class MappedMemoryBackend : IInstructionMemory
         public AddressedMemoryBufferEntry Touch(int index)
         {
             var entry = _entries[index];
-            Put(entry, index);
+            Put(entry, index, false);
             return entry;
         }
-        public void Put(AddressedMemoryBufferEntry entry, int index)
+        public void Put(AddressedMemoryBufferEntry entry, int index, bool changed = true)
         {
             int slot = index < 0 ? FreeSlot() : _slots[index];
             int shifted = index < 0 ? Math.Min(Count, capacity - 1) : index;
@@ -275,6 +282,7 @@ public sealed class MappedMemoryBackend : IInstructionMemory
             _entries[0] = entry;
             _slots[0] = slot;
             _registers[slot] = entry.Word;
+            if (changed) _versions[slot] = unchecked(_versions[slot] + 1);
             if (index < 0 && !IsFull) Count++;
         }
         public void RemoveAt(int index)
@@ -295,6 +303,8 @@ public sealed class MappedMemoryBackend : IInstructionMemory
             }
             return _slots[Count - 1];
         }
+        public int SlotAt(int index) => _slots[index];
+        public ulong VersionAt(int slot) => _versions[slot];
         public int FindRegister(MemoryRequestAddress request)
         {
             int index = Find(request);
@@ -309,6 +319,7 @@ public sealed class MappedMemoryBackend : IInstructionMemory
         {
             if ((uint)register >= capacity) throw new ArgumentOutOfRangeException(nameof(register));
             _registers[register] = word;
+            _versions[register] = unchecked(_versions[register] + 1);
             for (int i = 0; i < Count; i++)
                 if (_slots[i] == register) _entries[i] = _entries[i] with { Word = word };
         }
