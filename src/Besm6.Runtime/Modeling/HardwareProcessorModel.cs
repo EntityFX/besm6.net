@@ -13,9 +13,17 @@ internal sealed partial class HardwareProcessorModel
 {
     private readonly Processor _processor;
     private ArithmeticUnitStages? _arithmeticUnitStages;
+    private ArithmeticStageController? _arithmeticController;
     internal HardwareTimeline Timeline { get; } = new();
 
     internal HardwareProcessorModel(Processor processor) => _processor = processor;
+
+    internal ArithmeticStageController CreateArithmeticController(HardwareDuration cycle,
+        ArithmeticErrorPolicy? errorPolicy = null)
+    {
+        var unit = CreateArithmeticUnitStages(cycle, errorPolicy);
+        return _arithmeticController ??= new(Timeline, unit);
+    }
 
     internal ArithmeticUnitStages CreateArithmeticUnitStages(HardwareDuration cycle,
     ArithmeticErrorPolicy? errorPolicy = null)
