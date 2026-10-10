@@ -22,17 +22,37 @@ namespace Besm6.Core
         }
 
         /// <summary>Умножение аккумулятора A на операнд.</summary>
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
+        // Preserve the original dispatcher call boundary despite the small wrapper.
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization |
+            System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         internal void Multiply(Word48 val)
         {
-            if (_state.A.Value == 0 || val.Value == 0)
+            var sink = new ImmediateArithmeticResultSink(_normalizer);
+            ComputeMultiply(_state.A, val, ref sink);
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization |
+            System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        internal static NormalizedArithmeticResult EvaluateMultiply(Word48 accumulator, Word48 previousY,
+            uint mode, Word48 val)
+        {
+            var sink = new PreparedArithmeticResultSink(mode, previousY);
+            ComputeMultiply(accumulator, val, ref sink);
+            return sink.Result;
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization |
+            System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private static void ComputeMultiply<TSink>(Word48 accumulator, Word48 val, ref TSink sink)
+            where TSink : struct, IArithmeticResultSink
+        {
+            if (accumulator.Value == 0 || val.Value == 0)
             {
-                _state.A = Word48.Zero;
-                _state.Y = Word48.FromInt48(_state.Y.Value & ~BITS40);
+                sink.Zero();
                 return;
             }
 
-            MantissaExponent a = new MantissaExponent(_state.A);
+            MantissaExponent a = new MantissaExponent(accumulator);
             MantissaExponent word = new MantissaExponent(val);
 
             ulong y = (ulong)a.Multiply(word.Mantissa);
@@ -41,20 +61,38 @@ namespace Besm6.Core
             if (a.IsDenormal())
                 a.NormalizeToTheRight();
 
-            _normalizer.NormalizeAndRound(a, y, y != 0);
+            sink.Normalize(a, y, y != 0);
         }
 
         /// <summary>Деление аккумулятора A на операнд; деление на ноль выбрасывает исключение.</summary>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         internal void Divide(Word48 val)
+        {
+            var sink = new ImmediateArithmeticResultSink(_normalizer);
+            ComputeDivide(_state.A, val, ref sink);
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        internal static NormalizedArithmeticResult EvaluateDivide(Word48 accumulator, Word48 previousY,
+            uint mode, Word48 val)
+        {
+            var sink = new PreparedArithmeticResultSink(mode, previousY);
+            ComputeDivide(accumulator, val, ref sink);
+            return sink.Result;
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private static void ComputeDivide<TSink>(Word48 accumulator, Word48 val, ref TSink sink)
+            where TSink : struct, IArithmeticResultSink
         {
             if (((val.Value ^ (val.Value << 1)) & BIT41) == 0)
                 throw new ProcessorException("Division by zero");
 
-            MantissaExponent dividend = new MantissaExponent(_state.A);
+            MantissaExponent dividend = new MantissaExponent(accumulator);
             MantissaExponent divisor = new MantissaExponent(val);
 
             MantissaExponent a = NrDiv(dividend, divisor);
-            _normalizer.NormalizeAndRound(a, 0, false);
+            sink.Normalize(a, 0, false);
         }
 
         internal static MantissaExponent NrDiv(MantissaExponent n, MantissaExponent d)

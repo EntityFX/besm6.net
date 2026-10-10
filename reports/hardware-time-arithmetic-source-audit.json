@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-10",
+  "base_commit": "9f5315e",
+  "source": "TO-3 edition 1-65, section 4.16, sheets 96-97 and 100-101",
+  "pdf_sha256": "d5328d38db6485bf22bc2ccaf7f60051471e5715686fcf6a3b01a40764af1751",
+  "scans": [
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-50.png",
+      "sha256": "51211d0461f9625deed4d28febdb35bf9318a318494060c422308129abd62450"
+    },
+    {
+      "path": "docs/sources/hardware-time/arithmetic-pdf-52.png",
+      "sha256": "605de85894b46dca320469dade0afc49a5e0063174d509e529e26bac56288efd"
+    }
+  ],
+  "confirmed": [
+    "Division control uses a two-row sum/carry representation of the remainder",
+    "Leading partial remainder bits reach division control half a cycle before the main adder",
+    "The shift counter starts at binary 101000 and decrements each division cycle",
+    "Zero counter ends the division phase, followed by quotient formation",
+    "The source distinguishes 41 quotient bits and one rounding bit"
+  ],
+  "implementation_consequence": "Host NrDiv shortcuts compute guest bits but must not determine physical division deadlines; shared result preparation remains separate from a future physical stage driver",
+  "not_proven": [
+    "Whole-instruction division time from the counter alone",
+    "Operand-dependent carry propagation and normalization deadlines",
+    "Compatibility of TO-3 cycle duration with the 1976 book quantum",
+    "Executable CPU hardware timing profile"
+  ]
+}
