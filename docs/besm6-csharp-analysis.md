@@ -24,10 +24,10 @@
 | Измерения | `OpcodeProfiler`, `Besm6Timing`, Python tools | Состав команд, модельное время, проверки и сравнение запусков |
 
 Навигация по исходникам:
-[Architecture](../src/Besm6.Architecture/InstructionCodec.cs),
-[Processor](../src/Besm6.Processor/Processor.cs),
-[MachineCore](../src/Besm6.Runtime/MachineCore.cs),
-[DubnaLoader](../src/Besm6.Runtime/DubnaLoader.cs).
+[Architecture](../src/Besm6.Architecture/Isa/InstructionCodec.cs),
+[Processor](../src/Besm6.Processor/Cpu/Processor.cs),
+[MachineCore](../src/Besm6.Runtime/Machine/MachineCore.cs),
+[DubnaLoader](../src/Besm6.Runtime/Loading/DubnaLoader.cs).
 
 Основные объекты исполнителей создаются один раз для CPU и ссылаются на
 единый ProcessorState. Разделение на классы облегчает проверку семантики,
@@ -99,8 +99,8 @@ Legacy TraceInstruction вызывается после fetch/decode, но до 
 Fetch-watchpoint проверяется по принятому правилу для левой половины.
 MemLoad/MemStore проверяют watchpoint до специальной обработки адреса 0.
 Перестановка этих шагов может изменить то, что увидит отладчик.
-[InstructionExecutor](../src/Besm6.Processor/InstructionExecutor.cs),
-[ProcessorMemoryAccess](../src/Besm6.Processor/ProcessorMemoryAccess.cs).
+[InstructionExecutor](../src/Besm6.Processor/Execution/InstructionExecutor.cs),
+[ProcessorMemoryAccess](../src/Besm6.Processor/Memory/ProcessorMemoryAccess.cs).
 
 InstructionOutcome.Stop — обычная успешная команда. Экстракод *74 использует
 ProcessorException с пустым сообщением как сигнал завершения. Runtime
@@ -121,7 +121,7 @@ ProcessorException с пустым сообщением как сигнал за
 При десятках миллионов команд это создавало поток короткоживущих объектов
 и давление на GC. Сейчас ExecutionFrame — структура, изменяющие обработчики
 получают её по `ref`. Общие исполнители и АЛУ не размножены по режимам.
-[ExecutionFrame](../src/Besm6.Processor/ExecutionFrame.cs).
+[ExecutionFrame](../src/Besm6.Processor/Execution/ExecutionFrame.cs).
 
 В кадре находятся декодированная команда, текущий и исполнительный адрес,
 A/Y, NextC и флаги завершения. Это не «бесплатно» только потому, что объект
@@ -214,7 +214,7 @@ JIT принятой версии оставляет две проверки г�
 одноразовой последовательности он может не окупаться. Поэтому выигрыш нужно
 измерять на гостевом компиляторе и основных циклах, а не предполагать по
 самому факту наличия кеша.
-[InstructionExecutor](../src/Besm6.Processor/InstructionExecutor.cs).
+[InstructionExecutor](../src/Besm6.Processor/Execution/InstructionExecutor.cs).
 
 ## 7. Что означает «выполнение блоками»
 
@@ -235,8 +235,8 @@ ExecutionLoop в max запрашивает до 256 команд за обра�
 Step с прежним порядком наблюдения. После возвращения возможность bare-пути
 проверяется заново. При включении трассировки цикл возвращается к полному
 диагностическому исполнению.
-[MachineCore.ExecuteBlock](../src/Besm6.Runtime/MachineCore.cs),
-[InstructionExecutor.ExecuteUnobservedBlock](../src/Besm6.Processor/InstructionExecutor.cs).
+[MachineCore.ExecuteBlock](../src/Besm6.Runtime/Machine/MachineCore.cs),
+[InstructionExecutor.ExecuteUnobservedBlock](../src/Besm6.Processor/Execution/InstructionExecutor.cs).
 
 Это последовательное интерпретирование пакета команд, а не JIT гостевой
 программы и не готовый граф базовых блоков. Самозапись продолжает проверяться
@@ -250,7 +250,7 @@ Step с прежним порядком наблюдения. После воз�
 снимки до/после лишь при подписке на InstructionTrace/RegisterTrace.
 В снимках копируется массив M; это правильная цена полноценной диагностики,
 но лишняя цена для подсчёта опкодов.
-[ProcessorTraceController](../src/Besm6.Processor/ProcessorTraceController.cs).
+[ProcessorTraceController](../src/Besm6.Processor/Diagnostics/ProcessorTraceController.cs).
 
 В max без stats/profile нет табличного счётчика тактов и таймера для
 ограничения скорости. Таймер нужен, если установлен отдельный wall-clock
@@ -280,8 +280,8 @@ LoopDetect проверяет диапазон K в окне, а HangDetect — 
 Производственный доступ гостя к внешней памяти проходит через обработчики
 экстракодов. Для ускорения CPU напрямую использует тот же экземпляр
 CoreMemory, что находится за шиной.
-[SystemBus](../src/Besm6.Runtime/SystemBus.cs),
-[MachineCore](../src/Besm6.Runtime/MachineCore.cs).
+[SystemBus](../src/Besm6.Runtime/Machine/SystemBus.cs),
+[MachineCore](../src/Besm6.Runtime/Machine/MachineCore.cs).
 
 ### 9.2. Сброс и повторная загрузка
 
@@ -321,8 +321,8 @@ machine.Scheduler.AdvanceTo(machine.Clock.Tick);
 бенчмарков. Отдельные тесты очереди проходят без этого сценария.
 Исправление потребует решения о порядке событий относительно инструкции;
 единицы часов в рамках оптимизации не менялись.
-[EventScheduler](../src/Besm6.Runtime/EventScheduler.cs),
-[SimulationClock](../src/Besm6.Runtime/SimulationClock.cs).
+[EventScheduler](../src/Besm6.Runtime/Execution/EventScheduler.cs),
+[SimulationClock](../src/Besm6.Runtime/Execution/SimulationClock.cs).
 
 ## 10. Подтверждённое ускорение относительно первого кода
 

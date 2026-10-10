@@ -1,0 +1,811 @@
+{
+  "base_commit": "6c46c8f",
+  "moves": [
+    {
+      "old": "src/Besm6.Architecture/DecodedInstruction.cs",
+      "new": "src/Besm6.Architecture/Isa/DecodedInstruction.cs",
+      "sha256": "a303074dd9eec00f7cd5d9f7161395eea29a1eaee9c79853515381b4620ed1bb"
+    },
+    {
+      "old": "src/Besm6.Architecture/InstructionFormat.cs",
+      "new": "src/Besm6.Architecture/Isa/InstructionFormat.cs",
+      "sha256": "8caeed9a6761c34d258fdc56ddb19ccf2787a6a0a45c93f9a5741f1481ecf6bc"
+    },
+    {
+      "old": "src/Besm6.Architecture/InstructionCodec.cs",
+      "new": "src/Besm6.Architecture/Isa/InstructionCodec.cs",
+      "sha256": "fdf2e9e9e6a80918ca568b2cbb8c0a926decc8043e05c1e97269952dd50ea8ed"
+    },
+    {
+      "old": "src/Besm6.Architecture/Opcode.cs",
+      "new": "src/Besm6.Architecture/Isa/Opcode.cs",
+      "sha256": "89f4bc19b953d43723bc4665f847f54a57feef0aeac69c983ba5e3cd1e774e6e"
+    },
+    {
+      "old": "src/Besm6.Architecture/Extracode.cs",
+      "new": "src/Besm6.Architecture/Isa/Extracode.cs",
+      "sha256": "ded797b94b43d76272b5fa6c48da1da045da6ba8ae6f7ba9de4f746bd4128b2e"
+    },
+    {
+      "old": "src/Besm6.Architecture/Word48.cs",
+      "new": "src/Besm6.Architecture/Numerics/Word48.cs",
+      "sha256": "1a4fa5019c67976c18ac152df55279121d32f71a3e0a68a6fa5883fecbf40d86"
+    },
+    {
+      "old": "src/Besm6.Architecture/Word48Extensions.cs",
+      "new": "src/Besm6.Architecture/Numerics/Word48Extensions.cs",
+      "sha256": "97971265f4ff67988c45dec63edc319bd603b88b3bff016cebcdaa478ce2a135"
+    },
+    {
+      "old": "src/Besm6.Architecture/MantissaExponent.cs",
+      "new": "src/Besm6.Architecture/Numerics/MantissaExponent.cs",
+      "sha256": "9a30e29d88313c75b5391f9a1a920276e771f43f4f1d56dade837f244ed4fe4e"
+    },
+    {
+      "old": "src/Besm6.Architecture/AddressMode.cs",
+      "new": "src/Besm6.Architecture/State/AddressMode.cs",
+      "sha256": "986698cf45e8bdcbdadc30cf9e90e7f435e32ae3942e28d540a61fc2663a2c56"
+    },
+    {
+      "old": "src/Besm6.Architecture/ControlUnitStatus.cs",
+      "new": "src/Besm6.Architecture/State/ControlUnitStatus.cs",
+      "sha256": "6f2eb16be377c8190222b5a82e275745bb42147a724d28c042bf9e3b0c71cdfe"
+    },
+    {
+      "old": "src/Besm6.Architecture/RFlags.cs",
+      "new": "src/Besm6.Architecture/State/RFlags.cs",
+      "sha256": "816afc689ff6a67652011e24577609399f3e7aec8f1d3ab3185e9f22282616cb"
+    },
+    {
+      "old": "src/Besm6.Architecture/MemoryWord50.cs",
+      "new": "src/Besm6.Architecture/Memory/MemoryWord50.cs",
+      "sha256": "314a512826078490590192a0ca6dffcc21b6ac7c525c20e308c474cda397c292"
+    },
+    {
+      "old": "src/Besm6.Architecture/ArchitectureConstants.cs",
+      "new": "src/Besm6.Architecture/Machine/ArchitectureConstants.cs",
+      "sha256": "2b011a9c36b9cc9d2ad64ec94f6c61f092adb4a5dd04a328379d2d97a9be7a3c"
+    },
+    {
+      "old": "src/Besm6.Processor/Processor.cs",
+      "new": "src/Besm6.Processor/Cpu/Processor.cs",
+      "sha256": "17dcb82e8468c8d44471dcee3345c3a3366dccd3501fdd37188ec01c616f9bb2"
+    },
+    {
+      "old": "src/Besm6.Processor/ProcessorState.cs",
+      "new": "src/Besm6.Processor/Cpu/ProcessorState.cs",
+      "sha256": "cdeace47660c868bee3ac951318a94bef62d6324ff3cb784aeea4a1d22126ab0"
+    },
+    {
+      "old": "src/Besm6.Processor/ProcessorProfile.cs",
+      "new": "src/Besm6.Processor/Cpu/ProcessorProfile.cs",
+      "sha256": "2c5fa9b73e67a2b23875759e21814e313b3e129e8149c420f2d09983f70e956d"
+    },
+    {
+      "old": "src/Besm6.Processor/ProcessorException.cs",
+      "new": "src/Besm6.Processor/Cpu/ProcessorException.cs",
+      "sha256": "8daf0b9009bf88b56c965ef48c92d6218d0838122920e6db03b0cc69f6c1e143"
+    },
+    {
+      "old": "src/Besm6.Processor/StopReason.cs",
+      "new": "src/Besm6.Processor/Cpu/StopReason.cs",
+      "sha256": "6ead7d7953d8bc40a37958fc983fffa6334c820c29a833444d1f7f1fee3c4f3e"
+    },
+    {
+      "old": "src/Besm6.Processor/InstructionExecutor.cs",
+      "new": "src/Besm6.Processor/Execution/InstructionExecutor.cs",
+      "sha256": "186fe100ef166fd20d95a81566bf7a02b0f758ae8c79f741e21e2e2867805493"
+    },
+    {
+      "old": "src/Besm6.Processor/InstructionExecutor.Supervisor.cs",
+      "new": "src/Besm6.Processor/Execution/InstructionExecutor.Supervisor.cs",
+      "sha256": "e3a12d311a61818ddc3bd75afde4835b3c03ba9b57bbf2dd4662b61dc2e0a990"
+    },
+    {
+      "old": "src/Besm6.Processor/InstructionExecutor.Preparation.cs",
+      "new": "src/Besm6.Processor/Execution/InstructionExecutor.Preparation.cs",
+      "sha256": "557f88a351c2229e760cd67c14d5836019a09a1693b8cdee989eea12c0b5f27b"
+    },
+    {
+      "old": "src/Besm6.Processor/InstructionExecutor.ArithmeticPreparation.cs",
+      "new": "src/Besm6.Processor/Execution/InstructionExecutor.ArithmeticPreparation.cs",
+      "sha256": "7fa92d0d752ada10f07ec392e91c0be24e796c2009e6f60eb22812b66c2d7207"
+    },
+    {
+      "old": "src/Besm6.Processor/ExecutionFrame.cs",
+      "new": "src/Besm6.Processor/Execution/ExecutionFrame.cs",
+      "sha256": "85a71a4fdd70c79c18ff6b2098425e4978b95cd90cdd2b3b97e30aafd12a9625"
+    },
+    {
+      "old": "src/Besm6.Processor/InstructionOutcome.cs",
+      "new": "src/Besm6.Processor/Execution/InstructionOutcome.cs",
+      "sha256": "88011fc15ed5adfea160a9ff8e62c78f92f9fb993e83857f4ffcde816ddf232c"
+    },
+    {
+      "old": "src/Besm6.Processor/MemoryInstructionExecutor.cs",
+      "new": "src/Besm6.Processor/Execution/MemoryInstructionExecutor.cs",
+      "sha256": "9aa01ee16647d8a5f4f2edb71741707b6f5ed413e2558c86d45f28baebf257d6"
+    },
+    {
+      "old": "src/Besm6.Processor/IndexInstructionExecutor.cs",
+      "new": "src/Besm6.Processor/Execution/IndexInstructionExecutor.cs",
+      "sha256": "e1f9b1f4523686c177759097cbfd60098797a07a0128ff738e44125c09bcc72a"
+    },
+    {
+      "old": "src/Besm6.Processor/ControlInstructionExecutor.cs",
+      "new": "src/Besm6.Processor/Execution/ControlInstructionExecutor.cs",
+      "sha256": "434241219c367417a577c049544ec5471bbf2089b1fe61dfcd2249f1b48e4d07"
+    },
+    {
+      "old": "src/Besm6.Processor/ExtracodeInstructionExecutor.cs",
+      "new": "src/Besm6.Processor/Execution/ExtracodeInstructionExecutor.cs",
+      "sha256": "4ce90cc2edd1c9ce9615d4cad24515d220d87c068e1dc8ed38103cf3d830cc31"
+    },
+    {
+      "old": "src/Besm6.Processor/ArithmeticInstructionExecution.cs",
+      "new": "src/Besm6.Processor/Execution/ArithmeticInstructionExecution.cs",
+      "sha256": "eeee623637d964c33c4f210241cf749e38b2c24f7cf3da45caeacc96c2323605"
+    },
+    {
+      "old": "src/Besm6.Processor/Alu.cs",
+      "new": "src/Besm6.Processor/Arithmetic/Alu.cs",
+      "sha256": "2a35dce8b970e0ad3141bedf8f87462ad4aacf723e79740a1fd17c9cfce40f90"
+    },
+    {
+      "old": "src/Besm6.Processor/AdditiveOperations.cs",
+      "new": "src/Besm6.Processor/Arithmetic/AdditiveOperations.cs",
+      "sha256": "4673a8f70593a0d661799da19be9ef2cc1cc0ed3531aedfc23cd97fe2e981b70"
+    },
+    {
+      "old": "src/Besm6.Processor/MultiplicativeOperations.cs",
+      "new": "src/Besm6.Processor/Arithmetic/MultiplicativeOperations.cs",
+      "sha256": "17b01242d8cbb8437e4d50e2822df927aa9d3fe9401f09588483c7996b44d1e1"
+    },
+    {
+      "old": "src/Besm6.Processor/ShiftOperations.cs",
+      "new": "src/Besm6.Processor/Arithmetic/ShiftOperations.cs",
+      "sha256": "d95452b88111ce4162fde25c80cbf62ea37d3d8996ae235468d5d16867c4636c"
+    },
+    {
+      "old": "src/Besm6.Processor/NormalizationAndRounding.cs",
+      "new": "src/Besm6.Processor/Arithmetic/NormalizationAndRounding.cs",
+      "sha256": "c989becb699e03ecaaf8be5255518a0f287b517123d621ca2ca5ddac33612328"
+    },
+    {
+      "old": "src/Besm6.Processor/ArithmeticResultSink.cs",
+      "new": "src/Besm6.Processor/Arithmetic/ArithmeticResultSink.cs",
+      "sha256": "7e2bb195f57fcbb00424c7d429b2cff45f0b0c295506d06a69c9838e43d397ba"
+    },
+    {
+      "old": "src/Besm6.Processor/PreparedArithmeticOperation.cs",
+      "new": "src/Besm6.Processor/Arithmetic/PreparedArithmeticOperation.cs",
+      "sha256": "8ff0f1ab7298c26adbed8e075b17912620e591f1d6c3fbb61d4e8c6938d3493c"
+    },
+    {
+      "old": "src/Besm6.Processor/NormalizedArithmeticResult.cs",
+      "new": "src/Besm6.Processor/Arithmetic/NormalizedArithmeticResult.cs",
+      "sha256": "e8c989ef4c3ee3151f78429472cbec3e9b35833ab9c1a100491e5da808b8b6df"
+    },
+    {
+      "old": "src/Besm6.Processor/LogicalArithmeticOperations.cs",
+      "new": "src/Besm6.Processor/Arithmetic/LogicalArithmeticOperations.cs",
+      "sha256": "bc8f6698abad0621d0579bac00862e89fe346132ee01cfb8f782bc41b7358db2"
+    },
+    {
+      "old": "src/Besm6.Processor/ProcessorBitOperations.cs",
+      "new": "src/Besm6.Processor/Arithmetic/ProcessorBitOperations.cs",
+      "sha256": "c7c6b946b7e665cadeeefada5bbc4547e35b68d9c0e1be12c75b1f6492bdc07c"
+    },
+    {
+      "old": "src/Besm6.Processor/IMemory.cs",
+      "new": "src/Besm6.Processor/Memory/IMemory.cs",
+      "sha256": "288137efa785f8c25944d815c9a90cd09e8b7cbd60375065d0984849fd42cd91"
+    },
+    {
+      "old": "src/Besm6.Processor/IInstructionMemory.cs",
+      "new": "src/Besm6.Processor/Memory/IInstructionMemory.cs",
+      "sha256": "e33bd9c4e7f8abec1c0316c199dcaf4a1ee5ecb9adeb2f471b3257325c4eadab"
+    },
+    {
+      "old": "src/Besm6.Processor/CoreMemory.cs",
+      "new": "src/Besm6.Processor/Memory/CoreMemory.cs",
+      "sha256": "b54ea8b92c4c014cd30ca229e4de50bbd682e08d305dfd7691cacdd3000eff10"
+    },
+    {
+      "old": "src/Besm6.Processor/PhysicalMemory.cs",
+      "new": "src/Besm6.Processor/Memory/PhysicalMemory.cs",
+      "sha256": "2f41abfce6b2e9c8a5ab163e991401ed58910e156520120a49ed6c88e8b68d8f"
+    },
+    {
+      "old": "src/Besm6.Processor/BufferedMemory.cs",
+      "new": "src/Besm6.Processor/Memory/BufferedMemory.cs",
+      "sha256": "96e4961fc84025fefcf8fea08a9fb10959be0605de824c38c29cdc0b8c6b11ce"
+    },
+    {
+      "old": "src/Besm6.Processor/BufferedMemoryBackend.cs",
+      "new": "src/Besm6.Processor/Memory/BufferedMemoryBackend.cs",
+      "sha256": "b8429f773636b26b76597981b1c55a2aa78873b27fffe2c9e01cbbfdc4029823"
+    },
+    {
+      "old": "src/Besm6.Processor/MappedMemoryBackend.cs",
+      "new": "src/Besm6.Processor/Memory/MappedMemoryBackend.cs",
+      "sha256": "2d00115d9f0d5bc4cd74dfa6b95b4c3486e06c04946dd17f180c4d5ed3b41f00"
+    },
+    {
+      "old": "src/Besm6.Processor/MemoryMappingController.cs",
+      "new": "src/Besm6.Processor/Memory/MemoryMappingController.cs",
+      "sha256": "a694623b0ea3a0dc0adfda70bdb0c8503fa55b39ae00a6614745431d3fa22f17"
+    },
+    {
+      "old": "src/Besm6.Processor/PageAssignment.cs",
+      "new": "src/Besm6.Processor/Memory/PageAssignment.cs",
+      "sha256": "179cfc766091d542f2ea90eab0b685330f87b472799ebc253ef8fc36c2e14ced"
+    },
+    {
+      "old": "src/Besm6.Processor/MemoryRequestAddress.cs",
+      "new": "src/Besm6.Processor/Memory/MemoryRequestAddress.cs",
+      "sha256": "b81ad4a0f07e6d8edf00121ae7018724ae6234db2539e00524f0f3736d6d5773"
+    },
+    {
+      "old": "src/Besm6.Processor/ProcessorMemoryAccess.cs",
+      "new": "src/Besm6.Processor/Memory/ProcessorMemoryAccess.cs",
+      "sha256": "bfa3445f84f002c2405d4d1c0033c4fa7a793f6ff9c09cce14bac1a386db4333"
+    },
+    {
+      "old": "src/Besm6.Processor/HardwareMemoryExceptions.cs",
+      "new": "src/Besm6.Processor/Memory/HardwareMemoryExceptions.cs",
+      "sha256": "e7da66373f77c7dcb01925096b8acf4b638df04bfce251bb56823d7d578e6278"
+    },
+    {
+      "old": "src/Besm6.Processor/BytePointer.cs",
+      "new": "src/Besm6.Processor/Memory/BytePointer.cs",
+      "sha256": "fba80da2f870108dd7c02a2091b7f6b5a30254d27ef70c1b0f89b160903d6171"
+    },
+    {
+      "old": "src/Besm6.Processor/SupervisorControl.cs",
+      "new": "src/Besm6.Processor/Supervisor/SupervisorControl.cs",
+      "sha256": "10a21f0cdae58302c630b152fc425bade1603b3e5e64329a31aba8aabb91fec0"
+    },
+    {
+      "old": "src/Besm6.Processor/SupervisorSnapshot.cs",
+      "new": "src/Besm6.Processor/Supervisor/SupervisorSnapshot.cs",
+      "sha256": "df3e0f7d25b3c93e6a0d8b273b68282ee17cc88109c28f0311f65da68739477a"
+    },
+    {
+      "old": "src/Besm6.Processor/SupervisorHaltException.cs",
+      "new": "src/Besm6.Processor/Supervisor/SupervisorHaltException.cs",
+      "sha256": "2642537169b20b4b46d5ea00f1334174b10d88b6b8d23ab04b74c88a5abc1b94"
+    },
+    {
+      "old": "src/Besm6.Processor/ISupervisorIo.cs",
+      "new": "src/Besm6.Processor/Supervisor/ISupervisorIo.cs",
+      "sha256": "7ee13e3c7be0ecfc0ddd951863dab1bfc78157a57039bb7ab88cb6cf0794b3e3"
+    },
+    {
+      "old": "src/Besm6.Processor/ProcessorSnapshot.cs",
+      "new": "src/Besm6.Processor/Diagnostics/ProcessorSnapshot.cs",
+      "sha256": "0044e3d6ce5c5487c612445c249247c89d9ca67a85da74f0d6ec40d6ef356fad"
+    },
+    {
+      "old": "src/Besm6.Processor/InstructionTraceRecord.cs",
+      "new": "src/Besm6.Processor/Diagnostics/InstructionTraceRecord.cs",
+      "sha256": "4111206a6eb0284a45e296f84dc4b21934f037da40b68882242aafbefde52e3c"
+    },
+    {
+      "old": "src/Besm6.Processor/RegisterTraceRecord.cs",
+      "new": "src/Besm6.Processor/Diagnostics/RegisterTraceRecord.cs",
+      "sha256": "7b1b73c98e7a8d082df7af5641147dd6e234c503b6f8025313e3cf5197bbee81"
+    },
+    {
+      "old": "src/Besm6.Processor/ExtracodeCall.cs",
+      "new": "src/Besm6.Processor/Diagnostics/ExtracodeCall.cs",
+      "sha256": "48e8661102e2ee76646c3b8354807f3a208609f790ce4f319bb1645c91b63a7c"
+    },
+    {
+      "old": "src/Besm6.Processor/ProcessorTraceController.cs",
+      "new": "src/Besm6.Processor/Diagnostics/ProcessorTraceController.cs",
+      "sha256": "1478579a7f28f509ac847c284a9f41745d4d31d7ef8277b4df36832a197440e5"
+    },
+    {
+      "old": "src/Besm6.Processor/ProcessorDebugWatch.cs",
+      "new": "src/Besm6.Processor/Diagnostics/ProcessorDebugWatch.cs",
+      "sha256": "611c7dda2d91b96f3e1032cea1ba513ccc506bc98b429182608e655bfac1f058"
+    },
+    {
+      "old": "src/Besm6.Processor/HardwareWatchException.cs",
+      "new": "src/Besm6.Processor/Diagnostics/HardwareWatchException.cs",
+      "sha256": "b353cd70674937f748196c573a7878d8c69130798a86fe9a70515b2df24b8ec9"
+    },
+    {
+      "old": "src/Besm6.Processor/AssemblyInfo.cs",
+      "new": "src/Besm6.Processor/Properties/AssemblyInfo.cs",
+      "sha256": "1f59702e79a2681a286887ba338a8fa57ac57ba71dc03d605a870aa10d2d0e2a"
+    },
+    {
+      "old": "src/Besm6.Runtime/MachineCore.cs",
+      "new": "src/Besm6.Runtime/Machine/MachineCore.cs",
+      "sha256": "cc6dfb7d0953ec1874d1945c863377aa6d4dd120c8aa4957d2252be696f97218"
+    },
+    {
+      "old": "src/Besm6.Runtime/MachineFactory.cs",
+      "new": "src/Besm6.Runtime/Machine/MachineFactory.cs",
+      "sha256": "ce370db0a7bc6eed4dc61666bb79870c7125709e8acec8251525df73f7afd3b1"
+    },
+    {
+      "old": "src/Besm6.Runtime/MachineExecutionResult.cs",
+      "new": "src/Besm6.Runtime/Machine/MachineExecutionResult.cs",
+      "sha256": "dd46d01698c7e8c09014251528c12075a70a5b0f247e8220ac835b2c064ff536"
+    },
+    {
+      "old": "src/Besm6.Runtime/SystemBus.cs",
+      "new": "src/Besm6.Runtime/Machine/SystemBus.cs",
+      "sha256": "ffaf5a35adad7c4d4132d6844a8d491dab54ef419c0431db198a4a7857d7437f"
+    },
+    {
+      "old": "src/Besm6.Runtime/Config.cs",
+      "new": "src/Besm6.Runtime/Configuration/Config.cs",
+      "sha256": "0405e1e5ba2a47f94ff8763a5dc90ddb58e3f5bd715717d9c196c7c3938f6275"
+    },
+    {
+      "old": "src/Besm6.Runtime/ExecutionSpeed.cs",
+      "new": "src/Besm6.Runtime/Configuration/ExecutionSpeed.cs",
+      "sha256": "38c635b1ba061bcebdbaf8227c0a61c03514b2206f2f72fc79924e1788947399"
+    },
+    {
+      "old": "src/Besm6.Runtime/MemoryModel.cs",
+      "new": "src/Besm6.Runtime/Configuration/MemoryModel.cs",
+      "sha256": "7413ae7b4b7f33a0ab2439419d076659e1504ec82c48cfa898b97ffbc5047a91"
+    },
+    {
+      "old": "src/Besm6.Runtime/Besm6Constants.cs",
+      "new": "src/Besm6.Runtime/Configuration/Besm6Constants.cs",
+      "sha256": "d97a6517607f7af68b6535224a13caa67d16e372ad9f1cec93fc2f1d7df6a03d"
+    },
+    {
+      "old": "src/Besm6.Runtime/SimulationClock.cs",
+      "new": "src/Besm6.Runtime/Execution/SimulationClock.cs",
+      "sha256": "6bcc49f4beba37cea800b456335b5ab02a88edafe91f0f438e74f26c6ec57329"
+    },
+    {
+      "old": "src/Besm6.Runtime/EventScheduler.cs",
+      "new": "src/Besm6.Runtime/Execution/EventScheduler.cs",
+      "sha256": "26a754b6d20b0afa29da617f2c3a7de95edc27bb59e5b1dbbffb0ec45a0c0fcf"
+    },
+    {
+      "old": "src/Besm6.Runtime/ExecutionStatistics.cs",
+      "new": "src/Besm6.Runtime/Execution/ExecutionStatistics.cs",
+      "sha256": "ceabe749d37477e3009bb41ff69a3f1045a07ec5b63e2794032dccbb6569ef3f"
+    },
+    {
+      "old": "src/Besm6.Runtime/DubnaLoader.cs",
+      "new": "src/Besm6.Runtime/Loading/DubnaLoader.cs",
+      "sha256": "806365d467fe21748a39f9cdb4d05c8c9e690abb93500add763f7ce25fafbf8c"
+    },
+    {
+      "old": "src/Besm6.Runtime/JobParser.cs",
+      "new": "src/Besm6.Runtime/Loading/JobParser.cs",
+      "sha256": "a3cf88f12ab70bc8a07a9d0dc4ef82f6a0549569e9dfece66148b92c9f068538"
+    },
+    {
+      "old": "src/Besm6.Runtime/RuntimeAssets.cs",
+      "new": "src/Besm6.Runtime/Loading/RuntimeAssets.cs",
+      "sha256": "2e40017965709941ce4b7e9e5dca45927252b61d0b50cf540809bed1e8af9a6c"
+    },
+    {
+      "old": "src/Besm6.Runtime/IDevice.cs",
+      "new": "src/Besm6.Runtime/Devices/IDevice.cs",
+      "sha256": "0e358e133c511443453cd2f9f41e16f400ea02762dc06f13729d9afaf9c29745"
+    },
+    {
+      "old": "src/Besm6.Runtime/DeviceType.cs",
+      "new": "src/Besm6.Runtime/Devices/DeviceType.cs",
+      "sha256": "32558250b3c2fe58ba107b84e8f71a0dbeaee423c09dd58a5ad0813d8a8b3116"
+    },
+    {
+      "old": "src/Besm6.Runtime/DeviceManager.cs",
+      "new": "src/Besm6.Runtime/Devices/DeviceManager.cs",
+      "sha256": "5e45f945b32d55b0eb8b834d46bd98818759cc02d9f9b4914ffdb05df09b3c0d"
+    },
+    {
+      "old": "src/Besm6.Runtime/ConsoleDevice.cs",
+      "new": "src/Besm6.Runtime/Devices/ConsoleDevice.cs",
+      "sha256": "de14e4e2e69077db1d486583067e4e895108c22e862e52c395ec722fccbc6710"
+    },
+    {
+      "old": "src/Besm6.Runtime/DiskDevice.cs",
+      "new": "src/Besm6.Runtime/Devices/DiskDevice.cs",
+      "sha256": "52ba628437295e3c47c0556e269ed0e00d66464d917ac4a835f43ff28d952392"
+    },
+    {
+      "old": "src/Besm6.Runtime/MagneticDrumDevice.cs",
+      "new": "src/Besm6.Runtime/Devices/MagneticDrumDevice.cs",
+      "sha256": "f17febdc6fc28074825085bb6e2a0f709f14de03997b59bf1f1f4c2347b31336"
+    },
+    {
+      "old": "src/Besm6.Runtime/TeletypeDevice.cs",
+      "new": "src/Besm6.Runtime/Devices/TeletypeDevice.cs",
+      "sha256": "7f8c6f2db9661d6839c3b36305563fcc7fb8ac9b8c58f5e2ab6ccb0e3618128f"
+    },
+    {
+      "old": "src/Besm6.Runtime/SupervisorIoController.cs",
+      "new": "src/Besm6.Runtime/Devices/SupervisorIoController.cs",
+      "sha256": "de0dffdac9fb33433c21294bf4dcb62dfe547c4d7566e615d55fee6510c8b953"
+    },
+    {
+      "old": "src/Besm6.Runtime/Plotter.cs",
+      "new": "src/Besm6.Runtime/Devices/Plotter.cs",
+      "sha256": "0e9d8618a3e421e7829c883a1a433e6aae26c43bacce1ad20f2a1bc056b7b3ac"
+    },
+    {
+      "old": "src/Besm6.Runtime/Puncher.cs",
+      "new": "src/Besm6.Runtime/Devices/Puncher.cs",
+      "sha256": "7da19f9da4b4d1fa0b4bffaa92dcc2dd078c9f1d999a134429194b7afa8c74ba"
+    },
+    {
+      "old": "src/Besm6.Runtime/TapeImage.cs",
+      "new": "src/Besm6.Runtime/Storage/TapeImage.cs",
+      "sha256": "442069519e27b1a6c83b05616f0cdd4b67113629a30a30dafbeaa1b4d22ffc45"
+    },
+    {
+      "old": "src/Besm6.Runtime/CosyCodec.cs",
+      "new": "src/Besm6.Runtime/Encoding/CosyCodec.cs",
+      "sha256": "6b47aac4968720bc6f40aa8be2528e70ac6e3ffda9c04304099c4b4162686834"
+    },
+    {
+      "old": "src/Besm6.Runtime/CanonicalTraceWriter.cs",
+      "new": "src/Besm6.Runtime/Diagnostics/CanonicalTraceWriter.cs",
+      "sha256": "03ae0563ced640a850bc9ebb7210d5a656dae9041416138457c3a688e4c25e70"
+    },
+    {
+      "old": "src/Besm6.Runtime/DiagnosticTraceWriter.cs",
+      "new": "src/Besm6.Runtime/Diagnostics/DiagnosticTraceWriter.cs",
+      "sha256": "17398eb7fc47a49e1f33a6adf17bd017966028be75de9d3caa8e5729f6537014"
+    },
+    {
+      "old": "src/Besm6.Runtime/Besm6Math.cs",
+      "new": "src/Besm6.Runtime/Extracodes/Besm6Math.cs",
+      "sha256": "b4013454a4fa9fe20f0f7500193065af9d04633029e96fda783138a63d70a29d"
+    },
+    {
+      "old": "src/Besm6.Runtime/ExtracodeHandler.cs",
+      "new": "src/Besm6.Runtime/Extracodes/ExtracodeHandler.cs",
+      "sha256": "a67183378d88a5d48e74a1cbab30ab9fd086bb6d44bdd51c6c33ffd81a97cf6b"
+    },
+    {
+      "old": "src/Besm6.Runtime/ExtracodeHandler.Storage.cs",
+      "new": "src/Besm6.Runtime/Extracodes/ExtracodeHandler.Storage.cs",
+      "sha256": "1d1486f5c3fd6d34b7d9ec4e3d2b0add7a9564606fcaa116c76d38a22cfdb118"
+    },
+    {
+      "old": "src/Besm6.Runtime/ExtracodeHandler.Print.cs",
+      "new": "src/Besm6.Runtime/Extracodes/ExtracodeHandler.Print.cs",
+      "sha256": "592953f9e3f1b473aff37b17b8286031a336cefc7635f976b3c2dd6df1467ad7"
+    },
+    {
+      "old": "src/Besm6.Runtime/ExtracodeHandler.Math.cs",
+      "new": "src/Besm6.Runtime/Extracodes/ExtracodeHandler.Math.cs",
+      "sha256": "9fde9a1a700aa18fde1baafaac330a109deaf20ccd20c1111e845c891d93446f"
+    },
+    {
+      "old": "src/Besm6.Runtime/ExtracodeHandler.E64Numeric.cs",
+      "new": "src/Besm6.Runtime/Extracodes/ExtracodeHandler.E64Numeric.cs",
+      "sha256": "272000ffdf19ea82032a7407aa594a351fbf5fa1f3ad3980d130ef538aa0ff2d"
+    },
+    {
+      "old": "src/Besm6.Runtime/ExtracodeHandler.E64Instr.cs",
+      "new": "src/Besm6.Runtime/Extracodes/ExtracodeHandler.E64Instr.cs",
+      "sha256": "874c454ba5c8f54294a5f729a5addd62b343644d9647d503f2f968f367003bbc"
+    },
+    {
+      "old": "src/Besm6.Runtime/ExtracodeHandler.E64Gost.cs",
+      "new": "src/Besm6.Runtime/Extracodes/ExtracodeHandler.E64Gost.cs",
+      "sha256": "1409be054de84486da05195b7aaf1a5f654ae606363c398ef54f1c13be0dfa7f"
+    },
+    {
+      "old": "src/Besm6.Runtime/ExtracodeHandler.E64Dubna.cs",
+      "new": "src/Besm6.Runtime/Extracodes/ExtracodeHandler.E64Dubna.cs",
+      "sha256": "76962286c7be2bc77820ba780ed738d47c78ff880fbb70868883c8f33d08bddc"
+    },
+    {
+      "old": "src/Besm6.Runtime/ExtracodeHandler.E50.cs",
+      "new": "src/Besm6.Runtime/Extracodes/ExtracodeHandler.E50.cs",
+      "sha256": "9db98fced8ae1497316e7d0bcb0688ea9e16e461208b2a9a6d875f1aa4176174"
+    },
+    {
+      "old": "src/Besm6.Runtime/ExtracodeHandler.Terminal.cs",
+      "new": "src/Besm6.Runtime/Extracodes/ExtracodeHandler.Terminal.cs",
+      "sha256": "2722fc480e0198518c7574a84319251f8861e4a75495ff0b934f621563b9ef21"
+    },
+    {
+      "old": "src/Besm6.Runtime/ExtracodeHandler.System.cs",
+      "new": "src/Besm6.Runtime/Extracodes/ExtracodeHandler.System.cs",
+      "sha256": "9b4dc6a6ac3eea1abdaaaad62af9b89188b7e62e465f1158d73ae3e8f2b3c685"
+    },
+    {
+      "old": "src/Besm6.Runtime/AssemblyInfo.cs",
+      "new": "src/Besm6.Runtime/Properties/AssemblyInfo.cs",
+      "sha256": "44c202ffaa99baef4e9a88d1e93a44c465ef6da90d81f5cdf38a48aced9d94a0"
+    },
+    {
+      "old": "src/Besm6.Assembler/IBesm6Assembler.cs",
+      "new": "src/Besm6.Assembler/Api/IBesm6Assembler.cs",
+      "sha256": "927d7a47deb265ea6b9d2f798abc35c233e528f32b3c46717a9239027abd49fa"
+    },
+    {
+      "old": "src/Besm6.Assembler/AssemblyResult.cs",
+      "new": "src/Besm6.Assembler/Api/AssemblyResult.cs",
+      "sha256": "b14522ce46cca0a965c439535c9f263d4d83360afc4d0ebeb12517fbb070a889"
+    },
+    {
+      "old": "src/Besm6.Assembler/AssemblyDialect.cs",
+      "new": "src/Besm6.Assembler/Api/AssemblyDialect.cs",
+      "sha256": "2d1c35fe5aca0d1a942f5738b866b00ef54fda38b5d301979cb043b802ef3cc0"
+    },
+    {
+      "old": "src/Besm6.Assembler/AssemblerException.cs",
+      "new": "src/Besm6.Assembler/Api/AssemblerException.cs",
+      "sha256": "d191b430524a361c174bd3c870d2484d7c66f5663d01bcdab59a660d8c60c175"
+    },
+    {
+      "old": "src/Besm6.Assembler/AssemblyEngine.cs",
+      "new": "src/Besm6.Assembler/Assembly/AssemblyEngine.cs",
+      "sha256": "f9c8e2a87260fd5604b911c55b1253fd9aab3437c16c218f78618ac9a2c5c7df"
+    },
+    {
+      "old": "src/Besm6.Assembler/MadlenAssembler.cs",
+      "new": "src/Besm6.Assembler/Assembly/MadlenAssembler.cs",
+      "sha256": "185122cb0dfb3e36b8d04e1d5e7e64556aa4a590bd9275a8fac176e0fa98eeb8"
+    },
+    {
+      "old": "src/Besm6.Assembler/BemshAssembler.cs",
+      "new": "src/Besm6.Assembler/Assembly/BemshAssembler.cs",
+      "sha256": "67757e1c6e051bec2de7f7cc667dda125961be3397182012afc9a3f8513bb19e"
+    },
+    {
+      "old": "src/Besm6.Assembler/Lexer.cs",
+      "new": "src/Besm6.Assembler/Parsing/Lexer.cs",
+      "sha256": "bcdf12195a6f4d555c164696499db68017352932ffe9ee0202a06d8620f125f6"
+    },
+    {
+      "old": "src/Besm6.Assembler/Parser.cs",
+      "new": "src/Besm6.Assembler/Parsing/Parser.cs",
+      "sha256": "9c79acbfc489c750ebb2c893843d13cfca7ce3aac87c1a84ce330d0fc4a15fbc"
+    },
+    {
+      "old": "src/Besm6.Assembler/SymbolTable.cs",
+      "new": "src/Besm6.Assembler/Parsing/SymbolTable.cs",
+      "sha256": "3372b5c9f6362c8bc0f738549484a932fe0be9933a4a8257dec81c1ee1e8a03b"
+    },
+    {
+      "old": "src/Besm6.Assembler/OpcodeTable.cs",
+      "new": "src/Besm6.Assembler/Parsing/OpcodeTable.cs",
+      "sha256": "2333c094a22fa46cf04f608d990c981166ca573d3130d3e38c56036aac327f7a"
+    },
+    {
+      "old": "src/Besm6.Assembler/AssemblyDialectDetector.cs",
+      "new": "src/Besm6.Assembler/Detection/AssemblyDialectDetector.cs",
+      "sha256": "8163f6f006b71910927adddf19e8c023c185dded61b25ee9f860a9c173e65045"
+    },
+    {
+      "old": "src/Besm6.Assembler/AutoDetectingAssembler.cs",
+      "new": "src/Besm6.Assembler/Detection/AutoDetectingAssembler.cs",
+      "sha256": "1f675e800dd31aa822b3cebccde7c04eb4a974bc240f2b9a7679ce4156fb88bb"
+    },
+    {
+      "old": "src/Besm6.Assembler/Disassembler.cs",
+      "new": "src/Besm6.Assembler/Disassembly/Disassembler.cs",
+      "sha256": "a326b6fff40c3f5b1cedddccc7c52ae2ef87f18a02cbc08a221e9e4d606a9231"
+    },
+    {
+      "old": "src/Besm6.BitVisualizer/BitPattern.cs",
+      "new": "src/Besm6.BitVisualizer/Model/BitPattern.cs",
+      "sha256": "4b084926628e4a8b859095c17348b705eef1701b94bc0cca987c60788bf3b9a9"
+    },
+    {
+      "old": "src/Besm6.BitVisualizer/BitField.cs",
+      "new": "src/Besm6.BitVisualizer/Model/BitField.cs",
+      "sha256": "3b7f695b2ab2470f5cc470e53cdb44258cc10d34760a0872ffb6039916030772"
+    },
+    {
+      "old": "src/Besm6.BitVisualizer/CalculationReport.cs",
+      "new": "src/Besm6.BitVisualizer/Model/CalculationReport.cs",
+      "sha256": "85254390de1c271aa61eb06166337330af7db297cceccc062f94d0ae842cd349"
+    },
+    {
+      "old": "src/Besm6.BitVisualizer/IntegerDecoder.cs",
+      "new": "src/Besm6.BitVisualizer/Decoding/IntegerDecoder.cs",
+      "sha256": "6a5b9db5a6a01ae815817561d8e1621f5ff6d505a7e2ba0aa1b9ad6cf9abbc92"
+    },
+    {
+      "old": "src/Besm6.BitVisualizer/Ieee754Decoder.cs",
+      "new": "src/Besm6.BitVisualizer/Decoding/Ieee754Decoder.cs",
+      "sha256": "ae11c28de340b6ba3bd70da71162dfc14d112bd4b733ff06e918a260acedc091"
+    },
+    {
+      "old": "src/Besm6.BitVisualizer/Besm6InstructionDecoder.cs",
+      "new": "src/Besm6.BitVisualizer/Decoding/Besm6InstructionDecoder.cs",
+      "sha256": "32a292c3c989ebb7a96faa4f71e346c6cfaaeb8c43b5258d6a939a5e188747a4"
+    },
+    {
+      "old": "src/Besm6.BitVisualizer/Besm6FloatDecoder.cs",
+      "new": "src/Besm6.BitVisualizer/Decoding/Besm6FloatDecoder.cs",
+      "sha256": "90ca4d978d94b0aab91e2f39804c3bf90ec512640a995fbf021f0890ba774977"
+    },
+    {
+      "old": "src/Besm6.BitVisualizer/RadixConverter.cs",
+      "new": "src/Besm6.BitVisualizer/Formatting/RadixConverter.cs",
+      "sha256": "5b6fb0d4ed5604a566797efd2039504139c93fc9ed5831270178e46f2dbf8949"
+    },
+    {
+      "old": "src/Besm6.BitVisualizer/OpcodeInfoCatalog.cs",
+      "new": "src/Besm6.BitVisualizer/Isa/OpcodeInfoCatalog.cs",
+      "sha256": "6f3cc2e887f9114ad3646b781758770f3a186c98630bea7ae9485653d6dd4c99"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/ArithmeticBufferTransferTiming.cs",
+      "new": "src/Besm6.Runtime/Timing/Arithmetic/ArithmeticBufferTransferTiming.cs",
+      "sha256": "c90f9c0bd7e77ace057a5e5637f822062df8295309d2a171e6d7696342697283"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/ArithmeticCommandBuffer.cs",
+      "new": "src/Besm6.Runtime/Timing/Arithmetic/ArithmeticCommandBuffer.cs",
+      "sha256": "e4fbde220142e8bc5a94faa374ef576cf861c1a35ac931eb6460455a755ce852"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/ArithmeticCommandEncoding.cs",
+      "new": "src/Besm6.Runtime/Timing/Arithmetic/ArithmeticCommandEncoding.cs",
+      "sha256": "b00194c05f86df97240360387abba428e5a71363200d99fbd16d1dbf99cae7ec"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/ArithmeticCommandWord.cs",
+      "new": "src/Besm6.Runtime/Timing/Arithmetic/ArithmeticCommandWord.cs",
+      "sha256": "d131a9327c135437b65eb5351b82b42226ea6f1e7f6bb7fed52d9159e5641ff6"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/ArithmeticErrorControl.cs",
+      "new": "src/Besm6.Runtime/Timing/Arithmetic/ArithmeticErrorControl.cs",
+      "sha256": "31c2a7df0553e1b1fb38411615795c13463cf0d6c1c0d5670970ec68757be1ae"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/ArithmeticFixedCompletionTiming.cs",
+      "new": "src/Besm6.Runtime/Timing/Arithmetic/ArithmeticFixedCompletionTiming.cs",
+      "sha256": "6d832468a6759a3c61c243533e8730778645a074375c40d4ae192f407e32d12e"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/ArithmeticPipelineControl.cs",
+      "new": "src/Besm6.Runtime/Timing/Arithmetic/ArithmeticPipelineControl.cs",
+      "sha256": "c7a71d5dae6c115c99db93814ad1a5c06cc98bc12b27b3684c95f1ccf37f509b"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/ArithmeticStageController.cs",
+      "new": "src/Besm6.Runtime/Timing/Arithmetic/ArithmeticStageController.cs",
+      "sha256": "fad1259dfbec231d61bb65f18bd459b24ed3eee02db15c56c239028a14641112"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/ArithmeticUnitStages.cs",
+      "new": "src/Besm6.Runtime/Timing/Arithmetic/ArithmeticUnitStages.cs",
+      "sha256": "b4d61e610468e5b961c404ef0ed68545b6f97a9313fdab353d63c72407e93fb1"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/BookInstructionTiming.cs",
+      "new": "src/Besm6.Runtime/Timing/Specifications/BookInstructionTiming.cs",
+      "sha256": "09bd7203a1cbf510b829bff9930aa427f5416d5f494520fd22c5a28210c92073"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/DivisionControl.cs",
+      "new": "src/Besm6.Runtime/Timing/Arithmetic/Division/DivisionControl.cs",
+      "sha256": "f41bad5799f6ce12c789089212bfb1980a9d4e47f3b6eb72a769c98295705c82"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/DivisionQuotientParts.cs",
+      "new": "src/Besm6.Runtime/Timing/Arithmetic/Division/DivisionQuotientParts.cs",
+      "sha256": "adaee59453b6dc91d4394f456c5c8355c683a65e1bded295e60fe56985345ff2"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/HardwareResourceCalendar.cs",
+      "new": "src/Besm6.Runtime/Timing/Calendar/HardwareResourceCalendar.cs",
+      "sha256": "83c63e7911151c0d611c7a3e99d3e0130e80a98d5b5479acc4ebec7d68e68de8"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/HardwareTime.cs",
+      "new": "src/Besm6.Runtime/Timing/Calendar/HardwareTime.cs",
+      "sha256": "af3b5431a3756ed0f5c694d7beca319790c6b520f2bdaec27645a61372767fa7"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/HardwareTimeline.cs",
+      "new": "src/Besm6.Runtime/Timing/Calendar/HardwareTimeline.cs",
+      "sha256": "202f2d3565a38ae7bccfd06edb2e085d13aba7e3a05191b924ab97103a4f9fce"
+    },
+    {
+      "old": "src/Besm6.Runtime/Timing/MramReadTiming.cs",
+      "new": "src/Besm6.Runtime/Timing/Memory/MramReadTiming.cs",
+      "sha256": "7a79b83ddba5d757e21fd4366a425e611b1f03466f238646306fc0519918656b"
+    }
+  ],
+  "date": "2026-10-10",
+  "libraries": 5,
+  "byte_identical": true,
+  "namespaces_changed": false,
+  "api_changed": false,
+  "tests": {
+    "passed": 2932,
+    "failed": 0,
+    "existing_skips": 3,
+    "cern_active": 397,
+    "golden_passed": 3,
+    "projects": [
+      {
+        "project": "Besm6.Architecture.Tests",
+        "passed": 40,
+        "failed": 0,
+        "existing_skips": 0,
+        "trx_sha256": "5d951cecba07b5b0afe94b7f80b8ee4932de521b278386d54ea50110993f199e"
+      },
+      {
+        "project": "Besm6.Assembler.Tests",
+        "passed": 29,
+        "failed": 0,
+        "existing_skips": 0,
+        "trx_sha256": "ae71c7d549f6acab1f5a34d2df49d8ced40d80a3165fc7ab014774730e40100f"
+      },
+      {
+        "project": "Besm6.BitVisualizer.Tests",
+        "passed": 57,
+        "failed": 0,
+        "existing_skips": 0,
+        "trx_sha256": "1e7438b4d59cc196cba4f799e2784b73ffb71bb70103dd12de037cbf8d0193d3"
+      },
+      {
+        "project": "Besm6.BitVisualizer.WinForms.Tests",
+        "passed": 19,
+        "failed": 0,
+        "existing_skips": 0,
+        "trx_sha256": "faff419ea03be5e633f2a5b6417b1b951f0c131d49a7ee5f76852c525537665b"
+      },
+      {
+        "project": "Besm6.Cli.Tests",
+        "passed": 15,
+        "failed": 0,
+        "existing_skips": 0,
+        "trx_sha256": "e9d5d2b4247e5b6cf703435d3c535693ff3fa5b2229c94fcc157b4ff8f819d4a"
+      },
+      {
+        "project": "Besm6.Integration.Tests",
+        "passed": 426,
+        "failed": 0,
+        "existing_skips": 3,
+        "trx_sha256": "314eec27ef8ccfee97816e932b1238ae68b6c340705ddc1e01b397bd1b66c684"
+      },
+      {
+        "project": "Besm6.Processor.Tests",
+        "passed": 1610,
+        "failed": 0,
+        "existing_skips": 0,
+        "trx_sha256": "632cf6400263ea3bd3d1fa59e39535516d89714b42e71bd5dfd93448ac808320"
+      },
+      {
+        "project": "Besm6.Runtime.Tests",
+        "passed": 692,
+        "failed": 0,
+        "existing_skips": 0,
+        "trx_sha256": "e8f736d6f6c6444d9fb06be82b88a5553526c23c752f072c7bb90b10f5c835b6"
+      },
+      {
+        "project": "Besm6.Tui.Tests",
+        "passed": 44,
+        "failed": 0,
+        "existing_skips": 0,
+        "trx_sha256": "9630b50d165df6c7a9ae4e11858758cb3300ef281bf2de91b7bfa652b79b4030"
+      }
+    ]
+  },
+  "performance": {
+    "new_measurements": false,
+    "reason": "Source-only moves with byte-identical content; no algorithm change."
+  },
+  "stage5": {
+    "remaining_estimated_hours": 141,
+    "completion_by_estimated_work_percent": 29.5,
+    "complete": false
+  }
+}

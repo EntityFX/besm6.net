@@ -214,7 +214,7 @@ trampoline-заглушек. Например, по адресу `0o77345` в т
 3. `docs/monsys-kernel.hl.txt` — полный высокоуровневый листинг.
 4. `docs/monsys-kernel.listing.txt` — аннотированный машинный листинг.
 5. `docs/monsys-kernel.md` — карта ядра.
-6. `src/Besm6.Processor/ControlInstructionExecutor.cs` — семантика переходов.
+6. `src/Besm6.Processor/Execution/ControlInstructionExecutor.cs` — семантика переходов.
 
 по адресу `C + M(2)`. Это **программная задержка**: на БЭСМ-6 нет команды
 «ждать», длительность задаётся числом итераций.
