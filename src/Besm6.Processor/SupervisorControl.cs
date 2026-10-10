@@ -2,7 +2,7 @@ namespace Besm6.Core;
 
 /// <summary>
 /// Untimed supervisor state from TO-8 §§3.55–3.60, 6.16, 6.35 and 7.5–7.21.
-/// This is not a model of overlapped RK/RR acceptance or asynchronous AU execution.
+/// This is not a model of overlapped RK/RR acceptance or asynchronous arithmetic unit execution.
 /// </summary>
 public sealed class SupervisorControl
 {

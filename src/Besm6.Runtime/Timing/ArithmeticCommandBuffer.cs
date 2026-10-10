@@ -1,7 +1,8 @@
 namespace Besm6.Runtime.Timing;
 
 /// <summary>
-/// Four 17-bit BAK command registers, TO-3 edition 1-65, §§3.3–3.6,
+/// БАК — буфер арифметических команд.
+/// Four 17-bit arithmetic command registers, TO-3 edition 1-65, §§3.3–3.6,
 /// sheets31–33. A slot is released by operand acceptance (PVR), not by
 /// arithmetic completion (IZOP). No delay or opcode mapping is inferred here.
 /// This component is not attached to the functional processor yet.
@@ -18,11 +19,11 @@ public sealed class ArithmeticCommandBuffer
     public int ReceiveRegister => _receive;
     public int IssueRegister => _issue;
 
-    /// <summary>PBАК admission; false leaves a full buffer unchanged.</summary>
+    /// <summary>Command admission; false leaves a full buffer unchanged.</summary>
     public bool TryReceive(uint command)
     {
         if ((command & ~CommandMask) != 0)
-            throw new ArgumentOutOfRangeException(nameof(command), "BAK commands have 17 bits.");
+            throw new ArgumentOutOfRangeException(nameof(command), "Arithmetic buffer commands have 17 bits.");
         if (!CanReceive) return false;
         _commands[_receive] = command;
         _receive = (_receive + 1) % Capacity;
@@ -39,13 +40,13 @@ public sealed class ArithmeticCommandBuffer
 
     /// <summary>
     /// The caller asserts that PVR has actually occurred. Operand readiness and
-    /// RPK permission are separate prerequisites supplied by the AU model.
+    /// RPK permission are separate prerequisites supplied by the arithmetic unit model.
     /// Returns the accepted code and advances the issue ring exactly once.
     /// </summary>
     public uint AcceptOperand()
     {
         if (!TryPeek(out uint command))
-            throw new InvalidOperationException("PVR requires a command in the selected BAK register.");
+            throw new InvalidOperationException("PVR requires a command in the selected arithmetic command register.");
         _commands[_issue] = 0;
         _issue = (_issue + 1) % Capacity;
         Count--;

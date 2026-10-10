@@ -1,6 +1,7 @@
 namespace Besm6.Runtime.Timing;
 
 /// <summary>
+/// АУ — арифметическое устройство.
 /// TO-3 edition1-65, §3.7, sheet37: an already-ready BRUS operand takes
 /// three cycles to request/accept; after the waiting stage is released by
 /// GBRCh, acceptance follows after one and a half cycles. These are distinct

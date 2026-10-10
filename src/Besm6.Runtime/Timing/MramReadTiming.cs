@@ -5,6 +5,7 @@ public readonly record struct MramReadReservation(int Bank, HardwareInstant Star
     HardwareInstant DataReady, HardwareInstant BankAvailable);
 
 /// <summary>
+/// МОЗУ — магнитное оперативное запоминающее устройство; English code name: MRAM.
 /// Classical eight-bank read reservation, TO-4 §1.1–1.2, sheet3. The source
 /// specifies a minimum2us bank cycle and approximately0.9us data return.
 /// No request queue/arbitration, write visibility or CPU integration is inferred.

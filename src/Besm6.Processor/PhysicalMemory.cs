@@ -5,6 +5,7 @@ namespace Besm6.Core;
 public enum MemoryConfiguration { Classical32K, Simh512K }
 
 /// <summary>
+/// MRAM storage: МОЗУ — магнитное оперативное запоминающее устройство.
 /// Untimed physical storage. Default 32K follows TO-8 §4.1, §4.5–4.8;
 /// the explicit SIMH configuration supplies expanded capacity only.
 /// Deliberately not IMemory: command fetch and operand access have different control.
