@@ -20,8 +20,8 @@ public sealed class HardwareCallbackException : Exception
 }
 
 /// <summary>
-/// Deterministic event calendar in nanoseconds. This opt-in infrastructure is not
-/// attached to MachineCore, does not wait on host clocks, and does not reinterpret
+/// Deterministic event calendar in nanoseconds. It may be owned by MachineCore,
+/// does not wait on host clocks, and does not reinterpret
 /// SimulationClock. Equal-time callbacks follow registration order.
 /// </summary>
 public sealed class HardwareTimeline
@@ -30,6 +30,9 @@ public sealed class HardwareTimeline
     private readonly HashSet<ulong> _pending = new();
     private ulong _nextId = 1;
     private bool _advancing;
+    internal bool IsAdvancing => _advancing;
+    internal bool AdvancementProhibited { get; set; }
+    internal Action<bool>? AdvanceStateChanged { get; set; }
     public HardwareInstant Now { get; private set; }
     public HardwareInstant? NextEventTime { get; private set; }
 
@@ -73,12 +76,15 @@ public sealed class HardwareTimeline
 
     public void AdvanceTo(HardwareInstant time)
     {
+        if (AdvancementProhibited)
+            throw new InvalidOperationException("Hardware advancement inside another machine scheduler is not allowed.");
         if (_advancing) throw new InvalidOperationException("Nested hardware-time advancement is not allowed.");
         if (time.Nanoseconds < Now.Nanoseconds)
             throw new ArgumentOutOfRangeException(nameof(time), "Hardware time cannot move backward.");
         _advancing = true;
         try
         {
+            AdvanceStateChanged?.Invoke(true);
             while (NextEventTime is { } next && next.Nanoseconds <= time.Nanoseconds)
             {
                 var ev = _queue.Dequeue();
@@ -90,6 +96,10 @@ public sealed class HardwareTimeline
             }
             Now = time;
         }
-        finally { _advancing = false; }
+        finally
+        {
+            _advancing = false;
+            AdvanceStateChanged?.Invoke(false);
+        }
     }
 }

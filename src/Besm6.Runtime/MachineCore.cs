@@ -38,6 +38,32 @@ namespace Besm6.Runtime
 
         private readonly SimulationClock _clock = new();
         private readonly EventScheduler _scheduler;
+        private Timing.HardwareTimeline? _hardwareTimeline;
+
+        /// <summary>
+        /// Lazily created nanosecond calendar owned by this machine. Explicit
+        /// advancement only; instruction ticks and existing pacing are unchanged.
+        /// CPU reset preserves this calendar and its pending operations.
+        /// </summary>
+        public Timing.HardwareTimeline HardwareTimeline
+        {
+            get
+            {
+                if (_hardwareTimeline is not null) return _hardwareTimeline;
+                var timeline = new Timing.HardwareTimeline
+                {
+                    AdvancementProhibited = _scheduler.IsAdvancing,
+                    AdvanceStateChanged = active =>
+                    {
+                        Cpu.ExecutionProhibited = active;
+                        _scheduler.AdvancementProhibited = active;
+                        _clock.AdvancementProhibited = active;
+                    }
+                };
+                _hardwareTimeline = timeline;
+                return timeline;
+            }
+        }
 
         /// <summary>Модельные часы (read-only вид уровня B).</summary>
         public ISimulationClock Clock => _clock;
@@ -189,7 +215,11 @@ namespace Besm6.Runtime
 
             // B1: планировщик событий привязан к тем же модельным часам машины.
             _scheduler = new EventScheduler(_clock);
-            _scheduler.AdvanceStateChanged = active => Cpu.ExecutionProhibited = active;
+            _scheduler.AdvanceStateChanged = active =>
+            {
+                Cpu.ExecutionProhibited = active;
+                if (_hardwareTimeline is { } timeline) timeline.AdvancementProhibited = active;
+            };
             if (Cpu.Supervisor is { } supervisor)
             {
                 SupervisorIo = new SupervisorIoController(MappedMemory!, _scheduler, () => { });
@@ -270,7 +300,7 @@ namespace Besm6.Runtime
 
         internal void EnsureExecutionAllowed()
         {
-            if (_scheduler.IsAdvancing)
+            if (Cpu.ExecutionProhibited)
                 throw new InvalidOperationException("Machine execution inside a scheduler callback is not allowed.");
         }
 

@@ -92,6 +92,7 @@ namespace Besm6.Runtime
         private ulong _nextSeq;
         internal ulong? NextEventTick { get; private set; }
         internal bool IsAdvancing { get; private set; }
+        internal bool AdvancementProhibited { get; set; }
         internal Action<bool>? AdvanceStateChanged { get; set; }
 
         public EventScheduler() : this(new SimulationClock()) { }
@@ -151,6 +152,8 @@ namespace Besm6.Runtime
 
         private void AdvanceToCore(ulong tick, bool allowOverdue)
         {
+            if (AdvancementProhibited)
+                throw new InvalidOperationException("Scheduler advancement inside a hardware callback is not allowed.");
             if (IsAdvancing)
                 throw new InvalidOperationException("Nested scheduler advancement is not allowed.");
             if (tick < _clock.Tick)
