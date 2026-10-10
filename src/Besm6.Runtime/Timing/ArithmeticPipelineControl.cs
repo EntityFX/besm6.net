@@ -1,6 +1,7 @@
 namespace Besm6.Runtime.Timing;
 
 /// <summary>
+/// АУ — арифметическое устройство.
 /// Logical ordering of the TO-3 §3.2 signals: operand acceptance PVR needs
 /// RPK and a ready operand; SPОP needs preparation and previous IZOP.
 /// RPK may arrive before IZOP. The caller supplies actual signal instants;
@@ -17,7 +18,7 @@ public sealed class ArithmeticPipelineControl
     /// <summary>RPK indication; initial permission is not inferred from construction.</summary>
     public void GrantCommandPermission() => CommandPermission = true;
 
-    /// <summary>PVR: frees the BAK register only after both prerequisites hold.</summary>
+    /// <summary>PVR: frees the arithmetic command register after both prerequisites hold.</summary>
     public bool TryAcceptOperand(bool operandReady)
     {
         if (!CommandPermission || !operandReady || PreparedCommand.HasValue ||

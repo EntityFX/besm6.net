@@ -1,6 +1,14 @@
 namespace Besm6.Runtime.Timing;
 
-public enum HardwareResourceKind { ControlUnit, ArithmeticUnit, MemoryBank, CommandBuffer, WriteBuffer, IoChannel }
+public enum HardwareResourceKind
+{
+    ControlUnit,
+    ArithmeticUnit, // АУ — арифметическое устройство.
+    MemoryBank, // Банк МОЗУ — магнитного оперативного запоминающего устройства.
+    CommandBuffer,
+    WriteBuffer,
+    IoChannel
+}
 public readonly record struct HardwareResource(HardwareResourceKind Kind, int Index = 0);
 public readonly record struct HardwareReservation(HardwareInstant Start, HardwareInstant Finish);
 

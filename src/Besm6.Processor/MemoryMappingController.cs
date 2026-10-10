@@ -3,7 +3,7 @@ namespace Besm6.Core;
 /// <summary>
 /// Host-coordinated assignment change for the functional physical-address buffers.
 /// Validates the whole change, publishes pending writes under the old assignment,
-/// then changes pages. This is not ZpR execution, AU serialization or a cold reset.
+/// then changes pages. This is not ZpR execution, arithmetic unit serialization or a cold reset.
 /// </summary>
 public sealed class MemoryMappingController
 {

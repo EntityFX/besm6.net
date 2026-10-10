@@ -27,6 +27,15 @@ SHA256 и границы утверждений: [аудит](../reports/hardwar
 
 ## API и единицы
 
+Имена в коде английские, историческое русское название указано коротким
+комментарием у определения:
+
+| Русский термин | Имя в коде |
+|---|---|
+| БАК — буфер арифметических команд | `ArithmeticCommandBuffer` |
+| АУ — арифметическое устройство | `ArithmeticUnit`, существующий фасад `Alu` |
+| МОЗУ — магнитное оперативное запоминающее устройство | `MramReadTiming`, физическое хранилище `PhysicalMemory` |
+
 - `HardwareInstant` — абсолютные наносекунды отдельной шкалы.
 - `HardwareDuration` — длительность в наносекундах. Сложение проверяет
   переполнение; отрицательный интервал отклоняется.
@@ -57,10 +66,10 @@ SHA256 и границы утверждений: [аудит](../reports/hardwar
 using Besm6.Runtime.Timing;
 
 var timeline = new HardwareTimeline();
-var au = new HardwareResource(HardwareResourceKind.ArithmeticUnit);
-var resources = new HardwareResourceCalendar(new[] { au });
+var arithmeticUnit = new HardwareResource(HardwareResourceKind.ArithmeticUnit); // АУ.
+var resources = new HardwareResourceCalendar(new[] { arithmeticUnit });
 // Синтетический пример API, не расчёт длительности команды БЭСМ-6.
-var reservation = resources.Reserve(au, timeline.Now, new HardwareDuration(550));
+var reservation = resources.Reserve(arithmeticUnit, timeline.Now, new HardwareDuration(550));
 int published = 0;
 timeline.ScheduleAt(reservation.Finish, () => published = 42);
 timeline.AdvanceTo(reservation.Finish);

@@ -107,14 +107,14 @@ public sealed class HardwareTimingTests
     [TestMethod]
     public void ExplicitResourcesOverlapAndDependenciesDelayPublication()
     {
-        var au = new HardwareResource(HardwareResourceKind.ArithmeticUnit);
+        var arithmeticUnit = new HardwareResource(HardwareResourceKind.ArithmeticUnit);
         var bank = new HardwareResource(HardwareResourceKind.MemoryBank, 3);
-        var calendar = new HardwareResourceCalendar(new[] { au, bank });
+        var calendar = new HardwareResourceCalendar(new[] { arithmeticUnit, bank });
         var timeline = new HardwareTimeline();
         // Synthetic durations: this test proves the primitive, not BESM-6 arbitration.
-        var first = calendar.Reserve(au, new(0), new(550));
+        var first = calendar.Reserve(arithmeticUnit, new(0), new(550));
         var parallel = calendar.Reserve(bank, new(0), new(2000));
-        var dependent = calendar.Reserve(au, parallel.Finish, new(330));
+        var dependent = calendar.Reserve(arithmeticUnit, parallel.Finish, new(330));
         Assert.AreEqual(new HardwareReservation(new(0), new(550)), first);
         Assert.AreEqual(new HardwareReservation(new(0), new(2000)), parallel);
         Assert.AreEqual(new HardwareReservation(new(2000), new(2330)), dependent);
