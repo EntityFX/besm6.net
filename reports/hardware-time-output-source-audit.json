@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-10",
+  "base_commit": "35856a9",
+  "source": "TO-3 edition 1-65, sections 3.22-3.23, sheets 60-61",
+  "scan": {
+    "path": "docs/sources/hardware-time/arithmetic-pdf-32.png",
+    "sha256": "a42dbfa66937a597b2f4d22591422bc233e29d13d1834a2d950d7d696764db4e"
+  },
+  "claims": [
+    "IZOP completes operation independently of a successor being prepared",
+    "With no overflow and a prepared successor, SPOP may coincide with IZOP",
+    "Rounding overlay on output differs from the stored low accumulator bit",
+    "Transfer of a low-register unit during left normalization removes the rounding requirement"
+  ],
+  "implementation": "One shared Evaluate algorithm with deferred register publication and deferred overflow; legacy caller publishes immediately",
+  "not_proven": [
+    "Physical register microsequence",
+    "Universal time from IZOP to rounded-bit storage",
+    "Operand-dependent instruction duration",
+    "CPU timing integration"
+  ]
+}
