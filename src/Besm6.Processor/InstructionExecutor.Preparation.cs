@@ -39,9 +39,12 @@ public sealed partial class InstructionExecutor
     private uint _preparationStart;
     private bool _preparationRight;
     private bool _terminalPreparation;
+    private Exception? _preparationFailure;
     private bool _terminalStopped;
     private bool _terminalCompleted;
     internal bool HasPreparedInstruction => _preparationActive;
+    internal bool IsPreparedInstructionActive(in PreparedInstruction instruction) =>
+        _preparationActive && instruction.BelongsTo(this, _preparationGeneration);
 
     private void EnsureNoPreparedInstruction()
     {
@@ -64,6 +67,7 @@ public sealed partial class InstructionExecutor
         _preparationActive = true;
         _preparationTransition = true;
         _terminalPreparation = false;
+        _preparationFailure = null;
         _processor.LastStepCompleted = true;
         try
         {
@@ -81,9 +85,9 @@ public sealed partial class InstructionExecutor
             }
             catch (Exception failure) when (supervisor is not null && IsSupervisorGuestFailure(failure))
             {
-                _terminalStopped = HandleSupervisorFailure(supervisor, failure,
-                    _preparationStart, _preparationRight);
-                _terminalCompleted = _processor.LastStepCompleted;
+                // A model fetch records the guest cause. Delivering its interrupt
+                // belongs to the completion boundary, not the host fetch call.
+                _preparationFailure = failure;
                 _terminalPreparation = true;
             }
             catch (Processor.DebugWatchAbortException)
@@ -95,7 +99,7 @@ public sealed partial class InstructionExecutor
             if (!_preparationActive || generation != _preparationGeneration)
                 throw new InvalidOperationException("CPU preparation was invalidated during fetch.");
             _processor.LastStepCompleted = false;
-            return new(this, generation, _preparationStart, _preparationRight,
+            return new(this, generation, ArchitectureConstants.NormalizeAddress(_preparationStart), _preparationRight,
                 _terminalPreparation ? null : _prepared.Instruction);
         }
         catch
@@ -126,6 +130,9 @@ public sealed partial class InstructionExecutor
         {
             if (_terminalPreparation)
             {
+                if (_preparationFailure is { } failure)
+                    return HandleSupervisorFailure(_processor.Supervisor!, failure,
+                        _preparationStart, _preparationRight);
                 _processor.LastStepCompleted = _terminalCompleted;
                 return _terminalStopped;
             }
@@ -155,6 +162,7 @@ public sealed partial class InstructionExecutor
         {
             _preparationActive = false;
             _preparationTransition = false;
+            _preparationFailure = null;
         }
     }
 
@@ -175,5 +183,6 @@ public sealed partial class InstructionExecutor
         _preparationActive = false;
         _prepared = default;
         _terminalPreparation = false;
+        _preparationFailure = null;
     }
 }

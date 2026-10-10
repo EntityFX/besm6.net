@@ -66,8 +66,13 @@ namespace Besm6.Runtime
                 model.Timeline.AdvanceStateChanged = active =>
                 {
                     Cpu.ExecutionProhibited = active;
-                    _simulation.Scheduler.AdvancementProhibited = active;
-                    _simulation.Clock.AdvancementProhibited = active;
+                    _simulation.Scheduler.AdvancementProhibited = active || model.IsDriving;
+                    _simulation.Clock.AdvancementProhibited = active || model.IsDriving;
+                };
+                model.ExecutionStateChanged = active =>
+                {
+                    _simulation.Scheduler.AdvancementProhibited = active || model.Timeline.IsAdvancing;
+                    _simulation.Clock.AdvancementProhibited = active || model.Timeline.IsAdvancing;
                 };
                 return _hardwareModel = model;
             }

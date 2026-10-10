@@ -74,7 +74,20 @@ public sealed class HardwareTimeline
         NextEventTime = null;
     }
 
-    public void AdvanceTo(HardwareInstant time)
+    public void AdvanceTo(HardwareInstant time) => AdvanceToCore(time, null);
+
+    /// <summary>
+    /// Release the calendar's callback guards at an execution boundary. Remaining
+    /// callbacks at the same instant keep their order and remain queued. The model
+    /// can then complete a shared CPU command outside a calendar callback.
+    /// </summary>
+    internal void AdvanceUntil(HardwareInstant time, Func<bool> boundary)
+    {
+        ArgumentNullException.ThrowIfNull(boundary);
+        AdvanceToCore(time, boundary);
+    }
+
+    private void AdvanceToCore(HardwareInstant time, Func<bool>? boundary)
     {
         if (AdvancementProhibited)
             throw new InvalidOperationException("Hardware advancement inside another machine scheduler is not allowed.");
@@ -85,6 +98,7 @@ public sealed class HardwareTimeline
         try
         {
             AdvanceStateChanged?.Invoke(true);
+            if (boundary?.Invoke() == true) return;
             while (NextEventTime is { } next && next.Nanoseconds <= time.Nanoseconds)
             {
                 var ev = _queue.Dequeue();
@@ -93,6 +107,7 @@ public sealed class HardwareTimeline
                 Now = next;
                 try { ev.Callback(); }
                 catch (Exception cause) { throw new HardwareCallbackException(Now, new(this, ev.Id), cause); }
+                if (boundary?.Invoke() == true) return;
             }
             Now = time;
         }

@@ -300,6 +300,8 @@ namespace Besm6.Core
 
         internal InstructionExecutor.PreparedInstruction PrepareInstruction() => _executor.PrepareInstruction();
         internal bool HasPreparedInstruction => _executor.HasPreparedInstruction;
+        internal bool IsPreparedInstructionActive(in InstructionExecutor.PreparedInstruction instruction) =>
+            _executor.IsPreparedInstructionActive(in instruction);
         internal bool CompleteInstruction(in InstructionExecutor.PreparedInstruction instruction) =>
             _executor.CompleteInstruction(in instruction);
         internal void CancelInstruction(in InstructionExecutor.PreparedInstruction instruction) =>
