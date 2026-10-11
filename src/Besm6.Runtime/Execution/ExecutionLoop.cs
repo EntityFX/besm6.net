@@ -16,13 +16,6 @@ namespace Besm6.Runtime
         private readonly Action<string>? _output;
         private readonly Action<string>? _progressOutput;
 
-        private CanonicalTraceWriter? _canonicalTraceWriter;
-        private DiagnosticTraceWriter? _diagnosticTraceWriter;
-        private Action<InstructionTraceRecord>? _attachedTypedInstructionTrace;
-        private Action<int, ulong>? _attachedInstructionTrace;
-        private Action<uint, bool, uint, uint>? _attachedCppInstructionTrace;
-        private Action<string, ulong>? _attachedRegisterTrace;
-
         public long InstructionLimit { get; set; } = 1_000_000_000L;
         /// <summary>Optional host safety bound, independent of successfully completed guest commands.</summary>
         public long? StepAttemptLimit { get; set; }
@@ -46,8 +39,8 @@ namespace Besm6.Runtime
         public bool ProgressEnabled { get; set; }
         public ExecutionStatistics? Statistics { get; private set; }
         public Action<Opcode>? InstructionExecuted { get; set; }
-        private long _completedInstructions;
-        private long _totalCycles;
+        private ExecutionAccountingSession? _accounting;
+        private long TotalCycles => _accounting?.TotalCycles ?? 0;
 
         public Action<int, ulong>? InstructionTrace { get; set; }
         public Action<uint, bool, uint, uint>? CppInstructionTrace { get; set; }
@@ -72,7 +65,7 @@ namespace Besm6.Runtime
 
         // STIME/CTIME (счетное время): the documented resolution is 0.02 s.
         // Hosted Dubna has one logical CPU clock; this does not model device overlap.
-        private double ReadGuestTimeSeconds() => GuestClockEnabled ? (_totalCycles / 200_000) * 0.02 : 0;
+        private double ReadGuestTimeSeconds() => GuestClockEnabled ? (TotalCycles / 200_000) * 0.02 : 0;
 
         internal ExecutionLoop(MachineCore machine) => _machine = machine;
 
@@ -84,12 +77,11 @@ namespace Besm6.Runtime
             _machine.EnsureExecutionAllowed();
             if (StepAttemptLimit is < 1) throw new ArgumentOutOfRangeException(nameof(StepAttemptLimit));
             Statistics = null;
-            _completedInstructions = 0;
-            _totalCycles = 0;
             bool countCycles = Speed == ExecutionSpeed.Original || CollectStatistics || GuestClockEnabled;
-            Action<Opcode>? counter = countCycles ? ObserveExecuted : null;
+            _accounting = countCycles ? new ExecutionAccountingSession() : null;
+            Action<Opcode>? counter = _accounting is { } accounting ? accounting.Observe : null;
             Action<Opcode>? observer = InstructionExecuted;
-            bool counterAttached = false, observerAttached = false;
+            var diagnostics = new ExecutionDiagnosticsSession(_machine, this);
             var stopwatch = countCycles || WallClockLimitMs > 0 ? new Stopwatch() : null;
             long allocatedBefore = CollectStatistics ? GC.GetAllocatedBytesForCurrentThread() : 0;
             int gen0Before = CollectStatistics ? GC.CollectionCount(0) : 0;
@@ -97,100 +89,26 @@ namespace Besm6.Runtime
             try
             {
                 _machine.Cpu.InstructionCacheEnabled = Speed == ExecutionSpeed.Max;
-                AttachFileTraceWriters();
-                _machine.Cpu.InstructionExecuted += counter;
-                counterAttached = true;
-                _machine.Cpu.InstructionExecuted += observer;
-                observerAttached = true;
-                return RunCore(stopwatch);
+                diagnostics.AttachFileTraceWriters();
+                diagnostics.AttachInstructionObservers(counter, observer);
+                return RunCore(stopwatch, diagnostics);
             }
             finally
             {
                 stopwatch?.Stop();
                 if (countCycles)
-                    Statistics = new ExecutionStatistics(Speed, _completedInstructions, _totalCycles,
+                    Statistics = new ExecutionStatistics(Speed, _accounting!.TotalInstructions, TotalCycles,
                         stopwatch!.Elapsed.TotalSeconds,
                         CollectStatistics ? GC.GetAllocatedBytesForCurrentThread() - allocatedBefore : 0,
                         CollectStatistics ? GC.CollectionCount(0) - gen0Before : 0);
-                if (counterAttached) _machine.Cpu.InstructionExecuted -= counter;
-                if (observerAttached) _machine.Cpu.InstructionExecuted -= observer;
-                // Remove only this loop's subscriptions. Scheduler callbacks may
-                // deliberately install, replace or remove the caller's hooks.
-                if (_attachedInstructionTrace is not null)
-                    _machine.StepTrace -= _attachedInstructionTrace;
-                if (_attachedCppInstructionTrace is not null)
-                    _machine.Cpu.TraceInstruction -= _attachedCppInstructionTrace;
-                if (_attachedRegisterTrace is not null)
-                    _machine.RegisterTrace -= _attachedRegisterTrace;
-                _attachedInstructionTrace = null;
-                _attachedCppInstructionTrace = null;
-                _attachedRegisterTrace = null;
+                diagnostics.DetachExecutionObservers();
                 _machine.Cpu.InstructionCacheEnabled = previousInstructionCache;
                 try { _extracode?.FinishOutput(); }
-                finally { DetachFileTraceWriters(); }
+                finally { diagnostics.Dispose(); }
             }
         }
 
-        private void ObserveExecuted(Opcode opcode)
-        {
-            _completedInstructions++;
-            _totalCycles += Besm6Timing.CyclesOf(opcode);
-        }
-
-        private void AttachFileTraceWriters()
-        {
-            string? canonicalPath = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE");
-            if (!string.IsNullOrWhiteSpace(canonicalPath))
-            {
-                ulong limit = ulong.MaxValue;
-                string? value = Environment.GetEnvironmentVariable("BESM6_CANON_TRACE_LIMIT");
-                if (ulong.TryParse(value, out ulong parsedLimit))
-                    limit = parsedLimit;
-
-                _canonicalTraceWriter = new CanonicalTraceWriter(canonicalPath, limit);
-                _machine.Cpu.InstructionTrace += _canonicalTraceWriter.Write;
-            }
-
-            if (TypedInstructionTrace is not null)
-            {
-                // Профайлер опкодов (Runtime/Profiling): только наблюдение, не влияет на семантику.
-                _machine.Cpu.InstructionTrace += TypedInstructionTrace;
-                _attachedTypedInstructionTrace = TypedInstructionTrace;
-            }
-
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BESM6_INSTR_TRACE")))
-            {
-                string path = Path.Combine(Directory.GetCurrentDirectory(), "instr_trace.log");
-                _diagnosticTraceWriter = new DiagnosticTraceWriter(path);
-                _machine.Cpu.InstructionTrace += _diagnosticTraceWriter.Write;
-                _machine.Cpu.RegisterTrace += _diagnosticTraceWriter.Write;
-            }
-        }
-
-        private void DetachFileTraceWriters()
-        {
-            if (_attachedTypedInstructionTrace is not null)
-            {
-                _machine.Cpu.InstructionTrace -= _attachedTypedInstructionTrace;
-                _attachedTypedInstructionTrace = null;
-            }
-
-            if (_canonicalTraceWriter is not null)
-            {
-                _machine.Cpu.InstructionTrace -= _canonicalTraceWriter.Write;
-                _canonicalTraceWriter.Dispose();
-                _canonicalTraceWriter = null;
-            }
-
-            if (_diagnosticTraceWriter is not null)
-            {
-                _machine.Cpu.InstructionTrace -= _diagnosticTraceWriter.Write;
-                _machine.Cpu.RegisterTrace -= _diagnosticTraceWriter.Write;
-                _diagnosticTraceWriter.Dispose();
-                _diagnosticTraceWriter = null;
-            }
-        }
-        private LoadResult RunCore(Stopwatch? wallStopwatch)
+        private LoadResult RunCore(Stopwatch? wallStopwatch, ExecutionDiagnosticsSession diagnostics)
         {
             long limit = InstructionLimit;
             long wallLimitMs = WallClockLimitMs;
@@ -211,24 +129,7 @@ namespace Besm6.Runtime
             long[]? kHistory = LoopDetect ? new long[LoopWindow] : null;
             int kHistIdx = 0;
 
-            if (InstructionTrace != null)
-            {
-                _machine.StepTrace += InstructionTrace;
-                _attachedInstructionTrace = InstructionTrace;
-            }
-
-            if (CppInstructionTrace != null)
-            {
-                _machine.Cpu.TraceInstruction += CppInstructionTrace;
-                _attachedCppInstructionTrace = CppInstructionTrace;
-            }
-
-            if (RegisterTrace != null)
-            {
-                _machine.BeginRegisterTrace();
-                _machine.RegisterTrace += RegisterTrace;
-                _attachedRegisterTrace = RegisterTrace;
-            }
+            diagnostics.AttachRuntimeObservers();
 
             wallStopwatch?.Start();
             while (InstructionsExecuted < limit && (attemptLimit is null || stepAttempts < attemptLimit.Value))
@@ -250,11 +151,11 @@ namespace Besm6.Runtime
                         stepAttempts++;
                         stopped = _machine.Step(ref _instructionsExecuted);
                     }
-                    if (pacer is not null && (stopped || _totalCycles >= nextCheckpoint))
+                    if (pacer is not null && (stopped || TotalCycles >= nextCheckpoint))
                     {
-                        if (!pacer.Synchronize(_totalCycles, wallLimitSeconds))
+                        if (!pacer.Synchronize(TotalCycles, wallLimitSeconds))
                             return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
-                        nextCheckpoint = _totalCycles + ExecutionPacer.CheckpointCycles;
+                        nextCheckpoint = TotalCycles + ExecutionPacer.CheckpointCycles;
                     }
                     if (stopped)
                     {
@@ -291,7 +192,7 @@ namespace Besm6.Runtime
                                          $"for {LoopWindow / 1000}K+ instructions. " +
                                          "MONSYS is in an I/O wait/abort spin-loop (channel-done not signaled). " +
                                          "This is a known MONSYS kernel gap (same in C++ dubna reference). " +
-                                         "See plans/monsys-kernel-support.md.";
+                                         "See ARCHITECTURE.md for the execution limits and compatibility boundaries.";
                             if (_verboseLog != null) _verboseLog($"\n  [LOOP] {diag}");
                             return LoadResult.Failed(diag, currentK, InstructionsExecuted);
                         }
@@ -312,7 +213,7 @@ namespace Besm6.Runtime
                     if (string.IsNullOrEmpty(ex.Message))
                     {
                         _machine.Cpu.CanonPost(_machine.Cpu.GetK(), _machine.Cpu._rightInstrFlag);
-                        if (pacer is not null && !pacer.Synchronize(_totalCycles, wallLimitSeconds))
+                        if (pacer is not null && !pacer.Synchronize(TotalCycles, wallLimitSeconds))
                             return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
                         HaltedByStop = true;
                         return LoadResult.Halt(_machine.Cpu.GetK(), InstructionsExecuted);
@@ -321,11 +222,11 @@ namespace Besm6.Runtime
                     if (_machine.Cpu.Intercept(ex.Message))
                     {
                         _machine.Cpu.CanonPost(_machine.Cpu.GetK(), _machine.Cpu._rightInstrFlag);
-                        if (pacer is not null && _totalCycles >= nextCheckpoint)
+                        if (pacer is not null && TotalCycles >= nextCheckpoint)
                         {
-                            if (!pacer.Synchronize(_totalCycles, wallLimitSeconds))
+                            if (!pacer.Synchronize(TotalCycles, wallLimitSeconds))
                                 return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
-                            nextCheckpoint = _totalCycles + ExecutionPacer.CheckpointCycles;
+                            nextCheckpoint = TotalCycles + ExecutionPacer.CheckpointCycles;
                         }
                         if (_verboseLog != null)
                             _verboseLog($"\r  [INTERCEPT @ 0{_machine.Cpu.GetK():X4}] {ex.Message} → 0{_machine.Cpu.GetK():X4}\n");

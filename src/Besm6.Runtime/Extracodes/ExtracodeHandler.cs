@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 namespace Besm6.Runtime
 {
     /// <summary>
@@ -175,7 +175,7 @@ namespace Besm6.Runtime
                         "(BEMSH/EXFOR/B) or resource that never completes. " +
                         "This is a known limitation: the C++ reference (dubna/) also cannot " +
                         "run ALGOL/FORTRAN/B jobs because the OS kernel is incomplete. " +
-                        "See plans/monsys-kernel-support.md for details.");
+                        "See ARCHITECTURE.md for execution limits and compatibility boundaries.");
                 }
             }
 

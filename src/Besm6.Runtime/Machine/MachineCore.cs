@@ -28,13 +28,8 @@ namespace Besm6.Runtime
         public Puncher Puncher { get; }
         public Plotter Plotter { get; }
 
-        // ── Уровень B (SuperPlan Task B1): дискретное модельное время ──
-        // Часы и планировщик привязаны к одному источнику модельного времени.
-        // Шаг инструкции стоит TicksPerInstruction тиков. Это НЕ изменяет наблюдаемую
-        // семантику уровня A (CPU-путь не трогается) — изолированный эксперимент
-        // по правилу SuperPlan: «до закрытия Gate A задачи уровня B — только
-        // изолированные эксперименты и не заменяют текущий исполнительный путь».
-        /// <summary>Документированная стоимость одной CPU-инструкции в модельных тиках.</summary>
+        /// <summary>One successful functional CPU step advances one instruction tick.
+        /// Hardware nanoseconds and table cycles are independent time domains.</summary>
         public const ulong TicksPerInstruction = 1;
 
         private readonly Execution.FunctionalProcessorSimulation _simulation;
@@ -43,7 +38,7 @@ namespace Besm6.Runtime
 
         /// <summary>
         /// Internal staged АУ (арифметическое устройство) attached to this calendar.
-        /// Explicit construction for the developing driver; ordinary CPU execution
+        /// Explicit construction for the hardware owner; functional CPU execution
         /// neither creates it nor reads its state. CPU reset preserves it.
         /// </summary>
         internal Timing.ArithmeticUnitStages CreateArithmeticUnitStages(Timing.HardwareDuration cycle,
@@ -75,10 +70,10 @@ namespace Besm6.Runtime
         /// </summary>
         public Timing.HardwareTimeline HardwareTimeline => HardwareModel.Timeline;
 
-        /// <summary>Модельные часы (read-only вид уровня B).</summary>
+        /// <summary>Functional instruction clock (read-only).</summary>
         public ISimulationClock Clock => _simulation.Clock;
 
-        /// <summary>Планировщик событий модельного времени (уровень B).</summary>
+        /// <summary>Functional event calendar, ordered by instruction ticks.</summary>
         public IEventScheduler Scheduler => _simulation.Scheduler;
 
         // Свойство-мост для совместимости с существующим Debugger.
