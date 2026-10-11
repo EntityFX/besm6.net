@@ -36,9 +36,9 @@ namespace Besm6.Core
             _processor = processor;
             _state = state;
             _memory = memory;
-            _memoryInstructions = new MemoryInstructionExecutor(state, memory, alu);
-            _indexInstructions = new IndexInstructionExecutor(state, memory);
-            _controlInstructions = new ControlInstructionExecutor(state, memory);
+            _memoryInstructions = new MemoryInstructionExecutor(state, memory, alu, processor.Supervisor);
+            _indexInstructions = new IndexInstructionExecutor(state, memory, _memoryInstructions);
+            _controlInstructions = new ControlInstructionExecutor(state, memory, _memoryInstructions);
             _extracodeInstructions = new ExtracodeInstructionExecutor(state);
         }
 

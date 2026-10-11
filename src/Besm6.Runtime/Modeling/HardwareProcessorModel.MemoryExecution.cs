@@ -51,6 +51,8 @@ internal sealed partial class HardwareProcessorModel
     private void AcceptTimedInstructionFetch(HardwareBufferedRead reply)
     {
         var lease = _pendingInstruction!.Value;
+        bool prohibited = Timeline.AdvancementProhibited;
+        Timeline.AdvancementProhibited = true;
         try
         {
             var fetched = _processor.AcceptInstructionFetch(in lease, reply.Word, _timedFetchFailure ?? reply.Failure);
@@ -65,6 +67,7 @@ internal sealed partial class HardwareProcessorModel
                 failure is ProcessorException ? HardwareInstructionStatus.GuestFault : HardwareInstructionStatus.HostFailure, false);
             ClearPendingInstruction(); NotifyCompleted(outcome, failure); throw;
         }
+        finally { Timeline.AdvancementProhibited = prohibited; }
     }
 
     internal void RequestBoundArithmeticOperand(HardwareInstructionHandle instruction, ArithmeticCommandHandle command)
@@ -109,7 +112,7 @@ internal sealed partial class HardwareProcessorModel
 
     private void TimedMemoryCancelled(HardwareBufferedMemoryToken token)
     {
-        if ((token == _timedFetchToken || token == _timedOperandToken) && HasPendingInstruction)
+        if ((token == _timedFetchToken || token == _timedOperandToken || token == _dataMemoryToken) && HasPendingInstruction)
             _cancellationRequested = true;
     }
 

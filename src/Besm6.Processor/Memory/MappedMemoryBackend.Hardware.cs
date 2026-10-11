@@ -6,17 +6,57 @@ internal sealed record MappedReadAdmission(MappedMemoryBackend Owner, MemoryRequ
     MemoryWord50? BufferedWord, ulong Epoch);
 internal sealed record MappedWriteAdmission(MappedMemoryBackend Owner, AddressedMemoryBufferEntry Entry,
     uint PhysicalAddress, int Slot, ulong Version);
+internal sealed record MappedStoreAdmission(MappedMemoryBackend Owner, MemoryRequestAddress Request,
+    MemoryAddressKind Kind, MemoryWord50 Word, ulong Epoch);
+internal enum BufferedStoreAcceptance { WaitingForSlot, Accepted, AcceptedWithPublication }
 
 public sealed partial class MappedMemoryBackend
 {
+    internal MappedStoreAdmission AdmitHardwareStore(uint address, Word48 word)
+    {
+        var request = new MemoryRequestAddress(address, AssignmentBlocked);
+        var resolved = AdmitOperand(request, true);
+        if (resolved.Kind != MemoryAddressKind.ZeroOperand) OperandAccessAdmitted?.Invoke(request, true);
+        return new(this, request, resolved.Kind,
+            MemoryWord50.Form(word, InvertLeftStoreControl, InvertRightStoreControl), _hardwareStoreEpoch);
+    }
+
+    internal BufferedStoreAcceptance AcceptHardwareStore(MappedStoreAdmission admission, bool panelPublished)
+    {
+        if (!ReferenceEquals(admission.Owner, this) || admission.Epoch != _hardwareStoreEpoch)
+            throw new InvalidOperationException("The buffered store admission is no longer active.");
+        if (admission.Kind == MemoryAddressKind.ZeroOperand) return BufferedStoreAcceptance.Accepted;
+        if (admission.Kind == MemoryAddressKind.PanelRegister)
+        {
+            if (_panelStores > 0 && _operands.Count != 0 && !panelPublished)
+                return BufferedStoreAcceptance.WaitingForSlot;
+            _panelStores = Math.Min(_panelStores + 1, 8);
+            return BufferedStoreAcceptance.Accepted;
+        }
+        _panelStores = 0;
+        int index = _operands.Find(admission.Request);
+        if (index < 0 && _operands.IsFull) return BufferedStoreAcceptance.WaitingForSlot;
+        _operands.Put(new(admission.Request, admission.Word), index);
+        return _reserveOperandSlot && _operands.IsFull ?
+            BufferedStoreAcceptance.AcceptedWithPublication : BufferedStoreAcceptance.Accepted;
+    }
+
     private ulong _hardwareReadEpoch;
+    private ulong _hardwareStoreEpoch;
     /// <summary>Logical host barrier. False clears outstanding reads; true also abandons writeback leases.</summary>
     internal event Action<bool>? HardwareRequestsInvalidated;
-    internal void GuestAssignmentChanging() => InvalidateHardwareRequests(false);
+    internal event Action? HardwareStoresInvalidated;
+    internal void GuestAssignmentChanging()
+    {
+        InvalidateHardwareRequests(false);
+        _hardwareStoreEpoch = unchecked(_hardwareStoreEpoch + 1);
+        HardwareStoresInvalidated?.Invoke();
+    }
     private void InvalidateHardwareRequests(bool writes)
     {
         HardwareRequestsInvalidated?.Invoke(writes);
         _hardwareReadEpoch = unchecked(_hardwareReadEpoch + 1);
+        if (writes) _hardwareStoreEpoch = unchecked(_hardwareStoreEpoch + 1);
     }
 
     internal MappedReadAdmission AdmitHardwareRead(uint address, bool instruction, bool rightHalf)

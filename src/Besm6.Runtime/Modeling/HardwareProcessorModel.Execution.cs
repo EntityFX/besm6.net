@@ -95,7 +95,11 @@ internal sealed partial class HardwareProcessorModel
             if (_processor.Supervisor is not null && PendingArithmeticInterruption != 0)
                 throw new InvalidOperationException("The UU must accept the pending arithmetic interruption before the next fetch.");
             ulong sequence = checked(_sequence + 1);
-            var instruction = _processor.PrepareInstruction();
+            InstructionExecutor.PreparedInstruction instruction;
+            bool prohibited = Timeline.AdvancementProhibited;
+            Timeline.AdvancementProhibited = true;
+            try { instruction = _processor.PrepareInstruction(); }
+            finally { Timeline.AdvancementProhibited = prohibited; }
             _pendingInstruction = instruction;
             _pendingHandle = new(this, sequence, in instruction, Timeline.Now);
             _sequence = sequence;
@@ -134,6 +138,7 @@ internal sealed partial class HardwareProcessorModel
     {
         if (_boundArithmetic is not null && !_arithmeticBindingTransition) return false;
         if (!IsCurrent(in instruction) || _completionReady || _cancellationRequested || _capturingOperand ||
+            _processor.RequiresMemoryTransfer(_pendingInstruction!.Value) ||
             _processor.RequiresArithmeticResult(_pendingInstruction!.Value)) return false;
         _completionReady = true;
         return true;
@@ -202,6 +207,12 @@ internal sealed partial class HardwareProcessorModel
                 if (HasPendingInstruction && !_cancellationRequested && _timedFetchReply is { } reply)
                     AcceptTimedInstructionFetch(reply);
                 else if (HasPendingInstruction && !_cancellationRequested) return null;
+            }
+            while (_dataMemoryActive && !_completionReady && HasPendingInstruction && !_cancellationRequested)
+            {
+                Timeline.AdvanceUntil(time, () => _dataMemoryReplyReady || _cancellationRequested || !HasPendingInstruction);
+                if (HasPendingInstruction && !_cancellationRequested && _dataMemoryReplyReady) AcceptDataTransfer();
+                else break;
             }
             if (_pendingInstruction is { } instruction)
             {
@@ -283,6 +294,7 @@ internal sealed partial class HardwareProcessorModel
 
     private void ClearPendingInstruction()
     {
+        ClearDataMemory();
         ReleaseTimedMemory();
         ReleaseArithmeticBinding();
         Timeline.Cancel(_readyEvent);

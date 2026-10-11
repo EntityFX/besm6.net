@@ -309,6 +309,12 @@ namespace Besm6.Core
             _executor.GetPreparedMemoryOperandAddress(in instruction);
         internal PreparedArithmeticOperation? CaptureTransferredArithmeticOperand(in InstructionExecutor.PreparedInstruction instruction,
             uint address, Word48 word, Exception? failure) => _executor.CaptureArithmeticOperand(in instruction, address, word, failure);
+        internal CpuMemoryTransfer? BeginMemoryInstruction(in InstructionExecutor.PreparedInstruction instruction) =>
+            _executor.BeginMemoryInstruction(in instruction);
+        internal CpuMemoryTransfer? AcceptMemoryTransfer(in InstructionExecutor.PreparedInstruction instruction, Word48 word, Exception? failure) =>
+            _executor.AcceptMemoryTransfer(in instruction, word, failure);
+        internal bool RequiresMemoryTransfer(in InstructionExecutor.PreparedInstruction instruction) =>
+            _executor.RequiresMemoryTransfer(in instruction);
         internal bool HasPreparedInstruction => _executor.HasPreparedInstruction;
         internal PreparedArithmeticOperation? CaptureArithmeticOperand(in InstructionExecutor.PreparedInstruction instruction) =>
             _executor.CaptureArithmeticOperand(in instruction);

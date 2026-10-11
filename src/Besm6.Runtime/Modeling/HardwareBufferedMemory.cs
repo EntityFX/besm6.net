@@ -18,7 +18,7 @@ internal readonly record struct HardwareBufferedRead(HardwareBufferedMemoryToken
 /// bridge using the existing backend registers and raw MRAM port. No parallel cache
 /// or guest arithmetic exists. Hit delay and FIFO remain explicit logical policies.
 /// </summary>
-internal sealed class HardwareBufferedMemory
+internal sealed partial class HardwareBufferedMemory
 {
     private sealed class Pending
     {
@@ -26,6 +26,7 @@ internal sealed class HardwareBufferedMemory
         internal MramRequestToken MemoryToken;
         internal HardwareEventToken LocalEvent;
         internal bool Write;
+        internal bool Store;
     }
     private readonly MappedMemoryBackend _backend;
     private readonly HardwareTimeline _timeline;
@@ -42,6 +43,7 @@ internal sealed class HardwareBufferedMemory
     {
         _backend = backend; _timeline = timeline; _port = port; BufferHitLatency = hitLatency;
         backend.HardwareRequestsInvalidated += Invalidate;
+        backend.HardwareStoresInvalidated += () => { if (_store is { } store) Cancel(store.Pending.Token); };
     }
 
     internal HardwareBufferedMemoryToken ReadOperand(uint address, Action<HardwareBufferedRead> completed) =>
@@ -83,7 +85,8 @@ internal sealed class HardwareBufferedMemory
         {
             _pending.Remove(pending.Token.Id); _writeback = null;
             bool removed = _backend.CompleteHardwareWrite(admission);
-            completed(removed);
+            try { completed(removed); }
+            finally { ResumeWaitingStore(); }
         });
         _pending.Add(_nextId, pending); _nextId = next; _writeback = pending;
         token = pending.Token; return true;
@@ -94,6 +97,7 @@ internal sealed class HardwareBufferedMemory
         if (!token.BelongsTo(this) || !_pending.Remove(token.Id, out var pending)) return false;
         _timeline.Cancel(pending.LocalEvent); _port.Cancel(pending.MemoryToken);
         if (ReferenceEquals(_writeback, pending)) _writeback = null;
+        CancelWaitingStore(token);
         RequestCancelled?.Invoke(token);
         return true;
     }
@@ -101,6 +105,6 @@ internal sealed class HardwareBufferedMemory
     private void Invalidate(bool writes)
     {
         foreach (var pending in _pending.Values.ToArray())
-            if (writes || !pending.Write) Cancel(pending.Token);
+            if (writes || (!pending.Write && !pending.Store)) Cancel(pending.Token);
     }
 }

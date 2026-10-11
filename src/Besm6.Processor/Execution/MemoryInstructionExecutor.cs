@@ -1,17 +1,19 @@
 namespace Besm6.Core
 {
     /// <summary>Исполняет короткие команды памяти и АЛУ 000–037.</summary>
-    internal sealed class MemoryInstructionExecutor
+    internal sealed partial class MemoryInstructionExecutor
     {
         private readonly ProcessorState _state;
         private readonly ProcessorMemoryAccess _memory;
         private readonly Alu _alu;
+        private readonly SupervisorControl? _supervisor;
 
-        internal MemoryInstructionExecutor(ProcessorState state, ProcessorMemoryAccess memory, Alu alu)
+        internal MemoryInstructionExecutor(ProcessorState state, ProcessorMemoryAccess memory, Alu alu, SupervisorControl? supervisor = null)
         {
             _state = state;
             _memory = memory;
             _alu = alu;
+            _supervisor = supervisor;
         }
 
         // Keep the frequent load/store/mode instructions small enough to inline.
@@ -23,24 +25,9 @@ namespace Besm6.Core
             switch (frame.Instruction.Opcode)
             {
                 case Opcode.Xta:
-                {
-                    uint addr = frame.Address;
-                    int reg = frame.Instruction.Register;
-                    PrepareStack(addr, reg);
-                    SetEffectiveAddress(ref frame, Addr(addr + _state.M[reg]));
-                    frame.A = _memory.MemLoad(frame.EffectiveAddress);
-                    _state.SetLogical();
-                    return InstructionOutcome.Continue;
-                }
+                    return ExecuteLoad(ref frame);
                 case Opcode.Atx:
-                {
-                    uint addr = frame.Address;
-                    int reg = frame.Instruction.Register;
-                    SetEffectiveAddress(ref frame, Addr(addr + _state.M[reg]));
-                    _memory.MemStore(frame.EffectiveAddress, frame.A);
-                    if (addr == 0 && reg == 15) _state.M[15] = Addr(_state.M[15] + 1);
-                    return InstructionOutcome.Continue;
-                }
+                    return ExecuteStore(ref frame);
                 case Opcode.Ntr:
                     SetEffectiveAddress(ref frame, Addr(frame.Address + _state.M[frame.Instruction.Register]));
                     _state.R = frame.EffectiveAddress & 0x3Fu;
@@ -102,23 +89,11 @@ namespace Besm6.Core
             switch (frame.Instruction.Opcode)
             {
                 case Opcode.Stx:
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    _memory.MemStore(frame.EffectiveAddress, frame.A);
-                    m[15] = Addr(m[15] - 1);
-                    _state.StackCorrection = 1;
-                    frame.A = _memory.MemLoad(m[15]);
-                    _state.SetLogical();
-                    break;
+                    return ExecuteStx(ref frame);
                 case Opcode.Mod:
                     throw new ProcessorException("Illegal instruction 002 рег/mod");
                 case Opcode.Xts:
-                    _memory.MemStore(m[15], frame.A);
-                    m[15] = Addr(m[15] + 1);
-                    _state.StackCorrection = -1;
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    frame.A = _memory.MemLoad(frame.EffectiveAddress);
-                    _state.SetLogical();
-                    break;
+                    return ExecuteXts(ref frame);
                 case Opcode.APlusX:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
@@ -156,13 +131,7 @@ namespace Besm6.Core
                     arithmetic.FinishLogical(_state);
                     break;
                 case Opcode.Arx:
-                    PrepareStack(addr, reg);
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    frame.A += _memory.MemLoad(frame.EffectiveAddress);
-                    if ((frame.A & Bit49) != 0) frame.A = (frame.A + 1) & ArchitectureConstants.BITS48;
-                    frame.Y = 0;
-                    _state.SetMultiplicative();
-                    break;
+                    return ExecuteArx(ref frame);
                 case Opcode.Avx:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
@@ -200,31 +169,9 @@ namespace Besm6.Core
                     arithmetic.FinishLogical(_state);
                     break;
                 case Opcode.Acx:
-                    PrepareStack(addr, reg);
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    frame.A = (ulong)Processor.Besm6CountOnes(frame.A) + _memory.MemLoad(frame.EffectiveAddress);
-                    if ((frame.A & Bit49) != 0) frame.A = (frame.A + 1) & ArchitectureConstants.BITS48;
-                    frame.Y = 0;
-                    _state.SetLogical();
-                    break;
+                    return ExecuteAcx(ref frame);
                 case Opcode.Anx:
-                    PrepareStack(addr, reg);
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    if (frame.A != 0)
-                    {
-                        int highestBit = Processor.Besm6HighestBit(frame.A);
-                        _alu.Shift(48 - highestBit);
-                        frame.Y = _state.Y.Value;
-                        frame.A = (ulong)highestBit + _memory.MemLoad(frame.EffectiveAddress);
-                        if ((frame.A & Bit49) != 0) frame.A = (frame.A + 1) & ArchitectureConstants.BITS48;
-                    }
-                    else
-                    {
-                        frame.Y = 0;
-                        frame.A = _memory.MemLoad(frame.EffectiveAddress);
-                    }
-                    _state.SetLogical();
-                    break;
+                    return ExecuteAnx(ref frame);
                 case Opcode.EPlusX:
                     ExecuteExponentFromMemory(ref frame, 1, ref arithmetic);
                     break;
@@ -232,17 +179,9 @@ namespace Besm6.Core
                     ExecuteExponentFromMemory(ref frame, -1, ref arithmetic);
                     break;
                 case Opcode.Asx:
-                    PrepareStack(addr, reg);
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    _alu.Shift((int)(_memory.MemLoad(frame.EffectiveAddress) >> 41) - 64);
-                    UseAluResult(ref frame);
-                    _state.SetLogical();
-                    break;
+                    return ExecuteAsx(ref frame);
                 case Opcode.Xtr:
-                    PrepareStack(addr, reg);
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    _state.R = (uint)((_memory.MemLoad(frame.EffectiveAddress) >> 41) & 0x3Fu);
-                    break;
+                    return ExecuteXtr(ref frame);
                 case Opcode.Rte:
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
                     frame.A = ((ulong)(_state.R & frame.EffectiveAddress & 0x7Fu)) << 41;

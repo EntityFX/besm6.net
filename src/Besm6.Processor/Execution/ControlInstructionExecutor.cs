@@ -5,11 +5,12 @@ namespace Besm6.Core
     {
         private readonly ProcessorState _state;
         private readonly ProcessorMemoryAccess _memory;
+        private readonly MemoryInstructionExecutor _data;
 
-        internal ControlInstructionExecutor(ProcessorState state, ProcessorMemoryAccess memory)
+        internal ControlInstructionExecutor(ProcessorState state, ProcessorMemoryAccess memory, MemoryInstructionExecutor data)
         {
             _state = state;
-            _memory = memory;
+            _memory = memory; _data = data;
         }
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -64,17 +65,7 @@ namespace Besm6.Core
             switch (frame.Instruction.Opcode)
             {
                 case Opcode.Wtc:
-                    // A custom memory implementation can have observable side effects.
-                    // Retain the original register commit across this memory access.
-                    frame.RegistersInState = false;
-                    if (addr == 0 && reg == 15)
-                    {
-                        m[15] = Addr(m[15] - 1);
-                        _state.StackCorrection = 1;
-                    }
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    frame.NextC = Addr((uint)_memory.MemLoad(frame.EffectiveAddress));
-                    break;
+                    return _data.ExecuteWtc(ref frame);
                 case Opcode.Uza:
                     frame.RegistersInState = false;
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));

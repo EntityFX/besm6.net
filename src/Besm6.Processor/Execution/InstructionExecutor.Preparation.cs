@@ -142,6 +142,8 @@ public sealed partial class InstructionExecutor
     {
         ValidatePreparation(in instruction);
         if (_fetchPending) throw new InvalidOperationException("The CPU command is waiting for its fetched word.");
+        if (RequiresMemoryTransfer(in instruction))
+            throw new InvalidOperationException("The CPU command is still waiting for its data transfer.");
         if (RequiresArithmeticResult(in instruction))
             throw new InvalidOperationException("The captured CPU command is still waiting for its arithmetic result.");
         _preparationTransition = true;
@@ -155,9 +157,9 @@ public sealed partial class InstructionExecutor
                 _processor.LastStepCompleted = _terminalCompleted;
                 return _terminalStopped;
             }
-            if (_operandFailure is null &&
-                (_state.K != (_arithmeticCaptured ? _arithmeticPosition : _prepared.Address) ||
-                 _state.IsRightHalf != (_arithmeticCaptured ? _arithmeticRightHalf : _prepared.RightHalf)))
+            if (_operandFailure is null && _dataFailure is null &&
+                (_state.K != (_dataCaptured ? _dataPosition : _arithmeticCaptured ? _arithmeticPosition : _prepared.Address) ||
+                 _state.IsRightHalf != (_dataCaptured ? _dataRightHalf : _arithmeticCaptured ? _arithmeticRightHalf : _prepared.RightHalf)))
             {
                 _processor.CancelInstructionTrace();
                 throw new InvalidOperationException("The CPU instruction position changed while preparation was pending.");
@@ -165,12 +167,14 @@ public sealed partial class InstructionExecutor
             _processor.LastStepCompleted = true;
             try
             {
-                bool stopped = _arithmeticCaptured ? CompleteCapturedArithmetic() : ExecuteFetchedInstruction(in _prepared);
+                bool stopped = _dataCaptured ? CompleteCapturedData() : _arithmeticCaptured ? CompleteCapturedArithmetic() : ExecuteFetchedInstruction(in _prepared);
                 _processor.Supervisor?.CompletedInstruction();
                 return stopped;
             }
             catch (Exception failure) when (_processor.Supervisor is not null && IsSupervisorGuestFailure(failure))
             {
+                if (_dataSupervisorFailure is { } dataFault && ReferenceEquals(failure, _dataFailure?.SourceException))
+                    return InterruptFailedStep(_processor.Supervisor!, dataFault.Signal, dataFault.ReturnWord, dataFault.Flags);
                 if (_operandSupervisorFailure is { } fault && ReferenceEquals(failure, _operandFailure?.SourceException))
                     return InterruptFailedStep(_processor.Supervisor!, fault.Signal, fault.ReturnWord, fault.Flags);
                 return HandleSupervisorFailure(_processor.Supervisor!, failure,
@@ -187,6 +191,7 @@ public sealed partial class InstructionExecutor
             _preparationTransition = false;
             _preparationFailure = null;
             ClearArithmeticPreparation();
+            ClearDataPreparation();
         }
     }
 
@@ -209,5 +214,6 @@ public sealed partial class InstructionExecutor
         _terminalPreparation = false;
         _preparationFailure = null;
         ClearArithmeticPreparation();
+        ClearDataPreparation();
     }
 }

@@ -160,26 +160,17 @@ public sealed partial class InstructionExecutor
         }
         if (privileged && opcode is >= Opcode.Ati and <= Opcode.JPlusM)
         {
+            if (opcode == Opcode.Sti) return _memoryInstructions.ExecuteSti(ref frame);
+            if (opcode == Opcode.Its) return _memoryInstructions.ExecuteIts(ref frame);
             uint target = (opcode is Opcode.Mtj or Opcode.JPlusM ? frame.Address : ea) & 31;
             _state.EffectiveAddress = target;
-            if (opcode is Opcode.Ati or Opcode.Sti)
+            if (opcode == Opcode.Ati)
             {
                 uint value = ArchitectureConstants.NormalizeAddress((uint)frame.A);
-                if (opcode == Opcode.Sti)
-                {
-                    if (target != 15) { _state.M[15] = ArchitectureConstants.NormalizeAddress(_state.M[15] - 1); _state.StackCorrection = 1; }
-                    frame.A = _memory.MemLoad(target != 15 ? _state.M[15] : value);
-                    _state.SetLogical();
-                }
                 supervisor.WriteModifier((int)target, value);
             }
-            else if (opcode is Opcode.Ita or Opcode.Its)
+            else if (opcode == Opcode.Ita)
             {
-                if (opcode == Opcode.Its)
-                {
-                    _memory.MemStore(_state.M[15], frame.A);
-                    _state.M[15] = ArchitectureConstants.NormalizeAddress(_state.M[15] + 1);
-                }
                 frame.A = supervisor.ReadModifier((int)target);
                 _state.SetLogical();
             }

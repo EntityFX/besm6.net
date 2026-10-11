@@ -25,7 +25,7 @@ public sealed partial class InstructionExecutor
         _operandFailure is null && _arithmeticFailure is null && !_arithmeticResult.HasValue;
 
     internal bool CanCaptureArithmeticOperand(in PreparedInstruction instruction) =>
-        IsPreparedInstructionActive(in instruction) && !_arithmeticCaptured && !_terminalPreparation &&
+        IsPreparedInstructionActive(in instruction) && !_arithmeticCaptured && !_dataCaptured && !_terminalPreparation &&
         _prepared.ShouldExecute && MemoryInstructionExecutor.CanCaptureArithmetic(_prepared.Instruction.Opcode);
 
     /// <summary>Read-only UU operand formation; uses the same C/index resolver as execution.</summary>
@@ -60,7 +60,7 @@ public sealed partial class InstructionExecutor
         uint? transferredAddress = null, Word48 transferredWord = default, Exception? transferredFailure = null)
     {
         ValidateArithmeticAccess(in instruction);
-        if (_arithmeticCaptured || _terminalPreparation || !_prepared.ShouldExecute ||
+        if (_arithmeticCaptured || _dataCaptured || _terminalPreparation || !_prepared.ShouldExecute ||
             !MemoryInstructionExecutor.CanCaptureArithmetic(_prepared.Instruction.Opcode))
             throw new InvalidOperationException("This CPU command cannot accept an arithmetic operand.");
         if (_state.K != _prepared.Address || _state.IsRightHalf != _prepared.RightHalf)

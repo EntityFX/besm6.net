@@ -2,6 +2,11 @@ namespace Besm6.Core;
 
 internal sealed partial class ProcessorMemoryAccess
 {
+    internal void CheckTransferredAccess(uint address, bool write)
+    {
+        if (_debugWatch.MemoryWatchArmed && _debugWatch.DebugCheckMemory(address & 0x7FFF, write ? 1u : 2u))
+            throw new Processor.DebugWatchAbortException();
+    }
     internal ulong AcceptTransferredFetch(uint address, Word48 word)
     {
         if ((address & 0x7FFF) == 0 && !_allowZeroInstructionAddress) ThrowJumpToZero();
