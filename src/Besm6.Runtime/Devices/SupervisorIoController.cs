@@ -9,7 +9,7 @@ namespace Besm6.Runtime;
 /// host-time scheduling. CompletionDelayTicks is a functional delay, not hardware time.
 /// DMA bypasses RP/RZ and both CPU buffers, as an external physical memory request.
 /// </summary>
-public sealed class SupervisorIoController : ISupervisorIo
+public sealed partial class SupervisorIoController : ISupervisorIo
 {
     public const int ZoneWords = 1032;
     public const int FormattedDiskZones = 1015; // DISK_TOTBLK 01767 in pinned SIMH.
@@ -33,21 +33,21 @@ public sealed class SupervisorIoController : ISupervisorIo
     private readonly Action _interruptChanged;
     private readonly DiskImage?[] _disks = new DiskImage?[16];
     private readonly DiskImage?[] _drums = new DiskImage?[2];
-    private readonly EventToken?[] _drumPending = new EventToken?[2];
+    private readonly IoEventToken?[] _drumPending = new IoEventToken?[2];
     private readonly Channel[] _channels = [new() { Unit = 0 }, new() { Unit = 8 }];
     private readonly byte[] _consoleInput = new byte[2];
     private readonly bool[] _consoleConnected = new bool[2];
-    private readonly EventToken?[] _consolePending = new EventToken?[2];
+    private readonly IoEventToken?[] _consolePending = new IoEventToken?[2];
     private ulong _interrupts;
     private uint _peripheral;
     private uint _peripheralMask;
     private uint _diskErrors;
     private uint _drumErrors;
-    private EventToken? _timer;
+    private IoEventToken? _timer;
     private ulong _timerPeriod;
     private bool _includeSlowClock;
     private uint _timerPulses;
-    private EventToken? _serialClock;
+    private IoEventToken? _serialClock;
     private ulong _serialPeriod;
     private readonly SerialLine[] _serialLines = Enumerable.Range(0, 24).Select(_ => new SerialLine()).ToArray();
     private uint _serialOut;
@@ -222,16 +222,22 @@ public sealed class SupervisorIoController : ISupervisorIo
     /// periodTicks remains a functional scheduling delay, not hardware timing.</summary>
     public void StartTimer(ulong periodTicks, bool includeSlowClock)
     {
+        RequireFunctionalTiming();
+        StartTimerCore(periodTicks, includeSlowClock);
+    }
+
+    private void StartTimerCore(ulong periodTicks, bool includeSlowClock)
+    {
         if (periodTicks == 0) throw new ArgumentOutOfRangeException(nameof(periodTicks));
         StopTimer();
         _timerPeriod = periodTicks;
         _includeSlowClock = includeSlowClock;
-        _timer = _scheduler.Schedule(periodTicks, TimerElapsed);
+        _timer = ScheduleIo(IoEventKind.Timer, periodTicks, TimerElapsed);
     }
 
     public void StopTimer()
     {
-        if (_timer is EventToken token) _scheduler.Cancel(token);
+        if (_timer is IoEventToken token) CancelIo(token);
         _timer = null;
         _timerPeriod = 0;
         _includeSlowClock = false;
@@ -243,8 +249,8 @@ public sealed class SupervisorIoController : ISupervisorIo
         _timer = null;
         ulong signals = TimerInterrupt;
         if (_includeSlowClock && (++_timerPulses & 3) == 0) signals |= SlowClockInterrupt;
+        if (_timerPeriod != 0) _timer = ScheduleIo(IoEventKind.Timer, _timerPeriod, TimerElapsed);
         RaiseInterrupts(signals);
-        if (_timerPeriod != 0) _timer = _scheduler.Schedule(_timerPeriod, TimerElapsed);
     }
 
     public void ConfigureSerialTerminal(int line, bool connected = true)
@@ -270,15 +276,21 @@ public sealed class SupervisorIoController : ISupervisorIo
 
     public void StartSerialClock(ulong periodTicks)
     {
+        RequireFunctionalTiming();
+        StartSerialClockCore(periodTicks);
+    }
+
+    private void StartSerialClockCore(ulong periodTicks)
+    {
         if (periodTicks == 0) throw new ArgumentOutOfRangeException(nameof(periodTicks));
         StopSerialClock();
         _serialPeriod = periodTicks;
-        _serialClock = _scheduler.Schedule(periodTicks, SerialClockElapsed);
+        _serialClock = ScheduleIo(IoEventKind.Serial, periodTicks, SerialClockElapsed);
     }
 
     public void StopSerialClock()
     {
-        if (_serialClock is EventToken token) _scheduler.Cancel(token);
+        if (_serialClock is IoEventToken token) CancelIo(token);
         _serialClock = null;
         _serialPeriod = 0;
     }
@@ -286,8 +298,8 @@ public sealed class SupervisorIoController : ISupervisorIo
     private void SerialClockElapsed()
     {
         _serialClock = null;
+        if (_serialPeriod != 0) _serialClock = ScheduleIo(IoEventKind.Serial, _serialPeriod, SerialClockElapsed);
         PulseSerialClock();
-        if (_serialPeriod != 0) _serialClock = _scheduler.Schedule(_serialPeriod, SerialClockElapsed);
     }
 
     /// <summary>One serial bit clock. Inverted seven-bit data, parity and stop framing match SIMH vt_print/vt_receive.</summary>
@@ -419,7 +431,7 @@ public sealed class SupervisorIoController : ISupervisorIo
         if (!_consoleConnected[channel]) return; // No connected device can assert a completion signal.
         if (_consolePending[channel] is not null) throw new InvalidOperationException("Parallel console output is already pending.");
         ConsoleOutput?.Invoke(channel, (byte)(value & 127));
-        _consolePending[channel] = _scheduler.Schedule(CompletionDelayTicks, () =>
+        _consolePending[channel] = ScheduleIo(IoEventKind.Console, CompletionDelayTicks, () =>
         {
             _consolePending[channel] = null;
             _peripheral |= 1U << (9 - channel);
@@ -431,7 +443,7 @@ public sealed class SupervisorIoController : ISupervisorIo
     public void ConfigureConsole(int channel, bool connected = true)
     {
         ValidateDrum(channel);
-        if (_consolePending[channel] is EventToken token) _scheduler.Cancel(token);
+        if (_consolePending[channel] is IoEventToken token) CancelIo(token);
         _consolePending[channel] = null;
         _consoleConnected[channel] = connected;
         _consoleInput[channel] = 0;
@@ -526,23 +538,15 @@ public sealed class SupervisorIoController : ISupervisorIo
         uint serviceAddress = (uint)(index == 0 ? 24 : 32) + (uint)(page ? 0 : half * 4);
         _interrupts &= ~ReadyMask(index);
         // Snapshot the request, but read memory/data when the exchange completes.
-        channel.Pending = _scheduler.Schedule(CompletionDelayTicks, () =>
+        channel.Pending = ScheduleIo(IoEventKind.Exchange, CompletionDelayTicks, () =>
         {
-            if (read)
+            TransferMedia(read, image.Words, serviceOffset, serviceCount, serviceAddress,
+                dataOffset, read && serviceOnly ? 0 : count, address, () =>
             {
-                for (int i = 0; i < serviceCount; i++) _memory.PhysicalMemory.WriteRaw(serviceAddress + (uint)i, image.Words[serviceOffset + i]);
-                if (!serviceOnly)
-                    for (int i = 0; i < count; i++) _memory.PhysicalMemory.WriteRaw(address + (uint)i, image.Words[dataOffset + i]);
-            }
-            else
-            {
-                // Full-zone and half-zone service areas use the same selection as data.
-                for (int i = 0; i < serviceCount; i++) image.Words[serviceOffset + i] = _memory.PhysicalMemory.ReadRaw(serviceAddress + (uint)i);
-                for (int i = 0; i < count; i++) image.Words[dataOffset + i] = _memory.PhysicalMemory.ReadRaw(address + (uint)i);
-            }
             channel.Pending = null;
             CompletedTransfers++;
             RaiseInterrupts(ReadyMask(index));
+            }, () => channel.Pending = null);
         });
         NotifyInterrupts();
     }
@@ -578,12 +582,14 @@ public sealed class SupervisorIoController : ISupervisorIo
         uint serviceAddress = (uint)(index == 0 ? 24 : 32) + (uint)(channel.Half * 4);
         _diskErrors &= ~FailureMask(index);
         _interrupts &= ~ReadyMask(index);
-        channel.Pending = _scheduler.Schedule(CompletionDelayTicks, () =>
+        channel.Pending = ScheduleIo(IoEventKind.Exchange, CompletionDelayTicks, () =>
         {
-            for (int i = 0; i < 4; i++) _memory.PhysicalMemory.WriteRaw(serviceAddress + (uint)i, words[i]);
-            channel.Pending = null;
-            CompletedHeaderReads++;
-            RaiseInterrupts(ReadyMask(index));
+            TransferMedia(true, words, 0, 4, serviceAddress, 0, 0, 0, () =>
+            {
+                channel.Pending = null;
+                CompletedHeaderReads++;
+                RaiseInterrupts(ReadyMask(index));
+            }, () => channel.Pending = null);
         });
         NotifyInterrupts();
     }
@@ -605,7 +611,7 @@ public sealed class SupervisorIoController : ISupervisorIo
     {
         ValidateDrum(reader);
         var state = _paperReaders[reader];
-        if (state.Pending is EventToken token) _scheduler.Cancel(token);
+        if (state.Pending is IoEventToken token) CancelIo(token);
         state.Pending = null;
         state.Data = holes.ToArray();
         state.Position = state.Mode = 0;
@@ -677,17 +683,17 @@ public sealed class SupervisorIoController : ISupervisorIo
         switch (command)
         {
             case 0:
-                if (state.Pending is EventToken token) _scheduler.Cancel(token);
+                if (state.Pending is IoEventToken token) CancelIo(token);
                 state.Pending = null; state.Mode = 0; break;
             case 4:
-                if (state.Pending is EventToken starting) _scheduler.Cancel(starting);
+                if (state.Pending is IoEventToken starting) CancelIo(starting);
                 state.Pending = null; state.Mode = 1; break;
             case 5:
                 // Pinned fs_control/sim_activate: no feed without a running motor,
                 // and a second activation of an active unit retains its deadline.
                 if (state.Mode == 0 || state.Pending is not null) return;
                 if (state.Mode == 3) { _ready &= ~(1U << (15 - reader)); state.Mode = 0; break; }
-                state.Pending = _scheduler.Schedule(CompletionDelayTicks, () =>
+                state.Pending = ScheduleIo(IoEventKind.PaperReader, CompletionDelayTicks, () =>
                 {
                     state.Pending = null;
                     if (state.Mode == 0) state.Register = 0;
@@ -705,7 +711,7 @@ public sealed class SupervisorIoController : ISupervisorIo
     {
         ValidateDrum(printer);
         var state = _printers[printer];
-        if (state.Pending is EventToken token) _scheduler.Cancel(token);
+        if (state.Pending is IoEventToken token) CancelIo(token);
         state.Pending = null;
         state.Connected = connected;
         state.Running = false;
@@ -739,11 +745,11 @@ public sealed class SupervisorIoController : ISupervisorIo
                 state.Running = true;
                 _ready &= ~(1U << (23 - printer));
                 state.Feed = 1;
-                if (state.Pending is null) state.Pending = _scheduler.Schedule(PrinterPulseTicks, () => PulsePrinter(printer));
+                if (state.Pending is null) state.Pending = ScheduleIo(IoEventKind.PrinterCharacter, PrinterPulseTicks, () => PulsePrinter(printer));
                 break;
             case 2: case 8: case 10:
                 state.Running = false;
-                if (state.Pending is EventToken token) _scheduler.Cancel(token);
+                if (state.Pending is IoEventToken token) CancelIo(token);
                 state.Pending = null;
                 break;
             default: throw Unsupported("printer control", command);
@@ -762,9 +768,9 @@ public sealed class SupervisorIoController : ISupervisorIo
             if (state.Feed != 0 && --state.Feed == 0) _ready |= 1U << (23 - printer);
         }
         else { state.Character = 0; _interrupts |= 1UL << (38 - printer); }
-        NotifyInterrupts();
         if (state.Connected && state.Running)
-            state.Pending = _scheduler.Schedule(characterPulse ? PrinterPulseTicks : PrinterZeroTicks, () => PulsePrinter(printer));
+            state.Pending = ScheduleIo(characterPulse ? IoEventKind.PrinterCharacter : IoEventKind.PrinterZero, characterPulse ? PrinterPulseTicks : PrinterZeroTicks, () => PulsePrinter(printer));
+        NotifyInterrupts();
     }
 
     private void StrikePrinter(int printer, int position, uint mask)
@@ -822,22 +828,15 @@ public sealed class SupervisorIoController : ISupervisorIo
         ulong ready = controller == 0 ? Drum1Free : Drum2Free;
         _drumErrors &= ~failure;
         _interrupts &= ~ready;
-        _drumPending[controller] = _scheduler.Schedule(CompletionDelayTicks, () =>
+        _drumPending[controller] = ScheduleIo(IoEventKind.Exchange, CompletionDelayTicks, () =>
         {
-            if (read)
+            TransferMedia(read, image.Words, serviceOffset, serviceCount, serviceAddress,
+                dataOffset, read && serviceOnly ? 0 : checked((int)count), address, () =>
             {
-                for (int i = 0; i < serviceCount; i++) _memory.PhysicalMemory.WriteRaw(serviceAddress + (uint)i, image.Words[serviceOffset + i]);
-                if (!serviceOnly)
-                    for (uint i = 0; i < count; i++) _memory.PhysicalMemory.WriteRaw(address + i, image.Words[dataOffset + i]);
-            }
-            else
-            {
-                for (int i = 0; i < serviceCount; i++) image.Words[serviceOffset + i] = _memory.PhysicalMemory.ReadRaw(serviceAddress + (uint)i);
-                for (uint i = 0; i < count; i++) image.Words[dataOffset + i] = _memory.PhysicalMemory.ReadRaw(address + i);
-            }
             _drumPending[controller] = null;
             CompletedDrumTransfers++;
             RaiseInterrupts(ready);
+            }, () => _drumPending[controller] = null);
         });
         NotifyInterrupts();
     }
@@ -863,7 +862,7 @@ public sealed class SupervisorIoController : ISupervisorIo
         public int Position;
         public int Mode;
         public byte Register;
-        public EventToken? Pending;
+        public IoEventToken? Pending;
     }
     private sealed class Printer
     {
@@ -874,7 +873,7 @@ public sealed class SupervisorIoController : ISupervisorIo
         public int Length;
         public int Overprints;
         public byte[,] Strikes { get; } = new byte[128, 10];
-        public EventToken? Pending;
+        public IoEventToken? Pending;
     }
     private sealed class Channel
     {
@@ -884,6 +883,6 @@ public sealed class SupervisorIoController : ISupervisorIo
         public int Zone;
         public int Half;
         public uint Status;
-        public EventToken? Pending;
+        public IoEventToken? Pending;
     }
 }

@@ -180,6 +180,26 @@ namespace Besm6.Runtime
         /// </summary>
         public void Reset() => ResetCpu();
 
+        /// <summary>Use the CPU model's shared nanosecond calendar and MRAM port for devices.
+        /// CPU execution selection remains independent; device attachments and registers survive.</summary>
+        public void UseHardwareDeviceTiming(Timing.MramPortConfiguration memory, Timing.SupervisorIoHardwareTiming devices)
+        {
+            ArgumentNullException.ThrowIfNull(devices);
+            EnsureExecutionAllowed();
+            if (Cpu.HasPreparedInstruction || ExistingHardwareModel is { IsDriving: true })
+                throw new InvalidOperationException("Select device timing at an idle CPU boundary.");
+            var io = SupervisorIo ?? throw new InvalidOperationException("Hardware device timing requires the supervisor configuration.");
+            io.UseHardwareTiming(HardwareTimeline, HardwareModel.CreateMemoryPort(memory), devices);
+        }
+
+        public void UseFunctionalDeviceTiming()
+        {
+            EnsureExecutionAllowed();
+            if (Cpu.HasPreparedInstruction || ExistingHardwareModel is { IsDriving: true })
+                throw new InvalidOperationException("Select device timing at an idle CPU boundary.");
+            (SupervisorIo ?? throw new InvalidOperationException("No supervisor devices are configured.")).UseFunctionalTiming();
+        }
+
         /// <summary>Resets only the CPU. Memory, time, queued events and devices survive.</summary>
         public void ResetCpu() => Cpu.Reset();
 

@@ -47,6 +47,8 @@ public sealed class MramMemoryPort
     private readonly HardwareEventToken[] _starts = new HardwareEventToken[8];
     private readonly Dictionary<ulong, Request> _requests = new();
     private ulong _nextId = 1;
+    internal PhysicalMemory Storage => _memory;
+    internal HardwareTimeline Timeline => _timeline;
     public MramPortConfiguration Configuration { get; }
     public int PendingRequests => _requests.Count;
     public HardwareInstant AvailableAt(uint address) => _banks.AvailableAt(address);
@@ -109,6 +111,18 @@ public sealed class MramMemoryPort
             request.Word = _memory.ReadRaw(request.Address);
         request.Completion(new(request.Token, request.Address, request.Write, request.Word,
             cycle.Started, ready, cycle.BankAvailable));
+    }
+
+    /// <summary>Abort an external exchange without erasing an already accepted write cycle.</summary>
+    internal bool CancelQueuedOrDetachAcceptedWrite(MramRequestToken token)
+    {
+        if (!token.BelongsTo(this) || !_requests.TryGetValue(token.Id, out var request)) return false;
+        if (request.Write && request.QueueNode is null)
+        {
+            request.Completion = static _ => { };
+            return true;
+        }
+        return Cancel(token);
     }
 
     public bool Cancel(MramRequestToken token)
