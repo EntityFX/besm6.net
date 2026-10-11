@@ -20,14 +20,15 @@ internal sealed partial class HardwareProcessorModel
     /// </summary>
     internal ArithmeticCommandHandle BindArithmeticInstruction(HardwareInstructionHandle instruction,
         HardwareDuration cycle, bool operandReady, ArithmeticOperandBuffer? buffer = null,
-        bool automaticCompletion = false, ArithmeticErrorPolicy? errorPolicy = null)
+        bool automaticCompletion = false, ArithmeticErrorPolicy? errorPolicy = null,
+        HardwareDuration? logicalCompletionDelay = null)
     {
         EnsureBindableArithmetic(in instruction);
         var opcode = instruction.Instruction!.Value.Opcode;
         byte operand = ArithmeticCommandEncoding.IsImmediate(opcode)
             ? _processor.GetPreparedImmediateOperand(_pendingInstruction!.Value) : (byte)0;
         return BindArithmeticInstruction(instruction, ArithmeticCommandEncoding.Encode(opcode, operand, buffer),
-            cycle, operandReady, automaticCompletion, errorPolicy);
+            cycle, operandReady, automaticCompletion, errorPolicy, logicalCompletionDelay);
     }
 
     private void EnsureBindableArithmetic(in HardwareInstructionHandle instruction)
@@ -73,7 +74,8 @@ internal sealed partial class HardwareProcessorModel
 
     /// <summary>Use the documented AU interface source; encoding from a guest instruction is a separate UU responsibility.</summary>
     internal ArithmeticCommandHandle BindArithmeticInstruction(HardwareInstructionHandle instruction,
-        ArithmeticCommandWord command, HardwareDuration cycle, bool operandReady, bool automaticCompletion = false, ArithmeticErrorPolicy? errorPolicy = null)
+        ArithmeticCommandWord command, HardwareDuration cycle, bool operandReady, bool automaticCompletion = false, ArithmeticErrorPolicy? errorPolicy = null,
+        HardwareDuration? logicalCompletionDelay = null)
     {
         EnsureBindableArithmetic(in instruction);
         var route = command.Source switch
@@ -93,7 +95,9 @@ internal sealed partial class HardwareProcessorModel
         }
         else if (!Enum.IsDefined((ArithmeticOperandBufferKind)(command.Raw & 0x38)))
             throw new ArgumentException("Mixed AU buffer-class flags have no assigned control priority.", nameof(command));
-        HardwareDuration? delay = automaticCompletion ? ArithmeticFixedCompletionTiming.Duration(opcode, cycle) : null;
+        if (logicalCompletionDelay.HasValue && (!automaticCompletion || logicalCompletionDelay.Value.Nanoseconds == 0))
+            throw new ArgumentException("An explicit logical deadline requires automatic completion and positive duration.", nameof(logicalCompletionDelay));
+        HardwareDuration? delay = automaticCompletion ? logicalCompletionDelay ?? ArithmeticFixedCompletionTiming.Duration(opcode, cycle) : null;
         var handle = BindArithmeticInstructionCore(instruction, command.Raw, cycle, operandReady, route, delay, errorPolicy);
         _boundCommandWord = command;
         _boundAutomaticCompletion = automaticCompletion;

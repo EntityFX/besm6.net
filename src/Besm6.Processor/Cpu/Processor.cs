@@ -108,8 +108,6 @@ namespace Besm6.Core
             Reset();
         }
 
-        internal bool CanCaptureArithmeticOperand(in InstructionExecutor.PreparedInstruction instruction) =>
-            _executor.CanCaptureArithmeticOperand(in instruction);
 
         public void Reset()
         {
@@ -309,6 +307,12 @@ namespace Besm6.Core
             _executor.GetPreparedMemoryOperandAddress(in instruction);
         internal PreparedArithmeticOperation? CaptureTransferredArithmeticOperand(in InstructionExecutor.PreparedInstruction instruction,
             uint address, Word48 word, Exception? failure) => _executor.CaptureArithmeticOperand(in instruction, address, word, failure);
+        internal bool IsPreparedInstructionSuppressed(in InstructionExecutor.PreparedInstruction instruction) =>
+            _executor.IsPreparedInstructionSuppressed(in instruction);
+        internal bool CanBeginMemoryInstruction(in InstructionExecutor.PreparedInstruction instruction) =>
+            _executor.CanBeginMemoryInstruction(in instruction);
+        internal bool CanCaptureArithmeticOperand(in InstructionExecutor.PreparedInstruction instruction) =>
+            _executor.CanCaptureArithmeticOperand(in instruction);
         internal CpuMemoryTransfer? BeginMemoryInstruction(in InstructionExecutor.PreparedInstruction instruction) =>
             _executor.BeginMemoryInstruction(in instruction);
         internal CpuMemoryTransfer? AcceptMemoryTransfer(in InstructionExecutor.PreparedInstruction instruction, Word48 word, Exception? failure) =>

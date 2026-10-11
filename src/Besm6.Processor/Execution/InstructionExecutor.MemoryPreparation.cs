@@ -12,6 +12,11 @@ public sealed partial class InstructionExecutor
     private ExceptionDispatchInfo? _dataFailure;
     private SupervisorFailureDescription? _dataSupervisorFailure;
 
+    internal bool CanBeginMemoryInstruction(in PreparedInstruction instruction) =>
+        IsPreparedInstructionActive(in instruction) && !_fetchPending && !_dataCaptured &&
+        !_arithmeticCaptured && !_terminalPreparation && _prepared.ShouldExecute &&
+        MemoryInstructionExecutor.CanExecuteData(_prepared.Instruction.Opcode);
+
     internal bool RequiresMemoryTransfer(in PreparedInstruction instruction) =>
         IsPreparedInstructionActive(in instruction) && _dataCaptured && !_dataReady;
 

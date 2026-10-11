@@ -225,7 +225,21 @@ internal sealed partial class HardwareProcessorModel
                     outcome = RetireInvalidatedPreparation();
                 }
                 else if (_completionReady)
-                    outcome = CompletePendingInstruction(in instruction);
+                {
+                    if (_automaticOwnsInstruction && _automaticStagesStarted && !_automaticRetirementReady)
+                    {
+                        Timeline.AdvanceUntil(time, () => _automaticRetirementReady ||
+                            _cancellationRequested || !HasPendingInstruction);
+                        if (!HasPendingInstruction) outcome = RetireInvalidatedPreparation();
+                        else if (_cancellationRequested)
+                        {
+                            _processor.CancelInstruction(in instruction);
+                            outcome = RetireInvalidatedPreparation();
+                        }
+                        else if (!_automaticRetirementReady) return null;
+                    }
+                    if (HasPendingInstruction) outcome = CompletePendingInstruction(in instruction);
+                }
                 else return null;
             }
             Timeline.AdvanceTo(time);
@@ -294,6 +308,10 @@ internal sealed partial class HardwareProcessorModel
 
     private void ClearPendingInstruction()
     {
+        _automaticOwnsInstruction = _automaticStagesStarted = false;
+        _automaticRetirementReady = false;
+        Timeline.Cancel(_automaticRetirementEvent);
+        _automaticRetirementEvent = default;
         ClearDataMemory();
         ReleaseTimedMemory();
         ReleaseArithmeticBinding();

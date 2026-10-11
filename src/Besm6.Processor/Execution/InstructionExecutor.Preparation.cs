@@ -44,6 +44,9 @@ public sealed partial class InstructionExecutor
     private bool _terminalStopped;
     private bool _terminalCompleted;
     internal bool HasPreparedInstruction => _preparationActive;
+    internal bool IsPreparedInstructionSuppressed(in PreparedInstruction instruction) =>
+        IsPreparedInstructionActive(in instruction) && !_fetchPending &&
+        (_terminalPreparation || !_prepared.ShouldExecute);
     internal bool IsPreparedInstructionActive(in PreparedInstruction instruction) =>
         _preparationActive && instruction.BelongsTo(this, _preparationGeneration);
 
