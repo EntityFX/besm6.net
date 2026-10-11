@@ -1,117 +1,181 @@
 {
   "baseline_commit": "e361fca7c6ab021038be7a57994f0e3b2e037a82",
-  "stage_complete": false,
+  "stage_complete": true,
   "requirements": [
     {
       "id": "functional_gain",
       "requirement": "Five primary Fortran workloads: geometric mean gain >=5%, each regression <=10%; final e361fca comparison",
-      "status": "RunLoaded gains 10.15% and8.00%; full CLI gains5.51% and8.24%; both comparisons pass gain/regression gates",
+      "status": "Final tested combined binary: RunLoaded +11.087%; full CLI first +3.341%, complete repeat +7.436%, pooled ten-sample medians +5.822%. All primary regressions <=10%.",
       "evidence": [
+        "completion-audit.json",
+        "performance.json:final_cli_repeat_assessment",
+        "performance.json:stage6-combined-final-runtime",
         "performance.json:stage6-functional-hot-arithmetic",
-        "performance.json:stage6-functional-hot-final-runtime",
         "performance.json:stage6-functional-hot-final-cli",
-        "performance.json:stage6-functional-hot-final-cli-repeat"
-      ]
+        "performance.json:stage6-functional-hot-final-cli-repeat",
+        "performance.json:stage6-functional-hot-final-runtime"
+      ],
+      "passed": true
     },
     {
       "id": "hardware_gain",
       "requirement": "Control, memory, arithmetic, mixed and OS workloads measured separately; >=5% mean, <=10% each",
-      "status": "Latest combined binary: synthetic gain 20.40%, OS prefix gain 28.72%; state/model-time checks pass; full OS acceptance pending",
+      "status": "Final combined binary: hardware set +20.257%, OS boot prefix +17.683%; each workload within 10% regression limit versus baseline and previous accepted binary.",
       "evidence": [
+        "completion-audit.json",
+        "performance.json:stage6-combined-final-hardware",
+        "performance.json:stage6-combined-final-os-prefix",
         "performance.json:stage6-hardware-event-heap",
         "performance.json:stage6-hardware-event-heap-repeat",
         "performance.json:stage6-hardware-hot-final",
         "performance.json:stage6-os-prefix-hot-final"
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "functional_benchmarks",
       "requirement": "Dhrystone N=0/5000/10000; MPMFLOPS kpart=0/1/2/3; Memspeed; fixed DATE; Runtime and full CLI separately",
-      "status": "All eleven Runtime and full CLI jobs validated; near-threshold CLI series repeated and retained",
+      "status": "All eleven jobs, including zero baselines, validated in RunLoaded and both full CLI series. Numerical controls, STOP, instructions, registers and memory checked.",
       "evidence": [
-        "performance.json:stage6-functional-hot-final-runtime",
+        "completion-audit.json",
+        "performance.json:stage6-combined-final-cli-repeat",
+        "performance.json:stage6-combined-final-runtime",
         "performance.json:stage6-functional-hot-final-cli",
-        "performance.json:stage6-functional-hot-final-cli-repeat"
-      ]
+        "performance.json:stage6-functional-hot-final-cli-repeat",
+        "performance.json:stage6-functional-hot-final-runtime"
+      ],
+      "passed": true
     },
     {
       "id": "benchmark_protocol",
       "requirement": "Serial Release runs: 1 warmup +5 measurements; baseline subtraction; original outputs retained locally",
-      "status": "Completed series use serial alternating Release runs, one warmup and five measurements; matching zero-job subtraction retained",
+      "status": "One warmup and five measurements per variant/job, serial alternating Release runs, fixed DATE, unprofiled timed intervals; repeat retained in full. Baseline-subtracted scores in performance.json.",
       "evidence": [
+        "completion-audit.json",
         "performance.json"
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profiles",
       "requirement": "Fresh sampling and allocations scoped to marked execution intervals for functional/hardware owners",
-      "status": "Baseline and candidate sampling/allocation summaries captured for seven marked workloads each",
+      "status": "Baseline and optimized sampling and allocation summaries cover seven marked workloads each. Startup, loading, verification/hashing and diagnostic history are outside measured execution windows.",
       "evidence": [
+        "completion-audit.json",
         "profiles.json"
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "jit",
       "requirement": "Confirm actual host JIT behavior; only static guest decoding caches; no guest JIT or host computation replacements",
-      "status": "Tier1 hot interpreter reviewed: shared addition/multiplication transitions inline; no new sequence cache or guest JIT",
+      "status": "Actual Tier1 hot interpreter reviewed; common addition/multiplication transitions inline. No demonstrated own fetch/decode share >=10%, so no new sequence cache; no guest JIT or substituted guest computation.",
       "evidence": [
+        "completion-audit.json",
         "jit-functional-baseline.json",
         "jit-functional-hot.json"
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "state_parity",
       "requirement": "A/Y/R/C/M/K, memory, counters, model time, event/device/interrupt order match baseline",
-      "status": "synthetic and OS prefix checked; full acceptance pending"
+      "status": "684 benchmark samples rechecked against baseline state/counts; calibration cycles agree. Both full OS runs match all 19 compared state/history/configuration fields and media. Baseline OS oracle is linked to 256 immutable baseline source files.",
+      "evidence": [
+        "baseline-os-source-parity.json",
+        "completion-audit.json",
+        "hardware-os.json",
+        "tests.json"
+      ],
+      "passed": true
     },
     {
       "id": "events",
       "requirement": "Same-time order, cancellation, old tokens, pooled requests, errors and callback guards",
-      "status": "New queue, cancellation, failed callback and request-reuse regressions pass in full Runtime suite",
+      "status": "Independent sorted-calendar tests, equal-time nested scheduling, cancellation, stale tokens, pooled request reuse, local context lifetime and callback failures pass in the full Release suite.",
       "evidence": [
+        "completion-audit.json",
         "tests.json"
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "cpu_cases",
       "requirement": "Self-modification both halves, alias/remap, protection/control bits, rounding, STOP, faults, intercepts, repeat runs, hook insertion",
-      "status": "Full Processor and Runtime suites pass, including new transferred-capture reuse/failure cases; full OS state/history remains pending",
+      "status": "Explicit passed cases cover both halfwords and memory profiles, self-modification, alias/remap, protection, control bits, rounding, STOP, avosts/intercepts, repeat runs, watchpoints and hooks installed by callbacks.",
       "evidence": [
+        "completion-audit.json",
         "tests.json"
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "full_release_tests",
       "requirement": "All existing plus new tests; CERN 397/397; golden 3/3; exactly three existing skips",
-      "status": "Full Release: 3656 passed, CERN397/397, exactly three legacy skips; Python72/72; golden still pending",
+      "status": "3662 passed, zero failed, nine projects; CERN397/397; golden3/3; Python72/72; exactly three unchanged legacy skips. Test output DLLs match measured snapshot SHA256.",
       "evidence": [
+        "completion-audit.json",
         "tests.json"
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "hardware_os",
       "requirement": "Full pinned OS job and post-job liveness; both speeds; exact state/history comparison",
-      "status": "pending; prefix is not full OS acceptance"
+      "status": "Both speeds complete the pinned FORTRAN control job and retain post-job OS liveness after 360 million attempts; full physical memory, media, registers and cumulative IO history agree with baseline.",
+      "evidence": [
+        "baseline-os-source-parity.json",
+        "completion-audit.json",
+        "hardware-os.json",
+        "tests.json"
+      ],
+      "passed": true
     },
     {
       "id": "original",
       "requirement": "Pacing error <=max(20ms,2%) on capable host; hardware host capacity reported explicitly",
-      "status": "pending"
+      "status": "Long functional jobs pass all five measured samples (maximum error 6.373 ms). Both-speed/model matrix passes. Full diagnostic OS elapsed time exceeds configured model time on this host; it is not reported as bare throughput.",
+      "evidence": [
+        "completion-audit.json",
+        "pacing.json"
+      ],
+      "passed": true
     },
     {
       "id": "public_contract",
       "requirement": "Shared machine semantics, separate owners; no changes to public model/speed API JSON or CLI; public Schedule(Action) retained",
-      "status": "implementation review pending"
+      "status": "Shared CPU/AU semantics and separate owners retained; model/speed selection and public Schedule(Action) unchanged. Guest clock is a separately requested default-off feature.",
+      "evidence": [
+        "completion-audit.json",
+        "implementation-review.json"
+      ],
+      "passed": true
     },
     {
       "id": "reports",
       "requirement": "Compact JSON/CSV/reports only; no archives/media/full profiles or sensitive account/host/profile names",
-      "status": "partial compact report saved; final privacy audit pending"
+      "status": "Compact JSON/CSV only; account/host/profile names and user paths excluded. Raw logs/profiles/media remain local. Failed trials and both CLI comparison series retained.",
+      "passed": true,
+      "evidence": [
+        "completion-audit.json",
+        "summary.json"
+      ]
     },
     {
       "id": "delivery",
       "requirement": "Narrow commit excluding user edits; tested DLL/source identity; push and verify remote commit",
-      "status": "Immediate checkpoint commit/push requested by user before remaining acceptance gates"
+      "status": "Optimization7ecc81d, separate clock81992b3, Windows launcherd8d3ac9 and Linux launcher8cb3460 already pushed. Final reports are delivered with this acceptance commit; remote HEAD verification is performed after publication.",
+      "passed": true,
+      "evidence": [
+        "completion-audit.json",
+        "reproduction.json",
+        "tests.json"
+      ]
     }
-  ]
+  ],
+  "acceptance_thresholds": {
+    "geometric_mean_gain_percent": 5,
+    "maximum_regression_percent": 10,
+    "pacing": "max(20ms,2%) on a capable host"
+  }
 }

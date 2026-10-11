@@ -1,0 +1,101 @@
+{
+  "scope": "Full pinned OS control job and post-job liveness; full guest state/media/IO history parity; diagnostic elapsed time is not a bare throughput benchmark",
+  "accepted": true,
+  "checks": {
+    "explicit_supported_memory": true,
+    "hardware_dispatcher": true,
+    "hosted_extracodes_disabled": true,
+    "operator_ready": true,
+    "fortran_result": true,
+    "guest_job_completed": true,
+    "operating_system_alive": true,
+    "same_guest_state_original_max": true
+  },
+  "tested_binary_sha256": {
+    "Besm6.Runtime.dll": "a5ccd7793cbceec5ef88c80d2025a85a96bd9d58f0a0855d3f04a5c64e74187c",
+    "Besm6.Processor.dll": "1bc6eee98f68441cb9f411c67cb426818b128cc22885a2572be59b4f27afbcf5",
+    "besm6.dll": "751ecaf17110009b85cb93c8c8d48a726d5a672e2b9088c666f32cc518ce0eea"
+  },
+  "baseline_oracle": "baseline-os-source-parity.json",
+  "compared_fields": [
+    "state_sha256",
+    "completed_instructions",
+    "ticks",
+    "hardware_time_ns",
+    "probe_source_sha256",
+    "hardware_configuration_sha256",
+    "bootstrap_sha256",
+    "guest_state",
+    "printed_primes",
+    "guest_job_completed",
+    "operating_system_alive",
+    "final_cpu",
+    "interrupt_state",
+    "page_assignments",
+    "operand_buffers",
+    "instruction_buffers",
+    "io_calls",
+    "io_last256",
+    "errors"
+  ],
+  "samples": [
+    {
+      "speed": "max",
+      "result_sha256": "08373669ec4658dc659a3a63023301abf76ea141eee7e4f59811c57550ac7d70",
+      "state_sha256": "aabcfbb1f29039e7a7a7faefebecd5493b9261a601c6a84c5c0bc22170c56ce1",
+      "io_history_sha256": "854bca068285ce82b14de0a4b377c4f3cf5f646be959a52df908e8c9f15553b6",
+      "physical_memory_sha256": "6345c64f37b67f2d6fbf579a872c6a27abeb9a84b460d7a3d3d6570a6f07d47e",
+      "completed_instructions": 359999879,
+      "hardware_time_ns": 430696050250,
+      "simulation_clock_ticks": 0,
+      "model_seconds": 430.69605025,
+      "diagnostic_elapsed_seconds": 907.9900004,
+      "diagnostic_host_meets_model_tempo": false,
+      "printed_primes": [
+        9433,
+        19081,
+        29147,
+        39631,
+        50359,
+        61297,
+        72467,
+        83701,
+        95101
+      ],
+      "printer_line_count": 114,
+      "guest_job_completed": true,
+      "operating_system_alive": true,
+      "errors": [],
+      "baseline_state_and_history_match": true
+    },
+    {
+      "speed": "original",
+      "result_sha256": "c912294c00a429f5bad6fba3064f467f189b668441fb00a76bf31cd9d895ff17",
+      "state_sha256": "aabcfbb1f29039e7a7a7faefebecd5493b9261a601c6a84c5c0bc22170c56ce1",
+      "io_history_sha256": "854bca068285ce82b14de0a4b377c4f3cf5f646be959a52df908e8c9f15553b6",
+      "physical_memory_sha256": "6345c64f37b67f2d6fbf579a872c6a27abeb9a84b460d7a3d3d6570a6f07d47e",
+      "completed_instructions": 359999879,
+      "hardware_time_ns": 430696050250,
+      "simulation_clock_ticks": 0,
+      "model_seconds": 430.69605025,
+      "diagnostic_elapsed_seconds": 894.1700222,
+      "diagnostic_host_meets_model_tempo": false,
+      "printed_primes": [
+        9433,
+        19081,
+        29147,
+        39631,
+        50359,
+        61297,
+        72467,
+        83701,
+        95101
+      ],
+      "printer_line_count": 114,
+      "guest_job_completed": true,
+      "operating_system_alive": true,
+      "errors": [],
+      "baseline_state_and_history_match": true
+    }
+  ]
+}

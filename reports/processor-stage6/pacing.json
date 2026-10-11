@@ -1,0 +1,389 @@
+{
+  "scope": "Functional original pacing on long Fortran jobs; CPU loop separate from full process",
+  "warmups": 1,
+  "repeats": 5,
+  "accepted": true,
+  "tested_binary_sha256": {
+    "Besm6.Runtime.dll": "a5ccd7793cbceec5ef88c80d2025a85a96bd9d58f0a0855d3f04a5c64e74187c",
+    "Besm6.Processor.dll": "1bc6eee98f68441cb9f411c67cb426818b128cc22885a2572be59b4f27afbcf5",
+    "besm6.dll": "751ecaf17110009b85cb93c8c8d48a726d5a672e2b9088c666f32cc518ce0eea"
+  },
+  "measurements": [
+    {
+      "job": "dh10000:original",
+      "model_seconds": 4.2349906,
+      "median_elapsed_seconds": 4.2386121,
+      "maximum_absolute_error_seconds": 0.0051824000000006976,
+      "tolerance_seconds": 0.084699812,
+      "state_and_memory_match": true,
+      "completed_instructions": 25799835,
+      "model_cycles": 42349906
+    },
+    {
+      "job": "mp3:original",
+      "model_seconds": 5.1127036,
+      "median_elapsed_seconds": 5.1134417,
+      "maximum_absolute_error_seconds": 0.0063723000000006635,
+      "tolerance_seconds": 0.102254072,
+      "state_and_memory_match": true,
+      "completed_instructions": 20295025,
+      "model_cycles": 51127036
+    }
+  ],
+  "prior_optimized_checkpoint_matrix": {
+    "validated": true,
+    "samples": 24,
+    "fixture": {
+      "executionModel": "functional",
+      "speed": "max",
+      "memoryConfiguration": "classical32k",
+      "entryAddress": 8,
+      "controlFlags": 1027,
+      "instructionLimit": 10,
+      "memoryWords": [
+        {
+          "address": 8,
+          "raw50": 310062296694784
+        }
+      ],
+      "timing": {
+        "bankCycleNs": 2000,
+        "readLatencyNs": 900,
+        "writeVisibilityNs": 1500,
+        "readSampling": "cycleStart",
+        "banking": "documentedClassical",
+        "bufferHitNs": 100,
+        "arithmeticCycleNs": 100,
+        "controlDurationsNs": {
+          "Vtm": 1000000000,
+          "Stop": 1000000000
+        },
+        "arithmeticDurationsNs": {},
+        "devices": {
+          "exchangeReadyNs": 20000,
+          "consoleReplyNs": 700,
+          "paperFeedNs": 900,
+          "printerCharacterNs": 100,
+          "printerZeroNs": 50,
+          "timerPeriodNs": 500,
+          "serialPeriodNs": 30,
+          "dmaIssueIntervalNs": 0
+        }
+      }
+    },
+    "maximum_hardware_original_error_seconds": 0.013056900000000038,
+    "dll_sha256": "9cad75563027ae78d7844a0e160bf0b3270ed49ec712a48c633446a79c7361e1",
+    "scope": "Explicit logical timing fixture; historical electrical timing is not inferred"
+  },
+  "final_combined_matrix": {
+    "validated": true,
+    "purpose": "Logical machine profile/speed parity and hardware pacing",
+    "warmups": 1,
+    "repeats": 5,
+    "dll_sha256": "751ecaf17110009b85cb93c8c8d48a726d5a672e2b9088c666f32cc518ce0eea",
+    "fixture": {
+      "executionModel": "functional",
+      "speed": "max",
+      "memoryConfiguration": "classical32k",
+      "entryAddress": 8,
+      "controlFlags": 1027,
+      "instructionLimit": 10,
+      "memoryWords": [
+        {
+          "address": 8,
+          "raw50": 310062296694784
+        }
+      ],
+      "timing": {
+        "bankCycleNs": 2000,
+        "readLatencyNs": 900,
+        "writeVisibilityNs": 1500,
+        "readSampling": "cycleStart",
+        "banking": "documentedClassical",
+        "bufferHitNs": 100,
+        "arithmeticCycleNs": 100,
+        "controlDurationsNs": {
+          "Vtm": 1000000000,
+          "Stop": 1000000000
+        },
+        "arithmeticDurationsNs": {},
+        "devices": {
+          "exchangeReadyNs": 20000,
+          "consoleReplyNs": 700,
+          "paperFeedNs": 900,
+          "printerCharacterNs": 100,
+          "printerZeroNs": 50,
+          "timerPeriodNs": 500,
+          "serialPeriodNs": 30,
+          "dmaIssueIntervalNs": 0
+        }
+      }
+    },
+    "samples": [
+      {
+        "model": "functional",
+        "speed": "max",
+        "warmup": true,
+        "process_seconds": 0.27860060008242726,
+        "loop_seconds": 0.0070627,
+        "model_seconds": 3e-07,
+        "hardware_nanoseconds": null,
+        "absolute_error_seconds": 0.0070624,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "functional",
+        "speed": "max",
+        "warmup": false,
+        "process_seconds": 0.27113169990479946,
+        "loop_seconds": 0.0082191,
+        "model_seconds": 3e-07,
+        "hardware_nanoseconds": null,
+        "absolute_error_seconds": 0.0082188,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "functional",
+        "speed": "max",
+        "warmup": false,
+        "process_seconds": 0.30097009986639023,
+        "loop_seconds": 0.0076542,
+        "model_seconds": 3e-07,
+        "hardware_nanoseconds": null,
+        "absolute_error_seconds": 0.0076539,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "functional",
+        "speed": "max",
+        "warmup": false,
+        "process_seconds": 0.289650300052017,
+        "loop_seconds": 0.0094407,
+        "model_seconds": 3e-07,
+        "hardware_nanoseconds": null,
+        "absolute_error_seconds": 0.0094404,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "functional",
+        "speed": "max",
+        "warmup": false,
+        "process_seconds": 0.3103629001416266,
+        "loop_seconds": 0.0083083,
+        "model_seconds": 3e-07,
+        "hardware_nanoseconds": null,
+        "absolute_error_seconds": 0.008308,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "functional",
+        "speed": "max",
+        "warmup": false,
+        "process_seconds": 0.3133501000702381,
+        "loop_seconds": 0.0095468,
+        "model_seconds": 3e-07,
+        "hardware_nanoseconds": null,
+        "absolute_error_seconds": 0.0095465,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "functional",
+        "speed": "original",
+        "warmup": true,
+        "process_seconds": 0.3187549002468586,
+        "loop_seconds": 0.0082738,
+        "model_seconds": 3e-07,
+        "hardware_nanoseconds": null,
+        "absolute_error_seconds": 0.0082735,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "functional",
+        "speed": "original",
+        "warmup": false,
+        "process_seconds": 0.29030709993094206,
+        "loop_seconds": 0.008594,
+        "model_seconds": 3e-07,
+        "hardware_nanoseconds": null,
+        "absolute_error_seconds": 0.0085937,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "functional",
+        "speed": "original",
+        "warmup": false,
+        "process_seconds": 0.3226239997893572,
+        "loop_seconds": 0.0118036,
+        "model_seconds": 3e-07,
+        "hardware_nanoseconds": null,
+        "absolute_error_seconds": 0.0118033,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "functional",
+        "speed": "original",
+        "warmup": false,
+        "process_seconds": 0.45704409992322326,
+        "loop_seconds": 0.0094745,
+        "model_seconds": 3e-07,
+        "hardware_nanoseconds": null,
+        "absolute_error_seconds": 0.0094742,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "functional",
+        "speed": "original",
+        "warmup": false,
+        "process_seconds": 0.43075900012627244,
+        "loop_seconds": 0.0130111,
+        "model_seconds": 3e-07,
+        "hardware_nanoseconds": null,
+        "absolute_error_seconds": 0.0130108,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "functional",
+        "speed": "original",
+        "warmup": false,
+        "process_seconds": 0.4741067001596093,
+        "loop_seconds": 0.0097313,
+        "model_seconds": 3e-07,
+        "hardware_nanoseconds": null,
+        "absolute_error_seconds": 0.009731,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "hardware",
+        "speed": "max",
+        "warmup": true,
+        "process_seconds": 0.31218669982627034,
+        "loop_seconds": 0.0260762,
+        "model_seconds": 2.000001,
+        "hardware_nanoseconds": 2000001000,
+        "absolute_error_seconds": 1.9739248,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "hardware",
+        "speed": "max",
+        "warmup": false,
+        "process_seconds": 0.29684159997850657,
+        "loop_seconds": 0.0259732,
+        "model_seconds": 2.000001,
+        "hardware_nanoseconds": 2000001000,
+        "absolute_error_seconds": 1.9740278000000002,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "hardware",
+        "speed": "max",
+        "warmup": false,
+        "process_seconds": 0.2979728002101183,
+        "loop_seconds": 0.0268393,
+        "model_seconds": 2.000001,
+        "hardware_nanoseconds": 2000001000,
+        "absolute_error_seconds": 1.9731617000000001,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "hardware",
+        "speed": "max",
+        "warmup": false,
+        "process_seconds": 0.298087100032717,
+        "loop_seconds": 0.0263784,
+        "model_seconds": 2.000001,
+        "hardware_nanoseconds": 2000001000,
+        "absolute_error_seconds": 1.9736226000000001,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "hardware",
+        "speed": "max",
+        "warmup": false,
+        "process_seconds": 0.29947919957339764,
+        "loop_seconds": 0.0264664,
+        "model_seconds": 2.000001,
+        "hardware_nanoseconds": 2000001000,
+        "absolute_error_seconds": 1.9735346000000002,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "hardware",
+        "speed": "max",
+        "warmup": false,
+        "process_seconds": 0.2927704001776874,
+        "loop_seconds": 0.0268244,
+        "model_seconds": 2.000001,
+        "hardware_nanoseconds": 2000001000,
+        "absolute_error_seconds": 1.9731766000000002,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "hardware",
+        "speed": "original",
+        "warmup": true,
+        "process_seconds": 2.2810372998937964,
+        "loop_seconds": 2.007228,
+        "model_seconds": 2.000001,
+        "hardware_nanoseconds": 2000001000,
+        "absolute_error_seconds": 0.007226999999999872,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "hardware",
+        "speed": "original",
+        "warmup": false,
+        "process_seconds": 2.278663100209087,
+        "loop_seconds": 2.0109871,
+        "model_seconds": 2.000001,
+        "hardware_nanoseconds": 2000001000,
+        "absolute_error_seconds": 0.010986099999999777,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "hardware",
+        "speed": "original",
+        "warmup": false,
+        "process_seconds": 2.274878399912268,
+        "loop_seconds": 2.0027686,
+        "model_seconds": 2.000001,
+        "hardware_nanoseconds": 2000001000,
+        "absolute_error_seconds": 0.00276759999999987,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "hardware",
+        "speed": "original",
+        "warmup": false,
+        "process_seconds": 2.2843643999658525,
+        "loop_seconds": 2.0108151,
+        "model_seconds": 2.000001,
+        "hardware_nanoseconds": 2000001000,
+        "absolute_error_seconds": 0.010814099999999716,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "hardware",
+        "speed": "original",
+        "warmup": false,
+        "process_seconds": 2.274997199885547,
+        "loop_seconds": 2.0049133,
+        "model_seconds": 2.000001,
+        "hardware_nanoseconds": 2000001000,
+        "absolute_error_seconds": 0.004912299999999981,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      },
+      {
+        "model": "hardware",
+        "speed": "original",
+        "warmup": false,
+        "process_seconds": 2.280067500192672,
+        "loop_seconds": 2.0067311,
+        "model_seconds": 2.000001,
+        "hardware_nanoseconds": 2000001000,
+        "absolute_error_seconds": 0.006730099999999961,
+        "state_sha256": "cf32dbbff2864077c7115f4ffd0d4411570ac23cab8a7d62059875429d92937d"
+      }
+    ]
+  }
+}
