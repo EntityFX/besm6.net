@@ -1,5 +1,8 @@
 # Execution owners of one machine
 
+Source-backed rules, explicit timing parameters and compatibility limits are
+collected in the [stage 5 boundary matrix](besm6-stage5-model-boundaries.md).
+
 `MachineCore` defaults to functional execution. The shared CPU, registers,
 arithmetic semantics, physical memory, buffers and device attachments remain
 one machine. `UseHardwareExecution(HardwareMachineConfiguration)` selects the
@@ -68,8 +71,12 @@ its SHA256 and resolves relative to the JSON file. Images are copied into device
 storage; running the guest does not write back to host media files.
 
 `startTimer`/`startSerialClock` start the selected calendar after attachments.
-Functional execution requires positive `timerPeriodTicks`/`serialPeriodTicks`;
-hardware execution rejects tick periods and uses `timing.devices` nanoseconds.
+Functional execution requires positive `timerPeriodTicks`/`serialPeriodTicks`.
+Hardware execution uses `timing.devices` nanoseconds and leaves tick periods
+dormant. A job may specify both calendars and select either owner using
+`--execution functional|hardware`; no conversion between ticks and nanoseconds
+occurs. Enabled functional clocks still require their explicit positive tick
+periods, even when the job selects hardware execution by default.
 The CLI result also contains console/serial bytes and printer rows.
 
 The boot harness supports `--hardware-job` and public `UseHardwareExecution`.
@@ -118,3 +125,15 @@ read cache. Physical input checking requires an explicit verified source code;
 the slot number is not assumed to encode an interruption cause. Default shared
 guest memory-control/error delivery remains unchanged. Unknown physical fault
 continuation and overlap rules remain outside the automatic logical profile.
+
+Independent CPU validation reuses the existing 100 book/Fraction vectors in
+`MachineBookVectorTests`, without recalculating expected bits using the runtime
+ALU. Each vector runs through functional/hardware execution and original/max.
+Checks cover A/Y/R/C/M/K, the command half, visible memory, STOP, completion
+notifications and the selected clock. Supervisor arithmetic faults are checked
+at their interrupt vector with zero completed commands; supervisor extracodes
+are checked at their vector and saved return address rather than against the
+hosted Dubna dispatch result. Known book R/Y discrepancies remain explicitly
+classified compatibility contracts, not claims of corrected hardware behavior.
+The test configuration supplies logical delays for unnamed extracode opcodes
+as well as named instructions; these delays are not historical measurements.

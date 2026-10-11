@@ -24,8 +24,8 @@ public sealed class MachineDeviceConfiguration
         ArgumentNullException.ThrowIfNull(DiskImages); ArgumentNullException.ThrowIfNull(ScratchDisks);
         ArgumentNullException.ThrowIfNull(ScratchDrums); ArgumentNullException.ThrowIfNull(SerialTerminals);
         ArgumentNullException.ThrowIfNull(Printers); ArgumentNullException.ThrowIfNull(PaperTapes);
-        if (model == MachineExecutionModel.Hardware && (TimerPeriodTicks != 0 || SerialPeriodTicks != 0))
-            throw new ArgumentException("Hardware clocks use the timing configuration, not tick periods.");
+        // A job may define both calendars for CLI owner selection. Hardware uses
+        // only timing.devices nanoseconds; these independent tick rates are dormant.
         if (model == MachineExecutionModel.Functional &&
             (StartTimer && TimerPeriodTicks == 0 || StartSerialClock && SerialPeriodTicks == 0))
             throw new ArgumentException("Enabled functional clocks require positive tick periods.");

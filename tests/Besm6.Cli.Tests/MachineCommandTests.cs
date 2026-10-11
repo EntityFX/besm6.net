@@ -51,6 +51,23 @@ public sealed class MachineCommandTests
     }
 
     [TestMethod]
+    public void OneDeviceConfigurationAcceptsBothCliOwnersWithoutConvertingRates()
+    {
+        var job = Job("hardware");
+        job.Devices = new() { StartTimer = true, StartSerialClock = true,
+            TimerPeriodTicks = 100, SerialPeriodTicks = 50 };
+        var functional = Run(job, "--execution", "functional");
+        var hardware = Run(job, "--execution", "hardware");
+        Assert.AreEqual(0, functional.Code, functional.Error);
+        Assert.AreEqual(0, hardware.Code, hardware.Error);
+        using var f = JsonDocument.Parse(functional.Output);
+        using var h = JsonDocument.Parse(hardware.Output);
+        Assert.AreEqual(f.RootElement.GetProperty("state").GetRawText(), h.RootElement.GetProperty("state").GetRawText());
+        Assert.AreEqual(2UL, f.RootElement.GetProperty("functionalTicks").GetUInt64());
+        Assert.AreEqual(0UL, h.RootElement.GetProperty("functionalTicks").GetUInt64());
+    }
+
+    [TestMethod]
     [DataRow("functional", "original")] [DataRow("functional", "max")]
     [DataRow("hardware", "original")] [DataRow("hardware", "max")]
     public void BothOwnerAndSpeedSelectionsReachStop(string model, string speed)

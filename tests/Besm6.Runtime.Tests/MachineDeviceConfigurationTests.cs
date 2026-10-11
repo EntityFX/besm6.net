@@ -16,7 +16,7 @@ public sealed class MachineDeviceConfigurationTests
         job.MemoryWords.Add(new() { Address = 2, Panel = true, Raw50 = MemoryWord50.Form(new(123), true, true).RawValue });
         job.MemoryWords.Add(new() { Address = 2, Raw50 = MemoryWord50.Form(new(456), true, true).RawValue });
         job.Devices = new() { StartTimer = true, IncludeSlowClock = true, StartSerialClock = true,
-            TimerPeriodTicks = hardware ? 0UL : 10UL, SerialPeriodTicks = hardware ? 0UL : 5UL,
+            TimerPeriodTicks = 10UL, SerialPeriodTicks = 5UL,
             ScratchDrums = new() { 0, 1 }, SerialTerminals = new() { 1 }, Printers = new() { 0 } };
         var machine = job.CreateMachine();
         Assert.AreEqual(123UL, machine.MappedMemory!.GetPanel(2).Data.Value);
@@ -77,10 +77,26 @@ public sealed class MachineDeviceConfigurationTests
             var job = Job(false); job.Devices = devices;
             Assert.ThrowsExactly<ArgumentException>(() => job.CreateMachine());
         }
-        var hardware = Job(true); hardware.Devices = new() { TimerPeriodTicks = 1 };
-        Assert.ThrowsExactly<ArgumentException>(() => hardware.CreateMachine());
         var panel = Job(false); panel.MemoryWords.Add(new() { Address = 8, Panel = true });
         Assert.ThrowsExactly<ArgumentException>(() => panel.CreateMachine());
+    }
+
+    [TestMethod]
+    public void OneJobSelectsIndependentClockRatesThroughEitherOwner()
+    {
+        var job = Job(true);
+        job.Devices = new() { StartTimer = true, StartSerialClock = true,
+            TimerPeriodTicks = 10, SerialPeriodTicks = 5 };
+        var functional = job.CreateMachine(MachineExecutionModel.Functional);
+        var hardware = job.CreateMachine(MachineExecutionModel.Hardware);
+        Assert.AreEqual(5UL, ((EventScheduler)functional.Scheduler).NextEventTick!.Value);
+        Assert.AreEqual(30UL, hardware.HardwareTimeline.NextEventTime!.Value.Nanoseconds);
+        functional.Scheduler.AdvanceTo(10);
+        Assert.AreNotEqual(0UL, functional.SupervisorIo!.ExternalInterrupts & SupervisorIoController.TimerInterrupt);
+        hardware.HardwareTimeline.AdvanceTo(new(500));
+        Assert.AreNotEqual(0UL, hardware.SupervisorIo!.ExternalInterrupts & SupervisorIoController.TimerInterrupt);
+        Assert.AreEqual(0UL, hardware.Clock.Tick);
+        Assert.AreEqual(0UL, functional.HardwareTimeline.Now.Nanoseconds);
     }
 
     [TestMethod]

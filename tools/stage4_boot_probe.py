@@ -697,6 +697,7 @@ def main() -> int:
             "serialTerminals": [1], "printers": [0],
             "paperTapes": [{"reader": 0, "file": relative("input.txt"), "sha256": SUPPORT_FILES["input.txt"]}],
             "startTimer": True, "includeSlowClock": args.memory_configuration == "Simh512K", "startSerialClock": True,
+            "timerPeriodTicks": args.timer_period, "serialPeriodTicks": args.serial_period,
         }
         job_path.parent.mkdir(parents=True, exist_ok=True)
         job_path.write_text(json.dumps(job, indent=2) + "\n", encoding="utf-8")
