@@ -191,6 +191,46 @@ public sealed class CapturedArithmeticInstructionTests
     }
 
     [TestMethod]
+    [DataRow("a+x 10", false)]
+    [DataRow("a+x 10", true)]
+    [DataRow("a*x 10", false)]
+    [DataRow("a*x 10", true)]
+    public void RepeatedTransferredCapturesUseEachAcceptedWordInsteadOfBackingMemory(string instruction, bool right)
+    {
+        var cpu = Create(instruction);
+        cpu.MemStore(8, Word48.FromDouble(99).Value);
+        foreach (double operand in new[] { 0.5, 2.0, 1.0, 4.0, 0.5 })
+        {
+            cpu.StartAt(1); cpu.State.IsRightHalf = right;
+            cpu.SetA(Word48.FromDouble(1).Value);
+            var command = cpu.PrepareInstruction();
+            var operation = cpu.CaptureTransferredArithmeticOperand(in command, 8, Word48.FromDouble(operand), null)!.Value;
+            cpu.SupplyArithmeticResult(in command, operation.Evaluate(cpu.GetA(), cpu.GetY()), null);
+            cpu.CompleteInstruction(in command);
+            Assert.AreEqual(Word48.FromDouble(instruction.StartsWith("a+x") ? 1 + operand : operand), cpu.GetA());
+            Assert.AreEqual(Word48.FromDouble(99).Value, cpu.MemLoad(8));
+            Assert.IsFalse(cpu.HasPreparedInstruction);
+        }
+    }
+
+    [TestMethod]
+    public void FailedTransferredCaptureReleasesItsViewBeforeTheNextCommand()
+    {
+        var cpu = Create("a+x 10");
+        var cause = new InvalidOperationException("Accepted transfer failure");
+        var failed = cpu.PrepareInstruction();
+        Assert.IsNull(cpu.CaptureTransferredArithmeticOperand(in failed, 8, default, cause));
+        Assert.AreSame(cause, Assert.ThrowsExactly<InvalidOperationException>(() => cpu.CompleteInstruction(in failed)));
+        Assert.IsFalse(cpu.HasPreparedInstruction);
+        cpu.StartAt(1); cpu.SetA(Word48.FromDouble(1).Value);
+        var next = cpu.PrepareInstruction();
+        var operation = cpu.CaptureTransferredArithmeticOperand(in next, 8, Word48.FromDouble(2), null)!.Value;
+        cpu.SupplyArithmeticResult(in next, operation.Evaluate(cpu.GetA(), cpu.GetY()), null);
+        cpu.CompleteInstruction(in next);
+        Assert.AreEqual(Word48.FromDouble(3), cpu.GetA());
+    }
+
+    [TestMethod]
     public void CompletionDoesNotReadMemoryAgainAndCaptureIsNotReentrant()
     {
         var memory = new ObservedMemory(); var cpu = new Processor(memory);

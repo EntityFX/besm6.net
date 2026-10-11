@@ -1,0 +1,55 @@
+{
+  "environment": {
+    "platform": "Windows-10-AMD64",
+    "python": "3.12.5",
+    "dotnet": {
+      "sdk": "9.0.202",
+      "net8_runtimes": [
+        {
+          "framework": "Microsoft.AspNetCore.App",
+          "version": "8.0.24"
+        },
+        {
+          "framework": "Microsoft.NETCore.App",
+          "version": "8.0.24"
+        },
+        {
+          "framework": "Microsoft.WindowsDesktop.App",
+          "version": "8.0.24"
+        }
+      ]
+    }
+  },
+  "scope": "host JIT diagnostic; not a throughput measurement",
+  "workload": "control",
+  "requested_methods": "get_HasPendingInstruction",
+  "probe_sha256": "48507c7a0523d2a74ea25c633f1a65adeca2f1ba31ce43bf002fb6a416f03856",
+  "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+  "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18",
+  "assembly_sha256": "8a086d1fc25dba4b092e025c2d6e39ab153cd515c77cc48311fe0df33bb2e5ab",
+  "methods": [
+    {
+      "method": "Besm6.Runtime.Modeling.HardwareProcessorModel:get_HasPendingInstruction():bool:this (Tier0)",
+      "code_bytes": 157,
+      "calls": [
+        "Besm6.Core.Processor:IsPreparedInstructionActive(byref):bool:this",
+        "System.Nullable`1[Besm6.Core.InstructionExecutor+PreparedInstruction]:GetValueOrDefault():Besm6.Core.InstructionExecutor+PreparedInstruction:this",
+        "System.Nullable`1[Besm6.Core.InstructionExecutor+PreparedInstruction]:get_HasValue():bool:this"
+      ]
+    },
+    {
+      "method": "Besm6.Runtime.Modeling.HardwareProcessorModel:get_HasPendingInstruction():bool:this (Instrumented Tier0)",
+      "code_bytes": 187,
+      "calls": [
+        "Besm6.Core.Processor:IsPreparedInstructionActive(byref):bool:this",
+        "System.Nullable`1[Besm6.Core.InstructionExecutor+PreparedInstruction]:GetValueOrDefault():Besm6.Core.InstructionExecutor+PreparedInstruction:this",
+        "System.Nullable`1[Besm6.Core.InstructionExecutor+PreparedInstruction]:get_HasValue():bool:this"
+      ]
+    },
+    {
+      "method": "Besm6.Runtime.Modeling.HardwareProcessorModel:get_HasPendingInstruction():bool:this (Tier1)",
+      "code_bytes": 69,
+      "calls": []
+    }
+  ]
+}

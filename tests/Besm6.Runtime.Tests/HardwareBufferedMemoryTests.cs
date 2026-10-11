@@ -38,6 +38,48 @@ public sealed class HardwareBufferedMemoryTests
     }
 
     [TestMethod]
+    public void CancelledLocalContextCannotAffectNestedOrLaterReads()
+    {
+        var (_, memory, buffers, time) = Setup();
+        memory.Write(8, new(17));
+        time.ScheduleAt(new(50), () => { }); // Keep the cancelled hit behind a live entry.
+        var cancelled = buffers.ReadOperand(8, _ => Assert.Fail("Cancelled hit returned"));
+        HardwareBufferedRead? nested = null;
+        buffers.RequestCancelled += token =>
+        {
+            Assert.AreEqual(cancelled, token);
+            memory.Write(8, new(18));
+            buffers.ReadOperand(8, value => nested = value);
+        };
+        Assert.IsTrue(buffers.Cancel(cancelled));
+        Assert.IsFalse(buffers.Cancel(cancelled));
+        time.AdvanceTo(new(100));
+        Assert.AreEqual(18UL, nested!.Value.Word.Value);
+        Assert.AreNotEqual(cancelled, nested.Value.Token);
+        Assert.AreEqual(0, buffers.PendingRequests);
+        memory.Write(8, new(19));
+        Assert.AreEqual(19UL, Read(buffers, time, 8).Word.Value);
+        Assert.IsFalse(buffers.Cancel(cancelled));
+    }
+
+    [TestMethod]
+    public void FailedLocalReceiverDoesNotSurviveRequestReuse()
+    {
+        var (_, memory, buffers, time) = Setup();
+        memory.Write(8, new(17));
+        var cause = new ApplicationException("Buffered receiver");
+        var failed = buffers.ReadOperand(8, _ => throw cause);
+        var error = Assert.ThrowsExactly<HardwareCallbackException>(() => time.AdvanceTo(new(100)));
+        Assert.AreSame(cause, error.InnerException);
+        Assert.AreEqual(0, buffers.PendingRequests);
+        memory.Write(8, new(18));
+        var next = Read(buffers, time, 8);
+        Assert.AreEqual(18UL, next.Word.Value);
+        Assert.AreNotEqual(failed, next.Token);
+        Assert.IsFalse(buffers.Cancel(failed));
+    }
+
+    [TestMethod]
     public void OperandMissReturnsAtMramDeadlineWithoutAllocatingBrz()
     {
         var (_, memory, buffers, time) = Setup(); memory.PhysicalMemory.WriteRaw(8, Number(17));

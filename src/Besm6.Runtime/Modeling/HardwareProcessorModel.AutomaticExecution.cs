@@ -33,6 +33,7 @@ internal sealed partial class HardwareProcessorModel
     /// guest faults return to the caller, which owns interrupt-return policy.
     /// Neither legacy ticks nor host waiting are performed here.
     /// </summary>
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
     internal HardwareRunOutcome AdvanceAutomaticTo(HardwareInstant time, ulong instructionLimit)
     {
         EnsureDriverAllowed();
@@ -105,11 +106,12 @@ internal sealed partial class HardwareProcessorModel
         if (!arithmetic && !_processor.CanBeginMemoryInstruction(in lease) &&
             !_processor.IsPreparedInstructionSuppressed(in lease) && !IsAutomaticRegisterOrControl(opcode) && !IsAutomaticSupervisorControl(opcode))
             throw new NotSupportedException($"{opcode} requires its hardware device/special-memory route before automatic execution.");
-        _automaticRetirementEvent = Timeline.ScheduleAt(retirement, () =>
+        _automaticRetirementEvent = Timeline.ScheduleAt(retirement, static (context, _) =>
         {
-            _automaticRetirementEvent = default;
-            _automaticRetirementReady = true;
-        });
+            var model = (HardwareProcessorModel)context;
+            model._automaticRetirementEvent = default;
+            model._automaticRetirementReady = true;
+        }, this);
         if (arithmetic)
         {
             bool immediate = ArithmeticCommandEncoding.IsImmediate(opcode);

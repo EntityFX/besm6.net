@@ -24,10 +24,15 @@ public sealed class HardwareCallbackException : Exception
 /// does not wait on host clocks, and does not reinterpret
 /// SimulationClock. Equal-time callbacks follow registration order.
 /// </summary>
-public sealed class HardwareTimeline
+public sealed partial class HardwareTimeline
 {
-    private readonly PriorityQueue<(ulong Id, Action Callback), (ulong Time, ulong Id)> _queue = new();
+    private readonly ScheduledEventQueue _queue = new();
+    // Internal producers use cached static callbacks with explicit context instead
+    // of allocating a closure for each UU/AU (УУ/АУ) or MRAM (МОЗУ) signal.
+    private readonly record struct ScheduledEvent(ulong Time, ulong Id, Action<object, ulong> Callback,
+        object Context, ulong Payload);
     private readonly HashSet<ulong> _pending = new();
+    private readonly HashSet<ulong> _cancelled = new();
     private ulong _nextId = 1;
     private bool _advancing;
     internal bool IsAdvancing => _advancing;
@@ -44,11 +49,22 @@ public sealed class HardwareTimeline
     public HardwareEventToken ScheduleAt(HardwareInstant time, Action callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
+        return ScheduleAt(time, static (context, _) => ((Action)context)(), callback);
+    }
+
+    internal HardwareEventToken Schedule(HardwareDuration delay, Action<object, ulong> callback,
+        object context, ulong payload = 0) => ScheduleAt(Now + delay, callback, context, payload);
+
+    internal HardwareEventToken ScheduleAt(HardwareInstant time, Action<object, ulong> callback,
+        object context, ulong payload = 0)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+        ArgumentNullException.ThrowIfNull(context);
         if (time.Nanoseconds < Now.Nanoseconds)
             throw new ArgumentOutOfRangeException(nameof(time), "Cannot schedule in the past.");
         ulong id = _nextId;
         ulong nextId = checked(id + 1);
-        _queue.Enqueue((id, callback), (time.Nanoseconds, id));
+        _queue.Enqueue(new(time.Nanoseconds, id, callback, context, payload));
         _pending.Add(id);
         _nextId = nextId;
         if (NextEventTime is null || time.Nanoseconds < NextEventTime.Value.Nanoseconds)
@@ -59,16 +75,19 @@ public sealed class HardwareTimeline
     public bool Cancel(HardwareEventToken token)
     {
         if (!token.BelongsTo(this) || !_pending.Remove(token.Id)) return false;
+        _cancelled.Add(token.Id);
         RefreshNextEvent();
         return true;
     }
 
     private void RefreshNextEvent()
     {
-        while (_queue.TryPeek(out var ev, out var priority))
+        while (_queue.Count != 0)
         {
-            if (_pending.Contains(ev.Id))
-            { NextEventTime = new(priority.Time); return; }
+            // Most events complete normally. An empty tombstone set avoids
+            // hashing the next live ID again after every delivered signal.
+            if (!_cancelled.Remove(_queue.RootId))
+            { NextEventTime = new(_queue.RootTime); return; }
             _queue.Dequeue();
         }
         NextEventTime = null;
@@ -105,7 +124,7 @@ public sealed class HardwareTimeline
                 _pending.Remove(ev.Id);
                 RefreshNextEvent();
                 Now = next;
-                try { ev.Callback(); }
+                try { ev.Callback(ev.Context, ev.Payload); }
                 catch (Exception cause) { throw new HardwareCallbackException(Now, new(this, ev.Id), cause); }
                 if (boundary?.Invoke() == true) return;
             }

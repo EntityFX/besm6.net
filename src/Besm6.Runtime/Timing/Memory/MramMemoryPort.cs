@@ -35,13 +35,19 @@ public sealed class MramMemoryPort
 {
     private sealed class Request
     {
-        internal required MramRequestToken Token;
-        internal required uint Address;
-        internal required Action<MramTransfer> Completion;
+        internal MramRequestToken Token;
+        internal uint Address;
+        internal Action<object, ulong, MramTransfer> Completion = null!;
+        internal object CompletionContext = null!;
+        internal ulong CompletionPayload;
         internal bool Write;
         internal MemoryWord50 Word;
         internal HardwareEventToken ReturnEvent;
         internal LinkedListNode<Request>? QueueNode;
+        internal LinkedListNode<Request> Node;
+        internal MramReadReservation Cycle;
+        internal HardwareInstant Ready;
+        internal Request() => Node = new(this);
     }
 
     private readonly PhysicalMemory _memory;
@@ -50,6 +56,8 @@ public sealed class MramMemoryPort
     private readonly LinkedList<Request>[] _waiting = Enumerable.Range(0, 8).Select(_ => new LinkedList<Request>()).ToArray();
     private readonly HardwareEventToken[] _starts = new HardwareEventToken[8];
     private readonly Dictionary<ulong, Request> _requests = new();
+    private readonly Stack<Request> _spareRequests = new();
+    private const int MaximumSpareRequests = 128;
     private ulong _nextId = 1;
     internal PhysicalMemory Storage => _memory;
     internal HardwareTimeline Timeline => _timeline;
@@ -70,12 +78,25 @@ public sealed class MramMemoryPort
         _memory = memory; _timeline = timeline; Configuration = configuration;
     }
 
-    public MramRequestToken Read(uint address, Action<MramTransfer> completion) => Enqueue(address, false, default, completion);
-    public MramRequestToken Write(uint address, MemoryWord50 word, Action<MramTransfer> completion) => Enqueue(address, true, word, completion);
-
-    private MramRequestToken Enqueue(uint address, bool write, MemoryWord50 word, Action<MramTransfer> completion)
+    public MramRequestToken Read(uint address, Action<MramTransfer> completion)
     {
         ArgumentNullException.ThrowIfNull(completion);
+        return Enqueue(address, false, default, static (context, _, transfer) => ((Action<MramTransfer>)context)(transfer), completion, 0);
+    }
+    public MramRequestToken Write(uint address, MemoryWord50 word, Action<MramTransfer> completion)
+    {
+        ArgumentNullException.ThrowIfNull(completion);
+        return Enqueue(address, true, word, static (context, _, transfer) => ((Action<MramTransfer>)context)(transfer), completion, 0);
+    }
+
+    internal MramRequestToken Read(uint address, Action<object, ulong, MramTransfer> completion,
+        object context, ulong payload) => Enqueue(address, false, default, completion, context, payload);
+
+    private MramRequestToken Enqueue(uint address, bool write, MemoryWord50 word,
+        Action<object, ulong, MramTransfer> completion, object context, ulong payload)
+    {
+        ArgumentNullException.ThrowIfNull(completion);
+        ArgumentNullException.ThrowIfNull(context);
         var available = _banks.AvailableAt(address); // Validate the physical address before allocating state.
         int bank = (int)(address & 7);
         ulong start = Math.Max(available.Nanoseconds, _timeline.Now.Nanoseconds);
@@ -83,13 +104,29 @@ public sealed class MramMemoryPort
         start = checked(start + checked((ulong)_waiting[bank].Count * Configuration.BankCycle.Nanoseconds));
         _ = checked(start + Configuration.BankCycle.Nanoseconds);
         ulong next = checked(_nextId + 1);
-        var request = new Request { Token = new(this, _nextId), Address = address, Write = write, Word = word, Completion = completion };
+        var request = _spareRequests.TryPop(out var spare) ? spare : new Request();
+        request.Token = new(this, _nextId); request.Address = address; request.Write = write;
+        request.Word = word; request.Completion = completion;
+        request.CompletionContext = context; request.CompletionPayload = payload;
         if (_waiting[bank].Count == 0)
-            _starts[bank] = _timeline.ScheduleAt(new(Math.Max(available.Nanoseconds, _timeline.Now.Nanoseconds)), () => Start(bank));
-        request.QueueNode = _waiting[bank].AddLast(request);
+            _starts[bank] = ScheduleStart(new(Math.Max(available.Nanoseconds, _timeline.Now.Nanoseconds)), bank);
+        _waiting[bank].AddLast(request.Node); request.QueueNode = request.Node;
         _requests.Add(_nextId, request);
         _nextId = next;
         return request.Token;
+    }
+
+    private HardwareEventToken ScheduleStart(HardwareInstant time, int bank) =>
+        _timeline.ScheduleAt(time, static (context, value) => ((MramMemoryPort)context).Start((int)value), this, (ulong)bank);
+
+    private void Release(Request request)
+    {
+        // Calendar entries reference this port and a monotonically increasing ID,
+        // never a Request. Cancelled tombstones cannot address a reused object.
+        request.Completion = null!; request.CompletionContext = null!; request.CompletionPayload = 0;
+        request.ReturnEvent = default;
+        request.Cycle = default; request.Ready = default;
+        if (_spareRequests.Count < MaximumSpareRequests) _spareRequests.Push(request);
     }
 
     private void Start(int bank)
@@ -102,19 +139,29 @@ public sealed class MramMemoryPort
         if (!request.Write && Configuration.ReadSampling == MramReadSampling.AtCycleStart)
             request.Word = _memory.ReadRaw(request.Address);
         var ready = request.Write ? cycle.Started + Configuration.WriteVisibility : cycle.DataReady;
-        request.ReturnEvent = _timeline.ScheduleAt(ready, () => Return(request, cycle, ready));
+        request.Cycle = cycle; request.Ready = ready;
+        request.ReturnEvent = _timeline.ScheduleAt(ready, static (context, id) =>
+        {
+            var port = (MramMemoryPort)context;
+            if (port._requests.TryGetValue(id, out var current)) port.Return(current);
+        }, this, request.Token.Id);
         if (_waiting[bank].Count != 0)
-            _starts[bank] = _timeline.ScheduleAt(cycle.BankAvailable, () => Start(bank));
+            _starts[bank] = ScheduleStart(cycle.BankAvailable, bank);
     }
 
-    private void Return(Request request, MramReadReservation cycle, HardwareInstant ready)
+    private void Return(Request request)
     {
         _requests.Remove(request.Token.Id); // The transfer is terminal even if its observer fails.
-        if (request.Write) _memory.WriteRaw(request.Address, request.Word);
-        else if (Configuration.ReadSampling == MramReadSampling.AtDataReturn)
-            request.Word = _memory.ReadRaw(request.Address);
-        request.Completion(new(request.Token, request.Address, request.Write, request.Word,
-            cycle.Started, ready, cycle.BankAvailable));
+        try
+        {
+            if (request.Write) _memory.WriteRaw(request.Address, request.Word);
+            else if (Configuration.ReadSampling == MramReadSampling.AtDataReturn)
+                request.Word = _memory.ReadRaw(request.Address);
+            request.Completion(request.CompletionContext, request.CompletionPayload,
+                new(request.Token, request.Address, request.Write, request.Word,
+                request.Cycle.Started, request.Ready, request.Cycle.BankAvailable));
+        }
+        finally { Release(request); }
     }
 
     /// <summary>Abort an external exchange without erasing an already accepted write cycle.</summary>
@@ -123,7 +170,8 @@ public sealed class MramMemoryPort
         if (!token.BelongsTo(this) || !_requests.TryGetValue(token.Id, out var request)) return false;
         if (request.Write && request.QueueNode is null)
         {
-            request.Completion = static _ => { };
+            request.Completion = static (_, _, _) => { };
+            request.CompletionContext = this; request.CompletionPayload = 0;
             return true;
         }
         return Cancel(token);
@@ -141,11 +189,12 @@ public sealed class MramMemoryPort
             {
                 _timeline.Cancel(_starts[bank]); _starts[bank] = default;
                 if (_waiting[bank].Count != 0)
-                    _starts[bank] = _timeline.ScheduleAt(new(Math.Max(_timeline.Now.Nanoseconds,
-                        _banks.AvailableAt(request.Address).Nanoseconds)), () => Start(bank));
+                    _starts[bank] = ScheduleStart(new(Math.Max(_timeline.Now.Nanoseconds,
+                        _banks.AvailableAt(request.Address).Nanoseconds)), bank);
             }
         }
         else _timeline.Cancel(request.ReturnEvent);
+        Release(request);
         return true;
     }
 }

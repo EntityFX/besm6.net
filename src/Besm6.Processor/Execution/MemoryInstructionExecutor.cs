@@ -7,6 +7,7 @@ namespace Besm6.Core
         private readonly ProcessorMemoryAccess _memory;
         private readonly Alu _alu;
         private readonly SupervisorControl? _supervisor;
+        private MemoryInstructionExecutor? _transferredInstructions;
 
         internal MemoryInstructionExecutor(ProcessorState state, ProcessorMemoryAccess memory, Alu alu, SupervisorControl? supervisor = null)
         {
@@ -28,6 +29,10 @@ namespace Besm6.Core
                     return ExecuteLoad(ref frame);
                 case Opcode.Atx:
                     return ExecuteStore(ref frame);
+                case Opcode.APlusX:
+                    return ExecuteAdd(ref frame);
+                case Opcode.AMulX:
+                    return ExecuteMultiply(ref frame);
                 case Opcode.Ntr:
                     SetEffectiveAddress(ref frame, Addr(frame.Address + _state.M[frame.Instruction.Register]));
                     _state.R = frame.EffectiveAddress & 0x3Fu;
@@ -60,9 +65,16 @@ namespace Besm6.Core
             Addr(address + (address == 0 && register == 15 ? Addr(_state.M[15] - 1) : _state.M[register]));
 
         internal CapturedArithmeticInstructionExecution CaptureTransferredArithmetic(ref ExecutionFrame frame,
-            uint address, Word48 word, Exception? failure) =>
-            new MemoryInstructionExecutor(_state, _memory.WithTransferredOperand(address, word, failure), _alu)
-                .CaptureArithmetic(ref frame);
+            uint address, Word48 word, Exception? failure)
+        {
+            var access = _memory.BeginTransferredOperand(address, word, failure);
+            try
+            {
+                _transferredInstructions ??= new MemoryInstructionExecutor(_state, access, _alu);
+                return _transferredInstructions.CaptureArithmetic(ref frame);
+            }
+            finally { _memory.EndTransferredOperand(); }
+        }
 
         internal void PublishArithmetic(ref ExecutionFrame frame, NormalizedArithmeticResult result, bool additive, bool logical)
         {
@@ -95,29 +107,13 @@ namespace Besm6.Core
                 case Opcode.Xts:
                     return ExecuteXts(ref frame);
                 case Opcode.APlusX:
-                    PrepareStack(addr, reg);
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    arithmetic.Add(LoadWord(ref frame), false, false);
-                    arithmetic.Finish(ref frame, _state, true);
-                    break;
+                    return ExecuteAdd(ref frame, false, false, ref arithmetic);
                 case Opcode.AMinusX:
-                    PrepareStack(addr, reg);
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    arithmetic.Add(LoadWord(ref frame), false, true);
-                    arithmetic.Finish(ref frame, _state, true);
-                    break;
+                    return ExecuteAdd(ref frame, false, true, ref arithmetic);
                 case Opcode.XMinusA:
-                    PrepareStack(addr, reg);
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    arithmetic.Add(LoadWord(ref frame), true, false);
-                    arithmetic.Finish(ref frame, _state, true);
-                    break;
+                    return ExecuteAdd(ref frame, true, false, ref arithmetic);
                 case Opcode.Amx:
-                    PrepareStack(addr, reg);
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    arithmetic.Add(LoadWord(ref frame), true, true);
-                    arithmetic.Finish(ref frame, _state, true);
-                    break;
+                    return ExecuteAdd(ref frame, true, true, ref arithmetic);
                 case Opcode.Aax:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
@@ -151,11 +147,7 @@ namespace Besm6.Core
                     arithmetic.Finish(ref frame, _state, false);
                     break;
                 case Opcode.AMulX:
-                    PrepareStack(addr, reg);
-                    SetEffectiveAddress(ref frame, Addr(addr + m[reg]));
-                    arithmetic.Multiply(LoadWord(ref frame));
-                    arithmetic.Finish(ref frame, _state, false);
-                    break;
+                    return ExecuteMultiply(ref frame, ref arithmetic);
                 case Opcode.Apx:
                     PrepareStack(addr, reg);
                     SetEffectiveAddress(ref frame, Addr(addr + m[reg]));

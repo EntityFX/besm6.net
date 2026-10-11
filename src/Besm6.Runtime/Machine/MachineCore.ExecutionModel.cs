@@ -78,7 +78,7 @@ public partial class MachineCore
         long allocated = collectStatistics ? GC.GetAllocatedBytesForCurrentThread() : 0;
         int gen0 = collectStatistics ? GC.CollectionCount(0) : 0;
         ulong checkpoint = 10_000_000, completed = 0;
-        LoadResult outcome = LoadResult.StoppedByLimit(Cpu.GetK(), 0);
+        LoadResult? outcome = null;
         _publicHardwareRunning = true;
         try
         {
@@ -87,18 +87,21 @@ public partial class MachineCore
             {
                 var step = model.AdvanceAutomaticTo(new(ulong.MaxValue), 1);
                 completed += step.Completed;
-                ulong elapsed = model.Timeline.Now.Nanoseconds - started;
-                if (pacer is not null && elapsed >= checkpoint)
+                if (pacer is not null)
                 {
-                    pacer.SynchronizeSeconds(elapsed / 1_000_000_000.0);
-                    checkpoint = elapsed > ulong.MaxValue - 10_000_000 ? ulong.MaxValue : elapsed + 10_000_000;
+                    ulong elapsed = model.Timeline.Now.Nanoseconds - started;
+                    if (elapsed >= checkpoint)
+                    {
+                        pacer.SynchronizeSeconds(elapsed / 1_000_000_000.0);
+                        checkpoint = elapsed > ulong.MaxValue - 10_000_000 ? ulong.MaxValue : elapsed + 10_000_000;
+                    }
                 }
                 if (step.Boundary == HardwareRunBoundary.Stop)
                 { outcome = LoadResult.Halt(Cpu.GetK(), checked((long)completed)); break; }
                 if (step.Boundary is HardwareRunBoundary.Cancelled or HardwareRunBoundary.WaitingForSignal or HardwareRunBoundary.TimeLimit)
                 { outcome = LoadResult.Failed($"Hardware execution boundary: {step.Boundary}.", Cpu.GetK(), checked((long)completed)); break; }
-                outcome = LoadResult.StoppedByLimit(Cpu.GetK(), checked((long)completed));
             }
+            outcome ??= LoadResult.StoppedByLimit(Cpu.GetK(), checked((long)completed));
             pacer?.SynchronizeSeconds((model.Timeline.Now.Nanoseconds - started) / 1_000_000_000.0);
             var statistics = timed ? new ExecutionStatistics(speed, checked((long)completed), null,
                 time!.ElapsedSeconds, collectStatistics ? GC.GetAllocatedBytesForCurrentThread() - allocated : 0,

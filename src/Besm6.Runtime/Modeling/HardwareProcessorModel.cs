@@ -16,9 +16,22 @@ internal sealed partial class HardwareProcessorModel
     private ArithmeticStageController? _arithmeticController;
     private ArithmeticInterruptionPort? _arithmeticInterruptions;
     internal HardwareTimeline Timeline { get; } = new();
+    private readonly Func<bool> _fetchBoundary, _dataBoundary, _completionBoundary, _retirementBoundary;
+    private readonly Action<HardwareBufferedRead> _fetchCompleted, _dataReadCompleted;
+    private readonly Action _dataStoreCompleted;
 
     internal HardwareProcessorModel(Processor processor, PhysicalMemory? physicalMemory = null, MappedMemoryBackend? mappedMemory = null)
-    { _processor = processor; _physicalMemory = physicalMemory; _mappedMemory = mappedMemory; }
+    {
+        _processor = processor; _physicalMemory = physicalMemory; _mappedMemory = mappedMemory;
+        _fetchBoundary = () => _timedFetchReply.HasValue || _cancellationRequested || !HasPendingInstruction;
+        _dataBoundary = () => _dataMemoryReplyReady || _cancellationRequested || !HasPendingInstruction;
+        _completionBoundary = () => _completionReady || _cancellationRequested || !HasPendingInstruction;
+        _retirementBoundary = () => _automaticRetirementReady || _cancellationRequested || !HasPendingInstruction;
+        _fetchCompleted = reply => _timedFetchReply = reply;
+        _dataReadCompleted = reply =>
+        { _dataMemoryReply = reply.Word; _dataMemoryFailure = reply.Failure; _dataMemoryReplyReady = true; };
+        _dataStoreCompleted = () => { _dataMemoryReply = default; _dataMemoryReplyReady = true; };
+    }
 
     internal ArithmeticStageController CreateArithmeticController(HardwareDuration cycle,
         ArithmeticErrorPolicy? errorPolicy = null)

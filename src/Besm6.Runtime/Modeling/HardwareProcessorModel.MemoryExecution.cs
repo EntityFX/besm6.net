@@ -15,6 +15,7 @@ internal sealed partial class HardwareProcessorModel
         HasPendingInstruction && !_timedFetchWaiting ? _pendingHandle : null;
 
     /// <summary>Reserve the shared CPU lease before its asynchronous BRS/MRAM fetch.</summary>
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
     internal void StartTimedInstructionFetch(MramPortConfiguration configuration, HardwareDuration hitLatency)
     {
         EnsureDriverAllowed();
@@ -34,7 +35,7 @@ internal sealed partial class HardwareProcessorModel
             _sequence = sequence; _timedFetchWaiting = true;
             try
             {
-                _timedFetchToken = buffers.FetchInstruction(lease.Address, lease.RightHalf, reply => _timedFetchReply = reply);
+                _timedFetchToken = buffers.FetchInstruction(lease.Address, lease.RightHalf, _fetchCompleted);
             }
             catch (Exception failure) when (failure is MemoryProtectionException or HardwareWatchException)
             {

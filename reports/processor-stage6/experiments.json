@@ -1,0 +1,1753 @@
+{
+  "baseline_commit": "e361fca7c6ab021038be7a57994f0e3b2e037a82",
+  "stage_complete": false,
+  "acceptance": {
+    "minimum_geometric_mean_gain_percent": 5,
+    "maximum_primary_workload_regression_percent": 10
+  },
+  "full_tests": "deferred until stage end by user instruction",
+  "functional_direct_isolated": {
+    "geometric_mean_gain_percent": 5.974719403241391,
+    "measurements": [
+      {
+        "job": "dh5000",
+        "variant": "recency",
+        "process_seconds": 0.8848779001273215,
+        "time_reduction_percent": 0.0,
+        "speedup": 1.0,
+        "process_min_seconds": 0.8786573000252247,
+        "process_max_seconds": 0.913449099753052,
+        "loop_seconds": 0.5741378,
+        "loop_speedup": 1.0,
+        "loop_time_reduction_percent": 0.0
+      },
+      {
+        "job": "dh5000",
+        "variant": "direct",
+        "process_seconds": 0.8297565998509526,
+        "time_reduction_percent": 6.229254936577988,
+        "speedup": 1.0664306861629906,
+        "process_min_seconds": 0.8278026999905705,
+        "process_max_seconds": 0.835875999648124,
+        "loop_seconds": 0.530582,
+        "loop_speedup": 1.082090609933997,
+        "loop_time_reduction_percent": 7.586297226902672
+      },
+      {
+        "job": "dh10000",
+        "variant": "recency",
+        "process_seconds": 1.1255406001582742,
+        "time_reduction_percent": 0.0,
+        "speedup": 1.0,
+        "process_min_seconds": 1.1130099999718368,
+        "process_max_seconds": 1.1403103000484407,
+        "loop_seconds": 0.8225098,
+        "loop_speedup": 1.0,
+        "loop_time_reduction_percent": 0.0
+      },
+      {
+        "job": "dh10000",
+        "variant": "direct",
+        "process_seconds": 1.0840401002205908,
+        "time_reduction_percent": 3.68716152325802,
+        "speedup": 1.0382831778356154,
+        "process_min_seconds": 1.0671625002287328,
+        "process_max_seconds": 1.1356826997362077,
+        "loop_seconds": 0.7813602,
+        "loop_speedup": 1.0526640594184347,
+        "loop_time_reduction_percent": 5.0029312720650925
+      },
+      {
+        "job": "mp1",
+        "variant": "recency",
+        "process_seconds": 0.5734232999384403,
+        "time_reduction_percent": 0.0,
+        "speedup": 1.0,
+        "process_min_seconds": 0.5699618002399802,
+        "process_max_seconds": 0.6072555999271572,
+        "loop_seconds": 0.2699547,
+        "loop_speedup": 1.0,
+        "loop_time_reduction_percent": 0.0
+      },
+      {
+        "job": "mp1",
+        "variant": "direct",
+        "process_seconds": 0.5553401000797749,
+        "time_reduction_percent": 3.1535516363926597,
+        "speedup": 1.0325623880862698,
+        "process_min_seconds": 0.5510950000025332,
+        "process_max_seconds": 0.5712260003201663,
+        "loop_seconds": 0.2478906,
+        "loop_speedup": 1.089007408913448,
+        "loop_time_reduction_percent": 8.173260180319142
+      },
+      {
+        "job": "mp2",
+        "variant": "recency",
+        "process_seconds": 0.6899978001601994,
+        "time_reduction_percent": 0.0,
+        "speedup": 1.0,
+        "process_min_seconds": 0.6799154002219439,
+        "process_max_seconds": 0.6945305000990629,
+        "loop_seconds": 0.3855478,
+        "loop_speedup": 1.0,
+        "loop_time_reduction_percent": 0.0
+      },
+      {
+        "job": "mp2",
+        "variant": "direct",
+        "process_seconds": 0.6681707003153861,
+        "time_reduction_percent": 3.163357888930318,
+        "speedup": 1.0326669514758888,
+        "process_min_seconds": 0.6645478000864387,
+        "process_max_seconds": 0.6790730999782681,
+        "loop_seconds": 0.364224,
+        "loop_speedup": 1.058545839922685,
+        "loop_time_reduction_percent": 5.530779841046951
+      },
+      {
+        "job": "mp3",
+        "variant": "recency",
+        "process_seconds": 1.1512697003781796,
+        "time_reduction_percent": 0.0,
+        "speedup": 1.0,
+        "process_min_seconds": 1.1351983998902142,
+        "process_max_seconds": 1.1537246000953019,
+        "loop_seconds": 0.8451254,
+        "loop_speedup": 1.0,
+        "loop_time_reduction_percent": 0.0
+      },
+      {
+        "job": "mp3",
+        "variant": "direct",
+        "process_seconds": 1.1313415002077818,
+        "time_reduction_percent": 1.7309758229415384,
+        "speedup": 1.017614663801105,
+        "process_min_seconds": 1.1246837000362575,
+        "process_max_seconds": 1.1375686000101268,
+        "loop_seconds": 0.8302401,
+        "loop_speedup": 1.0179289099623108,
+        "loop_time_reduction_percent": 1.7613125815411523
+      }
+    ],
+    "scope": "isolated data-access candidate vs previous snapshot; final e361fca comparison outstanding"
+  },
+  "hardware_experiments": [
+    {
+      "name": "stage6-hardware-arithmetic",
+      "scope": "public RunInstructions, no instruction observers; state hash after stopwatch",
+      "probe_sha256": "2dd5dfb4488bd1ec4da5f9c1b9e0f8bfdb38210b62f0e83fdc9741229a4cc7d8",
+      "options": {
+        "iterations": 32760,
+        "warmups": 1,
+        "repeats": 5
+      },
+      "variants": {
+        "direct": {
+          "runtime_sha256": "62babd5bfaf0c3b1af980fbe3adcff8d9b1380c352cfedb4d1fabba93cd441fd",
+          "processor_sha256": "f7ba3dd4aff3e3b86f63df196f7f4f6ebea3de236a489eea3998bf9e78a2d519"
+        },
+        "arithmetic": {
+          "runtime_sha256": "5f2032dfe1b9470e487eb3109bb112431259a0b70c7c487afb97de6858a9ce6a",
+          "processor_sha256": "b7a018c8ca84ed5bc180d4af5f48963457bfcff53470ecdcf5221ee2d29f225f"
+        }
+      },
+      "completed_samples": 48,
+      "measurements": [
+        {
+          "variant": "direct",
+          "workload": "control",
+          "loop_seconds": 0.706243,
+          "min_seconds": 0.6973703,
+          "max_seconds": 0.7161848,
+          "allocated_bytes": 18348672,
+          "gen0_collections": 4
+        },
+        {
+          "variant": "arithmetic",
+          "workload": "control",
+          "loop_seconds": 0.7294301,
+          "min_seconds": 0.6773926,
+          "max_seconds": 0.741479,
+          "allocated_bytes": 18348672,
+          "gen0_collections": 4
+        },
+        {
+          "variant": "direct",
+          "workload": "memory",
+          "loop_seconds": 0.9334854,
+          "min_seconds": 0.9178392,
+          "max_seconds": 1.0085299,
+          "allocated_bytes": 50329688,
+          "gen0_collections": 12
+        },
+        {
+          "variant": "arithmetic",
+          "workload": "memory",
+          "loop_seconds": 0.9329712,
+          "min_seconds": 0.9229229,
+          "max_seconds": 0.9639623,
+          "allocated_bytes": 50329688,
+          "gen0_collections": 12
+        },
+        {
+          "variant": "direct",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1337988,
+          "min_seconds": 1.1113991,
+          "max_seconds": 1.1466449,
+          "allocated_bytes": 169074856,
+          "gen0_collections": 40
+        },
+        {
+          "variant": "arithmetic",
+          "workload": "arithmetic",
+          "loop_seconds": 1.192323,
+          "min_seconds": 1.1720699,
+          "max_seconds": 1.2174475,
+          "allocated_bytes": 88080976,
+          "gen0_collections": 21
+        },
+        {
+          "variant": "direct",
+          "workload": "mixed",
+          "loop_seconds": 1.0694393,
+          "min_seconds": 1.0485253,
+          "max_seconds": 1.1082921,
+          "allocated_bytes": 83886976,
+          "gen0_collections": 20
+        },
+        {
+          "variant": "arithmetic",
+          "workload": "mixed",
+          "loop_seconds": 0.998622,
+          "min_seconds": 0.9513295,
+          "max_seconds": 1.1688307,
+          "allocated_bytes": 56888880,
+          "gen0_collections": 13
+        }
+      ],
+      "comparison_at_current_limit": {
+        "direct": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "arithmetic": {
+          "geometric_mean_gain_percent": -0.3386622573183673,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        }
+      }
+    },
+    {
+      "name": "stage6-hardware-batched",
+      "scope": "public RunInstructions, no instruction observers; state hash after stopwatch",
+      "probe_sha256": "2dd5dfb4488bd1ec4da5f9c1b9e0f8bfdb38210b62f0e83fdc9741229a4cc7d8",
+      "options": {
+        "iterations": 32760,
+        "warmups": 1,
+        "repeats": 5
+      },
+      "variants": {
+        "baseline": {
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18"
+        },
+        "arithmetic": {
+          "runtime_sha256": "5f2032dfe1b9470e487eb3109bb112431259a0b70c7c487afb97de6858a9ce6a",
+          "processor_sha256": "b7a018c8ca84ed5bc180d4af5f48963457bfcff53470ecdcf5221ee2d29f225f"
+        },
+        "batched": {
+          "runtime_sha256": "5ee5e0c660c2dc05a0aadfabaa45a79200134c38d8dcf3996490951a3c4144f0",
+          "processor_sha256": "b7a018c8ca84ed5bc180d4af5f48963457bfcff53470ecdcf5221ee2d29f225f"
+        }
+      },
+      "completed_samples": 72,
+      "measurements": [
+        {
+          "variant": "baseline",
+          "workload": "control",
+          "loop_seconds": 0.7643553,
+          "min_seconds": 0.7536812,
+          "max_seconds": 0.7725058,
+          "allocated_bytes": 129738992,
+          "gen0_collections": 31
+        },
+        {
+          "variant": "arithmetic",
+          "workload": "control",
+          "loop_seconds": 0.7239703,
+          "min_seconds": 0.6910064,
+          "max_seconds": 0.8343873,
+          "allocated_bytes": 18348672,
+          "gen0_collections": 4
+        },
+        {
+          "variant": "batched",
+          "workload": "control",
+          "loop_seconds": 0.8384086,
+          "min_seconds": 0.7744756,
+          "max_seconds": 0.8863311,
+          "allocated_bytes": 10485888,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "baseline",
+          "workload": "memory",
+          "loop_seconds": 0.745714,
+          "min_seconds": 0.731337,
+          "max_seconds": 0.8722079,
+          "allocated_bytes": 204696160,
+          "gen0_collections": 48
+        },
+        {
+          "variant": "arithmetic",
+          "workload": "memory",
+          "loop_seconds": 0.926454,
+          "min_seconds": 0.8570982,
+          "max_seconds": 0.939921,
+          "allocated_bytes": 50329688,
+          "gen0_collections": 12
+        },
+        {
+          "variant": "batched",
+          "workload": "memory",
+          "loop_seconds": 0.8318855,
+          "min_seconds": 0.8140539,
+          "max_seconds": 0.8415912,
+          "allocated_bytes": 42460712,
+          "gen0_collections": 10
+        },
+        {
+          "variant": "baseline",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1033784,
+          "min_seconds": 1.097127,
+          "max_seconds": 1.1929147,
+          "allocated_bytes": 380075448,
+          "gen0_collections": 90
+        },
+        {
+          "variant": "arithmetic",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1902382,
+          "min_seconds": 1.1816297,
+          "max_seconds": 1.2304695,
+          "allocated_bytes": 88080976,
+          "gen0_collections": 21
+        },
+        {
+          "variant": "batched",
+          "workload": "arithmetic",
+          "loop_seconds": 1.2019726,
+          "min_seconds": 1.0751953,
+          "max_seconds": 1.2802003,
+          "allocated_bytes": 80217264,
+          "gen0_collections": 19
+        },
+        {
+          "variant": "baseline",
+          "workload": "mixed",
+          "loop_seconds": 0.9705974,
+          "min_seconds": 0.9515968,
+          "max_seconds": 0.9864185,
+          "allocated_bytes": 248230800,
+          "gen0_collections": 59
+        },
+        {
+          "variant": "arithmetic",
+          "workload": "mixed",
+          "loop_seconds": 0.9851326,
+          "min_seconds": 0.9780985,
+          "max_seconds": 1.1693431,
+          "allocated_bytes": 56888880,
+          "gen0_collections": 13
+        },
+        {
+          "variant": "batched",
+          "workload": "mixed",
+          "loop_seconds": 1.1427644,
+          "min_seconds": 1.1415974,
+          "max_seconds": 1.1538407,
+          "allocated_bytes": 49025168,
+          "gen0_collections": 11
+        }
+      ],
+      "comparison_at_current_limit": {
+        "baseline": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "arithmetic": {
+          "geometric_mean_gain_percent": -6.138066057538094,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": false,
+          "gain_at_least_5_percent": false
+        },
+        "batched": {
+          "geometric_mean_gain_percent": -10.65604828729395,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": false,
+          "gain_at_least_5_percent": false
+        }
+      }
+    },
+    {
+      "name": "stage6-hardware-buffer",
+      "scope": "public RunInstructions, no instruction observers; state hash after stopwatch",
+      "probe_sha256": "2dd5dfb4488bd1ec4da5f9c1b9e0f8bfdb38210b62f0e83fdc9741229a4cc7d8",
+      "options": {
+        "iterations": 32760,
+        "warmups": 1,
+        "repeats": 5
+      },
+      "variants": {
+        "callbacks": {
+          "runtime_sha256": "5ff4048e33fc912252bd3df2edb1fbc45e013b1fe0977ce00ff0dcba47c24204",
+          "processor_sha256": "5c2b18b08627299f51b908d2c036ac5a67dc425b2a4f2c27d6691a117424be4c"
+        },
+        "buffer": {
+          "runtime_sha256": "9d26449dec9509f27043e892e326efe7d56ef3af3351a0aa0173ffdea5bb511f",
+          "processor_sha256": "339ee35d67edd4cdc7ac612eab8fbcef8cc3701247189ac3e5c70feb1574dc6e"
+        }
+      },
+      "completed_samples": 48,
+      "measurements": [
+        {
+          "variant": "callbacks",
+          "workload": "control",
+          "loop_seconds": 0.7568794,
+          "min_seconds": 0.7562302,
+          "max_seconds": 0.7596562,
+          "allocated_bytes": 62910368,
+          "gen0_collections": 15
+        },
+        {
+          "variant": "buffer",
+          "workload": "control",
+          "loop_seconds": 0.6904996,
+          "min_seconds": 0.6766529,
+          "max_seconds": 0.716686,
+          "allocated_bytes": 18354864,
+          "gen0_collections": 4
+        },
+        {
+          "variant": "callbacks",
+          "workload": "memory",
+          "loop_seconds": 0.849064,
+          "min_seconds": 0.8307772,
+          "max_seconds": 0.9253872,
+          "allocated_bytes": 110080016,
+          "gen0_collections": 26
+        },
+        {
+          "variant": "buffer",
+          "workload": "memory",
+          "loop_seconds": 0.9253018,
+          "min_seconds": 0.9196826,
+          "max_seconds": 0.9526385,
+          "allocated_bytes": 50329688,
+          "gen0_collections": 12
+        },
+        {
+          "variant": "callbacks",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1320803,
+          "min_seconds": 1.1113756,
+          "max_seconds": 1.144518,
+          "allocated_bytes": 249283056,
+          "gen0_collections": 59
+        },
+        {
+          "variant": "buffer",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1207128,
+          "min_seconds": 1.10246,
+          "max_seconds": 1.2381262,
+          "allocated_bytes": 169074856,
+          "gen0_collections": 40
+        },
+        {
+          "variant": "callbacks",
+          "workload": "mixed",
+          "loop_seconds": 0.9673315,
+          "min_seconds": 0.9639485,
+          "max_seconds": 0.9799928,
+          "allocated_bytes": 144960432,
+          "gen0_collections": 34
+        },
+        {
+          "variant": "buffer",
+          "workload": "mixed",
+          "loop_seconds": 1.0725383,
+          "min_seconds": 1.0590286,
+          "max_seconds": 1.1308407,
+          "allocated_bytes": 83886976,
+          "gen0_collections": 20
+        }
+      ],
+      "comparison_at_current_limit": {
+        "callbacks": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "buffer": {
+          "geometric_mean_gain_percent": -2.160004528092907,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": false,
+          "gain_at_least_5_percent": false
+        }
+      }
+    },
+    {
+      "name": "stage6-hardware-callbacks",
+      "scope": "public RunInstructions, no instruction observers; state hash after stopwatch",
+      "probe_sha256": "3ea39b82cd670ed8e116bba3a48efe8be1286dee48e966c96c46017ce14f4ea4",
+      "options": {
+        "iterations": 32760,
+        "warmups": 1,
+        "repeats": 5
+      },
+      "variants": {
+        "mram": {
+          "runtime_sha256": "9b4f4d1eacc36f04a760bfbd8478ebffcfaa82bf7b8e5a991248ec66b37448f6",
+          "processor_sha256": "5c2b18b08627299f51b908d2c036ac5a67dc425b2a4f2c27d6691a117424be4c"
+        },
+        "callbacks": {
+          "runtime_sha256": "5ff4048e33fc912252bd3df2edb1fbc45e013b1fe0977ce00ff0dcba47c24204",
+          "processor_sha256": "5c2b18b08627299f51b908d2c036ac5a67dc425b2a4f2c27d6691a117424be4c"
+        }
+      },
+      "completed_samples": 48,
+      "measurements": [
+        {
+          "variant": "mram",
+          "workload": "control",
+          "loop_seconds": 0.6819191,
+          "min_seconds": 0.6723723,
+          "max_seconds": 0.7184243,
+          "allocated_bytes": 129744224,
+          "gen0_collections": 31
+        },
+        {
+          "variant": "callbacks",
+          "workload": "control",
+          "loop_seconds": 0.8523967,
+          "min_seconds": 0.7552619,
+          "max_seconds": 1.0688544,
+          "allocated_bytes": 62904176,
+          "gen0_collections": 15
+        },
+        {
+          "variant": "mram",
+          "workload": "memory",
+          "loop_seconds": 0.7615243,
+          "min_seconds": 0.7580828,
+          "max_seconds": 0.7847916,
+          "allocated_bytes": 192639152,
+          "gen0_collections": 46
+        },
+        {
+          "variant": "callbacks",
+          "workload": "memory",
+          "loop_seconds": 0.7521283,
+          "min_seconds": 0.7474477,
+          "max_seconds": 0.7702992,
+          "allocated_bytes": 110080016,
+          "gen0_collections": 26
+        },
+        {
+          "variant": "mram",
+          "workload": "arithmetic",
+          "loop_seconds": 1.0385142,
+          "min_seconds": 1.0246465,
+          "max_seconds": 1.0932894,
+          "allocated_bytes": 331851384,
+          "gen0_collections": 79
+        },
+        {
+          "variant": "callbacks",
+          "workload": "arithmetic",
+          "loop_seconds": 1.0340776,
+          "min_seconds": 1.0289141,
+          "max_seconds": 1.1429047,
+          "allocated_bytes": 249276864,
+          "gen0_collections": 59
+        },
+        {
+          "variant": "mram",
+          "workload": "mixed",
+          "loop_seconds": 0.8971463,
+          "min_seconds": 0.882097,
+          "max_seconds": 0.9268801,
+          "allocated_bytes": 224114960,
+          "gen0_collections": 53
+        },
+        {
+          "variant": "callbacks",
+          "workload": "mixed",
+          "loop_seconds": 0.8847147,
+          "min_seconds": 0.864852,
+          "max_seconds": 1.0477645,
+          "allocated_bytes": 144954240,
+          "gen0_collections": 34
+        }
+      ],
+      "comparison_at_current_limit": {
+        "mram": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "callbacks": {
+          "geometric_mean_gain_percent": -4.698317771941984,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": false,
+          "gain_at_least_5_percent": false
+        }
+      }
+    },
+    {
+      "name": "stage6-hardware-compact-calendar",
+      "scope": "public RunInstructions, no instruction observers; state hash after stopwatch",
+      "probe_sha256": "2dd5dfb4488bd1ec4da5f9c1b9e0f8bfdb38210b62f0e83fdc9741229a4cc7d8",
+      "options": {
+        "iterations": 32760,
+        "warmups": 1,
+        "repeats": 5
+      },
+      "variants": {
+        "baseline": {
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18"
+        },
+        "transfer": {
+          "runtime_sha256": "8e8269932b95c2735abb10c05425fb717956dcbd637a59bbc53d7680193cd15d",
+          "processor_sha256": "30038d3d516a90c1e761fa77081bddfe24db2faeaac9fa869122ab19f796d9e8"
+        },
+        "compact": {
+          "runtime_sha256": "8206dce8deb750ee1f434eedee71e0eb6c408c4be9c13251201c8d205515c17d",
+          "processor_sha256": "30038d3d516a90c1e761fa77081bddfe24db2faeaac9fa869122ab19f796d9e8"
+        }
+      },
+      "completed_samples": 72,
+      "measurements": [
+        {
+          "variant": "baseline",
+          "workload": "control",
+          "loop_seconds": 0.7810494,
+          "min_seconds": 0.7551628,
+          "max_seconds": 0.9702326,
+          "allocated_bytes": 129738992,
+          "gen0_collections": 31
+        },
+        {
+          "variant": "transfer",
+          "workload": "control",
+          "loop_seconds": 0.8730983,
+          "min_seconds": 0.8598335,
+          "max_seconds": 0.8909322,
+          "allocated_bytes": 11802496,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "compact",
+          "workload": "control",
+          "loop_seconds": 0.9160237,
+          "min_seconds": 0.7554379,
+          "max_seconds": 0.9729041,
+          "allocated_bytes": 11802464,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "baseline",
+          "workload": "memory",
+          "loop_seconds": 0.7411697,
+          "min_seconds": 0.7349887,
+          "max_seconds": 0.7448847,
+          "allocated_bytes": 204696160,
+          "gen0_collections": 48
+        },
+        {
+          "variant": "transfer",
+          "workload": "memory",
+          "loop_seconds": 0.845913,
+          "min_seconds": 0.8176061,
+          "max_seconds": 1.0575542,
+          "allocated_bytes": 38529368,
+          "gen0_collections": 9
+        },
+        {
+          "variant": "compact",
+          "workload": "memory",
+          "loop_seconds": 0.8212333,
+          "min_seconds": 0.8159965,
+          "max_seconds": 1.033204,
+          "allocated_bytes": 38529336,
+          "gen0_collections": 9
+        },
+        {
+          "variant": "baseline",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1422533,
+          "min_seconds": 1.1172812,
+          "max_seconds": 1.2543049,
+          "allocated_bytes": 380075448,
+          "gen0_collections": 90
+        },
+        {
+          "variant": "transfer",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1279499,
+          "min_seconds": 1.0646707,
+          "max_seconds": 1.2131333,
+          "allocated_bytes": 73926376,
+          "gen0_collections": 17
+        },
+        {
+          "variant": "compact",
+          "workload": "arithmetic",
+          "loop_seconds": 1.2618339,
+          "min_seconds": 1.1430985,
+          "max_seconds": 1.5811117,
+          "allocated_bytes": 73926344,
+          "gen0_collections": 17
+        },
+        {
+          "variant": "baseline",
+          "workload": "mixed",
+          "loop_seconds": 0.9817284,
+          "min_seconds": 0.9737991,
+          "max_seconds": 1.018608,
+          "allocated_bytes": 248230800,
+          "gen0_collections": 59
+        },
+        {
+          "variant": "transfer",
+          "workload": "mixed",
+          "loop_seconds": 0.9568941,
+          "min_seconds": 0.9492343,
+          "max_seconds": 0.976478,
+          "allocated_bytes": 45093536,
+          "gen0_collections": 10
+        },
+        {
+          "variant": "compact",
+          "workload": "mixed",
+          "loop_seconds": 0.9828469,
+          "min_seconds": 0.9515457,
+          "max_seconds": 1.1525776,
+          "allocated_bytes": 45093504,
+          "gen0_collections": 10
+        }
+      ],
+      "comparison_at_current_limit": {
+        "baseline": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "transfer": {
+          "geometric_mean_gain_percent": -5.004758375149665,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": false,
+          "gain_at_least_5_percent": false
+        },
+        "compact": {
+          "geometric_mean_gain_percent": -8.668171427245685,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": false,
+          "gain_at_least_5_percent": false
+        }
+      }
+    },
+    {
+      "name": "stage6-hardware-eager",
+      "scope": "public RunInstructions, no instruction observers; state hash after stopwatch",
+      "probe_sha256": "2dd5dfb4488bd1ec4da5f9c1b9e0f8bfdb38210b62f0e83fdc9741229a4cc7d8",
+      "options": {
+        "iterations": 32760,
+        "warmups": 1,
+        "repeats": 5
+      },
+      "variants": {
+        "direct": {
+          "runtime_sha256": "62babd5bfaf0c3b1af980fbe3adcff8d9b1380c352cfedb4d1fabba93cd441fd",
+          "processor_sha256": "f7ba3dd4aff3e3b86f63df196f7f4f6ebea3de236a489eea3998bf9e78a2d519"
+        },
+        "eager": {
+          "runtime_sha256": "accb224a2fd6d17f62939a4b92c93ad6e8618bfbc108f6198eb80b6a717cc52b",
+          "processor_sha256": "f7ba3dd4aff3e3b86f63df196f7f4f6ebea3de236a489eea3998bf9e78a2d519"
+        }
+      },
+      "completed_samples": 48,
+      "measurements": [
+        {
+          "variant": "direct",
+          "workload": "control",
+          "loop_seconds": 0.6995784,
+          "min_seconds": 0.6935269,
+          "max_seconds": 0.7171899,
+          "allocated_bytes": 18348672,
+          "gen0_collections": 4
+        },
+        {
+          "variant": "eager",
+          "workload": "control",
+          "loop_seconds": 0.8157766,
+          "min_seconds": 0.8016032,
+          "max_seconds": 0.9118704,
+          "allocated_bytes": 18354864,
+          "gen0_collections": 4
+        },
+        {
+          "variant": "direct",
+          "workload": "memory",
+          "loop_seconds": 0.9323331,
+          "min_seconds": 0.923588,
+          "max_seconds": 0.9408698,
+          "allocated_bytes": 50329688,
+          "gen0_collections": 12
+        },
+        {
+          "variant": "eager",
+          "workload": "memory",
+          "loop_seconds": 0.8951879,
+          "min_seconds": 0.8850531,
+          "max_seconds": 0.9234348,
+          "allocated_bytes": 50329688,
+          "gen0_collections": 12
+        },
+        {
+          "variant": "direct",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1331593,
+          "min_seconds": 1.119466,
+          "max_seconds": 1.1375773,
+          "allocated_bytes": 169074856,
+          "gen0_collections": 40
+        },
+        {
+          "variant": "eager",
+          "workload": "arithmetic",
+          "loop_seconds": 1.0768323,
+          "min_seconds": 1.0682449,
+          "max_seconds": 1.0984141,
+          "allocated_bytes": 169074856,
+          "gen0_collections": 40
+        },
+        {
+          "variant": "direct",
+          "workload": "mixed",
+          "loop_seconds": 1.0700671,
+          "min_seconds": 1.0494245,
+          "max_seconds": 1.1326484,
+          "allocated_bytes": 83886976,
+          "gen0_collections": 20
+        },
+        {
+          "variant": "eager",
+          "workload": "mixed",
+          "loop_seconds": 1.0283124,
+          "min_seconds": 1.0132166,
+          "max_seconds": 1.0337098,
+          "allocated_bytes": 83886976,
+          "gen0_collections": 20
+        }
+      ],
+      "comparison_at_current_limit": {
+        "direct": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "eager": {
+          "geometric_mean_gain_percent": -0.5539082331020406,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": false,
+          "gain_at_least_5_percent": false
+        }
+      }
+    },
+    {
+      "name": "stage6-hardware-mram",
+      "scope": "public RunInstructions, no instruction observers; state hash after stopwatch",
+      "probe_sha256": "3ea39b82cd670ed8e116bba3a48efe8be1286dee48e966c96c46017ce14f4ea4",
+      "options": {
+        "iterations": 32760,
+        "warmups": 1,
+        "repeats": 5
+      },
+      "variants": {
+        "baseline": {
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18"
+        },
+        "mram": {
+          "runtime_sha256": "9b4f4d1eacc36f04a760bfbd8478ebffcfaa82bf7b8e5a991248ec66b37448f6",
+          "processor_sha256": "5c2b18b08627299f51b908d2c036ac5a67dc425b2a4f2c27d6691a117424be4c"
+        }
+      },
+      "completed_samples": 48,
+      "measurements": [
+        {
+          "variant": "baseline",
+          "workload": "control",
+          "loop_seconds": 0.673644,
+          "min_seconds": 0.6659936,
+          "max_seconds": 0.7196359,
+          "allocated_bytes": 129745184,
+          "gen0_collections": 31
+        },
+        {
+          "variant": "mram",
+          "workload": "control",
+          "loop_seconds": 0.683519,
+          "min_seconds": 0.682047,
+          "max_seconds": 0.6940066,
+          "allocated_bytes": 129744224,
+          "gen0_collections": 31
+        },
+        {
+          "variant": "baseline",
+          "workload": "memory",
+          "loop_seconds": 0.7518304,
+          "min_seconds": 0.7462722,
+          "max_seconds": 0.7604132,
+          "allocated_bytes": 204696160,
+          "gen0_collections": 48
+        },
+        {
+          "variant": "mram",
+          "workload": "memory",
+          "loop_seconds": 0.7702403,
+          "min_seconds": 0.7573926,
+          "max_seconds": 0.7804817,
+          "allocated_bytes": 192639152,
+          "gen0_collections": 46
+        },
+        {
+          "variant": "baseline",
+          "workload": "arithmetic",
+          "loop_seconds": 1.0340769,
+          "min_seconds": 1.0210807,
+          "max_seconds": 1.237091,
+          "allocated_bytes": 380081640,
+          "gen0_collections": 90
+        },
+        {
+          "variant": "mram",
+          "workload": "arithmetic",
+          "loop_seconds": 1.0406838,
+          "min_seconds": 1.0300433,
+          "max_seconds": 1.0479744,
+          "allocated_bytes": 331851384,
+          "gen0_collections": 79
+        },
+        {
+          "variant": "baseline",
+          "workload": "mixed",
+          "loop_seconds": 0.8781217,
+          "min_seconds": 0.8721825,
+          "max_seconds": 0.9318231,
+          "allocated_bytes": 248236992,
+          "gen0_collections": 59
+        },
+        {
+          "variant": "mram",
+          "workload": "mixed",
+          "loop_seconds": 0.8922088,
+          "min_seconds": 0.8883338,
+          "max_seconds": 0.9209184,
+          "allocated_bytes": 224121152,
+          "gen0_collections": 53
+        }
+      ],
+      "comparison_at_current_limit": {
+        "baseline": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "mram": {
+          "geometric_mean_gain_percent": -1.5141273948201084,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        }
+      }
+    },
+    {
+      "name": "stage6-hardware-pending-query",
+      "scope": "public RunInstructions, no instruction observers; state hash after stopwatch",
+      "probe_sha256": "48507c7a0523d2a74ea25c633f1a65adeca2f1ba31ce43bf002fb6a416f03856",
+      "options": {
+        "iterations": 32760,
+        "rounds": 0,
+        "warmups": 1,
+        "repeats": 5,
+        "regression_limit_percent": 10.0
+      },
+      "variants": {
+        "baseline": {
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18"
+        },
+        "transfer": {
+          "runtime_sha256": "8e8269932b95c2735abb10c05425fb717956dcbd637a59bbc53d7680193cd15d",
+          "processor_sha256": "30038d3d516a90c1e761fa77081bddfe24db2faeaac9fa869122ab19f796d9e8"
+        },
+        "pending": {
+          "runtime_sha256": "192cb7f52c572c93517f9a0ebf253d13b899d75faa446b2a8347bec62f9872d2",
+          "processor_sha256": "30038d3d516a90c1e761fa77081bddfe24db2faeaac9fa869122ab19f796d9e8"
+        }
+      },
+      "completed_samples": 72,
+      "measurements": [
+        {
+          "variant": "baseline",
+          "workload": "control",
+          "loop_seconds": 0.7654989,
+          "min_seconds": 0.7405268,
+          "max_seconds": 0.7675595,
+          "allocated_bytes": 129745184,
+          "gen0_collections": 31
+        },
+        {
+          "variant": "transfer",
+          "workload": "control",
+          "loop_seconds": 0.8922191,
+          "min_seconds": 0.8757425,
+          "max_seconds": 0.9065595,
+          "allocated_bytes": 11796304,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "pending",
+          "workload": "control",
+          "loop_seconds": 0.884998,
+          "min_seconds": 0.8535763,
+          "max_seconds": 0.9797679,
+          "allocated_bytes": 11796304,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "baseline",
+          "workload": "memory",
+          "loop_seconds": 0.7454235,
+          "min_seconds": 0.7388358,
+          "max_seconds": 0.7845954,
+          "allocated_bytes": 204696160,
+          "gen0_collections": 48
+        },
+        {
+          "variant": "transfer",
+          "workload": "memory",
+          "loop_seconds": 1.013994,
+          "min_seconds": 0.8220589,
+          "max_seconds": 1.0409938,
+          "allocated_bytes": 38529368,
+          "gen0_collections": 9
+        },
+        {
+          "variant": "pending",
+          "workload": "memory",
+          "loop_seconds": 0.832368,
+          "min_seconds": 0.8244397,
+          "max_seconds": 0.8386688,
+          "allocated_bytes": 38529368,
+          "gen0_collections": 9
+        },
+        {
+          "variant": "baseline",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1164727,
+          "min_seconds": 1.0970848,
+          "max_seconds": 1.1297476,
+          "allocated_bytes": 380081640,
+          "gen0_collections": 90
+        },
+        {
+          "variant": "transfer",
+          "workload": "arithmetic",
+          "loop_seconds": 1.2130411,
+          "min_seconds": 1.0684385,
+          "max_seconds": 1.4485505,
+          "allocated_bytes": 73920184,
+          "gen0_collections": 17
+        },
+        {
+          "variant": "pending",
+          "workload": "arithmetic",
+          "loop_seconds": 1.171694,
+          "min_seconds": 1.0757363,
+          "max_seconds": 1.3257813,
+          "allocated_bytes": 73920184,
+          "gen0_collections": 17
+        },
+        {
+          "variant": "baseline",
+          "workload": "mixed",
+          "loop_seconds": 0.9842032,
+          "min_seconds": 0.9750831,
+          "max_seconds": 0.9976719,
+          "allocated_bytes": 248230800,
+          "gen0_collections": 59
+        },
+        {
+          "variant": "transfer",
+          "workload": "mixed",
+          "loop_seconds": 0.9713505,
+          "min_seconds": 0.9539997,
+          "max_seconds": 1.147212,
+          "allocated_bytes": 45087344,
+          "gen0_collections": 10
+        },
+        {
+          "variant": "pending",
+          "workload": "mixed",
+          "loop_seconds": 1.1486264,
+          "min_seconds": 0.9569707,
+          "max_seconds": 1.1560777,
+          "allocated_bytes": 45087344,
+          "gen0_collections": 10
+        }
+      ],
+      "comparison_at_current_limit": {
+        "baseline": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "transfer": {
+          "geometric_mean_gain_percent": -12.424921212510387,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": false,
+          "gain_at_least_5_percent": false
+        },
+        "pending": {
+          "geometric_mean_gain_percent": -10.822053669382681,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": false,
+          "gain_at_least_5_percent": false
+        }
+      }
+    },
+    {
+      "name": "stage6-hardware-recency",
+      "scope": "public RunInstructions, no instruction observers; state hash after stopwatch",
+      "probe_sha256": "2dd5dfb4488bd1ec4da5f9c1b9e0f8bfdb38210b62f0e83fdc9741229a4cc7d8",
+      "options": {
+        "iterations": 32760,
+        "warmups": 1,
+        "repeats": 5
+      },
+      "variants": {
+        "buffer": {
+          "runtime_sha256": "9d26449dec9509f27043e892e326efe7d56ef3af3351a0aa0173ffdea5bb511f",
+          "processor_sha256": "339ee35d67edd4cdc7ac612eab8fbcef8cc3701247189ac3e5c70feb1574dc6e"
+        },
+        "recency": {
+          "runtime_sha256": "9d26449dec9509f27043e892e326efe7d56ef3af3351a0aa0173ffdea5bb511f",
+          "processor_sha256": "057614e6c5659043511e271ff31d9ad852d45ea57818d06f775fd95dfc77efac"
+        }
+      },
+      "completed_samples": 48,
+      "measurements": [
+        {
+          "variant": "buffer",
+          "workload": "control",
+          "loop_seconds": 0.7037094,
+          "min_seconds": 0.661528,
+          "max_seconds": 0.8157685,
+          "allocated_bytes": 18354864,
+          "gen0_collections": 4
+        },
+        {
+          "variant": "recency",
+          "workload": "control",
+          "loop_seconds": 0.7050032,
+          "min_seconds": 0.6882882,
+          "max_seconds": 0.7139639,
+          "allocated_bytes": 18348672,
+          "gen0_collections": 4
+        },
+        {
+          "variant": "buffer",
+          "workload": "memory",
+          "loop_seconds": 0.9709115,
+          "min_seconds": 0.9405451,
+          "max_seconds": 1.053382,
+          "allocated_bytes": 50329688,
+          "gen0_collections": 12
+        },
+        {
+          "variant": "recency",
+          "workload": "memory",
+          "loop_seconds": 0.93086,
+          "min_seconds": 0.9136601,
+          "max_seconds": 0.9424648,
+          "allocated_bytes": 50329688,
+          "gen0_collections": 12
+        },
+        {
+          "variant": "buffer",
+          "workload": "arithmetic",
+          "loop_seconds": 1.109941,
+          "min_seconds": 1.1030459,
+          "max_seconds": 1.1158874,
+          "allocated_bytes": 169074856,
+          "gen0_collections": 40
+        },
+        {
+          "variant": "recency",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1355845,
+          "min_seconds": 1.1172195,
+          "max_seconds": 1.1834459,
+          "allocated_bytes": 169068664,
+          "gen0_collections": 40
+        },
+        {
+          "variant": "buffer",
+          "workload": "mixed",
+          "loop_seconds": 1.0735326,
+          "min_seconds": 1.0620653,
+          "max_seconds": 1.0793534,
+          "allocated_bytes": 83886976,
+          "gen0_collections": 20
+        },
+        {
+          "variant": "recency",
+          "workload": "mixed",
+          "loop_seconds": 1.0661386,
+          "min_seconds": 1.0467737,
+          "max_seconds": 1.2955197,
+          "allocated_bytes": 83886976,
+          "gen0_collections": 20
+        }
+      ],
+      "comparison_at_current_limit": {
+        "buffer": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "recency": {
+          "geometric_mean_gain_percent": 0.6108659770531766,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        }
+      }
+    },
+    {
+      "name": "stage6-hardware-reference",
+      "scope": "public RunInstructions, no instruction observers; state hash after stopwatch",
+      "probe_sha256": "2dd5dfb4488bd1ec4da5f9c1b9e0f8bfdb38210b62f0e83fdc9741229a4cc7d8",
+      "options": {
+        "iterations": 32760,
+        "warmups": 1,
+        "repeats": 5
+      },
+      "variants": {
+        "baseline": {
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18"
+        },
+        "reference": {
+          "runtime_sha256": "1db46736804bf4c7b4bbcd00f1a4b17e9eb243ffe58cea251ff8308317c9fe8b",
+          "processor_sha256": "9a3ba9b35992c9133e08f42883624c0e1ec179b47adc63c01b0ca9c2ca59f026"
+        }
+      },
+      "completed_samples": 48,
+      "measurements": [
+        {
+          "variant": "baseline",
+          "workload": "control",
+          "loop_seconds": 0.7658485,
+          "min_seconds": 0.7546285,
+          "max_seconds": 0.7682624,
+          "allocated_bytes": 129738992,
+          "gen0_collections": 31
+        },
+        {
+          "variant": "reference",
+          "workload": "control",
+          "loop_seconds": 0.8857353,
+          "min_seconds": 0.8716525,
+          "max_seconds": 0.8876622,
+          "allocated_bytes": 11802496,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "baseline",
+          "workload": "memory",
+          "loop_seconds": 0.7483201,
+          "min_seconds": 0.7443434,
+          "max_seconds": 0.7628011,
+          "allocated_bytes": 204696160,
+          "gen0_collections": 48
+        },
+        {
+          "variant": "reference",
+          "workload": "memory",
+          "loop_seconds": 0.8393358,
+          "min_seconds": 0.8384713,
+          "max_seconds": 1.0342753,
+          "allocated_bytes": 38529368,
+          "gen0_collections": 9
+        },
+        {
+          "variant": "baseline",
+          "workload": "arithmetic",
+          "loop_seconds": 1.107642,
+          "min_seconds": 1.0957675,
+          "max_seconds": 1.1344408,
+          "allocated_bytes": 380075448,
+          "gen0_collections": 90
+        },
+        {
+          "variant": "reference",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1871299,
+          "min_seconds": 1.1701568,
+          "max_seconds": 1.1938022,
+          "allocated_bytes": 88867072,
+          "gen0_collections": 21
+        },
+        {
+          "variant": "baseline",
+          "workload": "mixed",
+          "loop_seconds": 0.9834307,
+          "min_seconds": 0.9713253,
+          "max_seconds": 1.0081868,
+          "allocated_bytes": 248230800,
+          "gen0_collections": 59
+        },
+        {
+          "variant": "reference",
+          "workload": "mixed",
+          "loop_seconds": 1.1516687,
+          "min_seconds": 0.9595459,
+          "max_seconds": 1.1603831,
+          "allocated_bytes": 50073960,
+          "gen0_collections": 12
+        }
+      ],
+      "comparison_at_current_limit": {
+        "baseline": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "reference": {
+          "geometric_mean_gain_percent": -11.47274739405283,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": false,
+          "gain_at_least_5_percent": false
+        }
+      }
+    },
+    {
+      "name": "stage6-hardware-scalar-recency",
+      "scope": "public RunInstructions, no instruction observers; state hash after stopwatch",
+      "probe_sha256": "2dd5dfb4488bd1ec4da5f9c1b9e0f8bfdb38210b62f0e83fdc9741229a4cc7d8",
+      "options": {
+        "iterations": 32760,
+        "warmups": 1,
+        "repeats": 5,
+        "regression_limit_percent": 10.0
+      },
+      "variants": {
+        "baseline": {
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18"
+        },
+        "transfer": {
+          "runtime_sha256": "8e8269932b95c2735abb10c05425fb717956dcbd637a59bbc53d7680193cd15d",
+          "processor_sha256": "30038d3d516a90c1e761fa77081bddfe24db2faeaac9fa869122ab19f796d9e8"
+        },
+        "scalar": {
+          "runtime_sha256": "8e8269932b95c2735abb10c05425fb717956dcbd637a59bbc53d7680193cd15d",
+          "processor_sha256": "4d5ee109f2302e614415207007f05ec9e2460e86b353b95c04849778cf0343c6"
+        }
+      },
+      "completed_samples": 72,
+      "measurements": [
+        {
+          "variant": "baseline",
+          "workload": "control",
+          "loop_seconds": 0.7598489,
+          "min_seconds": 0.6836998,
+          "max_seconds": 0.8436934,
+          "allocated_bytes": 129738992,
+          "gen0_collections": 31
+        },
+        {
+          "variant": "transfer",
+          "workload": "control",
+          "loop_seconds": 0.877519,
+          "min_seconds": 0.8198763,
+          "max_seconds": 0.8888591,
+          "allocated_bytes": 11802496,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "scalar",
+          "workload": "control",
+          "loop_seconds": 0.8571477,
+          "min_seconds": 0.8413299,
+          "max_seconds": 0.8925712,
+          "allocated_bytes": 11802496,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "baseline",
+          "workload": "memory",
+          "loop_seconds": 0.7434332,
+          "min_seconds": 0.7311535,
+          "max_seconds": 0.8274038,
+          "allocated_bytes": 204696160,
+          "gen0_collections": 48
+        },
+        {
+          "variant": "transfer",
+          "workload": "memory",
+          "loop_seconds": 0.8544376,
+          "min_seconds": 0.826575,
+          "max_seconds": 0.8967125,
+          "allocated_bytes": 38535560,
+          "gen0_collections": 9
+        },
+        {
+          "variant": "scalar",
+          "workload": "memory",
+          "loop_seconds": 1.016158,
+          "min_seconds": 0.8383586,
+          "max_seconds": 1.0422558,
+          "allocated_bytes": 38535560,
+          "gen0_collections": 9
+        },
+        {
+          "variant": "baseline",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1021698,
+          "min_seconds": 1.0996424,
+          "max_seconds": 1.1310904,
+          "allocated_bytes": 380075448,
+          "gen0_collections": 90
+        },
+        {
+          "variant": "transfer",
+          "workload": "arithmetic",
+          "loop_seconds": 1.0988772,
+          "min_seconds": 1.0852036,
+          "max_seconds": 1.3101069,
+          "allocated_bytes": 73926376,
+          "gen0_collections": 17
+        },
+        {
+          "variant": "scalar",
+          "workload": "arithmetic",
+          "loop_seconds": 1.0901667,
+          "min_seconds": 1.0801268,
+          "max_seconds": 1.2947956,
+          "allocated_bytes": 73926376,
+          "gen0_collections": 17
+        },
+        {
+          "variant": "baseline",
+          "workload": "mixed",
+          "loop_seconds": 0.9671986,
+          "min_seconds": 0.9632476,
+          "max_seconds": 0.985632,
+          "allocated_bytes": 248230800,
+          "gen0_collections": 59
+        },
+        {
+          "variant": "transfer",
+          "workload": "mixed",
+          "loop_seconds": 0.9609497,
+          "min_seconds": 0.9537035,
+          "max_seconds": 1.1620263,
+          "allocated_bytes": 45093536,
+          "gen0_collections": 10
+        },
+        {
+          "variant": "scalar",
+          "workload": "mixed",
+          "loop_seconds": 1.1426684,
+          "min_seconds": 0.9423114,
+          "max_seconds": 1.1525599,
+          "allocated_bytes": 45093536,
+          "gen0_collections": 10
+        }
+      ],
+      "comparison_at_current_limit": {
+        "baseline": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "transfer": {
+          "geometric_mean_gain_percent": -6.612948273044738,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": false,
+          "gain_at_least_5_percent": false
+        },
+        "scalar": {
+          "geometric_mean_gain_percent": -13.687075720984964,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": false,
+          "gain_at_least_5_percent": false
+        }
+      }
+    },
+    {
+      "name": "stage6-hardware-smoke2",
+      "scope": "public RunInstructions, no instruction observers; state hash after stopwatch",
+      "probe_sha256": "3ea39b82cd670ed8e116bba3a48efe8be1286dee48e966c96c46017ce14f4ea4",
+      "options": {
+        "iterations": 20,
+        "warmups": 0,
+        "repeats": 1
+      },
+      "variants": {
+        "baseline": {
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18"
+        }
+      },
+      "completed_samples": 4,
+      "measurements": [
+        {
+          "variant": "baseline",
+          "workload": "control",
+          "loop_seconds": 0.0284229,
+          "min_seconds": 0.0284229,
+          "max_seconds": 0.0284229,
+          "allocated_bytes": 94784,
+          "gen0_collections": 0
+        },
+        {
+          "variant": "baseline",
+          "workload": "memory",
+          "loop_seconds": 0.0364451,
+          "min_seconds": 0.0364451,
+          "max_seconds": 0.0364451,
+          "allocated_bytes": 136640,
+          "gen0_collections": 0
+        },
+        {
+          "variant": "baseline",
+          "workload": "arithmetic",
+          "loop_seconds": 0.0580342,
+          "min_seconds": 0.0580342,
+          "max_seconds": 0.0580342,
+          "allocated_bytes": 255880,
+          "gen0_collections": 0
+        },
+        {
+          "variant": "baseline",
+          "workload": "mixed",
+          "loop_seconds": 0.088295,
+          "min_seconds": 0.088295,
+          "max_seconds": 0.088295,
+          "allocated_bytes": 165184,
+          "gen0_collections": 0
+        }
+      ],
+      "comparison_at_current_limit": {
+        "baseline": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        }
+      }
+    },
+    {
+      "name": "stage6-hardware-transfer",
+      "scope": "public RunInstructions, no instruction observers; state hash after stopwatch",
+      "probe_sha256": "2dd5dfb4488bd1ec4da5f9c1b9e0f8bfdb38210b62f0e83fdc9741229a4cc7d8",
+      "options": {
+        "iterations": 32760,
+        "warmups": 1,
+        "repeats": 5
+      },
+      "variants": {
+        "reference": {
+          "runtime_sha256": "1db46736804bf4c7b4bbcd00f1a4b17e9eb243ffe58cea251ff8308317c9fe8b",
+          "processor_sha256": "9a3ba9b35992c9133e08f42883624c0e1ec179b47adc63c01b0ca9c2ca59f026"
+        },
+        "transfer": {
+          "runtime_sha256": "8e8269932b95c2735abb10c05425fb717956dcbd637a59bbc53d7680193cd15d",
+          "processor_sha256": "30038d3d516a90c1e761fa77081bddfe24db2faeaac9fa869122ab19f796d9e8"
+        }
+      },
+      "completed_samples": 48,
+      "measurements": [
+        {
+          "variant": "reference",
+          "workload": "control",
+          "loop_seconds": 0.8896935,
+          "min_seconds": 0.8537045,
+          "max_seconds": 0.9093635,
+          "allocated_bytes": 11802496,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "transfer",
+          "workload": "control",
+          "loop_seconds": 0.893113,
+          "min_seconds": 0.7769015,
+          "max_seconds": 0.9138294,
+          "allocated_bytes": 11802496,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "reference",
+          "workload": "memory",
+          "loop_seconds": 0.8390297,
+          "min_seconds": 0.8262929,
+          "max_seconds": 1.0227467,
+          "allocated_bytes": 38529368,
+          "gen0_collections": 9
+        },
+        {
+          "variant": "transfer",
+          "workload": "memory",
+          "loop_seconds": 0.8410105,
+          "min_seconds": 0.8317227,
+          "max_seconds": 1.0372161,
+          "allocated_bytes": 38529368,
+          "gen0_collections": 9
+        },
+        {
+          "variant": "reference",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1892574,
+          "min_seconds": 1.1580446,
+          "max_seconds": 1.4428837,
+          "allocated_bytes": 88867072,
+          "gen0_collections": 21
+        },
+        {
+          "variant": "transfer",
+          "workload": "arithmetic",
+          "loop_seconds": 1.2165249,
+          "min_seconds": 1.0856752,
+          "max_seconds": 1.4737439,
+          "allocated_bytes": 73920184,
+          "gen0_collections": 17
+        },
+        {
+          "variant": "reference",
+          "workload": "mixed",
+          "loop_seconds": 1.1610763,
+          "min_seconds": 0.9334761,
+          "max_seconds": 1.1777777,
+          "allocated_bytes": 50073960,
+          "gen0_collections": 12
+        },
+        {
+          "variant": "transfer",
+          "workload": "mixed",
+          "loop_seconds": 0.9698871,
+          "min_seconds": 0.9534141,
+          "max_seconds": 0.9800076,
+          "allocated_bytes": 45093536,
+          "gen0_collections": 10
+        }
+      ],
+      "comparison_at_current_limit": {
+        "reference": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "transfer": {
+          "geometric_mean_gain_percent": 3.8487061520618093,
+          "regression_limit_percent": 10,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        }
+      }
+    },
+    {
+      "name": "stage6-os-prefix-transfer2",
+      "scope": "public RunInstructions OS boot prefix; no per-instruction observers; hashes after stopwatch",
+      "full_os_job_acceptance": false,
+      "options": {
+        "instructions": 1000000,
+        "warmups": 1,
+        "repeats": 5,
+        "regression_limit_percent": 10.0
+      },
+      "probe_sha256": "0e79a1fe349300c48e7b437cd3ead251871f560e3d2238dd6a4ccf16ca570b4d",
+      "machine_job_sha256": "b443af2519a9880f3fafc3de0e16f1b47e7d28ba44c982980f39e21c188e2e08",
+      "variants": {
+        "baseline": {
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18"
+        },
+        "transfer": {
+          "runtime_sha256": "8e8269932b95c2735abb10c05425fb717956dcbd637a59bbc53d7680193cd15d",
+          "processor_sha256": "30038d3d516a90c1e761fa77081bddfe24db2faeaac9fa869122ab19f796d9e8"
+        }
+      },
+      "completed_samples": 12,
+      "measurements": [
+        {
+          "variant": "baseline",
+          "workload": "os_boot_prefix",
+          "loop_seconds": 3.219568,
+          "min_seconds": 3.077566,
+          "max_seconds": 3.2887337,
+          "allocated_bytes": 1418847680,
+          "gen0_collections": 338
+        },
+        {
+          "variant": "transfer",
+          "workload": "os_boot_prefix",
+          "loop_seconds": 2.8167265,
+          "min_seconds": 2.7941946,
+          "max_seconds": 3.3307829,
+          "allocated_bytes": 228974480,
+          "gen0_collections": 53
+        }
+      ],
+      "comparison_at_current_limit": {
+        "baseline": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10.0,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "transfer": {
+          "geometric_mean_gain_percent": 14.301761282112402,
+          "regression_limit_percent": 10.0,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": true
+        }
+      }
+    }
+  ]
+}

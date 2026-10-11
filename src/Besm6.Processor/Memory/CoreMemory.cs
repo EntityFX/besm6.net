@@ -33,6 +33,7 @@ namespace Besm6.Core
             return words[address];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(uint address, Word48 word)
         {
             Word48[] words = _words;

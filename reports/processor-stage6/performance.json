@@ -1,0 +1,2304 @@
+{
+  "baseline_commit": "e361fca7c6ab021038be7a57994f0e3b2e037a82",
+  "stage_complete": false,
+  "scope": "Candidate throughput measurements; full tests, OS job, original pacing and delivery remain outstanding",
+  "series": [
+    {
+      "series": "stage6-hardware-event-heap",
+      "result_sha256": "eca28cefd506870729958e5c3fbd5aa7fe85104677f9c7702100c8aac4cb0f48",
+      "validated": true,
+      "environment": {
+        "platform": "Windows-10-AMD64",
+        "python": "3.12.5",
+        "dotnet": {
+          "sdk": "9.0.202",
+          "net8_runtimes": [
+            {
+              "framework": "Microsoft.AspNetCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.NETCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.WindowsDesktop.App",
+              "version": "8.0.24"
+            }
+          ]
+        }
+      },
+      "options": {
+        "iterations": 32760,
+        "rounds": 0,
+        "warmups": 1,
+        "repeats": 5,
+        "regression_limit_percent": 10.0
+      },
+      "variants": {
+        "baseline": {
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18"
+        },
+        "automatic": {
+          "runtime_sha256": "b6e7ce2a61cc20c91cbe357f9096d071a8eeb308218feff21192894c4716bcbf",
+          "processor_sha256": "30038d3d516a90c1e761fa77081bddfe24db2faeaac9fa869122ab19f796d9e8"
+        },
+        "heap": {
+          "runtime_sha256": "7e53deefb03a4aa42998c121d7db0795e7fc07f997d693d165deef84d0922eb9",
+          "processor_sha256": "30038d3d516a90c1e761fa77081bddfe24db2faeaac9fa869122ab19f796d9e8"
+        }
+      },
+      "measurements": [
+        {
+          "variant": "baseline",
+          "workload": "control",
+          "loop_seconds": 0.7649751,
+          "min_seconds": 0.7529973,
+          "max_seconds": 0.7700317,
+          "allocated_bytes": 129745184,
+          "gen0_collections": 31
+        },
+        {
+          "variant": "automatic",
+          "workload": "control",
+          "loop_seconds": 0.7381344,
+          "min_seconds": 0.7329094,
+          "max_seconds": 0.7437794,
+          "allocated_bytes": 11796312,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "heap",
+          "workload": "control",
+          "loop_seconds": 0.499208,
+          "min_seconds": 0.4621064,
+          "max_seconds": 0.5217078,
+          "allocated_bytes": 11796192,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "baseline",
+          "workload": "memory",
+          "loop_seconds": 0.7389882,
+          "min_seconds": 0.7341066,
+          "max_seconds": 0.8122822,
+          "allocated_bytes": 204696160,
+          "gen0_collections": 48
+        },
+        {
+          "variant": "automatic",
+          "workload": "memory",
+          "loop_seconds": 0.8157615,
+          "min_seconds": 0.8112624,
+          "max_seconds": 1.0217799,
+          "allocated_bytes": 39053552,
+          "gen0_collections": 9
+        },
+        {
+          "variant": "heap",
+          "workload": "memory",
+          "loop_seconds": 0.7141185,
+          "min_seconds": 0.7002125,
+          "max_seconds": 0.8066679,
+          "allocated_bytes": 39059624,
+          "gen0_collections": 9
+        },
+        {
+          "variant": "baseline",
+          "workload": "arithmetic",
+          "loop_seconds": 1.0943413,
+          "min_seconds": 1.0891667,
+          "max_seconds": 1.1764911,
+          "allocated_bytes": 380081640,
+          "gen0_collections": 90
+        },
+        {
+          "variant": "automatic",
+          "workload": "arithmetic",
+          "loop_seconds": 1.0873753,
+          "min_seconds": 1.0658507,
+          "max_seconds": 1.1704081,
+          "allocated_bytes": 73920192,
+          "gen0_collections": 17
+        },
+        {
+          "variant": "heap",
+          "workload": "arithmetic",
+          "loop_seconds": 0.9912458,
+          "min_seconds": 0.9526161,
+          "max_seconds": 1.0295625,
+          "allocated_bytes": 73926264,
+          "gen0_collections": 17
+        },
+        {
+          "variant": "baseline",
+          "workload": "mixed",
+          "loop_seconds": 0.9699085,
+          "min_seconds": 0.9637831,
+          "max_seconds": 0.9722626,
+          "allocated_bytes": 248230800,
+          "gen0_collections": 59
+        },
+        {
+          "variant": "automatic",
+          "workload": "mixed",
+          "loop_seconds": 1.1299287,
+          "min_seconds": 0.9305571,
+          "max_seconds": 1.1456848,
+          "allocated_bytes": 45349440,
+          "gen0_collections": 10
+        },
+        {
+          "variant": "heap",
+          "workload": "mixed",
+          "loop_seconds": 0.9360789,
+          "min_seconds": 0.8311313,
+          "max_seconds": 0.9426612,
+          "allocated_bytes": 45355512,
+          "gen0_collections": 10
+        }
+      ],
+      "comparison": {
+        "baseline": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10.0,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "automatic": {
+          "geometric_mean_gain_percent": -5.101400993972815,
+          "regression_limit_percent": 10.0,
+          "regressions_within_limit": false,
+          "gain_at_least_5_percent": false
+        },
+        "heap": {
+          "geometric_mean_gain_percent": 16.05281527207527,
+          "regression_limit_percent": 10.0,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": true
+        }
+      }
+    },
+    {
+      "series": "stage6-hardware-event-heap-repeat",
+      "result_sha256": "77a7ba4e1d076cad145ac4a9cbb9d61365740c486fb87be0ff3452248c4221d1",
+      "validated": true,
+      "environment": {
+        "platform": "Windows-10-AMD64",
+        "python": "3.12.5",
+        "dotnet": {
+          "sdk": "9.0.202",
+          "net8_runtimes": [
+            {
+              "framework": "Microsoft.AspNetCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.NETCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.WindowsDesktop.App",
+              "version": "8.0.24"
+            }
+          ]
+        }
+      },
+      "options": {
+        "iterations": 32760,
+        "rounds": 0,
+        "warmups": 1,
+        "repeats": 5,
+        "regression_limit_percent": 10.0
+      },
+      "variants": {
+        "baseline": {
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18"
+        },
+        "heap": {
+          "runtime_sha256": "7e53deefb03a4aa42998c121d7db0795e7fc07f997d693d165deef84d0922eb9",
+          "processor_sha256": "30038d3d516a90c1e761fa77081bddfe24db2faeaac9fa869122ab19f796d9e8"
+        }
+      },
+      "measurements": [
+        {
+          "variant": "baseline",
+          "workload": "control",
+          "loop_seconds": 0.8395325,
+          "min_seconds": 0.774511,
+          "max_seconds": 0.8635444,
+          "allocated_bytes": 129745184,
+          "gen0_collections": 31
+        },
+        {
+          "variant": "heap",
+          "workload": "control",
+          "loop_seconds": 0.4911758,
+          "min_seconds": 0.4725987,
+          "max_seconds": 0.5667868,
+          "allocated_bytes": 11796192,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "baseline",
+          "workload": "memory",
+          "loop_seconds": 0.8397639,
+          "min_seconds": 0.7638774,
+          "max_seconds": 0.8604866,
+          "allocated_bytes": 204696160,
+          "gen0_collections": 48
+        },
+        {
+          "variant": "heap",
+          "workload": "memory",
+          "loop_seconds": 0.81578,
+          "min_seconds": 0.8096036,
+          "max_seconds": 0.8258116,
+          "allocated_bytes": 39059624,
+          "gen0_collections": 9
+        },
+        {
+          "variant": "baseline",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1616438,
+          "min_seconds": 1.1302777,
+          "max_seconds": 1.223475,
+          "allocated_bytes": 380081640,
+          "gen0_collections": 90
+        },
+        {
+          "variant": "heap",
+          "workload": "arithmetic",
+          "loop_seconds": 1.083832,
+          "min_seconds": 0.9923916,
+          "max_seconds": 1.108013,
+          "allocated_bytes": 73926264,
+          "gen0_collections": 17
+        },
+        {
+          "variant": "baseline",
+          "workload": "mixed",
+          "loop_seconds": 0.993605,
+          "min_seconds": 0.9856386,
+          "max_seconds": 1.0253111,
+          "allocated_bytes": 248230800,
+          "gen0_collections": 59
+        },
+        {
+          "variant": "heap",
+          "workload": "mixed",
+          "loop_seconds": 0.9580278,
+          "min_seconds": 0.9418469,
+          "max_seconds": 1.0363872,
+          "allocated_bytes": 45355512,
+          "gen0_collections": 10
+        }
+      ],
+      "comparison": {
+        "baseline": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10.0,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "heap": {
+          "geometric_mean_gain_percent": 18.25862942918246,
+          "regression_limit_percent": 10.0,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": true
+        }
+      }
+    },
+    {
+      "series": "stage6-os-prefix-heap",
+      "result_sha256": "ca36dae8d81ee3eca666e66607ce9d222e3b7aa0ef6bdbf4c8de8d1d9783522e",
+      "validated": true,
+      "environment": {
+        "platform": "Windows-10-AMD64",
+        "python": "3.12.5",
+        "dotnet": {
+          "sdk": "9.0.202",
+          "net8_runtimes": [
+            {
+              "framework": "Microsoft.AspNetCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.NETCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.WindowsDesktop.App",
+              "version": "8.0.24"
+            }
+          ]
+        }
+      },
+      "options": {
+        "instructions": 1000000,
+        "warmups": 1,
+        "repeats": 5,
+        "regression_limit_percent": 10.0
+      },
+      "variants": {
+        "baseline": {
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18"
+        },
+        "heap": {
+          "runtime_sha256": "7e53deefb03a4aa42998c121d7db0795e7fc07f997d693d165deef84d0922eb9",
+          "processor_sha256": "30038d3d516a90c1e761fa77081bddfe24db2faeaac9fa869122ab19f796d9e8"
+        }
+      },
+      "measurements": [
+        {
+          "variant": "baseline",
+          "workload": "os_boot_prefix",
+          "loop_seconds": 3.1999346,
+          "min_seconds": 3.1122098,
+          "max_seconds": 3.388568,
+          "allocated_bytes": 1418847680,
+          "gen0_collections": 338
+        },
+        {
+          "variant": "heap",
+          "workload": "os_boot_prefix",
+          "loop_seconds": 2.8202345,
+          "min_seconds": 2.6328974,
+          "max_seconds": 2.8852248,
+          "allocated_bytes": 229913184,
+          "gen0_collections": 54
+        }
+      ],
+      "comparison": {
+        "baseline": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10.0,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "heap": {
+          "geometric_mean_gain_percent": 13.463422988407526,
+          "regression_limit_percent": 10.0,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": true
+        }
+      },
+      "full_os_job_acceptance": false
+    },
+    {
+      "series": "stage6-functional-hot-arithmetic",
+      "result_sha256": "2febbfaac02ad17e525a73f62a23f2a28628eb29064a327ad6a821784b66152f",
+      "validated": true,
+      "environment": {
+        "platform": "Windows-10-AMD64",
+        "python": "3.12.5",
+        "dotnet": {
+          "sdk": "9.0.202",
+          "net8_runtimes": [
+            {
+              "framework": "Microsoft.AspNetCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.NETCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.WindowsDesktop.App",
+              "version": "8.0.24"
+            }
+          ]
+        }
+      },
+      "options": {
+        "jobs": [
+          "dh5000",
+          "dh10000",
+          "mp1",
+          "mp2",
+          "mp3"
+        ],
+        "repeats": 5,
+        "warmups": 1,
+        "stats": false,
+        "order": "alternates each repetition",
+        "runtime_probe": true,
+        "legacy_variants": [],
+        "loop_scope": "RunLoaded including entry/exit and output completion"
+      },
+      "variants": {
+        "baseline": {
+          "dll": "tests-run/stage6-baseline/src/Besm6.Cli/bin/Release/net8.0/besm6.dll",
+          "sha256": "316fa88e3c03863f333bf994ef39df369b0b5bac17de27362dc6bf8274dcac5d",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18",
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "architecture_sha256": "908374e54b1269597b1573f6c06348766cc15d5d78f2c671a3590ffa920d0c10"
+        },
+        "heap": {
+          "dll": "tests-run/stage6-snapshots/event-heap/cli/besm6.dll",
+          "sha256": "9cad75563027ae78d7844a0e160bf0b3270ed49ec712a48c633446a79c7361e1",
+          "processor_sha256": "30038d3d516a90c1e761fa77081bddfe24db2faeaac9fa869122ab19f796d9e8",
+          "runtime_sha256": "7e53deefb03a4aa42998c121d7db0795e7fc07f997d693d165deef84d0922eb9",
+          "architecture_sha256": "cabf8c79f883c298744b2504ce14be604226445e363f1cbed3fe1fa952ce0d37"
+        },
+        "arithmetic": {
+          "dll": "tests-run/stage6-snapshots/hot-arithmetic/cli/besm6.dll",
+          "sha256": "9cad75563027ae78d7844a0e160bf0b3270ed49ec712a48c633446a79c7361e1",
+          "processor_sha256": "448e50fef9b7be881d3a10d7ea6e87d07295f949e819726323fb90ac6ac8916e",
+          "runtime_sha256": "7e53deefb03a4aa42998c121d7db0795e7fc07f997d693d165deef84d0922eb9",
+          "architecture_sha256": "cabf8c79f883c298744b2504ce14be604226445e363f1cbed3fe1fa952ce0d37"
+        }
+      },
+      "measurements": [
+        {
+          "job": "dh5000",
+          "variant": "baseline",
+          "process_seconds": 0.8722490998916328,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.8628519997000694,
+          "process_max_seconds": 0.8785276003181934,
+          "loop_seconds": 0.5690089,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "dh5000",
+          "variant": "heap",
+          "process_seconds": 0.8343317001126707,
+          "time_reduction_percent": 4.347083852958167,
+          "speedup": 1.0454464330839182,
+          "process_min_seconds": 0.8253260999917984,
+          "process_max_seconds": 0.8631099001504481,
+          "loop_seconds": 0.5325809,
+          "loop_speedup": 1.0683989981615938,
+          "loop_time_reduction_percent": 6.402008826223982
+        },
+        {
+          "job": "dh5000",
+          "variant": "arithmetic",
+          "process_seconds": 0.8272122000344098,
+          "time_reduction_percent": 5.163307117521631,
+          "speedup": 1.0544441920166914,
+          "process_min_seconds": 0.8232352999038994,
+          "process_max_seconds": 0.8425381002016366,
+          "loop_seconds": 0.528196,
+          "loop_speedup": 1.0772684760959947,
+          "loop_time_reduction_percent": 7.172629461507551
+        },
+        {
+          "job": "dh10000",
+          "variant": "baseline",
+          "process_seconds": 1.118578199762851,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.1105479998514056,
+          "process_max_seconds": 1.1518629998899996,
+          "loop_seconds": 0.8206348,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "dh10000",
+          "variant": "heap",
+          "process_seconds": 1.0790729997679591,
+          "time_reduction_percent": 3.5317334097220376,
+          "speedup": 1.0366103127437967,
+          "process_min_seconds": 1.0700165000744164,
+          "process_max_seconds": 1.0955274999141693,
+          "loop_seconds": 0.7735695,
+          "loop_speedup": 1.06084172139672,
+          "loop_time_reduction_percent": 5.735230823747662
+        },
+        {
+          "job": "dh10000",
+          "variant": "arithmetic",
+          "process_seconds": 1.0780801996588707,
+          "time_reduction_percent": 3.6204889486105007,
+          "speedup": 1.0375649233858435,
+          "process_min_seconds": 1.0613878001458943,
+          "process_max_seconds": 1.1178274997510016,
+          "loop_seconds": 0.7784689,
+          "loop_speedup": 1.054165169604078,
+          "loop_time_reduction_percent": 5.138205204068846
+        },
+        {
+          "job": "mp1",
+          "variant": "baseline",
+          "process_seconds": 0.5756874000653625,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.5671970997937024,
+          "process_max_seconds": 0.6546467998996377,
+          "loop_seconds": 0.2725763,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "mp1",
+          "variant": "heap",
+          "process_seconds": 0.5475089000537992,
+          "time_reduction_percent": 4.894757121375937,
+          "speedup": 1.0514667432964002,
+          "process_min_seconds": 0.5426403000019491,
+          "process_max_seconds": 0.5846349997445941,
+          "loop_seconds": 0.2480333,
+          "loop_speedup": 1.0989504231891443,
+          "loop_time_reduction_percent": 9.00408436096608
+        },
+        {
+          "job": "mp1",
+          "variant": "arithmetic",
+          "process_seconds": 0.5468028001487255,
+          "time_reduction_percent": 5.017410475434659,
+          "speedup": 1.0528245281640485,
+          "process_min_seconds": 0.5422873999923468,
+          "process_max_seconds": 0.5824366002343595,
+          "loop_seconds": 0.2447146,
+          "loop_speedup": 1.113853852610347,
+          "loop_time_reduction_percent": 10.221615012016816
+        },
+        {
+          "job": "mp2",
+          "variant": "baseline",
+          "process_seconds": 0.6818173001520336,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.6781285000033677,
+          "process_max_seconds": 0.6863749003969133,
+          "loop_seconds": 0.3853261,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "mp2",
+          "variant": "heap",
+          "process_seconds": 0.66815340006724,
+          "time_reduction_percent": 2.0040412705495614,
+          "speedup": 1.0204502440359033,
+          "process_min_seconds": 0.6598576996475458,
+          "process_max_seconds": 0.6875116000883281,
+          "loop_seconds": 0.3671988,
+          "loop_speedup": 1.0493664467313075,
+          "loop_time_reduction_percent": 4.70440491832762
+        },
+        {
+          "job": "mp2",
+          "variant": "arithmetic",
+          "process_seconds": 0.648067600093782,
+          "time_reduction_percent": 4.949962409391196,
+          "speedup": 1.0520774376829942,
+          "process_min_seconds": 0.6440205997787416,
+          "process_max_seconds": 0.7176228002645075,
+          "loop_seconds": 0.3498064,
+          "loop_speedup": 1.1015410238348984,
+          "loop_time_reduction_percent": 9.218088263421553
+        },
+        {
+          "job": "mp3",
+          "variant": "baseline",
+          "process_seconds": 1.1592879998497665,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.1387909003533423,
+          "process_max_seconds": 1.2042658999562263,
+          "loop_seconds": 0.8603695,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "mp3",
+          "variant": "heap",
+          "process_seconds": 1.1373431999236345,
+          "time_reduction_percent": 1.8929549800373868,
+          "speedup": 1.0192947915172883,
+          "process_min_seconds": 1.1250963998027146,
+          "process_max_seconds": 1.1403008000925183,
+          "loop_seconds": 0.8341161,
+          "loop_speedup": 1.0314745153582336,
+          "loop_time_reduction_percent": 3.051409888425838
+        },
+        {
+          "job": "mp3",
+          "variant": "arithmetic",
+          "process_seconds": 1.0376138999126852,
+          "time_reduction_percent": 10.49558866760022,
+          "speedup": 1.1172633673732784,
+          "process_min_seconds": 1.0344743998721242,
+          "process_max_seconds": 1.0597696998156607,
+          "loop_seconds": 0.7392445,
+          "loop_speedup": 1.1638497141338218,
+          "loop_time_reduction_percent": 14.078253587557443
+        }
+      ],
+      "workload_metrics": {},
+      "primary_comparison": {
+        "metric": "RunLoaded throughput",
+        "geometric_mean_gain_percent": 10.15182097973506,
+        "gain_at_least_5_percent": true,
+        "maximum_regression_percent": 10,
+        "regressions_within_limit": true
+      }
+    },
+    {
+      "series": "stage6-functional-hot-final-runtime",
+      "result_sha256": "01f600c7129edd621938c3e12e45513b7e7de22e92fa162f7aa81ba47a350bdb",
+      "validated": true,
+      "environment": {
+        "platform": "Windows-10-AMD64",
+        "python": "3.12.5",
+        "dotnet": {
+          "sdk": "9.0.202",
+          "net8_runtimes": [
+            {
+              "framework": "Microsoft.AspNetCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.NETCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.WindowsDesktop.App",
+              "version": "8.0.24"
+            }
+          ]
+        }
+      },
+      "options": {
+        "jobs": [
+          "dh0",
+          "dh5000",
+          "dh10000",
+          "mp0",
+          "mp1",
+          "mp2",
+          "mp3",
+          "mem0",
+          "mem1",
+          "mem2",
+          "mem3"
+        ],
+        "repeats": 5,
+        "warmups": 1,
+        "stats": false,
+        "order": "alternates each repetition",
+        "runtime_probe": true,
+        "legacy_variants": [],
+        "loop_scope": "RunLoaded including entry/exit and output completion"
+      },
+      "variants": {
+        "baseline": {
+          "dll": "tests-run/stage6-baseline/src/Besm6.Cli/bin/Release/net8.0/besm6.dll",
+          "sha256": "316fa88e3c03863f333bf994ef39df369b0b5bac17de27362dc6bf8274dcac5d",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18",
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "architecture_sha256": "908374e54b1269597b1573f6c06348766cc15d5d78f2c671a3590ffa920d0c10"
+        },
+        "arithmetic": {
+          "dll": "tests-run/stage6-snapshots/hot-arithmetic/cli/besm6.dll",
+          "sha256": "9cad75563027ae78d7844a0e160bf0b3270ed49ec712a48c633446a79c7361e1",
+          "processor_sha256": "448e50fef9b7be881d3a10d7ea6e87d07295f949e819726323fb90ac6ac8916e",
+          "runtime_sha256": "7e53deefb03a4aa42998c121d7db0795e7fc07f997d693d165deef84d0922eb9",
+          "architecture_sha256": "cabf8c79f883c298744b2504ce14be604226445e363f1cbed3fe1fa952ce0d37"
+        }
+      },
+      "measurements": [
+        {
+          "job": "dh0",
+          "variant": "baseline",
+          "process_seconds": 0.5900233997963369,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.5852469000965357,
+          "process_max_seconds": 0.6598477000370622,
+          "loop_seconds": 0.2842648,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "dh0",
+          "variant": "arithmetic",
+          "process_seconds": 0.5881785000674427,
+          "time_reduction_percent": 0.31268246810737255,
+          "speedup": 1.003136632380617,
+          "process_min_seconds": 0.5688100000843406,
+          "process_max_seconds": 0.5963766998611391,
+          "loop_seconds": 0.2756375,
+          "loop_speedup": 1.0312994422021677,
+          "loop_time_reduction_percent": 3.0349519180707607
+        },
+        {
+          "job": "dh5000",
+          "variant": "baseline",
+          "process_seconds": 0.8942836001515388,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.8737233001738787,
+          "process_max_seconds": 0.9477212000638247,
+          "loop_seconds": 0.5900503,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "dh5000",
+          "variant": "arithmetic",
+          "process_seconds": 0.8617928000167012,
+          "time_reduction_percent": 3.633165153574547,
+          "speedup": 1.0377014058764567,
+          "process_min_seconds": 0.8439742000773549,
+          "process_max_seconds": 0.9212030996568501,
+          "loop_seconds": 0.542054,
+          "loop_speedup": 1.0885452371903905,
+          "loop_time_reduction_percent": 8.13427262048676
+        },
+        {
+          "job": "dh10000",
+          "variant": "baseline",
+          "process_seconds": 1.1326919998973608,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.123713499866426,
+          "process_max_seconds": 1.1644691997207701,
+          "loop_seconds": 0.8292815,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "dh10000",
+          "variant": "arithmetic",
+          "process_seconds": 1.100921900011599,
+          "time_reduction_percent": 2.8048313123638757,
+          "speedup": 1.0288577235909533,
+          "process_min_seconds": 1.089621300343424,
+          "process_max_seconds": 1.1520509999245405,
+          "loop_seconds": 0.799303,
+          "loop_speedup": 1.0375058019299315,
+          "loop_time_reduction_percent": 3.614996837623896
+        },
+        {
+          "job": "mp0",
+          "variant": "baseline",
+          "process_seconds": 0.474134000018239,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.45822260016575456,
+          "process_max_seconds": 0.6271608001552522,
+          "loop_seconds": 0.1464719,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "mp0",
+          "variant": "arithmetic",
+          "process_seconds": 0.47262840019539,
+          "time_reduction_percent": 0.31754732265374397,
+          "speedup": 1.0031855889790513,
+          "process_min_seconds": 0.4391625998541713,
+          "process_max_seconds": 0.7001803000457585,
+          "loop_seconds": 0.1609001,
+          "loop_speedup": 0.9103282098643817,
+          "loop_time_reduction_percent": -9.850490094004382
+        },
+        {
+          "job": "mp1",
+          "variant": "baseline",
+          "process_seconds": 0.5770799997262657,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.5700892000459135,
+          "process_max_seconds": 0.623465099837631,
+          "loop_seconds": 0.268971,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "mp1",
+          "variant": "arithmetic",
+          "process_seconds": 0.5662497002631426,
+          "time_reduction_percent": 1.8767414341617106,
+          "speedup": 1.0191263667920532,
+          "process_min_seconds": 0.5518682999536395,
+          "process_max_seconds": 0.6399737996980548,
+          "loop_seconds": 0.2612003,
+          "loop_speedup": 1.0297499658308202,
+          "loop_time_reduction_percent": 2.889047518133936
+        },
+        {
+          "job": "mp2",
+          "variant": "baseline",
+          "process_seconds": 0.6940942001529038,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.6884383000433445,
+          "process_max_seconds": 0.8203837000764906,
+          "loop_seconds": 0.3866232,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "mp2",
+          "variant": "arithmetic",
+          "process_seconds": 0.6524980003014207,
+          "time_reduction_percent": 5.992875295935307,
+          "speedup": 1.0637491606599068,
+          "process_min_seconds": 0.6432843999937177,
+          "process_max_seconds": 0.6746592000126839,
+          "loop_seconds": 0.3503415,
+          "loop_speedup": 1.1035609540976448,
+          "loop_time_reduction_percent": 9.384253195359204
+        },
+        {
+          "job": "mp3",
+          "variant": "baseline",
+          "process_seconds": 1.1499342997558415,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.1431987998075783,
+          "process_max_seconds": 1.179513799957931,
+          "loop_seconds": 0.8489575,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "mp3",
+          "variant": "arithmetic",
+          "process_seconds": 1.0470742001198232,
+          "time_reduction_percent": 8.944867516157917,
+          "speedup": 1.0982357311680941,
+          "process_min_seconds": 1.0455905999988317,
+          "process_max_seconds": 1.1069793002679944,
+          "loop_seconds": 0.7417035,
+          "loop_speedup": 1.144604953327037,
+          "loop_time_reduction_percent": 12.63361240109193
+        },
+        {
+          "job": "mem0",
+          "variant": "baseline",
+          "process_seconds": 0.4172586998902261,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.41378889977931976,
+          "process_max_seconds": 0.4415176999755204,
+          "loop_seconds": 0.114315,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "mem0",
+          "variant": "arithmetic",
+          "process_seconds": 0.4230074998922646,
+          "time_reduction_percent": -1.3777543772127254,
+          "speedup": 0.9864096972193103,
+          "process_min_seconds": 0.4148728000000119,
+          "process_max_seconds": 0.4378303000703454,
+          "loop_seconds": 0.1170833,
+          "loop_speedup": 0.9763561498522847,
+          "loop_time_reduction_percent": -2.421641954249232
+        },
+        {
+          "job": "mem1",
+          "variant": "baseline",
+          "process_seconds": 1.693088199943304,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.6671281000599265,
+          "process_max_seconds": 1.7919990001246333,
+          "loop_seconds": 1.3905908,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "mem1",
+          "variant": "arithmetic",
+          "process_seconds": 1.6733231996186078,
+          "time_reduction_percent": 1.1673934249472717,
+          "speedup": 1.0118118247145569,
+          "process_min_seconds": 1.6468378999270499,
+          "process_max_seconds": 1.72598069999367,
+          "loop_seconds": 1.3640823,
+          "loop_speedup": 1.0194332116178035,
+          "loop_time_reduction_percent": 1.9062760950237845
+        },
+        {
+          "job": "mem2",
+          "variant": "baseline",
+          "process_seconds": 1.9405167996883392,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.9106232998892665,
+          "process_max_seconds": 2.038850899785757,
+          "loop_seconds": 1.6346755,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "mem2",
+          "variant": "arithmetic",
+          "process_seconds": 1.9551053000614047,
+          "time_reduction_percent": -0.7517842862998503,
+          "speedup": 0.9925382533756073,
+          "process_min_seconds": 1.8922383999451995,
+          "process_max_seconds": 2.003461299929768,
+          "loop_seconds": 1.6438518,
+          "loop_speedup": 0.9944178057900354,
+          "loop_time_reduction_percent": -0.5613530024766389
+        },
+        {
+          "job": "mem3",
+          "variant": "baseline",
+          "process_seconds": 2.276057899929583,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 2.216582799796015,
+          "process_max_seconds": 2.3586299000307918,
+          "loop_seconds": 1.9731651,
+          "loop_speedup": 1.0,
+          "loop_time_reduction_percent": 0.0
+        },
+        {
+          "job": "mem3",
+          "variant": "arithmetic",
+          "process_seconds": 2.216507699806243,
+          "time_reduction_percent": 2.6163745713666753,
+          "speedup": 1.0268666786623595,
+          "process_min_seconds": 2.096837899647653,
+          "process_max_seconds": 2.2562706996686757,
+          "loop_seconds": 1.8987485,
+          "loop_speedup": 1.0391924470249745,
+          "loop_time_reduction_percent": 3.7714330138922447
+        }
+      ],
+      "workload_metrics": {
+        "dh5000:baseline": {
+          "unit": "DMIPS",
+          "workload_model_cycles": 15311449,
+          "model_score": 1.858582958328354,
+          "host_process_workload_seconds": 0.30426020035520196,
+          "host_process_score": 9.353046552093081,
+          "host_loop_workload_seconds": 0.30578550000000004,
+          "host_loop_score": 9.306392284367217
+        },
+        "dh5000:arithmetic": {
+          "unit": "DMIPS",
+          "workload_model_cycles": 15311449,
+          "model_score": 1.858582958328354,
+          "host_process_workload_seconds": 0.27361429994925857,
+          "host_process_score": 10.400625326962496,
+          "host_loop_workload_seconds": 0.26641650000000006,
+          "host_loop_score": 10.681620011791203
+        },
+        "dh10000:baseline": {
+          "unit": "DMIPS",
+          "workload_model_cycles": 30621779,
+          "model_score": 1.8586508758170919,
+          "host_process_workload_seconds": 0.5426686001010239,
+          "host_process_score": 10.488020929685636,
+          "host_loop_workload_seconds": 0.5450167,
+          "host_loop_score": 10.442835303473716
+        },
+        "dh10000:arithmetic": {
+          "unit": "DMIPS",
+          "workload_model_cycles": 30621779,
+          "model_score": 1.8586508758170919,
+          "host_process_workload_seconds": 0.5127433999441564,
+          "host_process_score": 11.100132417818767,
+          "host_loop_workload_seconds": 0.5236655,
+          "host_loop_score": 10.868616771092888
+        },
+        "mp1:baseline": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 8618448,
+          "model_score": 0.6265629264108805,
+          "host_process_workload_seconds": 0.10294599970802665,
+          "host_process_score": 5.245468512924612,
+          "host_loop_workload_seconds": 0.12249910000000003,
+          "host_loop_score": 4.408195652049688
+        },
+        "mp1:arithmetic": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 8618448,
+          "model_score": 0.6265629264108805,
+          "host_process_workload_seconds": 0.0936213000677526,
+          "host_process_score": 5.767918193928183,
+          "host_loop_workload_seconds": 0.1003002,
+          "host_loop_score": 5.383837719167061
+        },
+        "mp2:baseline": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 16178623,
+          "model_score": 1.335095081948569,
+          "host_process_workload_seconds": 0.21996020013466477,
+          "host_process_score": 9.81995833190549,
+          "host_loop_workload_seconds": 0.2401513,
+          "host_loop_score": 8.994329824573093
+        },
+        "mp2:arithmetic": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 16178623,
+          "model_score": 1.335095081948569,
+          "host_process_workload_seconds": 0.1798696001060307,
+          "host_process_score": 12.008699628657146,
+          "host_loop_workload_seconds": 0.18944139999999998,
+          "host_loop_score": 11.401942764358795
+        },
+        "mp3:baseline": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 46418828,
+          "model_score": 1.8613136893503648,
+          "host_process_workload_seconds": 0.6758002997376025,
+          "host_process_score": 12.784841917582327,
+          "host_loop_workload_seconds": 0.7024856,
+          "host_loop_score": 12.29918449573913
+        },
+        "mp3:arithmetic": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 46418828,
+          "model_score": 1.8613136893503648,
+          "host_process_workload_seconds": 0.5744457999244332,
+          "host_process_score": 15.040583465205192,
+          "host_loop_workload_seconds": 0.5808034,
+          "host_loop_score": 14.87594597414547
+        },
+        "mem1:baseline": {
+          "unit": "MB/s",
+          "workload_model_cycles": 94265266,
+          "model_score": 5.214221747382541,
+          "host_process_workload_seconds": 1.275829500053078,
+          "host_process_score": 38.525523981029714,
+          "host_loop_workload_seconds": 1.2762758,
+          "host_loop_score": 38.51205201885047
+        },
+        "mem1:arithmetic": {
+          "unit": "MB/s",
+          "workload_model_cycles": 94265266,
+          "model_score": 5.214221747382541,
+          "host_process_workload_seconds": 1.2503156997263432,
+          "host_process_score": 39.31167145286419,
+          "host_loop_workload_seconds": 1.246999,
+          "host_loop_score": 39.41623048615115
+        },
+        "mem2:baseline": {
+          "unit": "MB/s",
+          "workload_model_cycles": 106598376,
+          "model_score": 6.916428070161219,
+          "host_process_workload_seconds": 1.523258099798113,
+          "host_process_score": 48.40151515345405,
+          "host_loop_workload_seconds": 1.5203605,
+          "host_loop_score": 48.49376184135276
+        },
+        "mem2:arithmetic": {
+          "unit": "MB/s",
+          "workload_model_cycles": 106598376,
+          "model_score": 6.916428070161219,
+          "host_process_workload_seconds": 1.53209780016914,
+          "host_process_score": 48.12225433119256,
+          "host_loop_workload_seconds": 1.5267685,
+          "host_loop_score": 48.29022867579466
+        },
+        "mem3:baseline": {
+          "unit": "MB/s",
+          "workload_model_cycles": 135294971,
+          "model_score": 5.449426497899911,
+          "host_process_workload_seconds": 1.858799200039357,
+          "host_process_score": 39.66431661819035,
+          "host_loop_workload_seconds": 1.8588501,
+          "host_loop_score": 39.66323051008793
+        },
+        "mem3:arithmetic": {
+          "unit": "MB/s",
+          "workload_model_cycles": 135294971,
+          "model_score": 5.449426497899911,
+          "host_process_workload_seconds": 1.7935001999139786,
+          "host_process_score": 41.10844258815037,
+          "host_loop_workload_seconds": 1.7816652,
+          "host_loop_score": 41.38151208206794
+        }
+      },
+      "primary_comparison": {
+        "metric": "RunLoaded throughput",
+        "geometric_mean_gain_percent": 7.9951245931719095,
+        "gain_at_least_5_percent": true,
+        "maximum_regression_percent": 10,
+        "regressions_within_limit": true
+      }
+    },
+    {
+      "series": "stage6-functional-hot-final-cli",
+      "result_sha256": "5d6ade175c47c17009a23fe0639316224b3d494ba4dc7824e1d56c1fe69668cc",
+      "validated": true,
+      "environment": {
+        "platform": "Windows-10-AMD64",
+        "python": "3.12.5",
+        "dotnet": {
+          "sdk": "9.0.202",
+          "net8_runtimes": [
+            {
+              "framework": "Microsoft.AspNetCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.NETCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.WindowsDesktop.App",
+              "version": "8.0.24"
+            }
+          ]
+        }
+      },
+      "options": {
+        "jobs": [
+          "dh0",
+          "dh5000",
+          "dh10000",
+          "mp0",
+          "mp1",
+          "mp2",
+          "mp3",
+          "mem0",
+          "mem1",
+          "mem2",
+          "mem3"
+        ],
+        "repeats": 5,
+        "warmups": 1,
+        "stats": false,
+        "order": "alternates each repetition",
+        "runtime_probe": false,
+        "legacy_variants": [],
+        "loop_scope": null
+      },
+      "variants": {
+        "baseline": {
+          "dll": "tests-run/stage6-baseline/src/Besm6.Cli/bin/Release/net8.0/besm6.dll",
+          "sha256": "316fa88e3c03863f333bf994ef39df369b0b5bac17de27362dc6bf8274dcac5d",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18",
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "architecture_sha256": "908374e54b1269597b1573f6c06348766cc15d5d78f2c671a3590ffa920d0c10"
+        },
+        "arithmetic": {
+          "dll": "tests-run/stage6-snapshots/hot-arithmetic/cli/besm6.dll",
+          "sha256": "9cad75563027ae78d7844a0e160bf0b3270ed49ec712a48c633446a79c7361e1",
+          "processor_sha256": "448e50fef9b7be881d3a10d7ea6e87d07295f949e819726323fb90ac6ac8916e",
+          "runtime_sha256": "7e53deefb03a4aa42998c121d7db0795e7fc07f997d693d165deef84d0922eb9",
+          "architecture_sha256": "cabf8c79f883c298744b2504ce14be604226445e363f1cbed3fe1fa952ce0d37"
+        }
+      },
+      "measurements": [
+        {
+          "job": "dh0",
+          "variant": "baseline",
+          "process_seconds": 0.5561931002885103,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.544172199908644,
+          "process_max_seconds": 0.6855529001913965,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "dh0",
+          "variant": "arithmetic",
+          "process_seconds": 0.5352580999024212,
+          "time_reduction_percent": 3.76398059868589,
+          "speedup": 1.0391119730647804,
+          "process_min_seconds": 0.5317803998477757,
+          "process_max_seconds": 0.5410939999856055,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "dh5000",
+          "variant": "baseline",
+          "process_seconds": 0.8494565999135375,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.8461293000727892,
+          "process_max_seconds": 0.8545905002392828,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "dh5000",
+          "variant": "arithmetic",
+          "process_seconds": 0.8006378002464771,
+          "time_reduction_percent": 5.747062259805791,
+          "speedup": 1.0609748873361107,
+          "process_min_seconds": 0.793042799923569,
+          "process_max_seconds": 0.8104515001177788,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "dh10000",
+          "variant": "baseline",
+          "process_seconds": 1.1224043001420796,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.1000707000494003,
+          "process_max_seconds": 1.1760116000659764,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "dh10000",
+          "variant": "arithmetic",
+          "process_seconds": 1.0357137001119554,
+          "time_reduction_percent": 7.723651808813492,
+          "speedup": 1.0837013163200926,
+          "process_min_seconds": 1.0277450000867248,
+          "process_max_seconds": 1.119336299598217,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp0",
+          "variant": "baseline",
+          "process_seconds": 0.40933840023353696,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.39783559972420335,
+          "process_max_seconds": 0.4120183000341058,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp0",
+          "variant": "arithmetic",
+          "process_seconds": 0.40983569994568825,
+          "time_reduction_percent": -0.1214886538540183,
+          "speedup": 0.9987865876198262,
+          "process_min_seconds": 0.4067343999631703,
+          "process_max_seconds": 0.4230748997069895,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp1",
+          "variant": "baseline",
+          "process_seconds": 0.5405037999153137,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.5345176998525858,
+          "process_max_seconds": 0.5962386997416615,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp1",
+          "variant": "arithmetic",
+          "process_seconds": 0.5387862003408372,
+          "time_reduction_percent": 0.3177775206660183,
+          "speedup": 1.0031879056542092,
+          "process_min_seconds": 0.5097265001386404,
+          "process_max_seconds": 0.542834599968046,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp2",
+          "variant": "baseline",
+          "process_seconds": 0.6598408999852836,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.6527519999071956,
+          "process_max_seconds": 0.7394337998703122,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp2",
+          "variant": "arithmetic",
+          "process_seconds": 0.6546513000503182,
+          "time_reduction_percent": 0.7864926128527516,
+          "speedup": 1.007927273549394,
+          "process_min_seconds": 0.6150056002661586,
+          "process_max_seconds": 0.7768906001001596,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp3",
+          "variant": "baseline",
+          "process_seconds": 1.1398125002160668,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.1182718998752534,
+          "process_max_seconds": 1.3607956999912858,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp3",
+          "variant": "arithmetic",
+          "process_seconds": 1.0134736998006701,
+          "time_reduction_percent": 11.084173966459176,
+          "speedup": 1.1246591800460584,
+          "process_min_seconds": 1.0004064999520779,
+          "process_max_seconds": 1.0483942003920674,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem0",
+          "variant": "baseline",
+          "process_seconds": 0.38339969981461763,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.37799740023911,
+          "process_max_seconds": 0.4160918998531997,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem0",
+          "variant": "arithmetic",
+          "process_seconds": 0.3867537002079189,
+          "time_reduction_percent": -0.874805169363202,
+          "speedup": 0.9913278130461373,
+          "process_min_seconds": 0.3741342001594603,
+          "process_max_seconds": 0.6891284002922475,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem1",
+          "variant": "baseline",
+          "process_seconds": 1.6636684001423419,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.6384871997870505,
+          "process_max_seconds": 1.7940890002064407,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem1",
+          "variant": "arithmetic",
+          "process_seconds": 1.6171663999557495,
+          "time_reduction_percent": 2.795148371070444,
+          "speedup": 1.0287552351989657,
+          "process_min_seconds": 1.6070954999886453,
+          "process_max_seconds": 1.6997587997466326,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem2",
+          "variant": "baseline",
+          "process_seconds": 1.9441563999280334,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.922039299737662,
+          "process_max_seconds": 2.346687899902463,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem2",
+          "variant": "arithmetic",
+          "process_seconds": 1.9427130999974906,
+          "time_reduction_percent": 0.07423785095664881,
+          "speedup": 1.0007429300448658,
+          "process_min_seconds": 1.8499138997867703,
+          "process_max_seconds": 2.004655800294131,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem3",
+          "variant": "baseline",
+          "process_seconds": 2.2363686999306083,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 2.218143000267446,
+          "process_max_seconds": 2.2384685003198683,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem3",
+          "variant": "arithmetic",
+          "process_seconds": 2.130092400126159,
+          "time_reduction_percent": 4.752181507805342,
+          "speedup": 1.0498928120668167,
+          "process_min_seconds": 2.0541165000759065,
+          "process_max_seconds": 2.1899613002315164,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        }
+      ],
+      "workload_metrics": {
+        "dh5000:baseline": {
+          "unit": "DMIPS",
+          "workload_model_cycles": 15311449,
+          "model_score": 1.858582958328354,
+          "host_process_workload_seconds": 0.2932634996250272,
+          "host_process_score": 9.703764094440732,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "dh5000:arithmetic": {
+          "unit": "DMIPS",
+          "workload_model_cycles": 15311449,
+          "model_score": 1.858582958328354,
+          "host_process_workload_seconds": 0.2653797003440559,
+          "host_process_score": 10.723351538124202,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "dh10000:baseline": {
+          "unit": "DMIPS",
+          "workload_model_cycles": 30621779,
+          "model_score": 1.8586508758170919,
+          "host_process_workload_seconds": 0.5662111998535693,
+          "host_process_score": 10.051937575969278,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "dh10000:arithmetic": {
+          "unit": "DMIPS",
+          "workload_model_cycles": 30621779,
+          "model_score": 1.8586508758170919,
+          "host_process_workload_seconds": 0.5004556002095342,
+          "host_process_score": 11.372676483907421,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mp1:baseline": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 8618448,
+          "model_score": 0.6265629264108805,
+          "host_process_workload_seconds": 0.13116539968177676,
+          "host_process_score": 4.1169393857687,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mp1:arithmetic": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 8618448,
+          "model_score": 0.6265629264108805,
+          "host_process_workload_seconds": 0.128950500395149,
+          "host_process_score": 4.187653389054351,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mp2:baseline": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 16178623,
+          "model_score": 1.335095081948569,
+          "host_process_workload_seconds": 0.25050249975174665,
+          "host_process_score": 8.622668444988,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mp2:arithmetic": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 16178623,
+          "model_score": 1.335095081948569,
+          "host_process_workload_seconds": 0.24481560010463,
+          "host_process_score": 8.82296716008642,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mp3:baseline": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 46418828,
+          "model_score": 1.8613136893503648,
+          "host_process_workload_seconds": 0.7304740999825299,
+          "host_process_score": 11.827934762104004,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mp3:arithmetic": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 46418828,
+          "model_score": 1.8613136893503648,
+          "host_process_workload_seconds": 0.6036379998549819,
+          "host_process_score": 14.313214214604905,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mem1:baseline": {
+          "unit": "MB/s",
+          "workload_model_cycles": 94265266,
+          "model_score": 5.214221747382541,
+          "host_process_workload_seconds": 1.2802687003277242,
+          "host_process_score": 38.39194068199748,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mem1:arithmetic": {
+          "unit": "MB/s",
+          "workload_model_cycles": 94265266,
+          "model_score": 5.214221747382541,
+          "host_process_workload_seconds": 1.2304126997478306,
+          "host_process_score": 39.947572070796696,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mem2:baseline": {
+          "unit": "MB/s",
+          "workload_model_cycles": 106598376,
+          "model_score": 6.916428070161219,
+          "host_process_workload_seconds": 1.5607567001134157,
+          "host_process_score": 47.23862469700908,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mem2:arithmetic": {
+          "unit": "MB/s",
+          "workload_model_cycles": 106598376,
+          "model_score": 6.916428070161219,
+          "host_process_workload_seconds": 1.5559593997895718,
+          "host_process_score": 47.38426980162271,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mem3:baseline": {
+          "unit": "MB/s",
+          "workload_model_cycles": 135294971,
+          "model_score": 5.449426497899911,
+          "host_process_workload_seconds": 1.8529690001159906,
+          "host_process_score": 39.78911681489805,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mem3:arithmetic": {
+          "unit": "MB/s",
+          "workload_model_cycles": 135294971,
+          "model_score": 5.449426497899911,
+          "host_process_workload_seconds": 1.7433386999182403,
+          "host_process_score": 42.29126560630915,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        }
+      },
+      "primary_comparison": {
+        "metric": "full CLI process throughput",
+        "geometric_mean_gain_percent": 5.508979993170127,
+        "gain_at_least_5_percent": true,
+        "maximum_regression_percent": 10,
+        "regressions_within_limit": true
+      }
+    },
+    {
+      "series": "stage6-hardware-hot-final",
+      "result_sha256": "ddfb489bb79fdc3d0c7f5df2d9e30ee3dd7c7628c24d392f8a0a94e1cbe16a81",
+      "validated": true,
+      "environment": {
+        "platform": "Windows-10-AMD64",
+        "python": "3.12.5",
+        "dotnet": {
+          "sdk": "9.0.202",
+          "net8_runtimes": [
+            {
+              "framework": "Microsoft.AspNetCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.NETCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.WindowsDesktop.App",
+              "version": "8.0.24"
+            }
+          ]
+        }
+      },
+      "options": {
+        "iterations": 32760,
+        "rounds": 0,
+        "warmups": 1,
+        "repeats": 5,
+        "regression_limit_percent": 10.0
+      },
+      "variants": {
+        "baseline": {
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18"
+        },
+        "arithmetic": {
+          "runtime_sha256": "7e53deefb03a4aa42998c121d7db0795e7fc07f997d693d165deef84d0922eb9",
+          "processor_sha256": "448e50fef9b7be881d3a10d7ea6e87d07295f949e819726323fb90ac6ac8916e"
+        }
+      },
+      "measurements": [
+        {
+          "variant": "baseline",
+          "workload": "control",
+          "loop_seconds": 0.755237,
+          "min_seconds": 0.7529937,
+          "max_seconds": 0.7776435,
+          "allocated_bytes": 129745184,
+          "gen0_collections": 31
+        },
+        {
+          "variant": "arithmetic",
+          "workload": "control",
+          "loop_seconds": 0.4466945,
+          "min_seconds": 0.4418359,
+          "max_seconds": 0.4834697,
+          "allocated_bytes": 11796192,
+          "gen0_collections": 2
+        },
+        {
+          "variant": "baseline",
+          "workload": "memory",
+          "loop_seconds": 0.7727457,
+          "min_seconds": 0.7387195,
+          "max_seconds": 1.0877434,
+          "allocated_bytes": 204696160,
+          "gen0_collections": 48
+        },
+        {
+          "variant": "arithmetic",
+          "workload": "memory",
+          "loop_seconds": 0.7086531,
+          "min_seconds": 0.6825743,
+          "max_seconds": 0.7439031,
+          "allocated_bytes": 39059624,
+          "gen0_collections": 9
+        },
+        {
+          "variant": "baseline",
+          "workload": "arithmetic",
+          "loop_seconds": 1.1141931,
+          "min_seconds": 1.0920311,
+          "max_seconds": 1.2069371,
+          "allocated_bytes": 380081640,
+          "gen0_collections": 90
+        },
+        {
+          "variant": "arithmetic",
+          "workload": "arithmetic",
+          "loop_seconds": 1.0142853,
+          "min_seconds": 0.9824592,
+          "max_seconds": 1.2525265,
+          "allocated_bytes": 73920072,
+          "gen0_collections": 17
+        },
+        {
+          "variant": "baseline",
+          "workload": "mixed",
+          "loop_seconds": 0.9718769,
+          "min_seconds": 0.9543499,
+          "max_seconds": 1.0094016,
+          "allocated_bytes": 248230800,
+          "gen0_collections": 59
+        },
+        {
+          "variant": "arithmetic",
+          "workload": "mixed",
+          "loop_seconds": 0.9366806,
+          "min_seconds": 0.9265578,
+          "max_seconds": 0.9598643,
+          "allocated_bytes": 45355512,
+          "gen0_collections": 10
+        }
+      ],
+      "comparison": {
+        "baseline": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10.0,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "arithmetic": {
+          "geometric_mean_gain_percent": 20.399284672993232,
+          "regression_limit_percent": 10.0,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": true
+        }
+      }
+    },
+    {
+      "series": "stage6-os-prefix-hot-final",
+      "result_sha256": "2788c0d975f9669f754ad55f73e8258bba347af0e7995b38165eb98d40d252a3",
+      "validated": true,
+      "environment": {
+        "platform": "Windows-10-AMD64",
+        "python": "3.12.5",
+        "dotnet": {
+          "sdk": "9.0.202",
+          "net8_runtimes": [
+            {
+              "framework": "Microsoft.AspNetCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.NETCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.WindowsDesktop.App",
+              "version": "8.0.24"
+            }
+          ]
+        }
+      },
+      "options": {
+        "instructions": 1000000,
+        "warmups": 1,
+        "repeats": 5,
+        "regression_limit_percent": 10.0
+      },
+      "variants": {
+        "baseline": {
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18"
+        },
+        "arithmetic": {
+          "runtime_sha256": "7e53deefb03a4aa42998c121d7db0795e7fc07f997d693d165deef84d0922eb9",
+          "processor_sha256": "448e50fef9b7be881d3a10d7ea6e87d07295f949e819726323fb90ac6ac8916e"
+        }
+      },
+      "measurements": [
+        {
+          "variant": "baseline",
+          "workload": "os_boot_prefix",
+          "loop_seconds": 3.3911843,
+          "min_seconds": 3.1023117,
+          "max_seconds": 4.4683149,
+          "allocated_bytes": 1418847680,
+          "gen0_collections": 338
+        },
+        {
+          "variant": "arithmetic",
+          "workload": "os_boot_prefix",
+          "loop_seconds": 2.6346298,
+          "min_seconds": 2.5965307,
+          "max_seconds": 3.7459588,
+          "allocated_bytes": 229913184,
+          "gen0_collections": 54
+        }
+      ],
+      "comparison": {
+        "baseline": {
+          "geometric_mean_gain_percent": 0.0,
+          "regression_limit_percent": 10.0,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": false
+        },
+        "arithmetic": {
+          "geometric_mean_gain_percent": 28.71578010694329,
+          "regression_limit_percent": 10.0,
+          "regressions_within_limit": true,
+          "gain_at_least_5_percent": true
+        }
+      },
+      "full_os_job_acceptance": false
+    },
+    {
+      "series": "stage6-functional-hot-final-cli-repeat",
+      "result_sha256": "7556cb7f43692745dcbdf1ac0a05ae161a50421bcf238aa83fa13a2425a0576e",
+      "validated": true,
+      "environment": {
+        "platform": "Windows-10-AMD64",
+        "python": "3.12.5",
+        "dotnet": {
+          "sdk": "9.0.202",
+          "net8_runtimes": [
+            {
+              "framework": "Microsoft.AspNetCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.NETCore.App",
+              "version": "8.0.24"
+            },
+            {
+              "framework": "Microsoft.WindowsDesktop.App",
+              "version": "8.0.24"
+            }
+          ]
+        }
+      },
+      "options": {
+        "jobs": [
+          "dh0",
+          "dh5000",
+          "dh10000",
+          "mp0",
+          "mp1",
+          "mp2",
+          "mp3",
+          "mem0",
+          "mem1",
+          "mem2",
+          "mem3"
+        ],
+        "repeats": 5,
+        "warmups": 1,
+        "stats": false,
+        "order": "alternates each repetition",
+        "runtime_probe": false,
+        "legacy_variants": [],
+        "loop_scope": null
+      },
+      "variants": {
+        "baseline": {
+          "dll": "tests-run/stage6-baseline/src/Besm6.Cli/bin/Release/net8.0/besm6.dll",
+          "sha256": "316fa88e3c03863f333bf994ef39df369b0b5bac17de27362dc6bf8274dcac5d",
+          "processor_sha256": "fb986e7d813efad9875e0c6de5224b3a5048d397657b8e55785f6cf3b703eb18",
+          "runtime_sha256": "3ff571e5a180d8447dec232757fe56bac34abb53ec93c9a549563c11bb7ecc42",
+          "architecture_sha256": "908374e54b1269597b1573f6c06348766cc15d5d78f2c671a3590ffa920d0c10"
+        },
+        "arithmetic": {
+          "dll": "tests-run/stage6-snapshots/hot-arithmetic/cli/besm6.dll",
+          "sha256": "9cad75563027ae78d7844a0e160bf0b3270ed49ec712a48c633446a79c7361e1",
+          "processor_sha256": "448e50fef9b7be881d3a10d7ea6e87d07295f949e819726323fb90ac6ac8916e",
+          "runtime_sha256": "7e53deefb03a4aa42998c121d7db0795e7fc07f997d693d165deef84d0922eb9",
+          "architecture_sha256": "cabf8c79f883c298744b2504ce14be604226445e363f1cbed3fe1fa952ce0d37"
+        }
+      },
+      "measurements": [
+        {
+          "job": "dh0",
+          "variant": "baseline",
+          "process_seconds": 0.5466583003289998,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.5394505998119712,
+          "process_max_seconds": 0.5800998001359403,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "dh0",
+          "variant": "arithmetic",
+          "process_seconds": 0.538860599976033,
+          "time_reduction_percent": 1.426430431637793,
+          "speedup": 1.0144707190566793,
+          "process_min_seconds": 0.5360859003849328,
+          "process_max_seconds": 0.5474878000095487,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "dh5000",
+          "variant": "baseline",
+          "process_seconds": 1.040759399998933,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.8682710002176464,
+          "process_max_seconds": 1.0763385999016464,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "dh5000",
+          "variant": "arithmetic",
+          "process_seconds": 0.9771700003184378,
+          "time_reduction_percent": 6.109903949035722,
+          "speedup": 1.0650750633561947,
+          "process_min_seconds": 0.7949274000711739,
+          "process_max_seconds": 1.5516563998535275,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "dh10000",
+          "variant": "baseline",
+          "process_seconds": 1.1234889002516866,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.083711199928075,
+          "process_max_seconds": 1.610399500001222,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "dh10000",
+          "variant": "arithmetic",
+          "process_seconds": 1.0549669000320137,
+          "time_reduction_percent": 6.099036688686688,
+          "speedup": 1.064951801063705,
+          "process_min_seconds": 1.0295923999510705,
+          "process_max_seconds": 1.1480455002747476,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp0",
+          "variant": "baseline",
+          "process_seconds": 0.41199339972808957,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.4035060000605881,
+          "process_max_seconds": 0.44850429985672235,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp0",
+          "variant": "arithmetic",
+          "process_seconds": 0.42321950010955334,
+          "time_reduction_percent": -2.7248252978986587,
+          "speedup": 0.9734745200101654,
+          "process_min_seconds": 0.40152629977092147,
+          "process_max_seconds": 0.45312879979610443,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp1",
+          "variant": "baseline",
+          "process_seconds": 0.544448500033468,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.5381733998656273,
+          "process_max_seconds": 0.5469929999671876,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp1",
+          "variant": "arithmetic",
+          "process_seconds": 0.5274116997607052,
+          "time_reduction_percent": 3.129184903937743,
+          "speedup": 1.0323026589673545,
+          "process_min_seconds": 0.5172140998765826,
+          "process_max_seconds": 0.5505892997607589,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp2",
+          "variant": "baseline",
+          "process_seconds": 0.7135089999064803,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.6452482999302447,
+          "process_max_seconds": 0.7492820997722447,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp2",
+          "variant": "arithmetic",
+          "process_seconds": 0.6229260000400245,
+          "time_reduction_percent": 12.695424988098047,
+          "speedup": 1.1454153460613872,
+          "process_min_seconds": 0.6154416999779642,
+          "process_max_seconds": 0.6403728001751006,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp3",
+          "variant": "baseline",
+          "process_seconds": 1.1119085000827909,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.1067109000869095,
+          "process_max_seconds": 1.1423249999061227,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mp3",
+          "variant": "arithmetic",
+          "process_seconds": 1.0039149997755885,
+          "time_reduction_percent": 9.712444890848603,
+          "speedup": 1.1075723545632277,
+          "process_min_seconds": 0.9960594000294805,
+          "process_max_seconds": 1.0081055001355708,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem0",
+          "variant": "baseline",
+          "process_seconds": 0.37925329990684986,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 0.3719413001090288,
+          "process_max_seconds": 0.4483177000656724,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem0",
+          "variant": "arithmetic",
+          "process_seconds": 0.38967749988660216,
+          "time_reduction_percent": -2.748611543343893,
+          "speedup": 0.9732491612094981,
+          "process_min_seconds": 0.3759717997163534,
+          "process_max_seconds": 0.6618588999845088,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem1",
+          "variant": "baseline",
+          "process_seconds": 1.621607800014317,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.6108653000555933,
+          "process_max_seconds": 1.638160599861294,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem1",
+          "variant": "arithmetic",
+          "process_seconds": 1.6291940999217331,
+          "time_reduction_percent": -0.4678258150552228,
+          "speedup": 0.9953435260367193,
+          "process_min_seconds": 1.5990879996679723,
+          "process_max_seconds": 1.6530937002971768,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem2",
+          "variant": "baseline",
+          "process_seconds": 1.9379855003207922,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 1.9045333000831306,
+          "process_max_seconds": 2.0784944999031723,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem2",
+          "variant": "arithmetic",
+          "process_seconds": 1.9395894999615848,
+          "time_reduction_percent": -0.082766338578244,
+          "speedup": 0.9991730210743952,
+          "process_min_seconds": 1.8795465999282897,
+          "process_max_seconds": 2.071908200159669,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem3",
+          "variant": "baseline",
+          "process_seconds": 2.3472742000594735,
+          "time_reduction_percent": 0.0,
+          "speedup": 1.0,
+          "process_min_seconds": 2.1719786999747157,
+          "process_max_seconds": 3.2811580998823047,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        },
+        {
+          "job": "mem3",
+          "variant": "arithmetic",
+          "process_seconds": 2.085629299748689,
+          "time_reduction_percent": 11.146754831802575,
+          "speedup": 1.1254512968063461,
+          "process_min_seconds": 2.05584769975394,
+          "process_max_seconds": 2.6780889998190105,
+          "loop_seconds": null,
+          "loop_speedup": null,
+          "loop_time_reduction_percent": null
+        }
+      ],
+      "workload_metrics": {
+        "dh5000:baseline": {
+          "unit": "DMIPS",
+          "workload_model_cycles": 15311449,
+          "model_score": 1.858582958328354,
+          "host_process_workload_seconds": 0.4941010996699333,
+          "host_process_score": 5.759468699366143,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "dh5000:arithmetic": {
+          "unit": "DMIPS",
+          "workload_model_cycles": 15311449,
+          "model_score": 1.858582958328354,
+          "host_process_workload_seconds": 0.43830940034240484,
+          "host_process_score": 6.492582216234195,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "dh10000:baseline": {
+          "unit": "DMIPS",
+          "workload_model_cycles": 30621779,
+          "model_score": 1.8586508758170919,
+          "host_process_workload_seconds": 0.5768305999226868,
+          "host_process_score": 9.866882298729616,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "dh10000:arithmetic": {
+          "unit": "DMIPS",
+          "workload_model_cycles": 30621779,
+          "model_score": 1.8586508758170919,
+          "host_process_workload_seconds": 0.5161063000559807,
+          "host_process_score": 11.027804998941884,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mp1:baseline": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 8618448,
+          "model_score": 0.6265629264108805,
+          "host_process_workload_seconds": 0.13245510030537844,
+          "host_process_score": 4.076853203500786,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mp1:arithmetic": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 8618448,
+          "model_score": 0.6265629264108805,
+          "host_process_workload_seconds": 0.1041921996511519,
+          "host_process_score": 5.182729626670571,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mp2:baseline": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 16178623,
+          "model_score": 1.335095081948569,
+          "host_process_workload_seconds": 0.30151560017839074,
+          "host_process_score": 7.163808435523877,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mp2:arithmetic": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 16178623,
+          "model_score": 1.335095081948569,
+          "host_process_workload_seconds": 0.19970649993047118,
+          "host_process_score": 10.815872296354975,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mp3:baseline": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 46418828,
+          "model_score": 1.8613136893503648,
+          "host_process_workload_seconds": 0.6999151003547013,
+          "host_process_score": 12.344354330434424,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mp3:arithmetic": {
+          "unit": "MFLOPS",
+          "workload_model_cycles": 46418828,
+          "model_score": 1.8613136893503648,
+          "host_process_workload_seconds": 0.5806954996660352,
+          "host_process_score": 14.878710107050884,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mem1:baseline": {
+          "unit": "MB/s",
+          "workload_model_cycles": 94265266,
+          "model_score": 5.214221747382541,
+          "host_process_workload_seconds": 1.2423545001074672,
+          "host_process_score": 39.56358671840301,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mem1:arithmetic": {
+          "unit": "MB/s",
+          "workload_model_cycles": 94265266,
+          "model_score": 5.214221747382541,
+          "host_process_workload_seconds": 1.239516600035131,
+          "host_process_score": 39.65416840614068,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mem2:baseline": {
+          "unit": "MB/s",
+          "workload_model_cycles": 106598376,
+          "model_score": 6.916428070161219,
+          "host_process_workload_seconds": 1.5587322004139423,
+          "host_process_score": 47.299978777894324,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mem2:arithmetic": {
+          "unit": "MB/s",
+          "workload_model_cycles": 106598376,
+          "model_score": 6.916428070161219,
+          "host_process_workload_seconds": 1.5499120000749826,
+          "host_process_score": 47.56915231086225,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mem3:baseline": {
+          "unit": "MB/s",
+          "workload_model_cycles": 135294971,
+          "model_score": 5.449426497899911,
+          "host_process_workload_seconds": 1.9680209001526237,
+          "host_process_score": 37.46301677704858,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        },
+        "mem3:arithmetic": {
+          "unit": "MB/s",
+          "workload_model_cycles": 135294971,
+          "model_score": 5.449426497899911,
+          "host_process_workload_seconds": 1.6959517998620868,
+          "host_process_score": 43.47293360931336,
+          "host_loop_workload_seconds": null,
+          "host_loop_score": null
+        }
+      },
+      "primary_comparison": {
+        "metric": "full CLI process throughput",
+        "geometric_mean_gain_percent": 8.23568346674235,
+        "gain_at_least_5_percent": true,
+        "maximum_regression_percent": 10,
+        "regressions_within_limit": true
+      }
+    }
+  ]
+}

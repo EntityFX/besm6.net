@@ -121,12 +121,13 @@ internal sealed partial class HardwareProcessorModel
     {
         if (!IsCurrent(in instruction) || _completionReady || _cancellationRequested)
             throw new InvalidOperationException("There is no waiting model instruction to schedule.");
-        HardwareEventToken signal = default;
-        signal = Timeline.ScheduleAt(time, () =>
+        var signal = Timeline.ScheduleAt(time, static (context, sequence) =>
         {
-            if (_readyEvent == signal) _readyEvent = default;
-            TryIndicateCompletionReady(in instruction);
-        });
+            var model = (HardwareProcessorModel)context;
+            if (model._pendingHandle.Sequence != sequence || !model.HasPendingInstruction) return;
+            model._readyEvent = default;
+            model.TryIndicateCompletionReady(in model._pendingHandle);
+        }, this, instruction.Sequence);
         Timeline.Cancel(_readyEvent);
         _readyEvent = signal;
         return signal;
@@ -203,20 +204,20 @@ internal sealed partial class HardwareProcessorModel
                 throw new InvalidOperationException("The pending CPU command belongs to another execution owner.");
             if (_timedFetchWaiting && HasPendingInstruction)
             {
-                Timeline.AdvanceUntil(time, () => _timedFetchReply.HasValue || _cancellationRequested || !HasPendingInstruction);
+                Timeline.AdvanceUntil(time, _fetchBoundary);
                 if (HasPendingInstruction && !_cancellationRequested && _timedFetchReply is { } reply)
                     AcceptTimedInstructionFetch(reply);
                 else if (HasPendingInstruction && !_cancellationRequested) return null;
             }
             while (_dataMemoryActive && !_completionReady && HasPendingInstruction && !_cancellationRequested)
             {
-                Timeline.AdvanceUntil(time, () => _dataMemoryReplyReady || _cancellationRequested || !HasPendingInstruction);
+                Timeline.AdvanceUntil(time, _dataBoundary);
                 if (HasPendingInstruction && !_cancellationRequested && _dataMemoryReplyReady) AcceptDataTransfer();
                 else break;
             }
             if (_pendingInstruction is { } instruction)
             {
-                Timeline.AdvanceUntil(time, () => _completionReady || _cancellationRequested || !HasPendingInstruction);
+                Timeline.AdvanceUntil(time, _completionBoundary);
                 if (!HasPendingInstruction)
                     outcome = RetireInvalidatedPreparation();
                 else if (_cancellationRequested)
@@ -228,8 +229,7 @@ internal sealed partial class HardwareProcessorModel
                 {
                     if (_automaticOwnsInstruction && _automaticStagesStarted && !_automaticRetirementReady)
                     {
-                        Timeline.AdvanceUntil(time, () => _automaticRetirementReady ||
-                            _cancellationRequested || !HasPendingInstruction);
+                        Timeline.AdvanceUntil(time, _retirementBoundary);
                         if (!HasPendingInstruction) outcome = RetireInvalidatedPreparation();
                         else if (_cancellationRequested)
                         {

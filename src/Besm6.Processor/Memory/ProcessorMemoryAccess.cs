@@ -48,6 +48,7 @@ namespace Besm6.Core
         private static void ThrowJumpToZero() => throw new ProcessorException("Jump to zero");
 
         /// <summary>Читает слово данных с проверкой load-watchpoint (mode=2).</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal ulong MemLoad(uint addr)
         {
             addr &= 0x7FFF;
@@ -55,10 +56,11 @@ namespace Besm6.Core
                 throw new Processor.DebugWatchAbortException();
             if (addr == 0)
                 return 0;
-            return _memory.Read(addr).Value;
+            return _coreMemory is { } core ? core.Read(addr).Value : _memory.Read(addr).Value;
         }
 
         /// <summary>Записывает слово данных с проверкой store-watchpoint (mode=1).</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void MemStore(uint addr, ulong val)
         {
             addr &= 0x7FFF;
@@ -66,7 +68,8 @@ namespace Besm6.Core
                 throw new Processor.DebugWatchAbortException();
             if (addr == 0)
                 return;
-            _memory.Write(addr, new Word48(val));
+            if (_coreMemory is { } core) core.Write(addr, new Word48(val));
+            else _memory.Write(addr, new Word48(val));
         }
     }
 }

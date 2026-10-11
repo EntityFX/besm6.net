@@ -36,12 +36,9 @@ internal sealed partial class HardwareProcessorModel
         {
             if (request.Value.Write)
                 _dataMemoryToken = _bufferedMemory!.StoreOperand(request.Value.Address, request.Value.Word,
-                    () => { _dataMemoryReply = default; _dataMemoryReplyReady = true; });
+                    _dataStoreCompleted);
             else
-                _dataMemoryToken = _bufferedMemory!.ReadOperand(request.Value.Address, reply =>
-                {
-                    _dataMemoryReply = reply.Word; _dataMemoryFailure = reply.Failure; _dataMemoryReplyReady = true;
-                });
+                _dataMemoryToken = _bufferedMemory!.ReadOperand(request.Value.Address, _dataReadCompleted);
         }
         catch (Exception failure)
         { _dataMemoryFailure = failure; _dataMemoryReply = default; _dataMemoryReplyReady = true; }

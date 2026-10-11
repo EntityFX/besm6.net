@@ -51,6 +51,8 @@ internal sealed class ArithmeticStageController
     private Action<ArithmeticStageTransition>? _boundTransition;
     private object? _bindingOwner;
     private Func<bool>? _bindingCurrent;
+    private readonly Action _releaseBindingAction, _permissionAction, _resumeAction,
+        _acceptanceAction, _startAction;
     internal ArithmeticStageTransition? LastTransition { get; private set; }
     internal int QueuedCommands => _waiting.Count;
     internal byte NextCommandRegister => _unit.CommandReceiveRegister;
@@ -66,15 +68,25 @@ internal sealed class ArithmeticStageController
         _timeline = timeline;
         _unit = unit;
         _transfer = new(unit.Cycle);
+        _releaseBindingAction = ReleaseBindingCore;
+        _permissionAction = () => { _unit.GrantCommandPermission(); Progress(); };
+        _resumeAction = Progress;
+        _acceptanceAction = () => { _acceptEvent = default; _transferElapsed = true; Progress(); };
+        _startAction = StartPreparedOperation;
         unit.AttachController();
     }
 
     private void Change(Action action)
     {
-        if (_changing) throw new InvalidOperationException("Nested arithmetic control transition is not allowed.");
-        _changing = true;
+        EnterChange();
         try { action(); }
         finally { _changing = false; }
+    }
+
+    private void EnterChange()
+    {
+        if (_changing) throw new InvalidOperationException("Nested arithmetic control transition is not allowed.");
+        _changing = true;
     }
 
     internal bool TryEnqueue(uint code, Func<PreparedArithmeticOperation> sampleOperand,
@@ -112,21 +124,23 @@ internal sealed class ArithmeticStageController
     internal void ReleaseBinding(object owner)
     {
         if (!ReferenceEquals(owner, _bindingOwner)) throw new InvalidOperationException("Foreign arithmetic binding.");
-        Change(() =>
-        {
-            if (_live.Count != 0) _unit.DiscardLogicalRequest();
-            _timeline.Cancel(_acceptEvent);
-            _timeline.Cancel(_startEvent);
-            CancelCompletion();
-            _acceptEvent = _startEvent = default;
-            _waiting.Clear();
-            _live.Clear();
-            _selected = _prepared = _active = null;
-            _transferElapsed = false;
-            _boundTransition = null;
-            _bindingOwner = null;
-            _bindingCurrent = null;
-        });
+        Change(_releaseBindingAction);
+    }
+
+    private void ReleaseBindingCore()
+    {
+        if (_live.Count != 0) _unit.DiscardLogicalRequest();
+        _timeline.Cancel(_acceptEvent);
+        _timeline.Cancel(_startEvent);
+        CancelCompletion();
+        _acceptEvent = _startEvent = default;
+        _waiting.Clear();
+        _live.Clear();
+        _selected = _prepared = _active = null;
+        _transferElapsed = false;
+        _boundTransition = null;
+        _bindingOwner = null;
+        _bindingCurrent = null;
     }
 
     private bool TryEnqueueOperand(uint code, Func<PreparedArithmeticOperation?> sampleOperand,
@@ -134,25 +148,27 @@ internal sealed class ArithmeticStageController
         HardwareDuration? completionDelay = null)
     {
         ArithmeticCommandHandle added = default;
-        Change(() =>
+        EnterChange();
+        try
         {
             ulong sequence = checked(_sequence + 1);
             // Validate the first transfer before admitting the command to BAK.
             if (_waiting.Count == 0 && operandReady && route == ArithmeticOperandRoute.Buffered) _transfer.AcceptFromReadyBuffer(_timeline.Now);
-            if (!_unit.TryReceiveCommand(code)) return;
+            if (!_unit.TryReceiveCommand(code)) { command = default; return false; }
             added = new(this, sequence);
             var entry = new Entry(added, code, sampleOperand, operandReady, route, completionDelay);
             _waiting.Enqueue(entry);
             _live.Add(sequence, entry);
             _sequence = sequence;
             Progress();
-        });
-        command = added;
-        return added.Owner is not null;
+            command = added;
+            return true;
+        }
+        finally { _changing = false; }
     }
 
     /// <summary>RPK may precede IZOP; it does not restart an elapsed transfer.</summary>
-    internal void GrantCommandPermission() => Change(() => { _unit.GrantCommandPermission(); Progress(); });
+    internal void GrantCommandPermission() => Change(_permissionAction);
 
     /// <summary>
     /// GBRCh releases a selected waiting transfer. For an unselected BAK slot,
@@ -160,22 +176,22 @@ internal sealed class ArithmeticStageController
     /// </summary>
     internal bool TryReleaseBufferWait(ArithmeticCommandHandle command)
     {
-        bool released = false;
-        Change(() =>
+        EnterChange();
+        try
         {
             if (!ReferenceEquals(command.Owner, this) || !_live.TryGetValue(command.Sequence, out var entry) ||
                 entry.Route != ArithmeticOperandRoute.Buffered || entry.Ready ||
-                ReferenceEquals(entry, _prepared) || ReferenceEquals(entry, _active)) return;
+                ReferenceEquals(entry, _prepared) || ReferenceEquals(entry, _active)) return false;
             if (ReferenceEquals(entry, _selected))
                 ScheduleAcceptance(_transfer.AcceptAfterBufferWait(_timeline.Now));
             entry.Ready = true;
-            released = true;
             Progress();
-        });
-        return released;
+            return true;
+        }
+        finally { _changing = false; }
     }
 
-    internal void Resume() => Change(Progress);
+    internal void Resume() => Change(_resumeAction);
 
     /// <summary>
     /// Explicit PVRA/PVRM input-register acceptance (ПВРА/ПВРМ).
@@ -184,27 +200,26 @@ internal sealed class ArithmeticStageController
     /// </summary>
     internal bool TryAcceptDirectOperand(ArithmeticCommandHandle command)
     {
-        bool accepted = false;
-        Change(() =>
+        EnterChange();
+        try
         {
             if (_selected is not { Route: ArithmeticOperandRoute.Direct } entry ||
-                entry.Handle != command || _prepared is not null || _unit.Interrupted || !_unit.CommandPermission) return;
+                entry.Handle != command || _prepared is not null || _unit.Interrupted || !_unit.CommandPermission) return false;
             entry.Ready = true;
             _transferElapsed = true;
             Progress();
-            accepted = true;
-        });
-        return accepted;
+            return true;
+        }
+        finally { _changing = false; }
     }
 
     private void ScheduleAcceptance(HardwareInstant time)
     {
-        _acceptEvent = _timeline.ScheduleAt(time, () => Change(() =>
+        _acceptEvent = _timeline.ScheduleAt(time, static (context, _) =>
         {
-            _acceptEvent = default;
-            _transferElapsed = true;
-            Progress();
-        }));
+            var controller = (ArithmeticStageController)context;
+            controller.Change(controller._acceptanceAction);
+        }, this);
     }
 
     private void Progress()
@@ -248,37 +263,50 @@ internal sealed class ArithmeticStageController
     private void ScheduleStart()
     {
         if (_prepared is null || _active is not null || _unit.Interrupted || _startEvent != default) return;
-        _startEvent = _timeline.ScheduleAt(_timeline.Now, () => Change(() =>
+        _startEvent = _timeline.ScheduleAt(_timeline.Now, static (context, _) =>
         {
-            _startEvent = default;
-            if (_prepared is not { } entry || _active is not null) return;
-            // Validate and register the owned deadline before changing the AU.
-            // Overflow/registration failure leaves its prepared operand resumable.
-            HardwareInstant? due = entry.CompletionDelay is { } delay ? _timeline.Now + delay : null;
-            HardwareEventToken completion = default;
-            if (due is { } time)
-                completion = _timeline.ScheduleAt(time, () => Change(() =>
-                {
-                    if (_active?.Handle != entry.Handle || _completionEvent != completion) return;
-                    _completionEvent = default;
-                    NextCompletionTime = null;
-                    // A reset/cancel may precede the driver's retirement boundary.
-                    // Consume this stale signal without changing the AU output.
-                    if (_bindingCurrent?.Invoke() == false) return;
-                    CompleteActiveOperation();
-                }));
-            try
-            {
-                if (!_unit.TryStartOperation()) { _timeline.Cancel(completion); return; }
-            }
-            catch { _timeline.Cancel(completion); throw; }
-            _completionEvent = completion;
-            NextCompletionTime = due;
-            _prepared = null;
-            _active = entry;
-            Progress();
-            Publish(entry, ArithmeticStageTransitionKind.Started);
-        }));
+            var controller = (ArithmeticStageController)context;
+            controller.Change(controller._startAction);
+        }, this);
+    }
+
+    private void StartPreparedOperation()
+    {
+        _startEvent = default;
+        if (_prepared is not { } entry || _active is not null) return;
+        // Validate and register the owned deadline before changing the AU.
+        // Overflow/registration failure leaves its prepared operand resumable.
+        HardwareInstant? due = entry.CompletionDelay is { } delay ? _timeline.Now + delay : null;
+        HardwareEventToken completion = default;
+        if (due is { } time)
+            completion = _timeline.ScheduleAt(time, static (context, sequence) =>
+                ((ArithmeticStageController)context).CompleteAtSequence(sequence), this, entry.Handle.Sequence);
+        try
+        {
+            if (!_unit.TryStartOperation()) { _timeline.Cancel(completion); return; }
+        }
+        catch { _timeline.Cancel(completion); throw; }
+        _completionEvent = completion;
+        NextCompletionTime = due;
+        _prepared = null;
+        _active = entry;
+        Progress();
+        Publish(entry, ArithmeticStageTransitionKind.Started);
+    }
+
+    private void CompleteAtSequence(ulong sequence)
+    {
+        EnterChange();
+        try
+        {
+            if (_active?.Handle.Sequence != sequence || _completionEvent == default) return;
+            _completionEvent = default;
+            NextCompletionTime = null;
+            // A reset/cancel may precede the driver's retirement boundary.
+            if (_bindingCurrent?.Invoke() == false) return;
+            CompleteActiveOperation();
+        }
+        finally { _changing = false; }
     }
 
     /// <summary>Explicit IZOP for operations without an owned fixed completion sequence.</summary>

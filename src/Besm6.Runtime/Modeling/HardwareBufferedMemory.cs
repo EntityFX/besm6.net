@@ -27,11 +27,16 @@ internal sealed partial class HardwareBufferedMemory
         internal HardwareEventToken LocalEvent;
         internal bool Write;
         internal bool Store;
+        internal uint Address;
+        internal HardwareBufferedMemory ReadOwner = null!;
+        internal MappedReadAdmission Admission = null!;
+        internal Action<HardwareBufferedRead>? ReadCompleted;
     }
     private readonly MappedMemoryBackend _backend;
     private readonly HardwareTimeline _timeline;
     private readonly MramMemoryPort _port;
     private readonly Dictionary<ulong, Pending> _pending = new();
+    private readonly Stack<Pending> _spareReads = new();
     private ulong _nextId = 1;
     private Pending? _writeback;
     internal HardwareDuration BufferHitLatency { get; }
@@ -57,20 +62,42 @@ internal sealed partial class HardwareBufferedMemory
         ArgumentNullException.ThrowIfNull(completed);
         ulong next = checked(_nextId + 1);
         var admission = _backend.AdmitHardwareRead(address, instruction, rightHalf);
-        var pending = new Pending { Token = new(this, _nextId) };
-        void Receive(MemoryWord50 raw)
-        {
-            _pending.Remove(pending.Token.Id);
-            Word48 word = raw.Data; MemoryControlException? failure = null;
-            try { word = _backend.CompleteHardwareRead(admission, raw); }
-            catch (MemoryControlException cause) { failure = cause; }
-            completed(new(pending.Token, address, word, raw, admission.Source, _timeline.Now, failure));
-        }
+        var pending = _spareReads.TryPop(out var spare) ? spare : new Pending { Token = default, ReadOwner = this };
+        pending.Token = new(this, _nextId); pending.Address = address;
+        pending.Admission = admission; pending.ReadCompleted = completed;
         if (admission.BufferedWord is { } buffered)
-            pending.LocalEvent = _timeline.Schedule(BufferHitLatency, () => Receive(buffered));
-        else pending.MemoryToken = _port.Read(admission.PhysicalAddress!.Value, transfer => Receive(transfer.Word));
+            pending.LocalEvent = _timeline.Schedule(BufferHitLatency, static (context, _) =>
+            {
+                var current = (Pending)context;
+                current.ReadOwner.Receive(current.Token.Id, current.Admission.BufferedWord!.Value);
+            }, pending);
+        else pending.MemoryToken = _port.Read(admission.PhysicalAddress!.Value,
+            static (context, id, transfer) => ((HardwareBufferedMemory)context).Receive(id, transfer.Word), this, pending.Token.Id);
         _pending.Add(_nextId, pending); _nextId = next;
         return pending.Token;
+    }
+
+    private void Receive(ulong id, MemoryWord50 raw)
+    {
+        if (!_pending.Remove(id, out var pending)) return;
+        try
+        {
+            Word48 word = raw.Data; MemoryControlException? failure = null;
+            try { word = _backend.CompleteHardwareRead(pending.Admission, raw); }
+            catch (MemoryControlException cause) { failure = cause; }
+            pending.ReadCompleted!(new(pending.Token, pending.Address, word, raw,
+                pending.Admission.Source, _timeline.Now, failure));
+        }
+        finally { ReleaseRead(pending); }
+    }
+
+    private void ReleaseRead(Pending pending, bool reusable = true)
+    {
+        pending.Admission = null!; pending.ReadCompleted = null;
+        pending.MemoryToken = default; pending.LocalEvent = default;
+        // A cancelled local event can still retain its context in a tombstone.
+        // Such a request is never reused; completed events have left the queue.
+        if (reusable && _spareReads.Count < 128) _spareReads.Push(pending);
     }
 
     internal bool TryPublishOldest(Action<bool> completed, out HardwareBufferedMemoryToken token)
@@ -98,7 +125,8 @@ internal sealed partial class HardwareBufferedMemory
         _timeline.Cancel(pending.LocalEvent); _port.Cancel(pending.MemoryToken);
         if (ReferenceEquals(_writeback, pending)) _writeback = null;
         CancelWaitingStore(token);
-        RequestCancelled?.Invoke(token);
+        try { RequestCancelled?.Invoke(token); }
+        finally { if (!pending.Write && !pending.Store) ReleaseRead(pending, pending.LocalEvent == default); }
         return true;
     }
 

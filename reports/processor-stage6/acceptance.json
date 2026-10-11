@@ -1,0 +1,117 @@
+{
+  "baseline_commit": "e361fca7c6ab021038be7a57994f0e3b2e037a82",
+  "stage_complete": false,
+  "requirements": [
+    {
+      "id": "functional_gain",
+      "requirement": "Five primary Fortran workloads: geometric mean gain >=5%, each regression <=10%; final e361fca comparison",
+      "status": "RunLoaded gains 10.15% and8.00%; full CLI gains5.51% and8.24%; both comparisons pass gain/regression gates",
+      "evidence": [
+        "performance.json:stage6-functional-hot-arithmetic",
+        "performance.json:stage6-functional-hot-final-runtime",
+        "performance.json:stage6-functional-hot-final-cli",
+        "performance.json:stage6-functional-hot-final-cli-repeat"
+      ]
+    },
+    {
+      "id": "hardware_gain",
+      "requirement": "Control, memory, arithmetic, mixed and OS workloads measured separately; >=5% mean, <=10% each",
+      "status": "Latest combined binary: synthetic gain 20.40%, OS prefix gain 28.72%; state/model-time checks pass; full OS acceptance pending",
+      "evidence": [
+        "performance.json:stage6-hardware-event-heap",
+        "performance.json:stage6-hardware-event-heap-repeat",
+        "performance.json:stage6-hardware-hot-final",
+        "performance.json:stage6-os-prefix-hot-final"
+      ]
+    },
+    {
+      "id": "functional_benchmarks",
+      "requirement": "Dhrystone N=0/5000/10000; MPMFLOPS kpart=0/1/2/3; Memspeed; fixed DATE; Runtime and full CLI separately",
+      "status": "All eleven Runtime and full CLI jobs validated; near-threshold CLI series repeated and retained",
+      "evidence": [
+        "performance.json:stage6-functional-hot-final-runtime",
+        "performance.json:stage6-functional-hot-final-cli",
+        "performance.json:stage6-functional-hot-final-cli-repeat"
+      ]
+    },
+    {
+      "id": "benchmark_protocol",
+      "requirement": "Serial Release runs: 1 warmup +5 measurements; baseline subtraction; original outputs retained locally",
+      "status": "Completed series use serial alternating Release runs, one warmup and five measurements; matching zero-job subtraction retained",
+      "evidence": [
+        "performance.json"
+      ]
+    },
+    {
+      "id": "profiles",
+      "requirement": "Fresh sampling and allocations scoped to marked execution intervals for functional/hardware owners",
+      "status": "Baseline and candidate sampling/allocation summaries captured for seven marked workloads each",
+      "evidence": [
+        "profiles.json"
+      ]
+    },
+    {
+      "id": "jit",
+      "requirement": "Confirm actual host JIT behavior; only static guest decoding caches; no guest JIT or host computation replacements",
+      "status": "Tier1 hot interpreter reviewed: shared addition/multiplication transitions inline; no new sequence cache or guest JIT",
+      "evidence": [
+        "jit-functional-baseline.json",
+        "jit-functional-hot.json"
+      ]
+    },
+    {
+      "id": "state_parity",
+      "requirement": "A/Y/R/C/M/K, memory, counters, model time, event/device/interrupt order match baseline",
+      "status": "synthetic and OS prefix checked; full acceptance pending"
+    },
+    {
+      "id": "events",
+      "requirement": "Same-time order, cancellation, old tokens, pooled requests, errors and callback guards",
+      "status": "New queue, cancellation, failed callback and request-reuse regressions pass in full Runtime suite",
+      "evidence": [
+        "tests.json"
+      ]
+    },
+    {
+      "id": "cpu_cases",
+      "requirement": "Self-modification both halves, alias/remap, protection/control bits, rounding, STOP, faults, intercepts, repeat runs, hook insertion",
+      "status": "Full Processor and Runtime suites pass, including new transferred-capture reuse/failure cases; full OS state/history remains pending",
+      "evidence": [
+        "tests.json"
+      ]
+    },
+    {
+      "id": "full_release_tests",
+      "requirement": "All existing plus new tests; CERN 397/397; golden 3/3; exactly three existing skips",
+      "status": "Full Release: 3656 passed, CERN397/397, exactly three legacy skips; Python72/72; golden still pending",
+      "evidence": [
+        "tests.json"
+      ]
+    },
+    {
+      "id": "hardware_os",
+      "requirement": "Full pinned OS job and post-job liveness; both speeds; exact state/history comparison",
+      "status": "pending; prefix is not full OS acceptance"
+    },
+    {
+      "id": "original",
+      "requirement": "Pacing error <=max(20ms,2%) on capable host; hardware host capacity reported explicitly",
+      "status": "pending"
+    },
+    {
+      "id": "public_contract",
+      "requirement": "Shared machine semantics, separate owners; no changes to public model/speed API JSON or CLI; public Schedule(Action) retained",
+      "status": "implementation review pending"
+    },
+    {
+      "id": "reports",
+      "requirement": "Compact JSON/CSV/reports only; no archives/media/full profiles or sensitive account/host/profile names",
+      "status": "partial compact report saved; final privacy audit pending"
+    },
+    {
+      "id": "delivery",
+      "requirement": "Narrow commit excluding user edits; tested DLL/source identity; push and verify remote commit",
+      "status": "Immediate checkpoint commit/push requested by user before remaining acceptance gates"
+    }
+  ]
+}

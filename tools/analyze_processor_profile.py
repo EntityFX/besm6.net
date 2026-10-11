@@ -6,7 +6,7 @@ import json
 import pathlib
 
 
-def aggregate(profile, frames):
+def aggregate(profile, frames, start=None, end=None):
     if profile["type"] != "evented":
         raise ValueError("Expected an evented Speedscope profile")
     stack = []
@@ -17,14 +17,16 @@ def aggregate(profile, frames):
         delta = event["at"] - previous
         if delta < 0:
             raise ValueError("Events are not chronological")
-        if stack and delta:
+        clipped = max(0, min(event["at"], end if end is not None else event["at"])
+                      - max(previous, start if start is not None else previous))
+        if stack and clipped:
             names = [frames[i]["name"] for i in stack
                      if frames[i]["name"] not in ("CPU_TIME", "UNMANAGED_CODE_TIME")]
-            total += delta
+            total += clipped
             if names:
-                own[names[-1]] += delta
+                own[names[-1]] += clipped
                 for name in set(names):
-                    inclusive[name] += delta
+                    inclusive[name] += clipped
         if event["type"] == "O":
             stack.append(event["frame"])
         elif event["type"] == "C":
@@ -38,11 +40,15 @@ def aggregate(profile, frames):
     return total, own, inclusive
 
 
-def summarize(path):
+def summarize(path, start=None, end=None):
     source = json.loads(path.read_text(encoding="utf-8-sig"))
     candidates = []
     for profile in source["profiles"]:
-        total, own, inclusive = aggregate(profile, source["shared"]["frames"])
+        # Speedscope from dotnet-trace uses milliseconds; reject accidental
+        # conversion of the measurement window to a different unit.
+        if start is not None and profile["unit"] != "milliseconds":
+            raise ValueError("Measurement window requires milliseconds")
+        total, own, inclusive = aggregate(profile, source["shared"]["frames"], start, end)
         processor = sum(time for name, time in own.items() if "Besm6.Core." in name)
         candidates.append((processor, profile, total, own, inclusive))
     processor, profile, total, own, inclusive = max(candidates, key=lambda row: row[0])
