@@ -35,6 +35,9 @@ namespace Besm6.Runtime
         /// </summary>
         public bool UseWallClock { get; set; } = false;
 
+        // Hosted CTIME/STIME reads this optional model clock, never DATE* or host time.
+        internal Func<double>? GuestTimeSeconds { get; set; }
+
         /// <summary>
         /// Эвристика обнаружения зависания: 500+ вызовов экстракодов без вывода (E64)
         /// исполняет, пока программа не завершится естественно, опираясь только на

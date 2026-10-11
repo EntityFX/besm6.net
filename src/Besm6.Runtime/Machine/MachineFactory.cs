@@ -33,6 +33,7 @@ namespace Besm6
                 InstructionLimit = cfg.DefaultLimit,
                 UseWallClock = cfg.UseWallClock,
                 Speed = cfg.Speed,
+                GuestClockEnabled = cfg.GuestClock,
             };
         }
 

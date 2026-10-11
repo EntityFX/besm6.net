@@ -48,6 +48,10 @@ namespace Besm6
         [JsonPropertyName("speed")]
         public ExecutionSpeed Speed { get; set; } = ExecutionSpeed.Max;
 
+        /// <summary>Opt-in hosted CTIME/STIME model clock, with 20 ms resolution.</summary>
+        [JsonPropertyName("guestClock")]
+        public bool GuestClock { get; set; }
+
         [JsonIgnore]
         private string? SourceDirectory { get; set; }
 

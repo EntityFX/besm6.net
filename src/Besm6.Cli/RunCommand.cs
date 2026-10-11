@@ -14,7 +14,7 @@ namespace Besm6.Cli
     {
         public string Name => "run";
         public string Description => "Load and execute a .dub job script";
-        public string Usage => "besm6 run <file.dub> [--speed original|max] [--stats] [--limit N] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--passes N] [--mflops N] [--ops N] [--loop-cycles N] [--baseline-cycles N] [--baseline-instructions N] [--config path]";
+        public string Usage => "besm6 run <file.dub> [--speed original|max] [--stats] [--guest-clock] [--limit N] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--passes N] [--mflops N] [--ops N] [--loop-cycles N] [--baseline-cycles N] [--baseline-instructions N] [--config path]";
 
         public int Execute(string[] args)
         {
@@ -41,6 +41,7 @@ namespace Besm6.Cli
             bool noHangDetect = false;
             bool profile = false;
             bool stats = false;
+            bool guestClock = false;
             ExecutionSpeed? speedOverride = null;
             long profilePasses = 0;
             long profileBaselineCycles = 0;
@@ -63,6 +64,9 @@ namespace Besm6.Cli
                         break;
                     case "--stats":
                         stats = true;
+                        break;
+                    case "--guest-clock":
+                        guestClock = true;
                         break;
                     case "--limit" when i + 1 < args.Length:
                         long.TryParse(args[++i], out limit);
@@ -154,6 +158,7 @@ namespace Besm6.Cli
             {
                 Config cfg = Config.Load(configPath);
                 if (speedOverride is ExecutionSpeed speed) cfg.Speed = speed;
+                if (guestClock) cfg.GuestClock = true;
                 if (limit == 0) limit = cfg.DefaultLimit;
                 // SuperPlan Task A4: fail-fast ДО запуска процессора — чётко перечислить отсутствующие
                 // bundled runtime-образы (monsys.9/librar.12/...) и способ восстановления

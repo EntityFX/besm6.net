@@ -110,9 +110,11 @@
                 case 137:
                     throw new ProcessorException("Task paused waiting for tape");
 
-                case 28735: cpu.SetA(0); break;         // 070077 oct
+                case 28735: // 070077 oct: CTIME commercial seconds.
+                    cpu.SetA(Word48.FromDouble(GuestTimeSeconds?.Invoke() ?? 0).Value); break;
                 case 28800: cpu.SetA(0x8000UL); break;   // 070200 oct: 0'0010'0000 in dubna/e50.cpp
-                case 28808: cpu.SetA(0); break;         // 070210 oct
+                case 28808: // 070210 oct: CTIME CPU seconds.
+                    cpu.SetA(Word48.FromDouble(GuestTimeSeconds?.Invoke() ?? 0).Value); break;
                 case 28812: cpu.SetA(System.Convert.ToUInt64("1234567012345670", 8)); break; // 070214 oct
 
                 default:

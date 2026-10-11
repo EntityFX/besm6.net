@@ -48,6 +48,9 @@ namespace Besm6.Runtime
         public bool LoopDetect { get => _exec.LoopDetect; set => _exec.LoopDetect = value; }
         public ExecutionSpeed Speed { get => _exec.Speed; set => _exec.Speed = value; }
         public bool CollectStatistics { get => _exec.CollectStatistics; set => _exec.CollectStatistics = value; }
+        /// <summary>Enable deterministic CTIME/STIME seconds from the instruction timing table.
+        /// Independent of DATE*, host speed and diagnostics; resets with each execution run.</summary>
+        public bool GuestClockEnabled { get => _exec.GuestClockEnabled; set => _exec.GuestClockEnabled = value; }
         public ExecutionStatistics? Statistics => _exec.Statistics;
         public Action<Opcode>? InstructionExecuted { get => _exec.InstructionExecuted; set => _exec.InstructionExecuted = value; }
         public Action<string>? Output { get; set; }

@@ -1,0 +1,146 @@
+{
+  "feature": "Opt-in hosted Dubna CTIME/STIME model clock and Fortran DMIPS output",
+  "command": "dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/dhrystone-dmips.dub --guest-clock --speed max --no-wall-clock",
+  "resolution_seconds": 0.02,
+  "time_source": "Besm6Timing cost of successfully completed instructions; independent of host pacing and DATE",
+  "commercial_and_cpu_time": "Same logical CPU clock in hosted Dubna; asynchronous device time is not modeled by this service",
+  "default_enabled": false,
+  "json_option": {
+    "guestClock": true
+  },
+  "formula": "passes / model_cpu_seconds / 1757",
+  "historical_source": "book/fortran-1976/02-fortran-dubna.md: time accounting via STIME",
+  "source_sha256": "3cf2a10ae31e31e4a6f20809dd89250c58843bce8c9bf624faf06615cfb264d1",
+  "samples": [
+    {
+      "passes": 5000,
+      "speed": "max",
+      "model_cpu_seconds": 1.52,
+      "guest_printed_dmips": 1.87221,
+      "all_18_control_values_match": true,
+      "halt_instructions": 17298114,
+      "output_sha256": "d6d580039053a280f8f8332be4fc8f734b3a4d30ff10f9843b1f2320223003eb"
+    },
+    {
+      "passes": 5000,
+      "speed": "original",
+      "model_cpu_seconds": 1.52,
+      "guest_printed_dmips": 1.87221,
+      "all_18_control_values_match": true,
+      "halt_instructions": 17298114,
+      "output_sha256": "d6d580039053a280f8f8332be4fc8f734b3a4d30ff10f9843b1f2320223003eb"
+    },
+    {
+      "passes": 10000,
+      "speed": "max",
+      "model_cpu_seconds": 3.06,
+      "guest_printed_dmips": 1.859974,
+      "all_18_control_values_match": true,
+      "halt_instructions": 26681458,
+      "output_sha256": "5f05dff77831c13826cca7de9155222c806611a1634c2166fb77ee50c4914c37"
+    }
+  ],
+  "guards": {
+    "zero_passes_no_rating": true,
+    "disabled_or_unresolved_clock_no_rating": true,
+    "failed_control_values_no_rating": true
+  },
+  "targeted_tests": {
+    "passed": 6,
+    "failed": 0
+  },
+  "full_compatibility_tests": {
+    "passed": 3662,
+    "failed": 0,
+    "cern_passed": 397,
+    "legacy_skips": [
+      "DumpAtDivergence",
+      "TraceAlgol_Last30Instructions",
+      "W303_LoopsForever"
+    ],
+    "projects": [
+      {
+        "project": "Besm6.Architecture.Tests",
+        "passed": 40,
+        "failed": 0,
+        "skipped": 0,
+        "result_sha256": "eb42f68abe8b8a6e0aced315a16526669e5fc281456313b667b55d28b4620c25"
+      },
+      {
+        "project": "Besm6.Assembler.Tests",
+        "passed": 29,
+        "failed": 0,
+        "skipped": 0,
+        "result_sha256": "d56dd24fadf335028b93e13679a4e32d87d778e7778dc8a7dc7de7849f1857ae"
+      },
+      {
+        "project": "Besm6.BitVisualizer.Tests",
+        "passed": 57,
+        "failed": 0,
+        "skipped": 0,
+        "result_sha256": "d3238cbf233d75331f2d624b634f75da4abae37dd9f022a2a33f66dadae843b7"
+      },
+      {
+        "project": "Besm6.BitVisualizer.WinForms.Tests",
+        "passed": 19,
+        "failed": 0,
+        "skipped": 0,
+        "result_sha256": "dc0d5423ea8ab7602f7bfad1d6674a10df58374e1d62b2052e6d0780a10b78bd"
+      },
+      {
+        "project": "Besm6.Cli.Tests",
+        "passed": 27,
+        "failed": 0,
+        "skipped": 0,
+        "result_sha256": "50cc26f88aa1b4f6d867c90f8082744462777968e963028c5fac3341f5798c31"
+      },
+      {
+        "project": "Besm6.Integration.Tests",
+        "passed": 426,
+        "failed": 0,
+        "skipped": 0,
+        "result_sha256": "2e39371c9971432da83eed70cd566425a68149bf786cd6684850fc0f7fadfb99"
+      },
+      {
+        "project": "Besm6.Processor.Tests",
+        "passed": 1615,
+        "failed": 0,
+        "skipped": 0,
+        "result_sha256": "eb090ee9ed7f84bd189c606e7aed87d2ab252aa4d4a8fd5a320f61255f2df35d"
+      },
+      {
+        "project": "Besm6.Runtime.Tests",
+        "passed": 1405,
+        "failed": 0,
+        "skipped": 0,
+        "result_sha256": "1cf61aac2648e589d8fd8f64cce50f177da471c374765098f6b684087ec59b4c"
+      },
+      {
+        "project": "Besm6.Tui.Tests",
+        "passed": 44,
+        "failed": 0,
+        "skipped": 0,
+        "result_sha256": "734d0c8d9ced84a29fa84f1f8e1df51228ff28ebe6817847fa28404dbdb81784"
+      }
+    ]
+  },
+  "failed_control_guard_evidence": {
+    "positive_passes": 5000,
+    "injected_mismatches": 1,
+    "halted_by_stop": true,
+    "output_sha256": "5860bc23878ba3398d20ab61581d19410deaf932ee527f52992177fe7a87aa3b"
+  },
+  "tested_binary_sha256": {
+    "Besm6.Runtime.dll": "a5ccd7793cbceec5ef88c80d2025a85a96bd9d58f0a0855d3f04a5c64e74187c",
+    "Besm6.Processor.dll": "1bc6eee98f68441cb9f411c67cb426818b128cc22885a2572be59b4f27afbcf5",
+    "besm6.dll": "751ecaf17110009b85cb93c8c8d48a726d5a672e2b9088c666f32cc518ce0eea"
+  },
+  "golden": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "by_status": {
+      "OK": 3
+    }
+  }
+}

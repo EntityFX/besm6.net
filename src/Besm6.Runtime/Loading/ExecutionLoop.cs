@@ -42,6 +42,7 @@ namespace Besm6.Runtime
             }
         }
         public bool CollectStatistics { get; set; }
+        public bool GuestClockEnabled { get; set; }
         public bool ProgressEnabled { get; set; }
         public ExecutionStatistics? Statistics { get; private set; }
         public Action<Opcode>? InstructionExecuted { get; set; }
@@ -66,7 +67,12 @@ namespace Besm6.Runtime
             _verboseLog = verboseLog;
             _output = output;
             _progressOutput = progressOutput;
+            _extracode.GuestTimeSeconds = ReadGuestTimeSeconds;
         }
+
+        // STIME/CTIME (счетное время): the documented resolution is 0.02 s.
+        // Hosted Dubna has one logical CPU clock; this does not model device overlap.
+        private double ReadGuestTimeSeconds() => GuestClockEnabled ? (_totalCycles / 200_000) * 0.02 : 0;
 
         internal ExecutionLoop(MachineCore machine) => _machine = machine;
 
@@ -80,7 +86,7 @@ namespace Besm6.Runtime
             Statistics = null;
             _completedInstructions = 0;
             _totalCycles = 0;
-            bool countCycles = Speed == ExecutionSpeed.Original || CollectStatistics;
+            bool countCycles = Speed == ExecutionSpeed.Original || CollectStatistics || GuestClockEnabled;
             Action<Opcode>? counter = countCycles ? ObserveExecuted : null;
             Action<Opcode>? observer = InstructionExecuted;
             bool counterAttached = false, observerAttached = false;
