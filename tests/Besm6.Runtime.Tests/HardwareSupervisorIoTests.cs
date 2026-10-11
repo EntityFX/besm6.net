@@ -305,4 +305,23 @@ public sealed class HardwareSupervisorIoTests
         fail = false; scheduler.AdvanceTo(10); io.StopTimer(); Assert.IsNull(scheduler.NextEventTick);
     }
 
+    [TestMethod]
+    public void ExpandedRawDmaSharesHighAddressBankWithCpuAndSurvivesReset()
+    {
+        var machine = new MachineCore(ProcessorProfile.Supervisor, MemoryConfiguration.Simh512K);
+        var timing = PortTiming() with { Banking = MramBanking.LogicalLowThreeBits };
+        machine.UseHardwareDeviceTiming(timing, DeviceTiming());
+        var port = machine.HardwareModel.CreateMemoryPort(timing); var dma = new TimedSupervisorDma(port, new(0));
+        var original = machine.MappedMemory!.PhysicalMemory.ReadRaw(524287);
+        var media = new[] { new MemoryWord50(MemoryWord50.Mask50) }; bool completed = false;
+        MramTransfer? cpu = null; port.Read(7, transfer => cpu = transfer);
+        dma.Transfer(true, media, new[] { new SupervisorDmaWord(524287, 0) }, () => completed = true, () => Assert.Fail());
+        machine.HardwareTimeline.AdvanceTo(new(900)); Assert.IsNotNull(cpu); machine.ResetCpu();
+        machine.HardwareTimeline.AdvanceTo(new(3499)); Assert.IsFalse(completed);
+        Assert.AreEqual(original, machine.MappedMemory!.PhysicalMemory.ReadRaw(524287));
+        machine.HardwareTimeline.AdvanceTo(new(3500)); Assert.IsTrue(completed);
+        Assert.AreEqual(media[0], machine.MappedMemory.PhysicalMemory.ReadRaw(524287));
+        Assert.AreEqual(0, dma.PendingTransfers); Assert.AreEqual(0UL, machine.Clock.Tick);
+    }
+
 }

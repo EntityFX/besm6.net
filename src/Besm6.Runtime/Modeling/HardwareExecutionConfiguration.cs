@@ -32,7 +32,8 @@ internal sealed class HardwareExecutionConfiguration
         var copy = new Dictionary<Opcode, HardwareDuration>();
         foreach (var pair in source)
         {
-            if (!Enum.IsDefined(pair.Key) || (positive && pair.Value.Nanoseconds == 0))
+            bool supervisorExtracode = !positive && (uint)pair.Key is >= 0x28 and <= 0x3F or 0x80 or 0x88;
+            if ((!Enum.IsDefined(pair.Key) && !supervisorExtracode) || (positive && pair.Value.Nanoseconds == 0))
                 throw new ArgumentException("Timing entries require a defined opcode and positive AU duration.", nameof(source));
             copy.Add(pair.Key, pair.Value);
         }

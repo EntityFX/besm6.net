@@ -10,6 +10,7 @@ public sealed partial class SupervisorIoController
     private SupervisorIoHardwareTiming? _hardwareTiming;
     private TimedSupervisorDma? _hardwareDma;
     private int _calendarCallbacks;
+    internal bool UsesHardwarePort(MramMemoryPort port) => _hardwareDma?.UsesPort(port) == true;
     public bool UsesHardwareTiming => _hardwareTimeline is not null;
 
     private bool HasScheduledIo => _timer.HasValue || _serialClock.HasValue ||

@@ -11,7 +11,7 @@ public sealed class HardwareAutomaticExecutionTests
     private static MramPortConfiguration MemoryTiming => new(new(2000), new(900), new(1500),
         MramReadSampling.AtCycleStart, MramArbitration.FifoPerBank);
     private static HardwareExecutionConfiguration Configuration(ulong control = 300) => new(MemoryTiming, new(100), new(100),
-        Enum.GetValues<Opcode>().ToDictionary(opcode => opcode, _ => new HardwareDuration(control)),
+        Enum.GetValues<Opcode>().Concat(Enumerable.Range(0x28, 24).Select(value => (Opcode)value)).Concat(new[] { (Opcode)0x80, (Opcode)0x88 }).Distinct().ToDictionary(opcode => opcode, _ => new HardwareDuration(control)),
         Enum.GetValues<Opcode>().ToDictionary(opcode => opcode, _ => new HardwareDuration(1200)));
     private static MachineCore Machine(string code = "xta 20, stop")
     {
@@ -20,6 +20,8 @@ public sealed class HardwareAutomaticExecutionTests
         machine.MappedMemory!.PhysicalMemory.WriteRaw(8, MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm(code)), false, false));
         for (uint address = 16; address < 40; address++)
             machine.MappedMemory.PhysicalMemory.WriteRaw(address, MemoryWord50.Form(Word48.FromDouble(0.75), true, true));
+        if (code.StartsWith("ext", StringComparison.Ordinal) || code.StartsWith("*33", StringComparison.Ordinal))
+            machine.UseHardwareDeviceTiming(MemoryTiming, new(new(20000), new(700), new(900), new(100), new(50), new(500), new(30), new(0)));
         machine.Cpu.StartAt(8); machine.Cpu.SetA(Word48.FromDouble(1.25).Value);
         machine.Cpu.SetY(0x12345); machine.Cpu.SetM(15, 24);
         return machine;
@@ -34,6 +36,8 @@ public sealed class HardwareAutomaticExecutionTests
     [DataRow("aax 20")] [DataRow("aex 20")] [DataRow("aox 20")] [DataRow("avx 20")]
     [DataRow("a/x 20")] [DataRow("a*x 20")] [DataRow("apx 20")] [DataRow("aux 20")]
     [DataRow("e+x 20")] [DataRow("e-x 20")] [DataRow("e+n 100")] [DataRow("e-n 100")]
+    [DataRow("mod 1")] [DataRow("mod 237")] [DataRow("*46 7")] [DataRow("*47 7")]
+    [DataRow("*50 3")] [DataRow("*77 3")] [DataRow("*200 3")] [DataRow("*210 3")] [DataRow("ext 4003")] [DataRow("*33 4003")]
     [DataRow("ntr 3")] [DataRow("asn 100")] [DataRow("rte 77")] [DataRow("yta")]
     [DataRow("ati 7")] [DataRow("ita 7")] [DataRow("mtj 7(6)")] [DataRow("j+m 7(6)")]
     [DataRow("utc 1")] [DataRow("vtm 2(7)")] [DataRow("utm 2(7)")]
@@ -147,11 +151,15 @@ public sealed class HardwareAutomaticExecutionTests
     }
 
     [TestMethod]
-    public void UnsupportedSpecialMemoryRouteDoesNotRunSynchronously()
+    public void SupervisorRegisterWriteWaitsForControlPermission()
     {
         var machine = Machine("mod 1, stop"); var model = machine.HardwareModel; model.ConfigureAutomaticExecution(Configuration());
-        Assert.ThrowsExactly<NotSupportedException>(() => model.AdvanceAutomaticTo(new(10000), 1));
+        var before = machine.MappedMemory!.ReadOperandBufferRegister(1);
+        Assert.AreEqual(HardwareRunBoundary.TimeLimit, model.AdvanceAutomaticTo(new(1199), 1).Boundary);
+        Assert.AreEqual(before, machine.MappedMemory.ReadOperandBufferRegister(1));
         Assert.AreEqual(0UL, model.CompletedInstructions); Assert.IsTrue(model.HasPendingInstruction);
+        Assert.AreEqual(HardwareRunBoundary.InstructionLimit, model.AdvanceAutomaticTo(new(1200), 1).Boundary);
+        Assert.AreEqual(machine.Cpu.GetA(), machine.MappedMemory.ReadOperandBufferRegister(1).Data);
     }
     [TestMethod]
     public void MixedProgramRetiresConsecutivelyAndForwardsAcceptedStores()
@@ -214,6 +222,51 @@ public sealed class HardwareAutomaticExecutionTests
         Assert.AreEqual(HardwareRunBoundary.InstructionLimit, result.Boundary);
         Assert.AreEqual(CpuState(expected), CpuState(actual)); Assert.IsNull(model.LastIssuedArithmeticCommand);
         Assert.AreEqual(0, model.CreateBufferedMemory(MemoryTiming, new(100)).PendingRequests);
+    }
+
+    [TestMethod]
+    public void DeviceRouteRejectsFunctionalCalendarBeforeGuestEffects()
+    {
+        var machine = Machine("ext 4003, stop"); machine.UseFunctionalDeviceTiming();
+        var before = CpuState(machine); var model = machine.HardwareModel;
+        model.ConfigureAutomaticExecution(Configuration());
+        Assert.ThrowsExactly<InvalidOperationException>(() => model.AdvanceAutomaticTo(new(10000), 1));
+        Assert.AreEqual(before, CpuState(machine)); Assert.AreEqual(0UL, model.CompletedInstructions);
+        Assert.AreEqual(0UL, machine.Clock.Tick);
+    }
+
+    [TestMethod]
+    public void RegisterControlFaultMatchesSharedSupervisorInterruption()
+    {
+        var expected = Machine("mod 200, stop"); var actual = Machine("mod 200, stop");
+        expected.Cpu.Step(); actual.HardwareModel.ConfigureAutomaticExecution(Configuration());
+        var result = actual.HardwareModel.AdvanceAutomaticTo(new(10000), 1);
+        Assert.AreEqual(HardwareRunBoundary.GuestFault, result.Boundary);
+        Assert.AreEqual(0UL, result.Completed); Assert.AreEqual(CpuState(expected), CpuState(actual));
+        Assert.AreEqual(JsonSerializer.Serialize(expected.Cpu.Supervisor!.Snapshot()), JsonSerializer.Serialize(actual.Cpu.Supervisor!.Snapshot()));
+    }
+
+    [TestMethod]
+    public void ExpandedMappedFetchAndOperandUseTheSameAutomaticMachine()
+    {
+        MachineCore Create()
+        {
+            var machine = new MachineCore(ProcessorProfile.Supervisor, MemoryConfiguration.Simh512K);
+            machine.Cpu.Supervisor!.Mode = SupervisorMode.Mathematical;
+            machine.Cpu.Supervisor.Status = new(ControlUnitFlags.ProtectionBlocked | ControlUnitFlags.ExternalInterruptsBlocked);
+            machine.MappedMemory!.Assignment.SetPhysicalPage(0, 511);
+            machine.MappedMemory.PhysicalMemory.WriteRaw(511 * 1024 + 8,
+                MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm("xta 20, stop")), false, false));
+            machine.MappedMemory.PhysicalMemory.WriteRaw(511 * 1024 + 16, MemoryWord50.Form(new(12345), true, true));
+            machine.Cpu.StartAt(8); return machine;
+        }
+        var expected = Create(); var actual = Create(); expected.Cpu.Step(); expected.Cpu.Step();
+        actual.HardwareModel.ConfigureAutomaticExecution(new(MemoryTiming with { Banking = MramBanking.LogicalLowThreeBits },
+            new(100), new(100), Enum.GetValues<Opcode>().ToDictionary(opcode => opcode, _ => new HardwareDuration(300))));
+        var result = actual.HardwareModel.AdvanceAutomaticTo(new(100000), 10);
+        Assert.AreEqual(HardwareRunBoundary.Stop, result.Boundary); Assert.AreEqual(2UL, result.Completed);
+        Assert.AreEqual(CpuState(expected), CpuState(actual)); Assert.AreEqual(12345UL, actual.Cpu.GetA().Value);
+        Assert.AreEqual(0UL, actual.Clock.Tick);
     }
 
 }

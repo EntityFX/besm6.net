@@ -97,4 +97,20 @@ public sealed class MramReadTimingTests
         CollectionAssert.AreEqual(new[] { "GBRCh@900", "PVR@1050", "bank@2000" }, log);
         // Nominal0.9us is a published approximation, not a calibrated hardware deadline.
     }
+    [TestMethod]
+    public void ExpandedLogicalBankingUsesFullCapacityAndRetainsBankContention()
+    {
+        var timing = new MramReadTiming(MemoryConfiguration.Simh512K, new(2000), new(900), MramBanking.LogicalLowThreeBits);
+        for (uint bank = 0; bank < 8; bank++)
+        {
+            Assert.IsTrue(timing.TryBeginRead(524280 + bank, new(0), out var read));
+            Assert.AreEqual((int)bank, read.Bank);
+            Assert.IsFalse(timing.TryBeginRead(bank, new(0), out _));
+            Assert.IsTrue(timing.TryBeginRead(bank, new(2000), out _));
+        }
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => timing.AvailableAt(524288));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new MramReadTiming(MemoryConfiguration.Simh512K,
+            new(2000), new(900), (MramBanking)99));
+    }
+
 }

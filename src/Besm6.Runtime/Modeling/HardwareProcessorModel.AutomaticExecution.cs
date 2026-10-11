@@ -85,16 +85,25 @@ internal sealed partial class HardwareProcessorModel
         Opcode.U1a or Opcode.Uj or Opcode.Vjm or Opcode.Ij or Opcode.Stop or Opcode.Vzm or
         Opcode.V1m or Opcode.Op36 or Opcode.Vlm;
 
+    // Supervisor special commands use shared register/device control semantics at UU retirement.
+    // Hosted extracodes/CTX may touch memory synchronously and remain outside this route.
+    private bool IsAutomaticSupervisorControl(Opcode opcode) => _processor.Supervisor is not null &&
+        (opcode is Opcode.Mod or Opcode.Ext or Opcode.Op33 or Opcode.Op46 or Opcode.Op47 ||
+         (uint)opcode is >= 0x28 and <= 0x3F or 0x80 or 0x88);
+
     private void StartAutomaticStages(HardwareInstructionHandle instruction, HardwareExecutionConfiguration configuration)
     {
         var lease = _pendingInstruction!.Value;
         var opcode = instruction.Instruction!.Value.Opcode;
+        if (_processor.Supervisor is not null && opcode is Opcode.Ext or Opcode.Op33 &&
+            (_processor.Supervisor.Io is not SupervisorIoController io || !io.UsesHardwarePort(_memoryPort!)))
+            throw new InvalidOperationException("Automatic device commands require the CPU's shared hardware MRAM port.");
         // All timing is validated before accepting address/stack/register effects.
         var retirement = Timeline.Now + configuration.ControlDuration(opcode);
         bool arithmetic = _processor.CanCaptureArithmeticOperand(in lease);
         HardwareDuration? arithmeticDelay = arithmetic ? configuration.ArithmeticDuration(opcode) : null;
         if (!arithmetic && !_processor.CanBeginMemoryInstruction(in lease) &&
-            !_processor.IsPreparedInstructionSuppressed(in lease) && !IsAutomaticRegisterOrControl(opcode))
+            !_processor.IsPreparedInstructionSuppressed(in lease) && !IsAutomaticRegisterOrControl(opcode) && !IsAutomaticSupervisorControl(opcode))
             throw new NotSupportedException($"{opcode} requires its hardware device/special-memory route before automatic execution.");
         _automaticRetirementEvent = Timeline.ScheduleAt(retirement, () =>
         {

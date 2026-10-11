@@ -14,6 +14,7 @@ internal sealed class TimedSupervisorDma
     private readonly MramMemoryPort _port;
     private readonly HardwareDuration _issueInterval;
     internal int PendingTransfers { get; private set; }
+    internal bool UsesPort(MramMemoryPort port) => ReferenceEquals(_port, port);
     internal bool HasPendingMemoryCycles => _port.PendingRequests != 0;
     internal TimedSupervisorDma(MramMemoryPort port, HardwareDuration issueInterval)
     { _port = port; _issueInterval = issueInterval; }

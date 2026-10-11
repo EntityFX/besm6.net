@@ -9,12 +9,13 @@ public readonly record struct MramReadReservation(int Bank, HardwareInstant Star
 /// Classical eight-bank read reservation, TO-4 §1.1–1.2, sheet3. The source
 /// specifies a minimum2us bank cycle and approximately0.9us data return.
 /// No request queue/arbitration, write visibility or CPU integration is inferred.
-/// Expanded SIMH memory has no specified bank timing and is rejected.
+/// Expanded SIMH storage requires an explicit logical banking choice; its wiring is not inferred.
 /// </summary>
 public sealed class MramReadTiming
 {
     public static HardwareDuration PublishedMinimumCycle => new(2000);
     public static HardwareDuration PublishedApproximateReadLatency => new(900);
+    private readonly uint _capacity;
     private readonly HardwareInstant[] _available = new HardwareInstant[8];
     public HardwareDuration BankCycle { get; }
     public HardwareDuration ReadLatency { get; }
@@ -25,15 +26,18 @@ public sealed class MramReadTiming
     /// than the published minimum. The caller supplies the source configuration.
     /// </summary>
     public MramReadTiming(MemoryConfiguration configuration, HardwareDuration bankCycle,
-        HardwareDuration readLatency)
+        HardwareDuration readLatency, MramBanking banking = MramBanking.DocumentedClassical)
     {
-        if (configuration != MemoryConfiguration.Classical32K)
+        if (!Enum.IsDefined(banking) || !Enum.IsDefined(configuration))
+            throw new ArgumentOutOfRangeException(nameof(banking));
+        if (configuration != MemoryConfiguration.Classical32K && banking == MramBanking.DocumentedClassical)
             throw new ArgumentOutOfRangeException(nameof(configuration),
                 "Only the documented classical eight-bank geometry has a timing specification.");
         if (bankCycle.Nanoseconds < PublishedMinimumCycle.Nanoseconds)
             throw new ArgumentOutOfRangeException(nameof(bankCycle));
         if (readLatency.Nanoseconds == 0 || readLatency.Nanoseconds > bankCycle.Nanoseconds)
             throw new ArgumentOutOfRangeException(nameof(readLatency));
+        _capacity = configuration == MemoryConfiguration.Classical32K ? PhysicalMemory.WordCount : 512U * 1024;
         BankCycle = bankCycle;
         ReadLatency = readLatency;
     }
@@ -56,9 +60,9 @@ public sealed class MramReadTiming
         return true;
     }
 
-    private static int BankOf(uint address)
+    private int BankOf(uint address)
     {
-        if (address >= PhysicalMemory.WordCount) throw new ArgumentOutOfRangeException(nameof(address));
+        if (address >= _capacity) throw new ArgumentOutOfRangeException(nameof(address));
         return (int)(address & 7);
     }
 }

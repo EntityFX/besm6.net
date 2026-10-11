@@ -129,4 +129,22 @@ public sealed class MramMemoryPortTests
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new MramMemoryPort(new(MemoryConfiguration.Simh512K), new(), Configuration()));
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new MramMemoryPort(new(), new(), Configuration() with { WriteVisibility = new(2001) }));
     }
+    [TestMethod]
+    [DataRow(MramReadSampling.AtCycleStart)]
+    [DataRow(MramReadSampling.AtDataReturn)]
+    public void ExpandedPortPreservesRawWordAndSharesBanksWithLowAddresses(MramReadSampling sampling)
+    {
+        var memory = new PhysicalMemory(MemoryConfiguration.Simh512K); var timeline = new HardwareTimeline();
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new MramMemoryPort(memory, timeline, Configuration(sampling)));
+        var port = new MramMemoryPort(memory, timeline, Configuration(sampling) with { Banking = MramBanking.LogicalLowThreeBits });
+        var raw = new MemoryWord50(MemoryWord50.Mask50); var replies = new List<MramTransfer>();
+        port.Write(524287, raw, replies.Add); port.Read(524287, replies.Add); port.Read(7, replies.Add);
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => port.Read(524288, replies.Add));
+        timeline.AdvanceTo(new(1499)); Assert.AreEqual(default, memory.ReadRaw(524287));
+        timeline.AdvanceTo(new(1500)); Assert.AreEqual(raw, memory.ReadRaw(524287));
+        timeline.AdvanceTo(new(4900)); Assert.AreEqual(3, replies.Count);
+        Assert.AreEqual(raw, replies[1].Word); Assert.AreEqual(new HardwareInstant(4000), replies[2].Started);
+        Assert.AreEqual(0, port.PendingRequests);
+    }
+
 }

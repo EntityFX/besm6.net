@@ -838,3 +838,27 @@ API выбора календаря устройств не включает а�
 Параметры задержек и подачи запросов логические; физические приоритеты,
 расширенная геометрия и аппаратный ОС-гейт требуют дальнейшей работы.
 [Приёмка](../reports/hardware-time/hardware-time-device-dma-report.md).
+
+
+## Supervisor control routes and expanded logical MRAM
+
+The automatic CPU driver retires REG, peripheral exchanges, privileged modifier
+aliases and supervisor extracode entries through their shared instruction
+handlers at the configured UU (УУ) permission boundary. Register-buffer control
+and assignment changes retain the functional rules; no implicit BRZ flush is
+introduced. Hosted extracodes and hosted CTX are outside this automatic route.
+Peripheral commands require the same MRAM port as the CPU; a functional device
+calendar or a separate queue is rejected before guest effects.
+
+`MramBanking.DocumentedClassical` remains the default and rejects expanded
+storage. `LogicalLowThreeBits` explicitly selects eight FIFO banks using the
+low three physical address bits over the chosen storage capacity. It permits
+Simh512K CPU mapping and raw DMA without claiming historical expanded-memory
+wiring. The configured cycle retains the published minimum of 2000 ns; read
+sampling and write visibility remain caller-selected. Address bounds follow
+the selected capacity, and high/low addresses compete in the same banks.
+
+Component checks cover control retirement, both instruction halves, register
+control faults, mathematical mapped fetch/data in the last physical page,
+full-capacity raw transfers, bank contention and CPU reset during DMA.
+Full hardware OS execution and public CPU profile selection remain outstanding.

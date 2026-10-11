@@ -4,10 +4,14 @@ namespace Besm6.Runtime.Timing;
 public enum MramReadSampling { AtCycleStart, AtDataReturn }
 public enum MramArbitration { FifoPerBank }
 
+/// <summary>LogicalLowThreeBits is a caller-selected approximation, including expanded storage.</summary>
+public enum MramBanking { DocumentedClassical, LogicalLowThreeBits }
+
 /// <summary>Read latency is approximate in TO-4; write visibility and sampling are caller-selected.</summary>
 public readonly record struct MramPortConfiguration(HardwareDuration BankCycle,
     HardwareDuration ReadLatency, HardwareDuration WriteVisibility,
-    MramReadSampling ReadSampling, MramArbitration Arbitration);
+    MramReadSampling ReadSampling, MramArbitration Arbitration,
+    MramBanking Banking = MramBanking.DocumentedClassical);
 
 public readonly record struct MramRequestToken
 {
@@ -62,7 +66,7 @@ public sealed class MramMemoryPort
         if (configuration.WriteVisibility.Nanoseconds == 0 ||
             configuration.WriteVisibility.Nanoseconds > configuration.BankCycle.Nanoseconds)
             throw new ArgumentOutOfRangeException(nameof(configuration));
-        _banks = new(memory.Configuration, configuration.BankCycle, configuration.ReadLatency);
+        _banks = new(memory.Configuration, configuration.BankCycle, configuration.ReadLatency, configuration.Banking);
         _memory = memory; _timeline = timeline; Configuration = configuration;
     }
 
