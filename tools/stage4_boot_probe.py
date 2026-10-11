@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import html
 import json
+import os
 import pathlib
 import re
 import subprocess
@@ -45,6 +46,7 @@ using System.Buffers.Binary;
 using Besm6.Architecture;
 using Besm6.Core;
 using Besm6.Runtime;
+using Besm6.Runtime.Timing;
 
 using var fixture = JsonDocument.Parse(File.ReadAllText(args[0]));
 string media = args[1];
@@ -56,10 +58,20 @@ bool submitJob = args[6] == "true";
 var configuration = Enum.Parse<MemoryConfiguration>(args[7]);
 var speed = args[8] == "original" ? ExecutionSpeed.Original : ExecutionSpeed.Max;
 bool stepDiagnostics = args[9] == "true";
+bool hardwareExecution = args[10] != "";
+bool progress = args[11] == "true";
+var hardwareJob = hardwareExecution ? MachineJobConfiguration.Load(args[10]) : null;
+var hardwareConfiguration = hardwareJob?.Timing?.Create();
+if (hardwareExecution && hardwareConfiguration is null)
+    throw new ArgumentException("A hardware timing configuration is required.");
 var core = new MachineCore(ProcessorProfile.Supervisor, configuration);
 var memory = core.MappedMemory!;
 var io = core.SupervisorIo!;
-var ioDiagnostics = new ProbeIo(io, memory, () => core.Clock.Tick, () => core.Cpu.GetK());
+ulong EventTime() => hardwareExecution ? core.HardwareTimeline.Now.Nanoseconds : core.Clock.Tick;
+ulong shortPoll = hardwareExecution ? 1_000_000_000UL : 1_000_000UL;
+ulong longPoll = checked(shortPoll * 10);
+ulong idlePeriod = hardwareExecution ? hardwareConfiguration!.Devices.SerialPeriod.Nanoseconds : serialPeriod;
+var ioDiagnostics = new ProbeIo(io, memory, EventTime, () => core.Cpu.GetK());
 core.Cpu.Supervisor!.Io = ioDiagnostics;
 var trace = new Queue<object>();
 var delaySnapshots = new Queue<object>();
@@ -96,14 +108,33 @@ int[] PrintedPrimes() {
 }
 ulong? serialIdleSince = null;
 var operatorActions = new List<object>();
+ulong? lastPanelRequestTime = null;
+ulong? panelPromptReadyTime = null;
+// The pinned guest dispatcher at 07067 subtracts the previous request time,
+// shifts by six and rejects zero. Its slow-clock counter advances every four
+// timer pulses. Wait one count beyond that 64-count window in this fixture.
+ulong panelQuietPeriod = hardwareExecution
+    ? checked(65UL * 4 * hardwareConfiguration!.Devices.TimerPeriod.Nanoseconds) : 0;
 void PanelRequest(string name, ulong selector, ulong parameter, ulong auxiliary = 0) {
     memory.SetPanel(6, MemoryWord50.Form(new Word48(selector), true, true));
     memory.SetPanel(5, MemoryWord50.Form(new Word48(parameter), true, true));
     memory.SetPanel(4, MemoryWord50.Form(new Word48(auxiliary), true, true));
+    // Record the admission state before raising the external panel request.
+    uint k = core.Cpu.GetK();
+    string mode = core.Cpu.Supervisor!.Mode.ToString();
+    ulong pending = io.ExternalInterrupts, mask = io.ExternalInterruptMask;
     io.RaiseInterrupts(1UL << 31);
-    operatorActions.Add(new { name, tick = core.Clock.Tick, selector, parameter, auxiliary });
+    lastPanelRequestTime = EventTime();
+    operatorActions.Add(new { name, time = EventTime(), selector, parameter, auxiliary,
+        k, mode, pending, mask, serial_idle = io.IsSerialIdle,
+        guest_panel_clock = memory.PhysicalMemory.ReadRaw(0x2E5).Data.Value,
+        guest_previous_panel_clock = memory.PhysicalMemory.ReadRaw(0x27A).Data.Value });
 }
 if (stepDiagnostics) core.Cpu.TraceInstruction = (k, right, rk, opcode) => {
+    // Keep a bounded first-request trace for hardware OS integration. Never
+    // retain an entire multi-million-instruction trace unless explicitly requested.
+    if (hardwareExecution && detailed is null &&
+        (!frontPanelInputRequested || trace.Count >= 1024)) return;
     if (k == 29464 && !right) { // 071430: documented-in-image nested delay entry.
         uint offset = core.Cpu.GetM(14);
         delaySnapshots.Enqueue(new { tick = core.Clock.Tick, m7 = core.Cpu.GetM(7),
@@ -125,7 +156,7 @@ if (stepDiagnostics) core.Cpu.TraceInstruction = (k, right, rk, opcode) => {
         mode = core.Cpu.Supervisor!.Mode.ToString() };
     trace.Enqueue(item);
     detailed?.WriteLine(JsonSerializer.Serialize(item));
-    if (trace.Count > 64) trace.Dequeue();
+    if (!hardwareExecution && trace.Count > 64) trace.Dequeue();
 };
 io.ConsoleOutput += (unit, value) => console.Add(new { unit, value });
 io.SerialOutput += (unit, value) => {
@@ -136,7 +167,14 @@ io.PrinterOutput += (unit, overprints) => {
     foreach (var row in overprints)
         printerLines.Add(new string(row.Select(code => code == 255 ? ' ' : CosyCodec.GostToUnicode(code)).ToArray()));
 };
-core.Cpu.InstructionExecuted += _ => completed++;
+core.Cpu.InstructionExecuted += _ => {
+    completed++;
+    if (progress && completed % 5_000_000 == 0)
+        Console.Error.WriteLine(JsonSerializer.Serialize(new { completed, time = EventTime(),
+            event_time_unit = hardwareExecution ? "nanoseconds" : "completed steps",
+            k = core.Cpu.GetK(), operator_bytes = operatorText.Length, printer_lines = printerLines.Count,
+            guest_completed = guestCompletionTick.HasValue, os_alive = osAlive }));
+};
 try {
     foreach (var item in fixture.RootElement.GetProperty("words").EnumerateArray()) {
         uint address = item.GetProperty("address").GetUInt32();
@@ -158,10 +196,17 @@ try {
     // simulation ticks remain completed steps, not microseconds/hardware timing.
     io.PrinterPulseTicks = 1400;
     io.PrinterZeroTicks = 1000;
-    if (serialPeriod != 0) io.StartSerialClock(serialPeriod);
     string input = Path.Combine(media, "input.txt");
     if (File.Exists(input)) io.AttachPaperTapeText(0, File.ReadAllText(input, Encoding.UTF8));
-    if (timerPeriod != 0) io.StartTimer(timerPeriod, configuration == MemoryConfiguration.Simh512K);
+    // Select the CPU/device owner before registering recurring clocks. No tick-to-ns conversion.
+    if (hardwareExecution) {
+        core.UseHardwareExecution(hardwareConfiguration!);
+        if (serialPeriod != 0) io.StartHardwareSerialClock();
+        if (timerPeriod != 0) io.StartHardwareTimer(configuration == MemoryConfiguration.Simh512K);
+    } else {
+        if (serialPeriod != 0) io.StartSerialClock(serialPeriod);
+        if (timerPeriod != 0) io.StartTimer(timerPeriod, configuration == MemoryConfiguration.Simh512K);
+    }
     core.Cpu.StartAt(fixture.RootElement.GetProperty("start_address").GetUInt32());
     core.StepTrace = (_, _) => {
         ioDiagnostics.ObserveCompletedDrums();
@@ -169,12 +214,20 @@ try {
             operatorSnapshot = operatorText.ToString();
             operatorSnapshotLength = operatorText.Length;
         }
-        if (io.IsSerialIdle) serialIdleSince ??= core.Clock.Tick;
+        if (io.IsSerialIdle) serialIdleSince ??= EventTime();
         else serialIdleSince = null;
         // Explicit operator actions from pinned check_initial_setup(). No host write
         // to YEAR or other OS memory: retained image date, fixed guest time12:00.
-        if (submitJob && core.Cpu.GetK() == 0x920 &&
-            serialIdleSince is ulong idleSince && core.Clock.Tick - idleSince > 10 * serialPeriod &&
+        bool panelReady = core.Cpu.GetK() == 0x920 &&
+            serialIdleSince is ulong panelIdleSince &&
+            EventTime() - panelIdleSince > checked(10 * idlePeriod) &&
+            (io.ExternalInterrupts & (1UL << 31)) == 0 &&
+            (io.ExternalInterruptMask & (1UL << 31)) != 0;
+        bool inputPromptReady = Regex.IsMatch(operatorSnapshot, "ДATA[^\\n]*\\n");
+        if (inputPromptReady) panelPromptReadyTime ??= EventTime();
+        if (submitJob && !(hardwareExecution && inputPromptReady && !frontPanelInputRequested) &&
+            core.Cpu.GetK() == 0x920 &&
+            serialIdleSince is ulong idleSince && EventTime() - idleSince > checked(10 * idlePeriod) &&
             (io.ExternalInterrupts & (1UL << 31)) == 0 &&
             (io.ExternalInterruptMask & (1UL << 31)) != 0) {
             ulong taken = memory.PhysicalMemory.ReadRaw(0x122).Data.Value;
@@ -187,31 +240,46 @@ try {
                 }
             }
         }
-        if (submitJob && !frontPanelInputRequested && Regex.IsMatch(operatorSnapshot, "ДATA[^\\n]*\\n")) {
-            // Same operator front-panel actions as pinned expect.ini, not an OS shortcut.
+        // Observe only published raw words used by the pinned dispatcher.
+        // Host-view reads would touch BRZ recency/watch hooks; do not use them.
+        bool guestPanelQuiet = !hardwareExecution;
+        if (hardwareExecution && panelReady && inputPromptReady) {
+            ulong current = memory.PhysicalMemory.ReadRaw(0x2E5).Data.Value;
+            ulong previous = memory.PhysicalMemory.ReadRaw(0x27A).Data.Value;
+            ulong elapsed = unchecked(current - previous) & Word48.Mask48;
+            guestPanelQuiet = elapsed >= 64 && elapsed < (1UL << 47);
+        }
+        if (submitJob && !frontPanelInputRequested && inputPromptReady &&
+            (!hardwareExecution || panelReady && guestPanelQuiet &&
+                panelPromptReadyTime is ulong promptReady && EventTime() - promptReady >= panelQuietPeriod &&
+                (lastPanelRequestTime is not ulong previousPanel ||
+                 EventTime() - previousPanel >= panelQuietPeriod))) {
+            // Hardware output can complete inside the serial interrupt handler.
+            // Submit the operator request at the existing idle-panel boundary,
+            // after the prompt and with its interrupt enabled; do not patch OS memory.
             PanelRequest("FS8", 1, 8);
             frontPanelInputRequested = true;
-            nextJobPoll = core.Clock.Tick + 1000000;
+            nextJobPoll = checked(EventTime() + shortPoll);
         }
         if (frontPanelInputRequested && guestCompletionTick is null) {
             string text = operatorSnapshot;
-            if (text.Contains("KЗ(") || text.Contains("КЗ(")) guestCompletionTick = core.Clock.Tick;
-            else if (core.Clock.Tick >= nextJobPoll && io.IsSerialIdle) {
+            if (text.Contains("KЗ(") || text.Contains("КЗ(")) guestCompletionTick = EventTime();
+            else if (EventTime() >= nextJobPoll && io.IsSerialIdle) {
                 io.ReceiveSerial(1, new byte[] { 87, 67, 80, 80, 3 }); // WCPP + terminal Enter(ETX).
-                nextJobPoll = core.Clock.Tick + 10000000;
+                nextJobPoll = checked(EventTime() + longPoll);
             }
         }
-        if (guestCompletionTick is ulong finished && !printerEnabled && core.Clock.Tick >= finished + 10000000) {
+        if (guestCompletionTick is ulong finished && !printerEnabled && EventTime() >= checked(finished + longPoll)) {
             PanelRequest("ONL A0", 8, 1);
             printerEnabled = true;
             printerEnableTextPosition = operatorText.Length;
-            nextPrinterPoll = core.Clock.Tick + 1000000;
+            nextPrinterPoll = checked(EventTime() + shortPoll);
         }
-        if (printerEnabled && core.Clock.Tick >= nextPrinterPoll && io.IsSerialIdle &&
+        if (printerEnabled && EventTime() >= nextPrinterPoll && io.IsSerialIdle &&
             operatorText.ToString(printerEnableTextPosition, operatorText.Length-printerEnableTextPosition).Contains("ECT")) {
             lastPrinterQueryPosition = operatorText.Length;
             io.ReceiveSerial(1, new byte[] { 72, 79, 77, 66, 3 }); // HOMB + ETX.
-            nextPrinterPoll = core.Clock.Tick + 1000000;
+            nextPrinterPoll = checked(EventTime() + shortPoll);
         }
         if (lastPrinterQueryPosition >= 0 && operatorSnapshotLength > lastPrinterQueryPosition &&
             operatorSnapshot[lastPrinterQueryPosition..].Contains("HET")) osAlive = true;
@@ -244,7 +312,7 @@ string physicalHash = WordsHash(Enumerable.Range(0,(int)memory.PhysicalMemory.Ca
 var mediaHashes = new[] { 0,1,2,5,6,7 }.ToDictionary(unit => unit.ToString(), unit => WordsHash(io.SnapshotDisk(unit)));
 var drumHashes = new[] { 0,1 }.Select(unit => WordsHash(io.SnapshotDrum(unit))).ToArray();
 var guestState = new {
-    physicalHash, mediaHashes, drumHashes, clock = core.Clock.Tick, completed,
+    physicalHash, mediaHashes, drumHashes, clock = core.Clock.Tick, hardwareTimeNs = hardwareExecution ? EventTime() : (ulong?)null, completed,
     a = core.Cpu.GetA().Value, y = core.Cpu.GetY().Value, r = core.Cpu.GetR(), k = core.Cpu.GetK(),
     right = core.Cpu.RightInstruction, c = core.Cpu.C, applyC = core.Cpu.ApplyC,
     modifiers = Enumerable.Range(0,16).Select(core.Cpu.GetM).ToArray(), supervisor = core.Cpu.Supervisor!.Snapshot(),
@@ -262,6 +330,7 @@ var guestState = new {
 string stateSha256 = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(guestState))).ToLowerInvariant();
 Console.WriteLine(JsonSerializer.Serialize(new {
     physical_words = memory.PhysicalMemory.CapacityWords, memory_configuration = configuration.ToString(),
+    execution_model = core.ExecutionModel.ToString(), hardware_time_ns = hardwareExecution ? EventTime() : (ulong?)null,
     hardware_dispatcher = true, hosted_extracodes = false,
     operator_output = operatorText.ToString(), console_bytes = console, serial_bytes = serial,
     printer_lines = printerLines, front_panel_input_requested = frontPanelInputRequested,
@@ -271,7 +340,9 @@ Console.WriteLine(JsonSerializer.Serialize(new {
     operating_system_alive = osAlive, state_sha256 = stateSha256, guest_state = guestState,
     same_guest_state_original_max = false,
     termination, timer_period_ticks = timerPeriod, serial_clock_period_ticks = serialPeriod,
-    timer_delay_model = "functional; not physical hardware time",
+    timer_delay_model = hardwareExecution ? "explicit logical nanosecond calendar" : "functional; not physical hardware time",
+    event_time_unit = hardwareExecution ? "nanoseconds" : "completed steps",
+    operator_short_poll = shortPoll, operator_long_poll = longPoll,
     instruction_attempt_limit = limit, speed = speed.ToString(), statistics,
     completed_instructions = completed, ticks = core.Clock.Tick,
     final_cpu = new { k = core.Cpu.GetK(), k_octal = Convert.ToString(core.Cpu.GetK(),8),
@@ -300,8 +371,9 @@ Console.WriteLine(JsonSerializer.Serialize(new {
 }));
 
 sealed class ProbeIo(SupervisorIoController inner, MappedMemoryBackend memory,
-    Func<ulong> tick, Func<uint> address) : ISupervisorIo
+    Func<ulong> tick, Func<uint> address) : IHardwareSupervisorIo
 {
+    public SupervisorIoController HardwareController => inner;
     private readonly IncrementalHash history = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
     public string Fingerprint() => Convert.ToHexString(history.GetHashAndReset()).ToLowerInvariant();
     public Dictionary<string,long> Counts { get; } = new();
@@ -372,7 +444,8 @@ sealed class ProbeIo(SupervisorIoController inner, MappedMemoryBackend memory,
 def run_runtime_probe(runtime: pathlib.Path, fixture: pathlib.Path, media: pathlib.Path,
                       limit: int, timeout: float, timer_period: int, detailed_trace: bool,
                       serial_period: int, submit_job: bool, memory_configuration: str,
-                      speed: str, light_probe: bool) -> dict:
+                      speed: str, light_probe: bool, hardware_job: pathlib.Path | None = None,
+                      progress: bool = False) -> dict:
     """Build against a completed Release snapshot, never against changing projects."""
     if runtime.name != "Besm6.Runtime.dll" or not runtime.is_file():
         raise ValueError("An existing Besm6.Runtime.dll snapshot is required")
@@ -382,23 +455,34 @@ def run_runtime_probe(runtime: pathlib.Path, fixture: pathlib.Path, media: pathl
         f'<Reference Include="{html.escape(dll.stem)}"><HintPath>{html.escape(str(dll.resolve()))}</HintPath></Reference>'
         for dll in sorted(runtime.parent.glob("Besm6.*.dll")))
     project = folder / "BootProbe.csproj"
-    project.write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>'
+    project_text = ('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>'
                        '<OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework>'
                        '<ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>'
-                       '</PropertyGroup><ItemGroup>' + references + '</ItemGroup></Project>', encoding="utf-8")
-    (folder / "Program.cs").write_text(RUNTIME_PROBE, encoding="utf-8")
-    build = subprocess.run(["dotnet", "build", str(project), "-c", "Release", "--nologo"],
-                           capture_output=True, text=True, encoding="utf-8", timeout=timeout)
-    if build.returncode:
+                       '</PropertyGroup><ItemGroup>' + references + '</ItemGroup></Project>')
+    fingerprint = hashlib.sha256((project_text + RUNTIME_PROBE).encode("utf-8"))
+    for dll in sorted(runtime.parent.glob("Besm6.*.dll")):
+        fingerprint.update(dll.name.encode("utf-8"))
+        fingerprint.update(hashlib.sha256(dll.read_bytes()).digest())
+    stamp = folder / "build-sha256.txt"
+    executable = folder / "bin/Release/net8.0/BootProbe.dll"
+    build = None
+    if not (executable.is_file() and stamp.is_file() and stamp.read_text() == fingerprint.hexdigest()):
+        project.write_text(project_text, encoding="utf-8")
+        (folder / "Program.cs").write_text(RUNTIME_PROBE, encoding="utf-8")
+        build = subprocess.run(["dotnet", "build", str(project), "-c", "Release", "--nologo"],
+                               capture_output=True, text=True, encoding="utf-8", timeout=timeout)
+    if build is not None and build.returncode:
         # Compiler descriptions are useful; source paths and host names are not.
         descriptions = sorted(set(re.findall(r"error (CS\d+): (.*?) \[", build.stdout)))
         descriptions = [(code, description.replace(str(runtime.parent), "SNAPSHOT").replace(str(folder), "PROBE"))
                         for code, description in descriptions]
         raise ValueError("Runtime probe build failed: " + json.dumps(descriptions))
-    run = subprocess.run(["dotnet", str(folder / "bin/Release/net8.0/BootProbe.dll"),
+    stamp.write_text(fingerprint.hexdigest())
+    run = subprocess.run(["dotnet", str(executable),
                           str(fixture), str(media), str(limit), str(timer_period), str(detailed_trace).lower(),
                           str(serial_period), str(submit_job).lower(), memory_configuration, speed,
-                          str(not light_probe).lower()], capture_output=True,
+                          str(not light_probe).lower(), str(hardware_job.resolve()) if hardware_job else "", str(progress).lower()],
+                         stdout=subprocess.PIPE, stderr=None if progress else subprocess.PIPE,
                          text=True, encoding="utf-8", timeout=timeout)
     if run.returncode:
         raise ValueError(f"Runtime probe failed with exit code {run.returncode}")
@@ -408,6 +492,7 @@ def run_runtime_probe(runtime: pathlib.Path, fixture: pathlib.Path, media: pathl
     probe["architecture_sha256"] = hashlib.sha256((runtime.parent / "Besm6.Architecture.dll").read_bytes()).hexdigest()
     probe["bootstrap_sha256"] = BOOT_HASH
     probe["probe_source_sha256"] = hashlib.sha256(RUNTIME_PROBE.encode("utf-8")).hexdigest()
+    probe["hardware_configuration_sha256"] = hashlib.sha256(hardware_job.read_bytes()).hexdigest() if hardware_job else None
     return probe
 
 
@@ -553,6 +638,11 @@ def main() -> int:
                         help="Explicit geometry; Simh512K is an experimental reference contract")
     parser.add_argument("--speed", choices=["max", "original"], default="max")
     parser.add_argument("--light-probe", action="store_true", help="Skip per-instruction diagnostic snapshots")
+    parser.add_argument("--progress", action="store_true", help="Print numeric progress every five million completed instructions")
+    parser.add_argument("--hardware-job", type=pathlib.Path,
+                        help="Explicit MachineJob JSON timing; selects the public hardware CPU/device owner")
+    parser.add_argument("--write-machine-job", type=pathlib.Path,
+                        help="Export pinned boot/panels/media into standalone CLI JSON; requires --hardware-job timing")
     parser.add_argument("--compare-probe", type=pathlib.Path, help="Require state parity with a saved run of the other speed")
     parser.add_argument("--run-command", nargs=argparse.REMAINDER,
                         help="External hardware runner; placeholders {fixture}, {media}; stdout must be JSON")
@@ -587,6 +677,29 @@ def main() -> int:
             url = f"https://raw.githubusercontent.com/besm6/besm6.github.io/{ARCHIVE_REVISION}/download/disks/{name}"
             manifest["assets"].append(download_verified(url, output / name, digest))
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    if args.write_machine_job:
+        if not args.hardware_job:
+            parser.error("--write-machine-job requires an explicit --hardware-job timing template")
+        job_path = args.write_machine_job.resolve()
+        job = json.loads(args.hardware_job.read_text(encoding="utf-8"))
+        job["entryAddress"] = fixture["start_address"]
+        job["memoryConfiguration"] = "simh512k" if args.memory_configuration == "Simh512K" else "classical32k"
+        job["memoryWords"] = [{key: word[key] for key in ["address", "raw50", "panel"]} for word in fixture["words"]]
+        for name in [*MEDIA, "input.txt"]:
+            if not (output / name).is_file():
+                raise ValueError(f"Missing required pinned attachment: {name}")
+        relative = lambda name: os.path.relpath(output / name, job_path.parent)
+        job["devices"] = {
+            "diskImages": [{"unit": unit, "file": relative(name), "sha256": MEDIA[name], "readOnly": False}
+                           for unit, name in [(0,"sbor2048.bin"),(7,"sbor2053.bin"),(5,"krab2063.bin"),
+                                              (1,"svs2048.bin"),(2,"alt2048.bin")]],
+            "scratchDisks": [{"unit": 6, "volume": 2052}], "scratchDrums": [0,1],
+            "serialTerminals": [1], "printers": [0],
+            "paperTapes": [{"reader": 0, "file": relative("input.txt"), "sha256": SUPPORT_FILES["input.txt"]}],
+            "startTimer": True, "includeSlowClock": args.memory_configuration == "Simh512K", "startSerialClock": True,
+        }
+        job_path.parent.mkdir(parents=True, exist_ok=True)
+        job_path.write_text(json.dumps(job, indent=2) + "\n", encoding="utf-8")
     result = {"fixture_words": len(fixture["words"]), "start_address_octal": f'{fixture["start_address"]:05o}',
               "os_gate": {"passed": False, "status": "not executed"}}
     if sum(bool(value) for value in [args.run_command, args.probe_json, args.runtime_dll]) > 1:
@@ -596,19 +709,22 @@ def main() -> int:
     if args.runtime_dll:
         probe = run_runtime_probe(args.runtime_dll.resolve(), fixture_path, output,
                                   args.instruction_limit, args.timeout, args.timer_period, args.instruction_trace,
-                                  args.serial_period, args.submit_job, args.memory_configuration, args.speed, args.light_probe)
+                                  args.serial_period, args.submit_job, args.memory_configuration, args.speed, args.light_probe,
+                                  args.hardware_job, args.progress)
         if args.compare_probe:
             reference = json.loads(args.compare_probe.read_text(encoding="utf-8"))
             fields = ["state_sha256", "completed_instructions", "ticks", "physical_words", "memory_configuration",
                       "timer_period_ticks", "serial_clock_period_ticks", "guest_date_policy", "runtime_sha256",
                       "processor_sha256", "architecture_sha256", "probe_source_sha256"]
+            if args.hardware_job:
+                fields += ["hardware_configuration_sha256", "hardware_time_ns", "execution_model", "event_time_unit"]
             probe["same_guest_state_original_max"] = (
                 probe.get("speed") != reference.get("speed") and
                 all(probe.get(field) is not None and probe[field] == reference.get(field) for field in fields) and
                 probe.get("statistics", {}).get("ModelCycles") == reference.get("statistics", {}).get("ModelCycles"))
             probe["comparison_reference_sha256"] = hashlib.sha256(args.compare_probe.read_bytes()).hexdigest()
         (output / "runtime-probe.json").write_text(json.dumps(probe, indent=2) + "\n", encoding="utf-8")
-        suffix = f'{args.memory_configuration}-{args.speed}-{args.instruction_limit}-t{args.timer_period}-s{args.serial_period}-{probe["runtime_sha256"][:12]}-{probe["probe_source_sha256"][:8]}'
+        suffix = f'{args.memory_configuration}-{probe["execution_model"]}-{args.speed}-{args.instruction_limit}-t{args.timer_period}-s{args.serial_period}-{probe["runtime_sha256"][:12]}-{probe["probe_source_sha256"][:8]}'
         (output / f"runtime-probe.{suffix}.json").write_text(json.dumps(probe, indent=2) + "\n", encoding="utf-8")
         result["os_gate"] = evaluate_gate(probe)
         result["diagnostic"] = {key: probe[key] for key in ["termination", "completed_instructions", "ticks", "final_cpu", "transfers", "errors"]}

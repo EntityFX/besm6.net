@@ -18,7 +18,7 @@ public sealed partial class SupervisorIoController
         _channels.Any(channel => channel.Pending.HasValue) || _paperReaders.Any(reader => reader.Pending.HasValue) ||
         _printers.Any(printer => printer.Pending.HasValue);
 
-    private void EnsureCalendarSwitchAllowed()
+    internal void EnsureCalendarSwitchAllowed()
     {
         if (_calendarCallbacks != 0 || HasScheduledIo || (_hardwareDma?.PendingTransfers ?? 0) != 0 ||
             _hardwareDma?.HasPendingMemoryCycles == true || _hardwareTimeline?.IsAdvancing == true ||

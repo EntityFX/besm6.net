@@ -96,7 +96,7 @@ internal sealed partial class HardwareProcessorModel
         var lease = _pendingInstruction!.Value;
         var opcode = instruction.Instruction!.Value.Opcode;
         if (_processor.Supervisor is not null && opcode is Opcode.Ext or Opcode.Op33 &&
-            (_processor.Supervisor.Io is not SupervisorIoController io || !io.UsesHardwarePort(_memoryPort!)))
+            (_processor.Supervisor.Io is not IHardwareSupervisorIo io || !io.HardwareController.UsesHardwarePort(_memoryPort!)))
             throw new InvalidOperationException("Automatic device commands require the CPU's shared hardware MRAM port.");
         // All timing is validated before accepting address/stack/register effects.
         var retirement = Timeline.Now + configuration.ControlDuration(opcode);
@@ -113,10 +113,10 @@ internal sealed partial class HardwareProcessorModel
         if (arithmetic)
         {
             bool immediate = ArithmeticCommandEncoding.IsImmediate(opcode);
-            var command = BindArithmeticInstruction(instruction, configuration.ArithmeticCycle, immediate,
-                immediate ? null : new ArithmeticOperandBuffer(ArithmeticOperandBufferKind.ReadNumbers, 0),
-                automaticCompletion: true, logicalCompletionDelay: arithmeticDelay);
             var controller = CreateArithmeticController(configuration.ArithmeticCycle);
+            var command = BindArithmeticInstruction(instruction, configuration.ArithmeticCycle, immediate,
+                immediate ? null : new ArithmeticOperandBuffer(ArithmeticOperandBufferKind.ReadNumbers, controller.NextCommandRegister),
+                automaticCompletion: true, logicalCompletionDelay: arithmeticDelay);
             controller.GrantCommandPermission();
             if (immediate)
             {

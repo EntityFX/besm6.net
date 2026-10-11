@@ -15,7 +15,7 @@ namespace Besm6.Runtime
     /// инфраструктура для загрузки программ и I/O. Функциональная симуляция
     /// и физическая модель процессора изолированы, ресурсы машины общие.
     /// </summary>
-    public class MachineCore
+    public partial class MachineCore
     {
         public IMemory Memory { get; }
         public MemoryModel MemoryModel { get; }
@@ -240,11 +240,23 @@ namespace Besm6.Runtime
         /// Выполнение одной инструкции.
         /// Возвращает true, когда процессор остановлен (команда СТОП).
         /// </summary>
-        public bool Step() => _simulation.Step();
+        public bool Step()
+        {
+            if (ExecutionModel == MachineExecutionModel.Functional) return _simulation.Step();
+            var result = HardwareStep();
+            if (result.Boundary is Modeling.HardwareRunBoundary.WaitingForSignal or Modeling.HardwareRunBoundary.TimeLimit)
+                throw new InvalidOperationException($"Hardware step requires external progress: {result.Boundary}.");
+            return result.Boundary == Modeling.HardwareRunBoundary.Stop;
+        }
 
         internal bool Step(ref long completed) => _simulation.Step(ref completed);
 
-        internal void EnsureExecutionAllowed() => _simulation.EnsureExecutionAllowed();
+        internal void EnsureExecutionAllowed()
+        {
+            if (ExecutionModel != MachineExecutionModel.Functional)
+                throw new InvalidOperationException("This entry point belongs to functional execution.");
+            _simulation.EnsureExecutionAllowed();
+        }
 
         internal bool ExecuteBlock(int count, ref long instructionsExecuted) =>
             _simulation.ExecuteBlock(count, ref instructionsExecuted);
@@ -273,6 +285,8 @@ namespace Besm6.Runtime
             ExecutionSpeed speed = ExecutionSpeed.Max, bool collectStatistics = false)
         {
             if (instructionLimit < 1) throw new ArgumentOutOfRangeException(nameof(instructionLimit));
+            if (ExecutionModel == MachineExecutionModel.Hardware)
+                return RunHardwareInstructions(instructionLimit, speed, collectStatistics);
             var loop = new ExecutionLoop(this)
             {
                 InstructionLimit = instructionLimit,

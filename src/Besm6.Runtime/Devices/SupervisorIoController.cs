@@ -9,8 +9,9 @@ namespace Besm6.Runtime;
 /// host-time scheduling. CompletionDelayTicks is a functional delay, not hardware time.
 /// DMA bypasses RP/RZ and both CPU buffers, as an external physical memory request.
 /// </summary>
-public sealed partial class SupervisorIoController : ISupervisorIo
+public sealed partial class SupervisorIoController : IHardwareSupervisorIo
 {
+    public SupervisorIoController HardwareController => this;
     public const int ZoneWords = 1032;
     public const int FormattedDiskZones = 1015; // DISK_TOTBLK 01767 in pinned SIMH.
     public const ulong Channel3Free = 1UL << 28;

@@ -282,11 +282,12 @@ namespace Besm6.Core
         /// Возвращает true, когда процессор остановлен (инструкция СТОП).
         /// </summary>
         internal bool ExecutionProhibited { get; set; }
+        internal bool PreparedExecutionOnly { get; set; }
 
         public bool Step()
         {
-            if (ExecutionProhibited)
-                throw new InvalidOperationException("CPU execution inside a scheduler callback is not allowed.");
+            if (ExecutionProhibited || PreparedExecutionOnly)
+                throw new InvalidOperationException("Direct CPU execution is unavailable while a callback or staged execution owns the machine.");
             return _executor.Execute();
         }
 

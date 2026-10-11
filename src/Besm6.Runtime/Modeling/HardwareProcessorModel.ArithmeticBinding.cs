@@ -138,7 +138,9 @@ internal sealed partial class HardwareProcessorModel
         {
             if (_timedOperandRequested)
             {
-                var transfer = _timedOperandTransfer ?? throw new InvalidOperationException("The accepted memory operand is missing.");
+                if (_timedOperandRegister is not { } register)
+                    throw new InvalidOperationException("The accepted memory operand register is missing.");
+                var transfer = ReadRegisters.Accept(register, instruction.Sequence);
                 return CaptureTransferredOperand(instruction, transfer);
             }
             return CaptureArithmeticOperand(instruction);

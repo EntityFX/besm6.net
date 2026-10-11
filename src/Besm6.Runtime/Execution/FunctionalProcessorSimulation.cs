@@ -104,14 +104,19 @@ internal sealed class FunctionalProcessorSimulation
         // Не влияет на наблюдаемую семантику уровня A (только учёт модельного времени).
         _clock.Advance(TicksPerInstruction);
         completed++;
+        EmitCompletedDiagnostics();
+        DeliverCurrentEvents();
+        return stopped;
+    }
+
+    internal void EmitCompletedDiagnostics()
+    {
         if (StepTrace != null)
         {
             int k = (int)Cpu.GetK();
             StepTrace(k, Memory.Read((uint)k).Value);
         }
         if (RegisterTrace is not null) EmitRegisterTrace();
-        DeliverCurrentEvents();
-        return stopped;
     }
 
     internal void EnsureExecutionAllowed()

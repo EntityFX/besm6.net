@@ -33,6 +33,7 @@ namespace Besm6.Cli
             var commandList = new List<ICommand>
             {
                 new RunCommand(),
+                new MachineCommand(),
                 new AsmCommand(),
                 new DisasmCommand(),
                 new CheckCommand(),

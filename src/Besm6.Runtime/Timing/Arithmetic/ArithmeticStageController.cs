@@ -53,6 +53,7 @@ internal sealed class ArithmeticStageController
     private Func<bool>? _bindingCurrent;
     internal ArithmeticStageTransition? LastTransition { get; private set; }
     internal int QueuedCommands => _waiting.Count;
+    internal byte NextCommandRegister => _unit.CommandReceiveRegister;
     internal ArithmeticCommandHandle? PreparedCommand => _prepared?.Handle;
     internal ArithmeticCommandHandle? ActiveCommand => _active?.Handle;
 

@@ -36,6 +36,7 @@ internal sealed class ArithmeticUnitStages
     internal HardwareDuration Cycle { get; }
     internal HardwareTimeline Timeline => _timeline;
     internal int QueuedCommands => _control.Commands.Count;
+    internal byte CommandReceiveRegister => (byte)_control.Commands.ReceiveRegister;
     internal uint? ActiveCommand => _control.ActiveCommand;
     internal uint? PreparedCommand => _control.PreparedCommand;
     internal bool CommandPermission => _control.CommandPermission;

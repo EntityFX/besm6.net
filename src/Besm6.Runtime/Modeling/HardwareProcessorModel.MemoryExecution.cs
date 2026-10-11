@@ -5,8 +5,11 @@ namespace Besm6.Runtime.Modeling;
 internal sealed partial class HardwareProcessorModel
 {
     private bool _timedFetchWaiting, _timedOperandRequested;
-    private HardwareBufferedRead? _timedFetchReply, _timedOperandTransfer;
+    private HardwareBufferedRead? _timedFetchReply;
     private HardwareBufferedMemoryToken _timedFetchToken, _timedOperandToken;
+    internal ArithmeticReadRegisters ReadRegisters { get; } = new();
+    private byte? _timedOperandRegister;
+    private ulong _timedOperandOwner;
     internal bool FetchWaiting => _timedFetchWaiting && HasPendingInstruction;
     internal HardwareInstructionHandle? CurrentInstruction =>
         HasPendingInstruction && !_timedFetchWaiting ? _pendingHandle : null;
@@ -70,21 +73,31 @@ internal sealed partial class HardwareProcessorModel
         finally { Timeline.AdvancementProhibited = prohibited; }
     }
 
-    internal void RequestBoundArithmeticOperand(HardwareInstructionHandle instruction, ArithmeticCommandHandle command)
+    internal void RequestBoundArithmeticOperand(HardwareInstructionHandle instruction, ArithmeticCommandHandle command,
+        byte? inputControlSource = null)
     {
         EnsureDriverAllowed();
         if (!IsCurrent(in instruction) || _boundArithmetic is null || command != _boundArithmeticCommand ||
             _boundOperandInitiallyReady || _timedOperandRequested || _bufferedMemory is null ||
             _boundCommandWord?.Source != ArithmeticCommandSource.BufferRead)
             throw new InvalidOperationException("No waiting bound memory operand can issue this request.");
+        if (inputControlSource is > 15 || _boundArithmetic.Errors is not null && !inputControlSource.HasValue)
+            throw new ArgumentException("Physical input control requires an explicit verified source code.", nameof(inputControlSource));
         uint address = _processor.GetPreparedMemoryOperandAddress(_pendingInstruction!.Value);
+        var word = _boundCommandWord!.Value;
+        if ((word.Raw & 0x38) != (uint)ArithmeticOperandBufferKind.ReadNumbers)
+            throw new InvalidOperationException("Timed MRAM operand delivery requires an addressed arithmetic read register.");
+        ReadRegisters.Reserve(word.BufferNumber, instruction.Sequence);
+        _timedOperandRegister = word.BufferNumber;
+        _timedOperandOwner = instruction.Sequence;
         _timedOperandRequested = true;
         try
         {
             _timedOperandToken = _bufferedMemory.ReadOperand(address, reply =>
             {
                 if (!IsCurrent(in instruction) || _cancellationRequested) return;
-                _timedOperandTransfer = reply;
+                ReadRegisters.Receive(word.BufferNumber, instruction.Sequence, reply);
+                if (inputControlSource is { } source) _boundArithmetic.Errors?.CheckInput(reply.RawWord, source);
                 if (!_boundArithmetic.TryReleaseBufferWait(command))
                     throw new InvalidOperationException("The AU cannot receive this timed memory transfer.");
             });
@@ -94,11 +107,18 @@ internal sealed partial class HardwareProcessorModel
             // Admission failed before MRAM. PVR still owns address/stack effects
             // and the shared completion handler owns the guest trap.
             _timedOperandFailure = failure;
-            _timedOperandTransfer = new(default, address, default, default, MemoryFaultSource.Protection, Timeline.Now, null);
+            ReadRegisters.Receive(word.BufferNumber, instruction.Sequence,
+                new(default, address, default, default, MemoryFaultSource.Protection, Timeline.Now, null));
             if (!_boundArithmetic.TryReleaseBufferWait(command))
                 throw new InvalidOperationException("The AU cannot accept its failed operand admission.");
         }
-        catch { _timedOperandRequested = false; throw; }
+        catch
+        {
+            ReadRegisters.Release(word.BufferNumber, instruction.Sequence);
+            _timedOperandRegister = null; _timedOperandOwner = 0;
+            _timedOperandRequested = false;
+            throw;
+        }
     }
 
     private PreparedArithmeticOperation? CaptureTransferredOperand(HardwareInstructionHandle instruction, HardwareBufferedRead transfer)
@@ -121,7 +141,9 @@ internal sealed partial class HardwareProcessorModel
         var fetch = _timedFetchToken; var operand = _timedOperandToken;
         _timedFetchToken = _timedOperandToken = default;
         _timedFetchWaiting = _timedOperandRequested = false;
-        _timedFetchReply = _timedOperandTransfer = null; _timedFetchFailure = _timedOperandFailure = null;
+        _timedFetchReply = null; _timedFetchFailure = _timedOperandFailure = null;
+        if (_timedOperandRegister is { } register) ReadRegisters.Release(register, _timedOperandOwner);
+        _timedOperandRegister = null; _timedOperandOwner = 0;
         _bufferedMemory?.Cancel(fetch); _bufferedMemory?.Cancel(operand);
     }
 }

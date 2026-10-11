@@ -75,6 +75,7 @@ namespace Besm6.Runtime
 
         public LoadResult Run()
         {
+            _machine.EnsureExecutionAllowed();
             if (StepAttemptLimit is < 1) throw new ArgumentOutOfRangeException(nameof(StepAttemptLimit));
             Statistics = null;
             _completedInstructions = 0;
