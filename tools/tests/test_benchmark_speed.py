@@ -127,5 +127,15 @@ class BenchmarkSpeedTests(unittest.TestCase):
         self.assertIsNone(bench.workload_metrics(rows, calibration)["mp1:max"]["host_process_score"])
 
 
+    def test_memory_model_rating_uses_memory_baseline_and_logical_bytes(self):
+        calibration = {job + ":max": {"report": {"statistics": {"modelCycles": cycles}}}
+                       for job, cycles in [("mp0", 90000000), ("mem0", 20000000), ("mem1", 100000000)]}
+        metrics = bench.model_metrics(["mp0", "mem0", "mem1"], calibration, "max")
+        self.assertEqual(["mem1"], list(metrics))
+        self.assertAlmostEqual(8.0, metrics["mem1"]["workload_model_seconds"])
+        self.assertAlmostEqual(6.144, metrics["mem1"]["model_mb_per_second"])
+        self.assertNotIn("model_mflops", metrics["mem1"])
+
+
 if __name__ == "__main__":
     unittest.main()

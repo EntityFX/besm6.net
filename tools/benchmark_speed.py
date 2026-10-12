@@ -360,12 +360,35 @@ def workload_metrics(measurements, calibration):
     return metrics
 
 
+def model_metrics(jobs, calibration, mode):
+    """Extract workload-only table time with the matching family baseline."""
+    metrics = {}
+    for name in jobs:
+        base = "dh0" if name.startswith("dh") else "mem0" if name.startswith("mem") else "mp0"
+        if name == base or base + ":" + mode not in calibration:
+            continue
+        measured = calibration[name + ":" + mode]["report"]["statistics"]
+        baseline = calibration[base + ":" + mode]["report"]["statistics"]
+        seconds = (measured["modelCycles"] - baseline["modelCycles"]) * 1e-7
+        if seconds <= 0:
+            raise ValueError("Nonpositive workload model time")
+        metrics[name] = {"workload_model_seconds": seconds}
+        if name.startswith("dh"):
+            metrics[name].update(dhrystones_per_second=int(name[2:]) / seconds,
+                                 dmips=int(name[2:]) / seconds / 1757)
+        elif name.startswith("mem"):
+            metrics[name]["model_mb_per_second"] = 4096 * 1000 * (12 if name == "mem1" else 18) / seconds / 1e6
+        else:
+            metrics[name]["model_mflops"] = 9000 * 30 * OPWD[int(name[2:])] / seconds / 1e6
+    return metrics
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dll", type=pathlib.Path, default=ROOT / "src/Besm6.Cli/bin/Release/net8.0/besm6.dll")
     parser.add_argument("--baseline-dll", type=pathlib.Path)
     parser.add_argument("--output", type=pathlib.Path, default=ROOT / "tests-run/speed")
-    parser.add_argument("--jobs", nargs="+", choices=JOBS, default=list(JOBS))
+    parser.add_argument("--jobs", nargs="+", choices=JOBS + MEMORY_JOBS, default=list(JOBS))
     parser.add_argument("--modes", nargs="+", choices=("max", "original"), default=["max", "original"])
     parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--warmups", type=int, default=1)
@@ -380,6 +403,8 @@ def main():
     logs = args.output / "logs"
     logs.mkdir(exist_ok=True)
     paths, config = prepare_jobs(args.output)
+    if any(name in MEMORY_JOBS for name in args.jobs):
+        paths.update(prepare_memory_jobs(args.output))
     probe = build_baseline_probe(args.baseline_dll.resolve(), args.output) if args.baseline_dll else None
     metadata = report_environment()
     metadata["arguments"] = {k: report_path(v) if isinstance(v, pathlib.Path) else v for k, v in vars(args).items()}
@@ -445,26 +470,10 @@ def main():
                 results["measurements"].append(row)
                 print(json.dumps(row), flush=True)
                 save()
-        metrics = {}
-        for name in args.jobs:
-            base = "dh0" if name.startswith("dh") else "mp0"
-            if name == base or base + ":" + args.modes[0] not in results["calibration"]:
-                continue
-            measured = results["calibration"][name + ":" + args.modes[0]]["report"]["statistics"]
-            baseline = results["calibration"][base + ":" + args.modes[0]]["report"]["statistics"]
-            seconds = (measured["modelCycles"] - baseline["modelCycles"]) * 1e-7
-            if seconds <= 0:
-                raise ValueError("Nonpositive workload model time")
-            metrics[name] = {"workload_model_seconds": seconds}
-            if name.startswith("dh"):
-                metrics[name].update(dhrystones_per_second=int(name[2:]) / seconds,
-                                     dmips=int(name[2:]) / seconds / 1757)
-            else:
-                metrics[name]["model_mflops"] = 9000 * 30 * OPWD[int(name[2:])] / seconds / 1e6
-        results["model_metrics"] = metrics
+        results["model_metrics"] = model_metrics(args.jobs, results["calibration"], args.modes[0])
         comparisons = {}
         for name in args.jobs:
-            if name in ("dh0", "mp0"):
+            if name in ("dh0", "mp0", "mem0"):
                 continue
             rows = {r["variant"]: r for r in results["measurements"] if r["job"] == name}
             if "baseline" in rows and "max" in rows:
