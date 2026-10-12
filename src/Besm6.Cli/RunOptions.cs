@@ -3,7 +3,7 @@ namespace Besm6.Cli;
 /// <summary>Immutable invocation data, separated from machine creation and execution.</summary>
 internal sealed record RunOptions
 {
-    internal const string Usage = "besm6 run <file.dub> [--speed original|max] [--stats] [--guest-clock] [--limit N] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--passes N] [--mflops N] [--ops N] [--loop-cycles N] [--baseline-cycles N] [--baseline-instructions N] [--config path]";
+    internal const string Usage = "besm6 run <file.dub> [--speed original|max] [--stats] [--guest-clock] [--limit N] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--config path]";
     internal string JobFile { get; init; } = string.Empty;
     internal long Limit { get; init; }
     internal bool Verbose { get; init; }
@@ -22,18 +22,23 @@ internal sealed record RunOptions
     internal bool Stats { get; init; }
     internal bool GuestClock { get; init; }
     internal ExecutionSpeed? SpeedOverride { get; init; }
-    internal long ProfilePasses { get; init; }
-    internal long ProfileBaselineCycles { get; init; }
-    internal long ProfileBaselineInstructions { get; init; }
-    internal long ProfileMflops { get; init; }
-    internal long ProfileOps { get; init; }
-    internal long ProfileLoopCycles { get; init; }
 
     internal static bool TryParse(string[] args, out RunOptions options, out string? error)
     {
         options = new();
         error = null;
         if (args.Length == 0) { error = "Usage: " + Usage; return false; }
+        foreach (string argument in args)
+        {
+            int equals = argument.IndexOf('=');
+            string key = equals < 0 ? argument : argument[..equals];
+            if (key is "--passes" or "--mflops" or "--ops" or "--loop-cycles" or
+                "--baseline-cycles" or "--baseline-instructions")
+            {
+                error = $"Error: {key} has been removed. Guest benchmark programs calculate their own rating; use --guest-clock. General --stats and --profile remain available.";
+                return false;
+            }
+        }
         string jobFile = args[0];
         long limit = 0;
         bool verbose = false;
@@ -52,12 +57,6 @@ internal sealed record RunOptions
         bool stats = false;
         bool guestClock = false;
         ExecutionSpeed? speedOverride = null;
-        long profilePasses = 0;
-        long profileBaselineCycles = 0;
-        long profileBaselineInstructions = 0;
-        long profileMflops = 0;
-    long profileOps = 0;
-    long profileLoopCycles = 0;
 
         for (int i = 1; i < args.Length; i++)
         {
@@ -134,32 +133,7 @@ internal sealed record RunOptions
                     // Гистограмма опкодов + модельное время по таблице тактов БЭСМ-6.
                     profile = true;
                     break;
-                case "--passes" when i + 1 < args.Length:
-                    // Число проходов тела бенчмарка (для блока Dhrystone/DMIPS).
-                    long.TryParse(args[++i], out profilePasses);
-                    break;
-                case "--baseline-cycles" when i + 1 < args.Length:
-                    // Такты накладных расходов (компиляция/загрузка), которые вычитаются.
-                    long.TryParse(args[++i], out profileBaselineCycles);
-                    break;
-                case "--baseline-instructions" when i + 1 < args.Length:
-                    // Инструкции накладных расходов (компиляция/загрузка), которые вычитаются.
-                    long.TryParse(args[++i], out profileBaselineInstructions);
-                    break;
-                case "--ops" when i + 1 < args.Length:
-                    // Число операций восьми циклов Whetstone (для блока MWIPS).
-                    long.TryParse(args[++i], out profileOps);
-                    break;
-                case "--loop-cycles" when i + 1 < args.Length:
-                    // Такты, приходящиеся только на циклы Whetstone (посегментный замер).
-                    long.TryParse(args[++i], out profileLoopCycles);
-                    break;
-                case "--mflops" when i + 1 < args.Length:
-                    // Число FLOPS, выполненных ядром (для блока MP-MFLOPS). Значение
-                    // берётся из строки "FLOPS=" в выводе самой программы.
-                    long.TryParse(args[++i], out profileMflops);
-                    break;
-            }
+                                    }
         }
 
         options = new RunOptions
@@ -182,12 +156,6 @@ internal sealed record RunOptions
             Stats = stats,
             GuestClock = guestClock,
             SpeedOverride = speedOverride,
-            ProfilePasses = profilePasses,
-            ProfileBaselineCycles = profileBaselineCycles,
-            ProfileBaselineInstructions = profileBaselineInstructions,
-            ProfileMflops = profileMflops,
-            ProfileOps = profileOps,
-            ProfileLoopCycles = profileLoopCycles,
         };
         return true;
     }

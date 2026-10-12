@@ -1,0 +1,96 @@
+*name memspeed
+*ftn
+c     MemSpeed-style kernels for BESM-6, FORTRAN-GDR REAL (48 bits).
+c     Independent adaptation: copy, add, and scalar multiply/add.
+c     Logical traffic counts 6 bytes per guest word, not host RAM bytes.
+c     Two arrays occupy 8192 words; active data size is 49152 bytes.
+c     KPART=0 skips the kernel for baseline subtraction.
+      program memspd
+      real x(4096), y(4096), scalar, expect, total, bytes
+      real ct0, ct1, rt0, rt1, secs, score
+      integer kpart, nwrds, rpts, i, ipas, nbad, byelem
+      data kpart/1/
+      data nwrds/4096/, rpts/1000/, scalar/0.5/
+      do 10 i=1,nwrds
+      x(i)=1.0
+   10 y(i)=float(i)/4096.0
+      call ctime(ct0,rt0)
+      if (kpart .ne. 1) go to 31
+      do 30 ipas=1,rpts
+      do 20 i=1,nwrds
+   20 x(i)=y(i)
+   30 continue
+   31 continue
+      if (kpart .ne. 2) go to 51
+      do 50 ipas=1,rpts
+      do 40 i=1,nwrds
+   40 x(i)=x(i)+y(i)
+   50 continue
+   51 continue
+      if (kpart .ne. 3) go to 71
+      do 70 ipas=1,rpts
+      do 60 i=1,nwrds
+   60 x(i)=x(i)+scalar*y(i)
+   70 continue
+   71 continue
+      call ctime(ct1,rt1)
+      secs=ct1-ct0
+      nbad=0
+      total=0.0
+      do 80 i=1,nwrds
+      expect=1.0
+      if (kpart .eq. 1) expect=y(i)
+      if (kpart .eq. 2) expect=1.0+float(rpts)*y(i)
+      if (kpart .eq. 3) expect=1.0+float(rpts)*scalar*y(i)
+      if (abs(x(i)-expect) .gt. 0.00000001) nbad=nbad+1
+   80 total=total+x(i)
+      if (nwrds .ne. 4096 .or. rpts .ne. 1000) nbad=nbad+1
+      if (kpart .lt. 0 .or. kpart .gt. 3) nbad=nbad+1
+      byelem=0
+      if (kpart .eq. 1) byelem=12
+      if (kpart .eq. 2 .or. kpart .eq. 3) byelem=18
+      bytes=float(nwrds)*float(rpts)*float(byelem)
+      print 100, kpart
+      print 200, nwrds
+      print 210, rpts
+      print 220, byelem
+      print 300, bytes
+      print 400, x(1)
+      print 410, x(nwrds)
+      print 420, total
+      print 430, nbad
+      if (nbad .eq. 0) print 900
+      if (nbad .ne. 0) print 950
+      if (nbad .ne. 0) go to 1102
+      if (kpart .eq. 0) go to 1101
+      if (secs .lt. 0.04) go to 1103
+      score=bytes/(secs*1000000.)
+      print 1000, secs
+      print 1010, score
+      go to 1104
+ 1101 print 1020
+      go to 1104
+ 1102 print 1030
+      go to 1104
+ 1103 print 1040
+ 1104 stop
+ 100  format ('MEMSPEED PART ', i2)
+ 200  format ('WORDS=', i6)
+ 210  format ('REPEAT PASSES=', i6)
+ 220  format ('BYTES/ELEMENT=', i3)
+ 300  format ('DATA TRAFFIC BYTES=', 1p, e20.12)
+ 400  format ('FIRST RESULT=', 1p, e20.12)
+ 410  format ('LAST RESULT=', 1p, e20.12)
+ 420  format ('CHECKSUM=', 1p, e20.12)
+ 430  format ('BAD ELEMENTS=', i6)
+ 900  format ('ALL VALUES MATCH: YES')
+ 950  format ('ALL VALUES MATCH: NO')
+ 1000 format ('GUEST MODEL CPU SECONDS: ', f12.4)
+ 1010 format ('GUEST MODEL MB/S: ', f12.6)
+ 1020 format ('MB/S UNAVAILABLE: ZERO KERNEL')
+ 1030 format ('MB/S UNAVAILABLE: CONTROL VALUES DO NOT MATCH')
+ 1040 format ('MB/S UNAVAILABLE: ENABLE --GUEST-CLOCK',
+     + ' OR RUN LONGER')
+      end
+*execute
+*end file

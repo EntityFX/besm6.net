@@ -132,3 +132,16 @@ plans/        планы разработки
 
 Проект исследовательский и распространяется «как есть»; книжные материалы в
 `book/` принадлежат их авторам и сохранены в справочных целях.
+
+## Гостевые показатели производительности
+
+Число операций и рейтинг вычисляет гостевая программа; специальные параметры рейтингов CLI больше не используются. Для hosted-таймера CTIME требуется `--guest-clock`:
+
+```bash
+dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/dhrystone-dmips.dub --guest-clock --speed max --no-wall-clock
+dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/mpmflops-mflops.dub --guest-clock --speed max --no-wall-clock
+dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/whetstone-mwips.dub --guest-clock --speed max --no-wall-clock
+dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/memspeed-mbps.dub --guest-clock --speed max --no-wall-clock
+```
+
+Вывод содержит модельные DMIPS, MFLOPS, MWIPS или MB/s. Производительность хоста измеряется отдельно внешними инструментами. Исходные нетаймированные задания сохраняются для сравнений. Формулы, защитные условия и совпадение состояния в обеих скоростях проверяются `tools/verify_guest_ratings.py`.

@@ -35,12 +35,6 @@ namespace Besm6.Cli
             int memDumpCount = options.MemoryDumpCount;
             bool profile = options.Profile;
             bool stats = options.Stats;
-            long profilePasses = options.ProfilePasses;
-            long profileBaselineCycles = options.ProfileBaselineCycles;
-            long profileBaselineInstructions = options.ProfileBaselineInstructions;
-            long profileMflops = options.ProfileMflops;
-            long profileOps = options.ProfileOps;
-            long profileLoopCycles = options.ProfileLoopCycles;
             bool memDumpDone = false;
 
             StreamWriter? regsWriter = null;
@@ -105,19 +99,7 @@ namespace Besm6.Cli
                     RunOutput.DumpMemory(machine, memDumpFile, memDumpCount);
 
                 if (opcodeProfiler != null)
-                {
                     Console.Write(opcodeProfiler.FormatSummary());
-                    if (profilePasses > 0)
-                        Console.Write(opcodeProfiler.FormatDhrystone(
-                            profilePasses, profileBaselineCycles, profileBaselineInstructions));
-                    if (profileOps > 0)
-                        Console.Write(opcodeProfiler.FormatWhetstone(
-                            profileOps, profileBaselineCycles, profileBaselineInstructions,
-                            profileLoopCycles));
-                    if (profileMflops > 0)
-                        Console.Write(opcodeProfiler.FormatMflops(
-                            profileMflops, profileBaselineCycles, profileBaselineInstructions));
-                }
 
                 if (stats && loader.Statistics is ExecutionStatistics statistics)
                     RunOutput.WriteStatistics(machine, statistics);
