@@ -39,7 +39,11 @@ def main():
     parser.add_argument("--workload", choices=hardware.WORKLOADS, default="arithmetic")
     parser.add_argument("--functional-job", choices=["dh10000", "mp3"],
                         help="Inspect a hosted functional job instead of a synthetic hardware workload")
+    parser.add_argument("--accounting", action="store_true",
+                        help="Inspect the functional CLI path with --stats and internal opcode accounting")
     args = parser.parse_args()
+    if args.accounting and not args.functional_job:
+        parser.error("--accounting requires --functional-job")
     dll = args.dll.resolve()
     if not dll.is_file():
         parser.error("A completed CLI Release DLL is required")
@@ -48,9 +52,14 @@ def main():
     if (output / "summary.json").exists():
         parser.error("Use a new output directory")
     if args.functional_job:
-        probe = bench.build_runtime_probe(dll, output)
         jobs, config = bench.prepare_jobs(output)
-        command = ["dotnet", str(probe), str(jobs[args.functional_job]), str(config)]
+        if args.accounting:
+            command = ["dotnet", str(dll), "run", str(jobs[args.functional_job]),
+                       "--config", str(config), "--speed", "max", "--stats",
+                       "--limit", "100000000", "--no-wall-clock", "--no-hang-detect"]
+        else:
+            probe = bench.build_runtime_probe(dll, output)
+            command = ["dotnet", str(probe), str(jobs[args.functional_job]), str(config)]
         workload = args.functional_job
     else:
         probe = hardware.build_probe(dll, output)
@@ -65,13 +74,19 @@ def main():
     (output / "run.log").write_text(run.stdout + run.stderr, encoding="utf-8")
     if run.returncode:
         raise RuntimeError("JIT diagnostic execution failed; see local log")
+    if args.accounting:
+        bench.parse_run(run.stdout + run.stderr, args.functional_job, run.returncode)
     if not assembly.is_file():
         raise RuntimeError("JIT diagnostic file was not emitted")
     result = {"environment": bench.report_environment(),
         "scope": "host JIT diagnostic; not a throughput measurement",
         "workload": workload, "requested_methods": args.methods,
-        "probe_sha256": hashlib.sha256((output / "runtime-probe/Program.cs").read_bytes()
+        "accounting": args.accounting,
+        "probe_sha256": None if args.accounting else hashlib.sha256(
+            (output / "runtime-probe/Program.cs").read_bytes()
             if args.functional_job else hardware.PROBE.encode()).hexdigest(),
+        "guest_source_sha256": hashlib.sha256(jobs[args.functional_job].read_bytes()).hexdigest()
+            if args.functional_job else None,
         "runtime_sha256": hashlib.sha256((dll.parent / "Besm6.Runtime.dll").read_bytes()).hexdigest(),
         "processor_sha256": hashlib.sha256((dll.parent / "Besm6.Processor.dll").read_bytes()).hexdigest(),
         "assembly_sha256": hashlib.sha256(assembly.read_bytes()).hexdigest(),

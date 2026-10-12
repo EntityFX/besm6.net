@@ -78,8 +78,7 @@ namespace Besm6.Runtime
             if (StepAttemptLimit is < 1) throw new ArgumentOutOfRangeException(nameof(StepAttemptLimit));
             Statistics = null;
             bool countCycles = Speed == ExecutionSpeed.Original || CollectStatistics || GuestClockEnabled;
-            _accounting = countCycles ? new ExecutionAccountingSession() : null;
-            Action<Opcode>? counter = _accounting is { } accounting ? accounting.Observe : null;
+            _accounting = countCycles ? new ExecutionAccountingSession(_machine.Cpu) : null;
             Action<Opcode>? observer = InstructionExecuted;
             var diagnostics = new ExecutionDiagnosticsSession(_machine, this);
             var stopwatch = countCycles || WallClockLimitMs > 0 ? new Stopwatch() : null;
@@ -88,9 +87,9 @@ namespace Besm6.Runtime
             bool previousInstructionCache = _machine.Cpu.InstructionCacheEnabled;
             try
             {
-                _machine.Cpu.InstructionCacheEnabled = Speed == ExecutionSpeed.Max;
+                _machine.Cpu.InstructionCacheEnabled = true;
                 diagnostics.AttachFileTraceWriters();
-                diagnostics.AttachInstructionObservers(counter, observer);
+                diagnostics.AttachInstructionObservers(null, observer);
                 return RunCore(stopwatch, diagnostics);
             }
             finally
@@ -102,6 +101,7 @@ namespace Besm6.Runtime
                         CollectStatistics ? GC.GetAllocatedBytesForCurrentThread() - allocatedBefore : 0,
                         CollectStatistics ? GC.CollectionCount(0) - gen0Before : 0);
                 diagnostics.DetachExecutionObservers();
+                _accounting?.Dispose();
                 _machine.Cpu.InstructionCacheEnabled = previousInstructionCache;
                 try { _extracode?.FinishOutput(); }
                 finally { diagnostics.Dispose(); }
@@ -122,7 +122,7 @@ namespace Besm6.Runtime
             var progressOutput = ProgressEnabled ? _progressOutput : null;
             long? attemptLimit = StepAttemptLimit;
             long stepAttempts = 0;
-            bool executeBlocks = Speed == ExecutionSpeed.Max && !LoopDetect && progressOutput is null && attemptLimit is null;
+            bool executeBlocks = !LoopDetect && progressOutput is null && attemptLimit is null;
 
             const int LoopWindow = 20_000;
             const int LoopRange = 16;
@@ -144,7 +144,8 @@ namespace Besm6.Runtime
                         // an exception interrupted the preceding block.
                         if (wallLimitMs > 0)
                             count = Math.Min(count, 4096 - (int)(InstructionsExecuted & 4095));
-                        stopped = _machine.ExecuteBlock(count, ref _instructionsExecuted);
+                        stopped = _machine.ExecuteBlock(count, ref _instructionsExecuted,
+                            pacer is null ? long.MaxValue : nextCheckpoint);
                     }
                     else
                     {

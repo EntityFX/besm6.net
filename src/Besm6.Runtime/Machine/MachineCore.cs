@@ -253,8 +253,8 @@ namespace Besm6.Runtime
             _simulation.EnsureExecutionAllowed();
         }
 
-        internal bool ExecuteBlock(int count, ref long instructionsExecuted) =>
-            _simulation.ExecuteBlock(count, ref instructionsExecuted);
+        internal bool ExecuteBlock(int count, ref long instructionsExecuted, long cycleLimit = long.MaxValue) =>
+            _simulation.ExecuteBlock(count, ref instructionsExecuted, cycleLimit);
 
         /// <summary>
         /// Запуск машины до достижения условия остановки.

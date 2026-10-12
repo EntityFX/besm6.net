@@ -183,8 +183,22 @@ namespace Besm6.Core
         /// Stop before an extracode: it can install hooks and must retain the
         /// observable Step completion order in MachineCore.
         /// </summary>
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
         internal bool ExecuteUnobservedBlock(int count, ref long completed, ref ulong tick)
+        {
+            if (_processor.InstructionAccounting is { } session)
+            {
+                var accounting = new CountedBlockAccounting(session);
+                return ExecuteUnobservedBlock(count, ref completed, ref tick, ref accounting);
+            }
+            var uncounted = new UncountedBlockAccounting();
+            return ExecuteUnobservedBlock(count, ref completed, ref tick, ref uncounted);
+        }
+
+        // Both specializations share dispatch/finalization. The uncounted struct
+        // inlines to no operations and never accesses cycle tables or a timer.
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
+        private bool ExecuteUnobservedBlock<TAccounting>(int count, ref long completed,
+            ref ulong tick, ref TAccounting accounting) where TAccounting : struct, IBlockAccounting
         {
             EnsureNoPreparedInstruction();
             var state = _state;
@@ -224,13 +238,16 @@ namespace Besm6.Core
                     A = state.A.Value,
                     Y = state.Y.Value,
                 };
+                accounting.Begin(instruction.Opcode);
                 AdvanceInstructionHalf();
                 frame.Address = ModifiedInstructionAddress(frame.Address);
                 InstructionOutcome outcome = Dispatch(ref frame);
                 FinalizeInstruction(ref frame, updateRegistersAndModification: true, observe: false);
+                accounting.Complete();
                 tick++;
                 completed++;
                 if (outcome == InstructionOutcome.Stop) return true;
+                if (accounting.AtCycleLimit) return false;
             }
             return false;
         }

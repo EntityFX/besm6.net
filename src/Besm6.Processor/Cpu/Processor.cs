@@ -39,6 +39,22 @@ namespace Besm6.Core
         private readonly ProcessorMemoryAccess _memoryAccess;
         internal readonly Alu _alu;
         internal readonly InstructionExecutor _executor;
+        internal ProcessorInstructionAccounting? InstructionAccounting { get; private set; }
+
+        internal ProcessorInstructionAccounting BeginInstructionAccounting(ReadOnlySpan<int> cycles, int defaultCycles)
+        {
+            if (InstructionAccounting is not null)
+                throw new InvalidOperationException("A CPU accounting session is already active.");
+            return InstructionAccounting = new ProcessorInstructionAccounting(cycles, defaultCycles);
+        }
+
+        internal void EndInstructionAccounting(ProcessorInstructionAccounting session)
+        {
+            if (!ReferenceEquals(InstructionAccounting, session))
+                throw new InvalidOperationException("The accounting session belongs to another run.");
+            session.CancelPending();
+            InstructionAccounting = null;
+        }
 
         /// <summary>
         /// (ref/trace.cpp:240). Вызывается в НАЧАЛЕ инструкции: после fetch RK и decode
@@ -114,6 +130,7 @@ namespace Besm6.Core
             _executor.InvalidatePreparedInstruction();
             _state.Reset();
             _traceController.Reset();
+            InstructionAccounting?.CancelPending();
             _debugWatch.Reset();
             Supervisor?.ResetCpu();
             LastStepCompleted = true;
@@ -295,6 +312,7 @@ namespace Besm6.Core
             !_executor.HasPreparedInstruction &&
             _memoryAccess.IsPlainCoreMemory && TraceInstruction is null &&
             !_traceController.IsEnabled && !_traceController.HasPending &&
+            InstructionAccounting?.HasPending != true &&
             !_state.DebugFetchArmed && !_state.DebugMemoryArmed;
 
         internal bool ExecuteUnobservedBlock(int count, ref long completed, ref ulong tick) =>
@@ -341,17 +359,23 @@ namespace Besm6.Core
 
         internal void CanonPre(ulong word, uint rk, DecodedInstruction instruction)
         {
+            InstructionAccounting?.Begin(instruction.Opcode);
             if (_traceController.IsEnabled)
                 _traceController.Begin(new Word48(word), rk, instruction);
         }
 
         internal void CanonPost(uint k, bool right)
         {
+            InstructionAccounting?.Complete();
             if (_traceController.HasPending)
                 _traceController.Complete();
         }
 
-        internal void CancelInstructionTrace() => _traceController.CancelPending();
+        internal void CancelInstructionTrace()
+        {
+            InstructionAccounting?.CancelPending();
+            _traceController.CancelPending();
+        }
 
         #endregion
     }

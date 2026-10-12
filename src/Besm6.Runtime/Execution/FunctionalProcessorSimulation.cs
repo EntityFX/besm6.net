@@ -137,13 +137,16 @@ internal sealed class FunctionalProcessorSimulation
     /// Executes a bounded batch through the same Step path. The counter advances
     /// only after a successful step, including STOP; exceptions leave it exact.
     /// </summary>
-    internal bool ExecuteBlock(int count, ref long instructionsExecuted)
+    internal bool ExecuteBlock(int count, ref long instructionsExecuted, long cycleLimit = long.MaxValue)
     {
         EnsureExecutionAllowed();
+        var accounting = Cpu.InstructionAccounting;
+        if (accounting is not null) accounting.CycleLimit = cycleLimit;
         long end = instructionsExecuted + count;
         while (instructionsExecuted < end)
         {
             DeliverCurrentEvents();
+            if (accounting?.AtCycleLimit == true) return false;
             if (StepTrace is null && RegisterTrace is null && Cpu.CanExecuteUnobservedBlock)
             {
                 int batch = (int)(end - instructionsExecuted);
@@ -154,6 +157,7 @@ internal sealed class FunctionalProcessorSimulation
                 ref instructionsExecuted, ref _clock.TickReference);
                 DeliverCurrentEvents();
                 if (stopped) return true;
+                if (accounting?.AtCycleLimit == true) return false;
                 if (instructionsExecuted == end) return false;
                 if (instructionsExecuted == batchEnd) continue;
             }
@@ -161,6 +165,7 @@ internal sealed class FunctionalProcessorSimulation
             // Recheck at the top after a completed batch; an extracode returns
             // without reaching its requested boundary and needs the ordinary step.
             if (Step(ref instructionsExecuted)) return true;
+            if (accounting?.AtCycleLimit == true) return false;
         }
         return false;
     }
