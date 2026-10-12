@@ -23,7 +23,7 @@ try {
     @{tapes=(Join-Path $repositoryRoot 'tapes');useWallClock=$false;forexAsFortran=[bool]$ForexAsFortran} | ConvertTo-Json | Set-Content -LiteralPath $config -Encoding utf8
     $source = Get-Content -LiteralPath $Deck -Raw
     $results = @()
-    $modelProgram = $null
+    $modelValues = $null
     foreach ($mode in $Modes) {
         Write-Host "Running Longbottom Whetstone $mode"
         $lines = & dotnet $Dll run $Deck --config $config --speed $mode --guest-clock --stats --no-wall-clock --no-hang-detect --limit 2000000000 2>&1
@@ -50,11 +50,11 @@ try {
         $gm = [double]::Parse([regex]::Match($output,'(?m)^GUEST MFLOPS GEOMEAN N1 N2 N6:\s*(\S+)').Groups[1].Value,$culture)
         $expectedGm = [Math]::Pow($sections[0].rate*$sections[1].rate*$sections[5].rate,1.0/3)
         if ([Math]::Abs($mwips-80.0/$sum) -gt 0.000002 -or [Math]::Abs($gm-$expectedGm) -gt 0.000002) { throw 'Aggregate formula failed' }
-        $program = ($output -split '≠')[-1].Split('Halted by STOP')[0].Trim()
-        if ($mode -ne 'virtual') {
-            if ($null -ne $modelProgram -and $modelProgram -cne $program) { throw 'Original/max guest output differs' }
-            $modelProgram = $program
-        }
+        # Clock sources intentionally differ. Compare computed kernel values;
+        # section/aggregate rating formulas were checked separately above.
+        $values = ($sections | ForEach-Object { $_.value.ToString('R', $culture) }) -join '|'
+        if ($null -ne $modelValues -and $modelValues -cne $values) { throw 'Guest kernel values differ between speeds' }
+        $modelValues = $values
         $stats = [regex]::Match($output,'(?m)^Execution stats: (.+)$').Groups[1].Value | ConvertFrom-Json
         $results += [pscustomobject]@{mode=$mode;validated=$true;deck=$Deck;forexAsFortran=[bool]$ForexAsFortran;mwips=$mwips;mflopsGeomean=$gm;normalizedSeconds=$sum;sections=$sections;stats=$stats}
         $results | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath (Join-Path $OutputDirectory 'results.json') -Encoding utf8

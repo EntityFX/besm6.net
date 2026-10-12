@@ -41,6 +41,21 @@ namespace Besm6.Runtime
         public Action<Opcode>? InstructionExecuted { get; set; }
         private ExecutionAccountingSession? _accounting;
         private long TotalCycles => _accounting?.TotalCycles ?? 0;
+        private Timing.HostedOriginalTiming? _originalTiming;
+        private double _originalTimeFactor = Timing.HostedTimingParameters.Default.ModelTimeFactor;
+        private double _originalMathFactor = Timing.HostedTimingParameters.Default.MathFactor;
+        internal double OriginalTimeFactor
+        {
+            get => _originalTimeFactor;
+            set => _originalTimeFactor = Timing.HostedTimingParameters.PositiveFinite(value, nameof(OriginalTimeFactor));
+        }
+        internal double OriginalMathFactor
+        {
+            get => _originalMathFactor;
+            set => _originalMathFactor = Timing.HostedTimingParameters.PositiveFinite(value, nameof(OriginalMathFactor));
+        }
+        private long PacingCycles => _originalTiming is { } timing ? checked((long)(timing.Nanoseconds / 100)) : TotalCycles;
+        private double PacingSeconds => _originalTiming?.Seconds ?? ExecutionPacer.SecondsOf(TotalCycles);
         private IExecutionTimeSource? _guestHostClock;
         // Injectable host clock for deterministic verification; never drives machine events.
         internal IExecutionTimeSource? GuestHostTimeSource { get; set; }
@@ -73,6 +88,8 @@ namespace Besm6.Runtime
             if (!GuestClockEnabled) return 0;
             if (Speed == ExecutionSpeed.Virtual)
                 return Math.Floor((_guestHostClock?.ElapsedSeconds ?? 0) * 50) * 0.02;
+            if (_originalTiming is { } timing)
+                return (timing.Nanoseconds / 20_000_000) * 0.02;
             return (TotalCycles / 200_000) * 0.02;
         }
 
@@ -97,6 +114,9 @@ namespace Besm6.Runtime
             bool previousInstructionCache = _machine.Cpu.InstructionCacheEnabled;
             try
             {
+                if (Speed == ExecutionSpeed.Original && _extracode is not null)
+                    _originalTiming = new Timing.HostedOriginalTiming(_machine.Cpu,
+                        Timing.HostedTimingParameters.Default with { ModelTimeFactor = OriginalTimeFactor, MathFactor = OriginalMathFactor });
                 _machine.Cpu.InstructionCacheEnabled = true;
                 diagnostics.AttachFileTraceWriters();
                 diagnostics.AttachInstructionObservers(null, observer);
@@ -110,7 +130,10 @@ namespace Besm6.Runtime
                     Statistics = new ExecutionStatistics(Speed, _accounting!.TotalInstructions, TotalCycles,
                         stopwatch!.Elapsed.TotalSeconds,
                         CollectStatistics ? GC.GetAllocatedBytesForCurrentThread() - allocatedBefore : 0,
-                        CollectStatistics ? GC.CollectionCount(0) - gen0Before : 0);
+                        CollectStatistics ? GC.CollectionCount(0) - gen0Before : 0,
+                        StatisticalModelSeconds: _originalTiming?.Seconds);
+                _originalTiming?.Dispose();
+                _originalTiming = null;
                 diagnostics.DetachExecutionObservers();
                 _accounting?.Dispose();
                 _machine.Cpu.InstructionCacheEnabled = previousInstructionCache;
@@ -133,7 +156,7 @@ namespace Besm6.Runtime
             var progressOutput = ProgressEnabled ? _progressOutput : null;
             long? attemptLimit = StepAttemptLimit;
             long stepAttempts = 0;
-            bool executeBlocks = !LoopDetect && progressOutput is null && attemptLimit is null;
+            bool executeBlocks = !LoopDetect && progressOutput is null && attemptLimit is null && _originalTiming is null;
 
             const int LoopWindow = 20_000;
             const int LoopRange = 16;
@@ -168,11 +191,11 @@ namespace Besm6.Runtime
                         stepAttempts++;
                         stopped = _machine.Step(ref _instructionsExecuted);
                     }
-                    if (pacer is not null && (stopped || TotalCycles >= nextCheckpoint))
+                    if (pacer is not null && (stopped || PacingCycles >= nextCheckpoint))
                     {
-                        if (!pacer.Synchronize(TotalCycles, wallLimitSeconds))
+                        if (!pacer.SynchronizeSeconds(PacingSeconds, wallLimitSeconds))
                             return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
-                        nextCheckpoint = TotalCycles + ExecutionPacer.CheckpointCycles;
+                        nextCheckpoint = PacingCycles + ExecutionPacer.CheckpointCycles;
                     }
                     if (stopped)
                     {
@@ -230,7 +253,7 @@ namespace Besm6.Runtime
                     if (string.IsNullOrEmpty(ex.Message))
                     {
                         _machine.Cpu.CanonPost(_machine.Cpu.GetK(), _machine.Cpu._rightInstrFlag);
-                        if (pacer is not null && !pacer.Synchronize(TotalCycles, wallLimitSeconds))
+                        if (pacer is not null && !pacer.SynchronizeSeconds(PacingSeconds, wallLimitSeconds))
                             return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
                         HaltedByStop = true;
                         return LoadResult.Halt(_machine.Cpu.GetK(), InstructionsExecuted);
@@ -239,11 +262,11 @@ namespace Besm6.Runtime
                     if (_machine.Cpu.Intercept(ex.Message))
                     {
                         _machine.Cpu.CanonPost(_machine.Cpu.GetK(), _machine.Cpu._rightInstrFlag);
-                        if (pacer is not null && TotalCycles >= nextCheckpoint)
+                        if (pacer is not null && PacingCycles >= nextCheckpoint)
                         {
-                            if (!pacer.Synchronize(TotalCycles, wallLimitSeconds))
+                            if (!pacer.SynchronizeSeconds(PacingSeconds, wallLimitSeconds))
                                 return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
-                            nextCheckpoint = TotalCycles + ExecutionPacer.CheckpointCycles;
+                            nextCheckpoint = PacingCycles + ExecutionPacer.CheckpointCycles;
                         }
                         if (_verboseLog != null)
                             _verboseLog($"\r  [INTERCEPT @ 0{_machine.Cpu.GetK():X4}] {ex.Message} → 0{_machine.Cpu.GetK():X4}\n");

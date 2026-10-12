@@ -52,6 +52,25 @@ namespace Besm6
         [JsonPropertyName("guestClock")]
         public bool GuestClock { get; set; }
 
+        private double _originalTimeFactor = Besm6.Runtime.Timing.HostedTimingParameters.Default.ModelTimeFactor;
+        private double _originalMathFactor = Besm6.Runtime.Timing.HostedTimingParameters.Default.MathFactor;
+
+        /// <summary>Empirical CPU-time scale used only by hosted original execution.</summary>
+        [JsonPropertyName("originalTimeFactor")]
+        public double OriginalTimeFactor
+        {
+            get => _originalTimeFactor;
+            set => _originalTimeFactor = Besm6.Runtime.Timing.HostedTimingParameters.PositiveFinite(value, nameof(OriginalTimeFactor));
+        }
+
+        /// <summary>Multiplier for estimated elementary-function costs in hosted original.</summary>
+        [JsonPropertyName("originalMathFactor")]
+        public double OriginalMathFactor
+        {
+            get => _originalMathFactor;
+            set => _originalMathFactor = Besm6.Runtime.Timing.HostedTimingParameters.PositiveFinite(value, nameof(OriginalMathFactor));
+        }
+
         /// <summary>Legacy compatibility: rewrite *forex as *fortran instead of invoking FOREX.</summary>
         [JsonPropertyName("forexAsFortran")]
         public bool ForexAsFortran { get; set; }

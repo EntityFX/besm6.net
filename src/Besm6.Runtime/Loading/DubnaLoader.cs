@@ -48,6 +48,8 @@ namespace Besm6.Runtime
         public bool LoopDetect { get => _exec.LoopDetect; set => _exec.LoopDetect = value; }
         public ExecutionSpeed Speed { get => _exec.Speed; set => _exec.Speed = value; }
         public bool CollectStatistics { get => _exec.CollectStatistics; set => _exec.CollectStatistics = value; }
+        public double OriginalTimeFactor { get => _exec.OriginalTimeFactor; set => _exec.OriginalTimeFactor = value; }
+        public double OriginalMathFactor { get => _exec.OriginalMathFactor; set => _exec.OriginalMathFactor = value; }
         /// <summary>Enable CTIME/STIME: model time in max/original, host elapsed time in virtual.
         /// Independent of DATE*; 20 ms resolution and a new origin for every execution run.</summary>
         public bool GuestClockEnabled { get => _exec.GuestClockEnabled; set => _exec.GuestClockEnabled = value; }

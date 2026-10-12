@@ -143,7 +143,7 @@ def main():
     (args.output / "jobs").mkdir()
     config = args.output / "config.json"
     config.write_text(json.dumps({"tapes": str(ROOT / "tapes"), "useWallClock": False}), encoding="utf-8")
-    result = {"validated": False, "scope": "Guest formula/control/guard checks; exact parity only between model-clock speeds",
+    result = {"validated": False, "scope": "Guest formula/control/guard checks; exact state parity only with guest clock disabled",
               "environment": bench.report_environment(), "dll_sha256": hashlib.sha256(args.dll.read_bytes()).hexdigest(),
               "cases": [], "minimum_guest_seconds": 0.04}
 
@@ -172,9 +172,9 @@ def main():
                 state = {"program_sha256": hashlib.sha256(program.encode()).hexdigest(), "halt_instructions": instructions,
                          "finalState": report["finalState"], "memorySha256": report["memorySha256"],
                          "instructions": report["statistics"]["completedInstructions"], "cycles": report["statistics"]["modelCycles"]}
-                if speed != "virtual" and reference is not None and state != reference:
+                if not clock and reference is not None and state != reference:
                     raise ValueError("Guest rating/state/count/time changed with speed")
-                if speed != "virtual":
+                if not clock:
                     reference = state
                 result["cases"].append({"case": case, "speed": speed, "clock": clock,
                                         "source_sha256": hashlib.sha256(source.encode()).hexdigest(),
