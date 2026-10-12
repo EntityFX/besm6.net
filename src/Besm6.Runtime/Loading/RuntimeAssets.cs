@@ -10,7 +10,7 @@ using System.Text.Json.Serialization;
 namespace Besm6.Runtime
 {
     /// <summary>
-    /// Класс лицензии runtime-ресурса (SuperPlan Task A4):
+    /// Класс лицензии runtime-ресурса:
     /// <see cref="Bundled"/> — поставляется вместе с пакетом;
     /// <see cref="UserProvided"/> — пользователь предоставляет сам (для возможных внешних образов).
     /// </summary>
@@ -25,7 +25,7 @@ namespace Besm6.Runtime
 {
     /// <summary>
     /// Описание одного обязательного runtime-образа (лента/диск) с контрольной суммой,
-    /// происхождением и классом лицензии — единица checksum-manifest (SuperPlan Task A4).
+    /// происхождением и классом лицензии — единица checksum-manifest.
     /// </summary>
     public sealed class RuntimeAsset
     {
@@ -73,7 +73,7 @@ namespace Besm6.Runtime
 namespace Besm6.Runtime
 {
     /// <summary>
-    /// Ошибка проверки runtime-ресурсов (SuperPlan Task A4): перечисляет каждый отсутствующий
+    /// Ошибка проверки runtime-ресурсов: перечисляет каждый отсутствующий
     /// или несовпадающий по checksum ресурс, способ его получения и все проверенные каталоги.
     /// </summary>
     public sealed class RuntimeAssetsException : Exception
@@ -96,7 +96,7 @@ namespace Besm6.Runtime
 namespace Besm6.Runtime
 {
     /// <summary>
-    /// Каталог обязательных runtime-образов и их fail-fast разрешение (SuperPlan Task A4).
+    /// Каталог обязательных runtime-образов и их fail-fast разрешение.
     /// Наличие ресурса проверяется ДО запуска процессора; при любом отсутствии/несоответствии
     /// checksum бросается <see cref="RuntimeAssetsException"/>, перечисляющий все проблемные
     /// ресурсы и все проверенные каталоги. Поиск идёт в порядке приоритета:
@@ -166,7 +166,7 @@ namespace Besm6.Runtime
             Catalog.Where(a => a.Required).ToList();
 
         /// <summary>
-        /// Каталог в порядке приоритета поиска (SuperPlan Task A4):
+        /// Каталог в порядке приоритета поиска:
         /// 1) явно указанный абсолютный путь (config «tapes»);
         /// 2) каталог конфигурации (относительно besm6.json, через Config.ResolvePath);
         /// 3) каталог приложения (AppContext.BaseDirectory — куда кладёт dotnet publish);
@@ -197,7 +197,7 @@ namespace Besm6.Runtime
         }
 
         /// <summary>
-        /// Разрешить обязательные runtime-ресурсы (SuperPlan Task A4). Возвращает полный путь
+        /// Разрешить обязательные runtime-ресурсы. Возвращает полный путь
         /// каждого ресурса; при любом отсутствии/несоответствии checksum бросает
         /// <see cref="RuntimeAssetsException"/>, перечисляющий все проблемные ресурсы и каталоги.
         /// </summary>

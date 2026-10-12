@@ -5902,7 +5902,14 @@
     "protected_and_initial_hashes_match": true,
     "historical_reports_to_keep": 334,
     "candidate_report_removals": 457,
-    "cleanup_complete": false
+    "cleanup_complete": true,
+    "removed_report_count": 457,
+    "removed_plan": "plans/refactor.md",
+    "protected_file_count": 157,
+    "protected_direct_report_targets": 50,
+    "transitive_dependencies_verified": true,
+    "protected_target_availability_unchanged": true,
+    "runtime_comment_only_changes_verified": true
   },
   "pending": [
     "full Release test suite",
@@ -5911,7 +5918,6 @@
     "full original pacing series",
     "full hardware OS in both speeds",
     "external N3350 rerun",
-    "report consolidation",
     "final publication"
   ],
   "fast_accounting_checkpoint_accepted": true,
@@ -5920,5 +5926,2297 @@
     "cause": "A retention dependency audit ran concurrently for part of this series before being stopped.",
     "decision": "Preserve the original series and repeat the full clean CLI comparison after the serial queue completes. Do not use the affected series as sole acceptance evidence.",
     "profiling": false
+  },
+  "material_consolidation": {
+    "source_commit_before_cleanup": "37a5aa3f4efe767f872d59d325818aca37391f58",
+    "working_tree_hash_scope": "File bytes before removal; Git blob IDs identify the archived repository content",
+    "removed_materials": {
+      "reports/architecture-matrix.md": {
+        "bytes": 21291,
+        "working_tree_sha256": "57b365bbef0120d1026b6fe08f93fb3226bff2656985af5466cf0bc9afeb2f23",
+        "git_blob": "77706e067b1356dec3a4e3ad4e15db9a6494696d"
+      },
+      "reports/benchmark-porting-report.md": {
+        "bytes": 238775,
+        "working_tree_sha256": "6b84d788d8f3f0814faa0314d1fd68b68b8c5578784c20dc8288fa566805e6e2",
+        "git_blob": "052d16e73b32baf901f230a8c319c036b4dd5013"
+      },
+      "reports/cernlib-matrix-a1.md": {
+        "bytes": 9462,
+        "working_tree_sha256": "74d87f38d408ccacb7b245c7d59385e66c02b02a59f54a688123bd556a1f02e5",
+        "git_blob": "1869c751bc13d39fb021bf92f04873d5209aedd4"
+      },
+      "reports/control-status-report.md": {
+        "bytes": 2884,
+        "working_tree_sha256": "5284e3ef8c6cc8cd249623449444cfec1f9673b891d569654ee0dbb0bfd35ae1",
+        "git_blob": "1df303bc00dc6127f0e3184507994ec3c41ada60"
+      },
+      "reports/control-status-results.csv": {
+        "bytes": 147,
+        "working_tree_sha256": "be7351fd55c8094256403cd2c141e5e656385ffdff4b96701bbf7f30432d7700",
+        "git_blob": "8e45903633d9ef034e922b0f8580af194e38311e"
+      },
+      "reports/control-status-results.json": {
+        "bytes": 1028,
+        "working_tree_sha256": "ec11ee8b5ed1eda23be256334bfc555cea9f5a0d854179caf93ce77016b0cf81",
+        "git_blob": "5be67802e0e9a4a6b4b2f9019b667337fbd3e05d"
+      },
+      "reports/dhrystone-guest-clock-results.json": {
+        "bytes": 4925,
+        "working_tree_sha256": "07a52f374ff1274685deddba77bde0eaf1926ba82958778d610f4d20a98dd3db",
+        "git_blob": "bbb2684ed407ef80eecbc8ebd55c2cfe8929877e"
+      },
+      "reports/dhrystone-porting-report.md": {
+        "bytes": 63683,
+        "working_tree_sha256": "8e0694b452d20da93ed8f9b3926cbabd2f0e066477078fd8325a82bfd30a5a0a",
+        "git_blob": "5728050b3bfcec2926964d13dab8e97c428ecd93"
+      },
+      "reports/execution-speed-report.md": {
+        "bytes": 8741,
+        "working_tree_sha256": "f7fb63a6370bd1227268a40ae5125a33db9b50d72565f03026a98ee3c0e8205d",
+        "git_blob": "e772bb0cf274aed69f2494311d3c11a210388a28"
+      },
+      "reports/hardware-time-arithmetic-accepted-cli-results.csv": {
+        "bytes": 1503,
+        "working_tree_sha256": "207d7a52412c365f4888cc80fb309676734410ae050313b1b0f2767e4f05792d",
+        "git_blob": "3057ec34460501a7d7a57ab60ac6e87e62979cbc"
+      },
+      "reports/hardware-time-arithmetic-accepted-runtime-results.csv": {
+        "bytes": 1918,
+        "working_tree_sha256": "d3df7cf7b8806ca3cb3c840260bfa9d7b017a7588374732dccb12983364e4f8c",
+        "git_blob": "0c547a1751bac6c28b81f0222cd6350684299d31"
+      },
+      "reports/hardware-time-arithmetic-all-sinks-runtime-results.csv": {
+        "bytes": 1917,
+        "working_tree_sha256": "7e4616ba56133d4d81fa1f4dc2b20f784a4b8b04e42dc0e9955800eb04bbeec6",
+        "git_blob": "f6552efac2222f2524446740c15c9cdfcbeae1b8"
+      },
+      "reports/hardware-time-arithmetic-all-sinks-runtime-results.json": {
+        "bytes": 126291,
+        "working_tree_sha256": "00adb8e1ccc613a3e363b03d704ff6450df8fb9bdc98dc7e2f21aa241fdc78e7",
+        "git_blob": "12168bea1d7364316d15d25de22c6b266e237f46"
+      },
+      "reports/hardware-time-arithmetic-boundary-runtime-results.csv": {
+        "bytes": 1916,
+        "working_tree_sha256": "7de17e1b34a7eaf619e8fef686760cd8574661d25d8327a670c26df2b4c49f3b",
+        "git_blob": "033e833ed0eb297ef76ffa06b85f86c5cb73fb65"
+      },
+      "reports/hardware-time-arithmetic-boundary-runtime-results.json": {
+        "bytes": 126307,
+        "working_tree_sha256": "7ba6d5714d1b10fa4cdaa25fda4fa2d4851a5db28d5cf8bc33d8ef03f3937d23",
+        "git_blob": "1fa26c9401b2d008477a60c309321d8a231c18db"
+      },
+      "reports/hardware-time-arithmetic-dispatch-runtime-results.csv": {
+        "bytes": 1923,
+        "working_tree_sha256": "77953180445a103ceb1090f522be188b8628c2425d58b6a9ee4572962ee952d5",
+        "git_blob": "e822f5b97e56d375a40cbe15dbbaa48d0311097e"
+      },
+      "reports/hardware-time-arithmetic-dispatch-runtime-results.json": {
+        "bytes": 126342,
+        "working_tree_sha256": "148450cf4473d17feda5ab16b18bae3b9e71e627e4c8a022b4695ac61223b56e",
+        "git_blob": "b401a8cabb1a73577caa0ccf0e229b25e9b53311"
+      },
+      "reports/hardware-time-arithmetic-initial-runtime-results.csv": {
+        "bytes": 1928,
+        "working_tree_sha256": "5f6377b25e7e02697ae7aca5b5a67ae5d5f2293525aeacfc45f0b9b605373201",
+        "git_blob": "a20ef6b6d963bd23c8e1bc13412b432368e1c71a"
+      },
+      "reports/hardware-time-arithmetic-initial-runtime-results.json": {
+        "bytes": 126332,
+        "working_tree_sha256": "dc4db23cbdefb8d42f16813a273fa55be877ac74a9a50919d85e640a91a6d4ac",
+        "git_blob": "5a5ca02ad10d9240f7bcbbe9c50a01b381ce8c20"
+      },
+      "reports/hardware-time-arithmetic-shared-runtime-results.csv": {
+        "bytes": 1917,
+        "working_tree_sha256": "326a3de2adced20400afefcf23f71ba3c7ab12bf549736d23b65f4e7288b5b4b",
+        "git_blob": "b794d1717e9cedb51517ae63f6b44c4f09d63d58"
+      },
+      "reports/hardware-time-arithmetic-shared-runtime-results.json": {
+        "bytes": 126313,
+        "working_tree_sha256": "bb82d2e2105b13a82411cc04b831bee3362136eed44e91af413aaf0e870d21e7",
+        "git_blob": "47b04913e84ead61d27468b8e0bf48ca6d6b10c6"
+      },
+      "reports/hardware-time-arithmetic-sinks-runtime-results.csv": {
+        "bytes": 1917,
+        "working_tree_sha256": "3c8e57c1bc477ecdd895436cefb0de5f619482b2c74d3e28b8cd779e5b1de587",
+        "git_blob": "b560f7143356678dbbf3c814ea6f0f22f4b7e021"
+      },
+      "reports/hardware-time-arithmetic-sinks-runtime-results.json": {
+        "bytes": 126307,
+        "working_tree_sha256": "55e1d65d9547ef9fe1b4636d25462ec69ce17fc81a958b8aefa78c8d967b4bcf",
+        "git_blob": "754206158f18cd92a0b9e6af9ce0597982523f86"
+      },
+      "reports/hardware-time-arithmetic-tempo-results.csv": {
+        "bytes": 345,
+        "working_tree_sha256": "cd368521f0831cd805a9095daee9421a800765f780c2d2a727158c6415bb78af",
+        "git_blob": "b908e89065d93ab60f1ddfabed3f415d6a0a9f7c"
+      },
+      "reports/hardware-time-binding-cli-results.csv": {
+        "bytes": 1504,
+        "working_tree_sha256": "69e10affe35d99c5af900564db192eefc2ac1ddb5e2e0271c6ca342b1583c377",
+        "git_blob": "a7576cf5f681f3de08511679de2163d95b8617b3"
+      },
+      "reports/hardware-time-binding-cli-results.json": {
+        "bytes": 54334,
+        "working_tree_sha256": "5236e1f610d9e868c9eeb1ac5e49a1b63d7cf5644c014dece9b0765288bc36de",
+        "git_blob": "a35ed4c593938b5c48352c7f1fa64f40ed0682e1"
+      },
+      "reports/hardware-time-binding-runtime-results.csv": {
+        "bytes": 1924,
+        "working_tree_sha256": "7e2bdf737cc47ab99f08fef747a740ae5028b1ea7fd2fdbe3cee60b9b96d2db0",
+        "git_blob": "df5867a2647b4f35a30a29e700803ac30c6a67bf"
+      },
+      "reports/hardware-time-binding-runtime-results.json": {
+        "bytes": 126364,
+        "working_tree_sha256": "00aef935becb6459f4e42672471b485dc8a47e8ace1620f1e61ef9e1f383709e",
+        "git_blob": "c11c6b929300617f230e5b9a24b49d6db7584a1c"
+      },
+      "reports/hardware-time-binding-tempo-results.csv": {
+        "bytes": 343,
+        "working_tree_sha256": "d494e798514cf216afa920f57bcba572f00754b933763537cadca61005345595",
+        "git_blob": "eda3684e5b39bbed1be06b9d7bc65f860d5c4ac9"
+      },
+      "reports/hardware-time-binding-tempo-results.json": {
+        "bytes": 23328,
+        "working_tree_sha256": "83468d54cf9ca475fd0f9248d24e617fa9dafb0a38c2b6f567b2cecd7600a244",
+        "git_blob": "e1095afdfdcd5e74ede701125a2cb799f6193a37"
+      },
+      "reports/hardware-time-command-encoding-cli-results.csv": {
+        "bytes": 1501,
+        "working_tree_sha256": "e5fa8008b15a7a603e05ebb16f79a0edfa44f9723f89d6a66e4dc200a55ab7f9",
+        "git_blob": "8ada120150ec0b6028662f46f8e66e1f5a0e7cd9"
+      },
+      "reports/hardware-time-command-encoding-cli-results.json": {
+        "bytes": 54310,
+        "working_tree_sha256": "2196fb7a5237afd1b981bc1854774726c4f9779bd3b9e000d09ed94d6f6d1061",
+        "git_blob": "92f168013425c7aeec8762a91bdc4b4be8349f64"
+      },
+      "reports/hardware-time-command-encoding-runtime-results.csv": {
+        "bytes": 1920,
+        "working_tree_sha256": "e6cf5a0c6749a669fecce58b37437beec54fd22ace8922a422429d130bd8d99f",
+        "git_blob": "871420791b9adcbd838f94afd98dd64be095d1db"
+      },
+      "reports/hardware-time-command-encoding-runtime-results.json": {
+        "bytes": 126313,
+        "working_tree_sha256": "d902d6072124149e8f3f66c32af814a0a75896139700844c44cd4c2a696c540b",
+        "git_blob": "5f696ff2c24b5637cb9a5270df835f8d1b0e62af"
+      },
+      "reports/hardware-time-command-encoding-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "cc493f57e27cba58027e4a16c6ce9d517a644d7462359873fd3d2122d4da69d3",
+        "git_blob": "c21225c8349deee3e775fc6b9f57ab758f7ed9ab"
+      },
+      "reports/hardware-time-command-encoding-tempo-results.json": {
+        "bytes": 23346,
+        "working_tree_sha256": "e7383a1af9d6473ad09a4a2d02e6ab8b5c844b00a2a2f1d1d22fe3af8879e7e8",
+        "git_blob": "d558d9e66cfa21b2f755fc90dc3147a5e86b5ba5"
+      },
+      "reports/hardware-time-command-source-cli-results.csv": {
+        "bytes": 1509,
+        "working_tree_sha256": "3e8b3e540705a24f515ec569e178fb263c5a0534855c8434724edfea7857cce1",
+        "git_blob": "2a573ebc3d3c31fa06e64ea447994b21e643de1d"
+      },
+      "reports/hardware-time-command-source-cli-results.json": {
+        "bytes": 54315,
+        "working_tree_sha256": "b81eb17cf2c8bcb287a2e82d60350a2128d68eb5f27eab5ac8ef1616c9a82081",
+        "git_blob": "44971d417528644fd1b3a9b4bda53d76d75799ed"
+      },
+      "reports/hardware-time-command-source-runtime-results.csv": {
+        "bytes": 1926,
+        "working_tree_sha256": "1904df7d4e6549910aec5d1cbae7e25896bdec1d13b7ef1f89c424ea0105bf2a",
+        "git_blob": "ab81a794fbd72cb3a88ae1bebc74f25d05c81627"
+      },
+      "reports/hardware-time-command-source-runtime-results.json": {
+        "bytes": 126310,
+        "working_tree_sha256": "5f77d4d41d89325d247c64bb6fe93af0e8f0e1702c3ad3697e842a42c10e3e95",
+        "git_blob": "c2685318d97e997299da5ef9f06386172eea5e10"
+      },
+      "reports/hardware-time-command-source-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "92d7251ca0567caadec3c8896d0abb565708c3a9d73580e7d0058d6456c61c35",
+        "git_blob": "4d4be1c7e96624cb63f8e3309e0da2fd689782d1"
+      },
+      "reports/hardware-time-command-source-tempo-results.json": {
+        "bytes": 23337,
+        "working_tree_sha256": "3344eaabba6dce9ed50ac6c2486c53f33f95858cd8a95cf2eacc8317ec4b59ca",
+        "git_blob": "031e453f42cb29aeca178f3e580deae1d30d9db5"
+      },
+      "reports/hardware-time-control-report.md": {
+        "bytes": 4309,
+        "working_tree_sha256": "d0183c22f67d7da2b1ddd7340573840306b4bb83328f3234ea59f45bb5e2d884",
+        "git_blob": "51cac4cdadb20f06ed2aecce20f76d33bb5db4d0"
+      },
+      "reports/hardware-time-control-results.csv": {
+        "bytes": 909,
+        "working_tree_sha256": "5a866ec7ac96919e3645c2532a422d54339ea8512a0ef757992aa60cdbbf7cd8",
+        "git_blob": "8cb198c6f39d2b5ef20215eca7a8f6a915cd7e72"
+      },
+      "reports/hardware-time-control-results.json": {
+        "bytes": 40215,
+        "working_tree_sha256": "13606e350ae2ae22c44e9de3083f7ce16a1ef3f2e2a429fc401639e3930eefbe",
+        "git_blob": "2ddfa38f1baf36a9cf7842a4daa0b3ddb1632e15"
+      },
+      "reports/hardware-time-controller-cli-results.csv": {
+        "bytes": 1501,
+        "working_tree_sha256": "ab6f2654cf01e5d83c026fe020293d72866c6c2e3343b39a84d896280a7c7915",
+        "git_blob": "dbf67a80b360bc228eb2493da2206855c5cb17ad"
+      },
+      "reports/hardware-time-controller-runtime-results.csv": {
+        "bytes": 1930,
+        "working_tree_sha256": "1df8d6ec1f47542516731fac79bc3e6a2eab1c1d117fd8311b42b9ef57a45a55",
+        "git_blob": "d6cb6c46d2c3bb2e35501f026abfb963ffbaf35d"
+      },
+      "reports/hardware-time-controller-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "9f065383ae635ae20f5b75001218eb6d9a6d951e9195ac7575cf0e7f77ab1dc8",
+        "git_blob": "09cef5cd9e8d1fd9604713467e3f29861b8fac00"
+      },
+      "reports/hardware-time-division-cli-results.csv": {
+        "bytes": 1498,
+        "working_tree_sha256": "0f0ca46ba145f5625363d53c9935982bf68db73c1db5341522fe9b9973859f14",
+        "git_blob": "749578d16f4cc2704f234cf39f1e337377114370"
+      },
+      "reports/hardware-time-division-cli-results.json": {
+        "bytes": 54292,
+        "working_tree_sha256": "8d5283d631990ce5b8806fddd73c4669fa33314f7fe95130520276aedcf6a7c5",
+        "git_blob": "a9a5b4645a0dd56862605a2d33a2204cdaa35306"
+      },
+      "reports/hardware-time-division-local-outputs.json": {
+        "bytes": 42585,
+        "working_tree_sha256": "c95ab6e1971219f5a383e0b75577af250fad86b2666fc2ec0a23bdea3878dab8",
+        "git_blob": "412ad701152d373801ddb42f4326bd1935255ab5"
+      },
+      "reports/hardware-time-division-report.md": {
+        "bytes": 4991,
+        "working_tree_sha256": "25f92cc750f78b5ea4a53094c83e23442fe0e968b4ef0f7e9932aeed3a69c3ef",
+        "git_blob": "f7d28f03245ff2e9f7cd6288817d3bca09ae537a"
+      },
+      "reports/hardware-time-division-results.csv": {
+        "bytes": 909,
+        "working_tree_sha256": "08da73b47d2faa34377613ee47fa1e871a180c689cf574685664eb008ec53ea5",
+        "git_blob": "a8368e5b2d37eb68737a9c4fd099499edb96501c"
+      },
+      "reports/hardware-time-division-results.json": {
+        "bytes": 3656,
+        "working_tree_sha256": "2b11083f93e523468d2886f06b4ba08f3911a7d111c4cf738184fa133860ecc8",
+        "git_blob": "70165fd51f7668a3c2e1a532c2e2ae01c4631a0b"
+      },
+      "reports/hardware-time-division-runtime-results.csv": {
+        "bytes": 1930,
+        "working_tree_sha256": "70c8f1b49c6a5ebd9fa14fef3158fc43d03a490d17a26240b4ffc795e1d49a56",
+        "git_blob": "805046bfa0e870c2e2fb052af3e93fad81749666"
+      },
+      "reports/hardware-time-division-runtime-results.json": {
+        "bytes": 126298,
+        "working_tree_sha256": "fabd7fc2213b9181f25a2cf6d4c1fcf749733bfc98d01901e6da42ab844d0493",
+        "git_blob": "6a93235a9d01924c63b90d3989a93bba18210c94"
+      },
+      "reports/hardware-time-division-source-audit.json": {
+        "bytes": 1494,
+        "working_tree_sha256": "338f94011e6fe701108a5d7f8edf6f1571b09ef102e32c55ab1c0acc25923094",
+        "git_blob": "856ab21438bdc7fdce45c4d71916c9b14867ef2f"
+      },
+      "reports/hardware-time-division-tempo-results.csv": {
+        "bytes": 340,
+        "working_tree_sha256": "2a55dcfa7d13b84df77e642f557a8496cb9d5d7244ade95d96ce6eb2d0193bf9",
+        "git_blob": "0c0f06fe0b758855e400e1c0fc7f5d3ea3d9290d"
+      },
+      "reports/hardware-time-division-tempo-results.json": {
+        "bytes": 23323,
+        "working_tree_sha256": "29ab506775ba90c4cd1d0e8c3394b223abb3b21b6e2d56a2721f65e993042f03",
+        "git_blob": "c29b04df2d99cb948f2b83d49eef1ed8a984b54d"
+      },
+      "reports/hardware-time-driver-cli-earlier-results.csv": {
+        "bytes": 1499,
+        "working_tree_sha256": "e07a311173223ff6980f32763dfb90bc918a49e7074ad2f675134aeb175b49fd",
+        "git_blob": "716f900068150eb72878c380574295792a5f2c88"
+      },
+      "reports/hardware-time-driver-cli-earlier-results.json": {
+        "bytes": 54299,
+        "working_tree_sha256": "522c5026199263ddfcb2b434b982a70fbffd64263f287b092892943373da2107",
+        "git_blob": "ca18d830ccf3865aa21d857339473e4b14b4d8d6"
+      },
+      "reports/hardware-time-driver-cli-results.csv": {
+        "bytes": 1500,
+        "working_tree_sha256": "09a3dd853f79879d5a6253a933fd786816cd0a31b9ba7a4ebb272d01746e2a14",
+        "git_blob": "5b11d2a4e0f60e9c2d1da7b26a7bc83266da697b"
+      },
+      "reports/hardware-time-driver-runtime-earlier-repeat-results.csv": {
+        "bytes": 1931,
+        "working_tree_sha256": "a61d90556ff9c6a5ae2357252a131e748f4b1771b03adebc60cc0d0f4d5c4aa9",
+        "git_blob": "7ccf4e47c6e0572911a9ef0927768165ce15b93d"
+      },
+      "reports/hardware-time-driver-runtime-first-results.csv": {
+        "bytes": 1920,
+        "working_tree_sha256": "5b20c69ed96135c1f59b949613842373819fb38e5d86c54b7a11a1665a392ea0",
+        "git_blob": "d4fde6ac2408ec6ded81fd4886ccc60920143b75"
+      },
+      "reports/hardware-time-driver-runtime-results.csv": {
+        "bytes": 1927,
+        "working_tree_sha256": "49a251f07fd933772451367c549c06bb6d9a0b4598b0958512f47d99fed6470d",
+        "git_blob": "e94d7e1b901b62f5cc8548158725efbaa23bd7ce"
+      },
+      "reports/hardware-time-driver-tempo-results.csv": {
+        "bytes": 342,
+        "working_tree_sha256": "f6fbb359dd407722150502becf34fe6d75379ad67c478c610dc96d04ce27c6d5",
+        "git_blob": "8c2ecba5e06d4e06658403d52c17f708ff97fd14"
+      },
+      "reports/hardware-time-errors-cli-results.csv": {
+        "bytes": 1501,
+        "working_tree_sha256": "7c30c8678495c8dc7f659522979344785a0bb6f4896c2ad6c107da528a0246ab",
+        "git_blob": "e2eb73fa665c43c2486d9c6a9361212b5e28362d"
+      },
+      "reports/hardware-time-errors-cli-results.json": {
+        "bytes": 54292,
+        "working_tree_sha256": "41aae711319aa0a94c6de6659b880654b2c716bc935ca28a664f7b1cbd09f4b6",
+        "git_blob": "87a49510be0a7320168eac1e40e3f4fbd43fce57"
+      },
+      "reports/hardware-time-errors-local-outputs.json": {
+        "bytes": 42153,
+        "working_tree_sha256": "97e4568535e3e441f7cf85914879a10538d3d65002d4d32ddfdaf8fbc34d5761",
+        "git_blob": "b876832fb6ca7c89b725906602b2fc5d2669b6c4"
+      },
+      "reports/hardware-time-errors-report.md": {
+        "bytes": 7703,
+        "working_tree_sha256": "f132b495582d02fee4e47d3fa713148534a0644964cdbd1c49f214e3bef1fd4a",
+        "git_blob": "915bf15ac5db5a8592ab730534c5a1e79c5673b3"
+      },
+      "reports/hardware-time-errors-results.csv": {
+        "bytes": 909,
+        "working_tree_sha256": "af24f76927b5fd1218fabe3633a311febb9dcb614fed7eb7a5244103c7c164e5",
+        "git_blob": "b4758aa708b525fd8192a294149b382176f8fe44"
+      },
+      "reports/hardware-time-errors-results.json": {
+        "bytes": 3692,
+        "working_tree_sha256": "e88ac0a7bbc18f0ef150799596c3c7b71fefe8014081765369631631af33f6c5",
+        "git_blob": "bf957e873142a570049c869f7918153b7202e780"
+      },
+      "reports/hardware-time-errors-runtime-results.csv": {
+        "bytes": 1933,
+        "working_tree_sha256": "1ba76b76828a09224d5dd94f39bba0a3f5ba4164f74985bec09c8de66c5430c1",
+        "git_blob": "c6581bacceeba2b231aad691d6075ab7f45d30f4"
+      },
+      "reports/hardware-time-errors-runtime-results.json": {
+        "bytes": 126344,
+        "working_tree_sha256": "78ab76b408d6099838a2a1ab8f6b809937986498beba5fc5d3c573cef3b2a47e",
+        "git_blob": "4d454b5b6f8f3cd2bf8d462a2f14e28b7e831f04"
+      },
+      "reports/hardware-time-errors-source-audit.json": {
+        "bytes": 1690,
+        "working_tree_sha256": "5d3aed068bed5cc0c55c9d4ad07e622520806f9eedb34c7d348c729e6660ebd8",
+        "git_blob": "795b2e981dc8e7d7133583db511384d7ef4636e5"
+      },
+      "reports/hardware-time-errors-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "f3f163b07f83a89a5024bdf8dbc46a69c4975a64e2ce67bedd340ca79d136606",
+        "git_blob": "3ee79d41f028227ade6d350e6127b8dfce3b6c20"
+      },
+      "reports/hardware-time-errors-tempo-results.json": {
+        "bytes": 23331,
+        "working_tree_sha256": "1ec3c8ddf7597335465c40dcf693a5781f9a5c24ff18b9708fb3e18dc0682a89",
+        "git_blob": "614d5d5f53d85c1ceefd31b9a8dbb864c0ca492b"
+      },
+      "reports/hardware-time-fixed-sequences-cli-results.csv": {
+        "bytes": 1503,
+        "working_tree_sha256": "0465093efa59f9a1a6a99e9a3a86594bc876eff193d714f3f60c9136cce0ee07",
+        "git_blob": "15f6d046e6307da1fabf0ec87baf7201c54a1e8f"
+      },
+      "reports/hardware-time-fixed-sequences-cli-results.json": {
+        "bytes": 54318,
+        "working_tree_sha256": "d5c6602699b31ab3cae137fd807173e89942d4d51ed70e0d8768e3c542c96f29",
+        "git_blob": "7e6186c08e0b7595a223720f5faa546be4287543"
+      },
+      "reports/hardware-time-fixed-sequences-runtime-results.csv": {
+        "bytes": 1927,
+        "working_tree_sha256": "219ad5563811b9cdcc478766a211f16a0c7b804630856c835adf1d4e8aaaf60e",
+        "git_blob": "f4e991975d7eddeb26da0ec881c1aa03708fb1f8"
+      },
+      "reports/hardware-time-fixed-sequences-runtime-results.json": {
+        "bytes": 126309,
+        "working_tree_sha256": "1c3890989a89d521b2df97eed4799fbe5db049abdd81338625d4ef28c579f4a4",
+        "git_blob": "e420077671c0cbfd0ea0e2f7812ecaa56baed53b"
+      },
+      "reports/hardware-time-fixed-sequences-tempo-results.csv": {
+        "bytes": 341,
+        "working_tree_sha256": "88eab1bf7bf0a9dd57f5a6e17e007f3476f73b81f24d47582bf7942fa2e346ad",
+        "git_blob": "ca489710de49f261f9b990fcd75dbc462d0f3bbe"
+      },
+      "reports/hardware-time-fixed-sequences-tempo-results.json": {
+        "bytes": 23337,
+        "working_tree_sha256": "12cd171bd3e8a8ca08222ecdd206930236500f5ece0263b36417903a107a179f",
+        "git_blob": "89526b75e22bf394c2cc6cf05d7b7d0fedc056d9"
+      },
+      "reports/hardware-time-foundation-report.md": {
+        "bytes": 3906,
+        "working_tree_sha256": "c2444970c2a3151cf88ef08f9ed7523aac50c53763267f126441ddc5eaf343fb",
+        "git_blob": "ac0ebc57ca923a201a16b908338cd173132f349d"
+      },
+      "reports/hardware-time-foundation-results.csv": {
+        "bytes": 909,
+        "working_tree_sha256": "8248e4b0bb9c2583763a70137b0b3fea039781e5391c1633aa85fa57da8f596e",
+        "git_blob": "33c36d904cc782f7f25f40072eb560d1d9bb9d8a"
+      },
+      "reports/hardware-time-foundation-results.json": {
+        "bytes": 40181,
+        "working_tree_sha256": "41aeede20fc55bd494e17e295aab843a1fb550843fe8560f489bcf766a53e7ac",
+        "git_blob": "bd65d97a34ec02d081d111b3924ee7c30840b0ba"
+      },
+      "reports/hardware-time-interruption-cli-results.csv": {
+        "bytes": 1507,
+        "working_tree_sha256": "ae3c3230e57c96b6dd96e86d8e37972d01edf9574abaa711d3652bf391f13a22",
+        "git_blob": "fafb805bd5dc025681a910db4fc57a780ff1d21a"
+      },
+      "reports/hardware-time-interruption-cli-results.json": {
+        "bytes": 72996,
+        "working_tree_sha256": "286b77cf3aa2073aeececa877f724fd947059d0ff162d411819007901cfbd4ef",
+        "git_blob": "1c2625d75a1b6ae102dc11b34497a78f6ca32ed2"
+      },
+      "reports/hardware-time-interruption-confirmation-cli-results.csv": {
+        "bytes": 541,
+        "working_tree_sha256": "cfd16a08e534f19dcbe97eb971a6a3f716617a704cdd38c1389a303c0125e867",
+        "git_blob": "dde556dfa1b6e257c828da9567a8bfb1009d265b"
+      },
+      "reports/hardware-time-interruption-confirmation-cli-results.json": {
+        "bytes": 27631,
+        "working_tree_sha256": "f7626ff60da2a1790778897e918777b2a9529996cbeb784f44d009fda2aaa714",
+        "git_blob": "e9102de37c2e5341908ea03e462024508fd6720c"
+      },
+      "reports/hardware-time-interruption-initial-cli-results.csv": {
+        "bytes": 1502,
+        "working_tree_sha256": "88b665bbe71dcb997e34a36a57ed5721d0bc8c362e981ca0bacc00e7a4464490",
+        "git_blob": "5b5ec25028341888eda231388af87404111375c4"
+      },
+      "reports/hardware-time-interruption-initial-cli-results.json": {
+        "bytes": 54305,
+        "working_tree_sha256": "f2b49d87a9988e06930eb5bd34880df776d7b51d0489b6211d67f2aa903aef48",
+        "git_blob": "016e9fa81940122f1a08ca75ffecd5ed81ed699b"
+      },
+      "reports/hardware-time-interruption-runtime-results.csv": {
+        "bytes": 1922,
+        "working_tree_sha256": "016cf58b8429bb361568aa8a323fc2f9ad0663de0042c4da533ca7ce253b0b52",
+        "git_blob": "1c4e43e18ebdfab4930a728da3a2ead4b6d65608"
+      },
+      "reports/hardware-time-interruption-runtime-results.json": {
+        "bytes": 126349,
+        "working_tree_sha256": "5afac888a35e13dfe97caaf3012fef59782b6b8d706a25edaf012bd8d962d0fa",
+        "git_blob": "aad4b76a730fe16f798233762bbd44b27ede021d"
+      },
+      "reports/hardware-time-interruption-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "5ee34e7e2e8ba961a24a84159569794059910dacae6ff1089c284893291e9005",
+        "git_blob": "5b42a2780138a5a13cabe5dbfdba292bb1614362"
+      },
+      "reports/hardware-time-interruption-tempo-results.json": {
+        "bytes": 23344,
+        "working_tree_sha256": "2b6172358b89594bea113683eab6a8d39aa5fe691a09fca91d54b3636bdcc65f",
+        "git_blob": "4f595b691f7ed8c8269cdf05797b5982eae1779c"
+      },
+      "reports/hardware-time-logical-input-cli-results.csv": {
+        "bytes": 1511,
+        "working_tree_sha256": "a35222fea0ac0cb73b159bcb2e44bc74ab44c3d5ca85af4cd6d029bc7ed85e9d",
+        "git_blob": "d8ff43ffa2f83d07eeb89d7e532b8cd76014af60"
+      },
+      "reports/hardware-time-logical-input-cli-results.json": {
+        "bytes": 54325,
+        "working_tree_sha256": "375d5c300873eb6ac04e01a0046c2672373a90b8b5bc0638bf16ea178ef793c3",
+        "git_blob": "8b9412a57bb2ef82224caf13a844619701246069"
+      },
+      "reports/hardware-time-logical-input-early-runtime-results.csv": {
+        "bytes": 1925,
+        "working_tree_sha256": "12a604e3b5588a982ff2b849753296a5059a6810034e650ca25835f356bb8cfb",
+        "git_blob": "93e19fd8a02ab29e70b590f0d0d586f9a1e9d34f"
+      },
+      "reports/hardware-time-logical-input-early-runtime-results.json": {
+        "bytes": 126313,
+        "working_tree_sha256": "cc35db6fda0959c0877ef675f9f78091bbbeb8cae69477fde59aadb0b7d9d727",
+        "git_blob": "a1502791eaed8e2516b06af1f520a8f11548783a"
+      },
+      "reports/hardware-time-logical-input-runtime-results.csv": {
+        "bytes": 1926,
+        "working_tree_sha256": "63e0df108983500798f21049994922cb359cf4e3474283da19ff6284b2df4eb0",
+        "git_blob": "dc81c3248f65920ff66066b9469a4eb6acb3f214"
+      },
+      "reports/hardware-time-logical-input-runtime-results.json": {
+        "bytes": 126329,
+        "working_tree_sha256": "888d987abf8b88feee863b08a49b25cdb6fc90c137b42eed7262a9c80dbf314a",
+        "git_blob": "1a7ec95653213ec92543b722c986ab094101ee68"
+      },
+      "reports/hardware-time-logical-input-tempo-results.csv": {
+        "bytes": 343,
+        "working_tree_sha256": "20647c99d228d579a9b29ce8ca478ef1447cefadac0dba13b39a6a9dfa47d890",
+        "git_blob": "a15a2b711de021edbce26111e5656be978059b46"
+      },
+      "reports/hardware-time-logical-input-tempo-results.json": {
+        "bytes": 23343,
+        "working_tree_sha256": "77fe590f5915cbb99cb8ce16710528d169f6f836f7d0a74122db327dee7f4581",
+        "git_blob": "dba2adf04a6ec537cdc016083fc854cf66cc6bc5"
+      },
+      "reports/hardware-time-machine-results.csv": {
+        "bytes": 909,
+        "working_tree_sha256": "88c53d2fb22731ebd8a0757f0376a59e98cb155578eea2e7475f8e45b0963205",
+        "git_blob": "27dd2e7569aa66c809b940d2eb6dcacc965253b4"
+      },
+      "reports/hardware-time-machine-results.json": {
+        "bytes": 52822,
+        "working_tree_sha256": "5fd812342f609a665abc4a16636c6391ebd72dfb35f895a3809e218a5bd4aa5a",
+        "git_blob": "36e92f08eddd617f61bad6a6d79d68e918b4f126"
+      },
+      "reports/hardware-time-output-inlined-cli-results.csv": {
+        "bytes": 1506,
+        "working_tree_sha256": "902974d9df12c47583209d7dbab63fe713e2931b0e417a16cdf652e7d37bccd8",
+        "git_blob": "f762f35121131bc7eec2e5457a935a980b928b7c"
+      },
+      "reports/hardware-time-output-inlined-runtime-results.csv": {
+        "bytes": 3020,
+        "working_tree_sha256": "e8fadd30a8963dfd56d0e6a938c35c5b89dff10193dc2fb3285281cdd1baa2ba",
+        "git_blob": "ac0a632e304680fc502a14619023afeab7930fbc"
+      },
+      "reports/hardware-time-output-split-runtime-results.csv": {
+        "bytes": 1939,
+        "working_tree_sha256": "895234c2c0184a91f10c7960ce7046576224928dcc4d5480a8f4ee82b50f3b5a",
+        "git_blob": "e141a95e8673ba31265aecc4ba34e46a71a4c819"
+      },
+      "reports/hardware-time-output-tempo-results.csv": {
+        "bytes": 342,
+        "working_tree_sha256": "4adc82e72930e281adbb78ea48a37bc8c9d312e03d3fd40cf9b53beeed6b6cfa",
+        "git_blob": "c19a06ef525ca942c566b33a195472f0d7e146ac"
+      },
+      "reports/hardware-time-physical-binding-cli-results.csv": {
+        "bytes": 1511,
+        "working_tree_sha256": "a33aaa5a7cbe53eaf20245c199c2161291381e7422b9566897ce9649ed5c2eaf",
+        "git_blob": "919cb4c55dabbf9cc8210c96116bc213423ac2e6"
+      },
+      "reports/hardware-time-physical-binding-cli-results.json": {
+        "bytes": 54320,
+        "working_tree_sha256": "ed59f0d7e2e5da0a6ef613fb4ab63d4c4b58cc65c7e792c121e14660b00e56aa",
+        "git_blob": "cbabe98d4583a25ff38cdc5236f34b14bcaa4313"
+      },
+      "reports/hardware-time-physical-binding-runtime-results.csv": {
+        "bytes": 1925,
+        "working_tree_sha256": "f4df382a3909fe475c516f4ff5ed1f1a1e1e6765759f32f1c8862e3a2fcd4f26",
+        "git_blob": "1fa28026852b1b842bf2d7e1c9c1dbd13af23b7e"
+      },
+      "reports/hardware-time-physical-binding-runtime-results.json": {
+        "bytes": 126337,
+        "working_tree_sha256": "8b2509fc35f8b2f51ada49e829f98ba055b0262d18e74ed7d15e710cd18312fb",
+        "git_blob": "3e5fecdc87bc03c52990a8cd80b15ab0f6fa6e14"
+      },
+      "reports/hardware-time-physical-binding-tempo-results.csv": {
+        "bytes": 343,
+        "working_tree_sha256": "b40d0d1491aea2ea4884b94c140184127a87ff12b2051193a7b05c8a532a59f7",
+        "git_blob": "4473deed1600827210a8a4e7116e20ab9dd152a4"
+      },
+      "reports/hardware-time-physical-binding-tempo-results.json": {
+        "bytes": 23339,
+        "working_tree_sha256": "b8309bf7171dc8d5a88723e15b45222803827e732012729c659b63c67c9ffcd4",
+        "git_blob": "ccb174e1d8d14032d4aaf518da6ed59cfcbb1e2d"
+      },
+      "reports/hardware-time-preparation-cli-earlier-repeat-results.csv": {
+        "bytes": 1504,
+        "working_tree_sha256": "857ce38e1de1ce34f52a37af2e1bcbb6f9e95b9f91502b1a36a528a4e937e17f",
+        "git_blob": "8a787858189c37dabc6733abb5fbf3ef84df8ae2"
+      },
+      "reports/hardware-time-preparation-cli-first-results.csv": {
+        "bytes": 1507,
+        "working_tree_sha256": "3d3e6d3707169dfe4643d762a5058ebe077c83556404ead8909684cdd5fb6ee0",
+        "git_blob": "fdaa1feeb296ab37f7b8811e26a094a08a9516ec"
+      },
+      "reports/hardware-time-preparation-cli-results.csv": {
+        "bytes": 1503,
+        "working_tree_sha256": "1220e21f9ce6c7f7b1cc5cea0f0023973c80ae2ee647463f99d65c460be752f7",
+        "git_blob": "253ea4789ebee08e1bccc465b94e01d9f4d731a9"
+      },
+      "reports/hardware-time-preparation-runtime-results.csv": {
+        "bytes": 1933,
+        "working_tree_sha256": "c1ea453b6e144cedc874053732a452b4319c5f2fc064650d2137cb7245fb7979",
+        "git_blob": "e9ede13be38708ca2f545eb619b7c9085067a03b"
+      },
+      "reports/hardware-time-preparation-tempo-results.csv": {
+        "bytes": 342,
+        "working_tree_sha256": "027f97f41bace3b9c89052729f705e5b9a8e5721674bb0b301512fd71380a340",
+        "git_blob": "11a1cc10a23125b9156bacc89354081086f1c995"
+      },
+      "reports/hardware-time-publication-cli-results.csv": {
+        "bytes": 1512,
+        "working_tree_sha256": "56015a9a5263d6a91cdec016df85435d30f2465a4a47227b2ed971306714c8e3",
+        "git_blob": "56bcb199b55a4fc2391363f68ee5553377f2b804"
+      },
+      "reports/hardware-time-publication-earlier-cli-results.csv": {
+        "bytes": 1502,
+        "working_tree_sha256": "238a6e3387d130a5be6aff89d55460a2224c0bb602f5117a8d8f332dcabc521a",
+        "git_blob": "8da2752ddad8e82bfeaa517e044bfe99f9dfc77c"
+      },
+      "reports/hardware-time-publication-earlier-cli-results.json": {
+        "bytes": 54312,
+        "working_tree_sha256": "90d91acf487552df5c99e61833dd9b6315f8e7b73994d978bcecfc717bf40ab2",
+        "git_blob": "c171880fad206ae263d3e0bf698f883d163c8787"
+      },
+      "reports/hardware-time-publication-earlier-runtime-results.csv": {
+        "bytes": 1924,
+        "working_tree_sha256": "be8850814a4ea024040d5d30f721f8800cce707a6af1e955d1d8ff5721d2fc99",
+        "git_blob": "70e798c1630c15535ca3dd9afc3a7be0840cdf4b"
+      },
+      "reports/hardware-time-publication-earlier-runtime-results.json": {
+        "bytes": 126310,
+        "working_tree_sha256": "0b9b0fd0ddfac54d1f6e7361f2f56092b21c745171e9936de204f629b07075ac",
+        "git_blob": "5c718d4e98209b4e0ebc3758b5755de8d27525ca"
+      },
+      "reports/hardware-time-publication-earlier-tempo-results.csv": {
+        "bytes": 342,
+        "working_tree_sha256": "33ba6774491b173fe2b33fb84463c1daea86c9edf928d37b5e4bb0d15c2439de",
+        "git_blob": "fb811408e6426c7c02c0665860ba1ad2892a8ce0"
+      },
+      "reports/hardware-time-publication-earlier-tempo-results.json": {
+        "bytes": 23343,
+        "working_tree_sha256": "e1b40c0cea30b5761726ecf884d2d4361916c8a000504811b551ef9f8f0695aa",
+        "git_blob": "418913ea39c4e6c8134a65baa2b60379dd08db8c"
+      },
+      "reports/hardware-time-publication-runtime-results.csv": {
+        "bytes": 1931,
+        "working_tree_sha256": "6501233fe2ee7b865e1fec46c7e3c5f5ea9b07d714d48098dfbcaddb5326ef4c",
+        "git_blob": "34ff524e0f5857dbe08885af113187cff0c5a809"
+      },
+      "reports/hardware-time-publication-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "d2eff49628d29199461482dcd84e4949c044f132e9241cdc55b5797ce247b19b",
+        "git_blob": "dfffbc5f641c3068e4619dbe0a7a9dee0427409a"
+      },
+      "reports/hardware-time-quotient-cli-mp1-repeat-results.csv": {
+        "bytes": 346,
+        "working_tree_sha256": "bd42edca0c5d6d3847bbfbeb3d1558cae0eafb8ec153a258806c4d1e951cef78",
+        "git_blob": "0cddf0b2e0357b33e1bbbac09e02f5274cd4b8d0"
+      },
+      "reports/hardware-time-quotient-cli-mp1-repeat-results.json": {
+        "bytes": 8814,
+        "working_tree_sha256": "20a3499fbdc5ea4002543a6c63461b657bc11fec68f538cf8c2dba184548e82f",
+        "git_blob": "67856c255d07e053947739c55001c5b0d9fcd5aa"
+      },
+      "reports/hardware-time-quotient-cli-results.csv": {
+        "bytes": 1507,
+        "working_tree_sha256": "ba6d67e8d79ea64b0dd38759c803f716ea31594ad39e0f5bea07c22d2a6ad5db",
+        "git_blob": "7ef0aadb4a6a677bd846d82064cd7e8bc2bc1a75"
+      },
+      "reports/hardware-time-quotient-cli-results.json": {
+        "bytes": 54313,
+        "working_tree_sha256": "77cb4cda1d54eab76f535c157b6dd498785e892d522ec2ea7e437568a110d318",
+        "git_blob": "235042d9fb91ead4f5196b4e720e8c57596f99f0"
+      },
+      "reports/hardware-time-quotient-local-outputs.json": {
+        "bytes": 45454,
+        "working_tree_sha256": "b6128c531fc75c3ee2e5be8d921b0a0fd7506f873b07fec7e79e1b87d0743684",
+        "git_blob": "cdc0894a3847bd719ca97fa385b279dca83dee6f"
+      },
+      "reports/hardware-time-quotient-report.md": {
+        "bytes": 5008,
+        "working_tree_sha256": "b37cd6891a31e8ecfa927ec3a993f8a2fb204aa2586ce4f6c505f8fb6f29c748",
+        "git_blob": "12dbfd6a08d33895e24553bc7dbb0bc4610c61de"
+      },
+      "reports/hardware-time-quotient-results.csv": {
+        "bytes": 909,
+        "working_tree_sha256": "4249f3a8e3648aa6ba42afc7c53f603250e7ba5cbf158cb81e90cd04254f2683",
+        "git_blob": "49610e2ca72aa09df03b313d8d58dd15d43ca61e"
+      },
+      "reports/hardware-time-quotient-results.json": {
+        "bytes": 4007,
+        "working_tree_sha256": "9f3bf45eccf517194087a544d093135386bfa5facb15debc8337d7ac0a666aaf",
+        "git_blob": "48327c1df76331f6d0ee9c86ec2884dacd829095"
+      },
+      "reports/hardware-time-quotient-runtime-results.csv": {
+        "bytes": 1914,
+        "working_tree_sha256": "d6c1d43940d2bac6a1ee04f611cc6c00901f4e8592be83767a5c70e2caaecc28",
+        "git_blob": "aab295d99a2722c421fa80ce6b133378cff231a1"
+      },
+      "reports/hardware-time-quotient-runtime-results.json": {
+        "bytes": 126307,
+        "working_tree_sha256": "e91daa9acda7e8c6a878e78a2490a0d806dbe2e0b10fdede3c1b7d6ba9db7183",
+        "git_blob": "3e0d350dd8fe58dd60f102ffac215cb90225ed7b"
+      },
+      "reports/hardware-time-quotient-source-audit.json": {
+        "bytes": 1878,
+        "working_tree_sha256": "36a88cee5c8537ffc512162de6eb61bd37ca7ba4b13de83b0c72ff28dcc5e64a",
+        "git_blob": "e2d873d1b6326ad40c4dcd8bcc5274fde27114a9"
+      },
+      "reports/hardware-time-quotient-tempo-results.csv": {
+        "bytes": 343,
+        "working_tree_sha256": "11d182a3edccb38c00f17a6ad51f7a9858f79e127a3b62fd7645a2c42093e144",
+        "git_blob": "29fe10d02ca2e34c185af6bc0f7778d920532bac"
+      },
+      "reports/hardware-time-quotient-tempo-results.json": {
+        "bytes": 23332,
+        "working_tree_sha256": "b873c3439db1f258df7aed505a15dbd90419e53ed64fc42ce9829cd55b65a166",
+        "git_blob": "d24b359fb23bd73ee0f3e7b6fc678eebd5409efe"
+      },
+      "reports/hardware-time-separation-cli-results.csv": {
+        "bytes": 1504,
+        "working_tree_sha256": "97001043331936538d1c85df3254a51178ba0ca23a2e985acc4f45a0feba6fad",
+        "git_blob": "79b26eead7d6842339a58242581e53ae9a686d61"
+      },
+      "reports/hardware-time-separation-runtime-results.csv": {
+        "bytes": 1924,
+        "working_tree_sha256": "8d123cf59c60ddb555a55cbeb94172ee4555f9d9b6fc641815312e439434e963",
+        "git_blob": "e7cc85dc2caad67824799e289a5dcb41f03eba63"
+      },
+      "reports/hardware-time-separation-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "11ae24e98868bcab9c3f764fcc1c0ff7a5c868dd8e3f26292d7abc094c4d72e7",
+        "git_blob": "1f1a6c3a5c045141bfeaa5362d022496debf45da"
+      },
+      "reports/hardware-time-source-audit.json": {
+        "bytes": 2400,
+        "working_tree_sha256": "6a874ba3a871f53509161a276e100acea0613728962531d5d7a1b6c4d176f201",
+        "git_blob": "8bda62ded6e754c9a7a3726be16a29229a0bfbb4"
+      },
+      "reports/hardware-time-unit-cli-results.csv": {
+        "bytes": 1500,
+        "working_tree_sha256": "dd7f1d70c84554e73dc16589b1c9bdf502c2f81580880d337aa9f20f5d682233",
+        "git_blob": "8d4b344ddf8c5a51bf7283f47cd1deed9a20a708"
+      },
+      "reports/hardware-time-unit-cli-results.json": {
+        "bytes": 54295,
+        "working_tree_sha256": "a0f655e0916ddf9656df92f6528886d6802714b2d642429fa41811107d592672",
+        "git_blob": "5efd3b770de877103a94a0f0b7a017be8c59854b"
+      },
+      "reports/hardware-time-unit-local-outputs.json": {
+        "bytes": 41721,
+        "working_tree_sha256": "44bad4d6ab3963de0e3d6121250948b574eddd6b2f1797ba5733cdf8f3446c3e",
+        "git_blob": "9a49665412fb1116353e269835004e172a9e6f6b"
+      },
+      "reports/hardware-time-unit-report.md": {
+        "bytes": 6592,
+        "working_tree_sha256": "30054bc1e224dca92fc26d798f3920058879845e8cce64ac572b7b5bc5d66f54",
+        "git_blob": "eba899f1a2777abb924ed738f23fc3dd8d9f5356"
+      },
+      "reports/hardware-time-unit-results.csv": {
+        "bytes": 909,
+        "working_tree_sha256": "b73a06194e511d5ea52c5ec969256cc271255f22fb7ec3d82ddc19d627bdc2de",
+        "git_blob": "0fd022ab79503a211fe5ffbd7502041c86689d0d"
+      },
+      "reports/hardware-time-unit-results.json": {
+        "bytes": 3688,
+        "working_tree_sha256": "b4942201024f2fe1f1c704b5110fd6117d0359f9fa8de8d75d3981efeb7fb45e",
+        "git_blob": "9df9093871edd04753045e7690bfdc84eb34fb9d"
+      },
+      "reports/hardware-time-unit-runtime-results.csv": {
+        "bytes": 1922,
+        "working_tree_sha256": "ed5fbbb5811d1a7a9433d6335e6bc0968e9f98c25bbd50f1bf93f5715a39b07e",
+        "git_blob": "8433a9784feff03bacd6127cf043dba23c3326be"
+      },
+      "reports/hardware-time-unit-runtime-results.json": {
+        "bytes": 126306,
+        "working_tree_sha256": "252483a2137e0c7dd091461afda01215372eb69097ef0a99774bf5d77f0868aa",
+        "git_blob": "a5ce2468fce164581d8f3ec167deac945b009e44"
+      },
+      "reports/hardware-time-unit-source-audit.json": {
+        "bytes": 1367,
+        "working_tree_sha256": "e3180cbfd46f17f40821f46e3c4c928c517bb8a7a3314307e582a3df6b3e7eb6",
+        "git_blob": "90bc4609bede66c25a08e8bfe1834dea78d4dcf1"
+      },
+      "reports/hardware-time-unit-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "881f14b67e8eaf894d504d37b57e70bf73af70b5143929385f8c4bf238d5ce4e",
+        "git_blob": "ff0426fbd2062c686fdd793e14873b2d3b82939a"
+      },
+      "reports/hardware-time-unit-tempo-results.json": {
+        "bytes": 23325,
+        "working_tree_sha256": "412b094535ea8185e3e2e447406d1405ac99f5542a1e2c5d6374d38cdbb2f41d",
+        "git_blob": "2ea4d7c046d4cc0b1e232b19d58f464a13eba64e"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-accepted-cli-results.csv": {
+        "bytes": 1503,
+        "working_tree_sha256": "207d7a52412c365f4888cc80fb309676734410ae050313b1b0f2767e4f05792d",
+        "git_blob": "3057ec34460501a7d7a57ab60ac6e87e62979cbc"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-accepted-runtime-results.csv": {
+        "bytes": 1918,
+        "working_tree_sha256": "d3df7cf7b8806ca3cb3c840260bfa9d7b017a7588374732dccb12983364e4f8c",
+        "git_blob": "0c547a1751bac6c28b81f0222cd6350684299d31"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-all-sinks-runtime-results.csv": {
+        "bytes": 1917,
+        "working_tree_sha256": "7e4616ba56133d4d81fa1f4dc2b20f784a4b8b04e42dc0e9955800eb04bbeec6",
+        "git_blob": "f6552efac2222f2524446740c15c9cdfcbeae1b8"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-all-sinks-runtime-results.json": {
+        "bytes": 126291,
+        "working_tree_sha256": "00adb8e1ccc613a3e363b03d704ff6450df8fb9bdc98dc7e2f21aa241fdc78e7",
+        "git_blob": "12168bea1d7364316d15d25de22c6b266e237f46"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-boundary-runtime-results.csv": {
+        "bytes": 1916,
+        "working_tree_sha256": "7de17e1b34a7eaf619e8fef686760cd8574661d25d8327a670c26df2b4c49f3b",
+        "git_blob": "033e833ed0eb297ef76ffa06b85f86c5cb73fb65"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-boundary-runtime-results.json": {
+        "bytes": 126307,
+        "working_tree_sha256": "7ba6d5714d1b10fa4cdaa25fda4fa2d4851a5db28d5cf8bc33d8ef03f3937d23",
+        "git_blob": "1fa26c9401b2d008477a60c309321d8a231c18db"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-dispatch-runtime-results.csv": {
+        "bytes": 1923,
+        "working_tree_sha256": "77953180445a103ceb1090f522be188b8628c2425d58b6a9ee4572962ee952d5",
+        "git_blob": "e822f5b97e56d375a40cbe15dbbaa48d0311097e"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-dispatch-runtime-results.json": {
+        "bytes": 126342,
+        "working_tree_sha256": "148450cf4473d17feda5ab16b18bae3b9e71e627e4c8a022b4695ac61223b56e",
+        "git_blob": "b401a8cabb1a73577caa0ccf0e229b25e9b53311"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-initial-runtime-results.csv": {
+        "bytes": 1928,
+        "working_tree_sha256": "5f6377b25e7e02697ae7aca5b5a67ae5d5f2293525aeacfc45f0b9b605373201",
+        "git_blob": "a20ef6b6d963bd23c8e1bc13412b432368e1c71a"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-initial-runtime-results.json": {
+        "bytes": 126332,
+        "working_tree_sha256": "dc4db23cbdefb8d42f16813a273fa55be877ac74a9a50919d85e640a91a6d4ac",
+        "git_blob": "5a5ca02ad10d9240f7bcbbe9c50a01b381ce8c20"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-shared-runtime-results.csv": {
+        "bytes": 1917,
+        "working_tree_sha256": "326a3de2adced20400afefcf23f71ba3c7ab12bf549736d23b65f4e7288b5b4b",
+        "git_blob": "b794d1717e9cedb51517ae63f6b44c4f09d63d58"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-shared-runtime-results.json": {
+        "bytes": 126313,
+        "working_tree_sha256": "bb82d2e2105b13a82411cc04b831bee3362136eed44e91af413aaf0e870d21e7",
+        "git_blob": "47b04913e84ead61d27468b8e0bf48ca6d6b10c6"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-sinks-runtime-results.csv": {
+        "bytes": 1917,
+        "working_tree_sha256": "3c8e57c1bc477ecdd895436cefb0de5f619482b2c74d3e28b8cd779e5b1de587",
+        "git_blob": "b560f7143356678dbbf3c814ea6f0f22f4b7e021"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-sinks-runtime-results.json": {
+        "bytes": 126307,
+        "working_tree_sha256": "55e1d65d9547ef9fe1b4636d25462ec69ce17fc81a958b8aefa78c8d967b4bcf",
+        "git_blob": "754206158f18cd92a0b9e6af9ce0597982523f86"
+      },
+      "reports/hardware-time/hardware-time-arithmetic-tempo-results.csv": {
+        "bytes": 345,
+        "working_tree_sha256": "cd368521f0831cd805a9095daee9421a800765f780c2d2a727158c6415bb78af",
+        "git_blob": "b908e89065d93ab60f1ddfabed3f415d6a0a9f7c"
+      },
+      "reports/hardware-time/hardware-time-automatic-driver-cli-results.csv": {
+        "bytes": 1500,
+        "working_tree_sha256": "e4ca22906ca970b4deaa38ec26b0f50d9f037a5bf19211ac9bb25974ce2507db",
+        "git_blob": "01042d4725aca4034334cbfa6afb0f4a959a4684"
+      },
+      "reports/hardware-time/hardware-time-automatic-driver-cli-results.json": {
+        "bytes": 54336,
+        "working_tree_sha256": "f05b462a9370d01611c72ff2e381e00433d504f76dea48aa1c6ef835d0faab60",
+        "git_blob": "50118cb40bee1bcb470003e071cbe66cc90604c1"
+      },
+      "reports/hardware-time/hardware-time-automatic-driver-runtime-results.csv": {
+        "bytes": 1929,
+        "working_tree_sha256": "9d5d9ebeef6763c5a212f91168bebbd096a22c4a2a568d54a1a9457b79830784",
+        "git_blob": "fe2509de0b5446842eca586e2d40b648134b5e30"
+      },
+      "reports/hardware-time/hardware-time-automatic-driver-runtime-results.json": {
+        "bytes": 126344,
+        "working_tree_sha256": "e675dacfdb4c8d912426a33c76c3282cd2a29147fc683f70512b6f8d7c315df6",
+        "git_blob": "a0469ff41dd4f53c345d6ed70eeb5328f56accef"
+      },
+      "reports/hardware-time/hardware-time-automatic-driver-tempo-results.csv": {
+        "bytes": 341,
+        "working_tree_sha256": "ba6919f3daec9d17c79f2e01cdc5521ce96e5b554be63a76275bd2ab985f2c00",
+        "git_blob": "bc45a07f05f17a9943a91cbe0a949141530fe982"
+      },
+      "reports/hardware-time/hardware-time-automatic-driver-tempo-results.json": {
+        "bytes": 23334,
+        "working_tree_sha256": "641d26e8f46e0d404e090c90c428b20582acfbeec82cc7503f5e4b2e9bd275e9",
+        "git_blob": "9cfc5af220cafbd0727d0dc9770165d60bff4452"
+      },
+      "reports/hardware-time/hardware-time-binding-cli-results.csv": {
+        "bytes": 1504,
+        "working_tree_sha256": "69e10affe35d99c5af900564db192eefc2ac1ddb5e2e0271c6ca342b1583c377",
+        "git_blob": "a7576cf5f681f3de08511679de2163d95b8617b3"
+      },
+      "reports/hardware-time/hardware-time-binding-cli-results.json": {
+        "bytes": 54334,
+        "working_tree_sha256": "5236e1f610d9e868c9eeb1ac5e49a1b63d7cf5644c014dece9b0765288bc36de",
+        "git_blob": "a35ed4c593938b5c48352c7f1fa64f40ed0682e1"
+      },
+      "reports/hardware-time/hardware-time-binding-runtime-results.csv": {
+        "bytes": 1924,
+        "working_tree_sha256": "7e2bdf737cc47ab99f08fef747a740ae5028b1ea7fd2fdbe3cee60b9b96d2db0",
+        "git_blob": "df5867a2647b4f35a30a29e700803ac30c6a67bf"
+      },
+      "reports/hardware-time/hardware-time-binding-runtime-results.json": {
+        "bytes": 126364,
+        "working_tree_sha256": "00aef935becb6459f4e42672471b485dc8a47e8ace1620f1e61ef9e1f383709e",
+        "git_blob": "c11c6b929300617f230e5b9a24b49d6db7584a1c"
+      },
+      "reports/hardware-time/hardware-time-binding-tempo-results.csv": {
+        "bytes": 343,
+        "working_tree_sha256": "d494e798514cf216afa920f57bcba572f00754b933763537cadca61005345595",
+        "git_blob": "eda3684e5b39bbed1be06b9d7bc65f860d5c4ac9"
+      },
+      "reports/hardware-time/hardware-time-binding-tempo-results.json": {
+        "bytes": 23328,
+        "working_tree_sha256": "83468d54cf9ca475fd0f9248d24e617fa9dafb0a38c2b6f567b2cecd7600a244",
+        "git_blob": "e1095afdfdcd5e74ede701125a2cb799f6193a37"
+      },
+      "reports/hardware-time/hardware-time-command-encoding-cli-results.csv": {
+        "bytes": 1501,
+        "working_tree_sha256": "e5fa8008b15a7a603e05ebb16f79a0edfa44f9723f89d6a66e4dc200a55ab7f9",
+        "git_blob": "8ada120150ec0b6028662f46f8e66e1f5a0e7cd9"
+      },
+      "reports/hardware-time/hardware-time-command-encoding-cli-results.json": {
+        "bytes": 54310,
+        "working_tree_sha256": "2196fb7a5237afd1b981bc1854774726c4f9779bd3b9e000d09ed94d6f6d1061",
+        "git_blob": "92f168013425c7aeec8762a91bdc4b4be8349f64"
+      },
+      "reports/hardware-time/hardware-time-command-encoding-runtime-results.csv": {
+        "bytes": 1920,
+        "working_tree_sha256": "e6cf5a0c6749a669fecce58b37437beec54fd22ace8922a422429d130bd8d99f",
+        "git_blob": "871420791b9adcbd838f94afd98dd64be095d1db"
+      },
+      "reports/hardware-time/hardware-time-command-encoding-runtime-results.json": {
+        "bytes": 126313,
+        "working_tree_sha256": "d902d6072124149e8f3f66c32af814a0a75896139700844c44cd4c2a696c540b",
+        "git_blob": "5f696ff2c24b5637cb9a5270df835f8d1b0e62af"
+      },
+      "reports/hardware-time/hardware-time-command-encoding-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "cc493f57e27cba58027e4a16c6ce9d517a644d7462359873fd3d2122d4da69d3",
+        "git_blob": "c21225c8349deee3e775fc6b9f57ab758f7ed9ab"
+      },
+      "reports/hardware-time/hardware-time-command-encoding-tempo-results.json": {
+        "bytes": 23346,
+        "working_tree_sha256": "e7383a1af9d6473ad09a4a2d02e6ab8b5c844b00a2a2f1d1d22fe3af8879e7e8",
+        "git_blob": "d558d9e66cfa21b2f755fc90dc3147a5e86b5ba5"
+      },
+      "reports/hardware-time/hardware-time-command-source-cli-results.csv": {
+        "bytes": 1509,
+        "working_tree_sha256": "3e8b3e540705a24f515ec569e178fb263c5a0534855c8434724edfea7857cce1",
+        "git_blob": "2a573ebc3d3c31fa06e64ea447994b21e643de1d"
+      },
+      "reports/hardware-time/hardware-time-command-source-cli-results.json": {
+        "bytes": 54315,
+        "working_tree_sha256": "b81eb17cf2c8bcb287a2e82d60350a2128d68eb5f27eab5ac8ef1616c9a82081",
+        "git_blob": "44971d417528644fd1b3a9b4bda53d76d75799ed"
+      },
+      "reports/hardware-time/hardware-time-command-source-runtime-results.csv": {
+        "bytes": 1926,
+        "working_tree_sha256": "1904df7d4e6549910aec5d1cbae7e25896bdec1d13b7ef1f89c424ea0105bf2a",
+        "git_blob": "ab81a794fbd72cb3a88ae1bebc74f25d05c81627"
+      },
+      "reports/hardware-time/hardware-time-command-source-runtime-results.json": {
+        "bytes": 126310,
+        "working_tree_sha256": "5f77d4d41d89325d247c64bb6fe93af0e8f0e1702c3ad3697e842a42c10e3e95",
+        "git_blob": "c2685318d97e997299da5ef9f06386172eea5e10"
+      },
+      "reports/hardware-time/hardware-time-command-source-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "92d7251ca0567caadec3c8896d0abb565708c3a9d73580e7d0058d6456c61c35",
+        "git_blob": "4d4be1c7e96624cb63f8e3309e0da2fd689782d1"
+      },
+      "reports/hardware-time/hardware-time-command-source-tempo-results.json": {
+        "bytes": 23337,
+        "working_tree_sha256": "3344eaabba6dce9ed50ac6c2486c53f33f95858cd8a95cf2eacc8317ec4b59ca",
+        "git_blob": "031e453f42cb29aeca178f3e580deae1d30d9db5"
+      },
+      "reports/hardware-time/hardware-time-controller-cli-results.csv": {
+        "bytes": 1501,
+        "working_tree_sha256": "ab6f2654cf01e5d83c026fe020293d72866c6c2e3343b39a84d896280a7c7915",
+        "git_blob": "dbf67a80b360bc228eb2493da2206855c5cb17ad"
+      },
+      "reports/hardware-time/hardware-time-controller-runtime-results.csv": {
+        "bytes": 1930,
+        "working_tree_sha256": "1df8d6ec1f47542516731fac79bc3e6a2eab1c1d117fd8311b42b9ef57a45a55",
+        "git_blob": "d6cb6c46d2c3bb2e35501f026abfb963ffbaf35d"
+      },
+      "reports/hardware-time/hardware-time-controller-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "9f065383ae635ae20f5b75001218eb6d9a6d951e9195ac7575cf0e7f77ab1dc8",
+        "git_blob": "09cef5cd9e8d1fd9604713467e3f29861b8fac00"
+      },
+      "reports/hardware-time/hardware-time-cpu-memory-cli-results.csv": {
+        "bytes": 1505,
+        "working_tree_sha256": "dc06ba94088d26e89c89d564b7759215f8b45f1769c56e977c2047846ab44e6f",
+        "git_blob": "eb1f6b0ca751af6369d8c96c04153ad9e11087fa"
+      },
+      "reports/hardware-time/hardware-time-cpu-memory-cli-results.json": {
+        "bytes": 54308,
+        "working_tree_sha256": "16227260ffcf8742abb4ed9ebacedc33b83d53905b79e68919274e4fca6ce266",
+        "git_blob": "aa2a20c688afe6977ac473c9ab7bef66c4f4c184"
+      },
+      "reports/hardware-time/hardware-time-cpu-memory-runtime-results.csv": {
+        "bytes": 1934,
+        "working_tree_sha256": "a78038722ae4e97de147adef2d817143c7162227be40b0e49ea0ace2c14893fa",
+        "git_blob": "63c0e39c4e6dd936ea7dee91c49fcb0b923257cf"
+      },
+      "reports/hardware-time/hardware-time-cpu-memory-runtime-results.json": {
+        "bytes": 126319,
+        "working_tree_sha256": "37fbf1d9e9800c08df673d2fa2466e384272f711382778bdd1d0a1a8cb767a1a",
+        "git_blob": "9275941ddb0cec8ece4e68d9f60df10370c761bf"
+      },
+      "reports/hardware-time/hardware-time-cpu-memory-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "0de109deadf5a6e265fa93a649557d889514395d8e12448e8a621d767dfa03ba",
+        "git_blob": "23c818e6dd71e3648370e033e8fbbd6e8c86fa2b"
+      },
+      "reports/hardware-time/hardware-time-cpu-memory-tempo-results.json": {
+        "bytes": 23332,
+        "working_tree_sha256": "02dc06f06a4102afedc95b2f4b019693ae2aeac26f1110b973f0f429bace4afd",
+        "git_blob": "fbeee3095d657f22abb3a176ad7b3ed80e1fa7e3"
+      },
+      "reports/hardware-time/hardware-time-data-memory-cli-results.csv": {
+        "bytes": 1505,
+        "working_tree_sha256": "75a733e41d6ceb7a15d2fd90809b5ff4a2c9bc0338f29d65c70c0eba4626e0cc",
+        "git_blob": "1fe9d4d21e12984dcd36f8de2a53efe86de44d41"
+      },
+      "reports/hardware-time/hardware-time-data-memory-cli-results.json": {
+        "bytes": 54312,
+        "working_tree_sha256": "9c0d6fe8355102c74578e5e2faf46fb645e243e9685fbe04b4cf0c4ee5de6f7e",
+        "git_blob": "edb0d6bb45eab9e31c8d02b50737f75514db942b"
+      },
+      "reports/hardware-time/hardware-time-data-memory-direct-runtime-results.csv": {
+        "bytes": 1919,
+        "working_tree_sha256": "9b3a436119f22e6d9d31493bc7fcd129e0ecd6b22313fc038d32e21bbfdf5562",
+        "git_blob": "ece339603c72c84d2651644e865c8c6938219443"
+      },
+      "reports/hardware-time/hardware-time-data-memory-direct-runtime-results.json": {
+        "bytes": 126291,
+        "working_tree_sha256": "e4161a0be1bf98b9d3ef8e666a7f4378caeb1a0cfa190f9df454b351e5f80d19",
+        "git_blob": "5bd7d24993dbb756c26f2fb0ba22fb2e0e7450b6"
+      },
+      "reports/hardware-time/hardware-time-data-memory-initial-runtime-results.csv": {
+        "bytes": 1924,
+        "working_tree_sha256": "d450f1ce2ec8fbe6a3764b4910763038287561bd8fcc90f4aedec4580bd839b0",
+        "git_blob": "678fac3c8f5fdbf895df6d11d3874d571cdd8213"
+      },
+      "reports/hardware-time/hardware-time-data-memory-initial-runtime-results.json": {
+        "bytes": 126323,
+        "working_tree_sha256": "52f17a7faea13d0f51961c49923a202c40769812c8e35178c3fcf2007066a06e",
+        "git_blob": "6f62c72b7396987c8f6aa96784138ce8e2f1e325"
+      },
+      "reports/hardware-time/hardware-time-data-memory-pre-barrier-cli-results.csv": {
+        "bytes": 1512,
+        "working_tree_sha256": "ce1608b238c85158854d493bfa909b34b3f33c1904780f5c5cc872410085ee13",
+        "git_blob": "c1cc58307f9d6800f788c00b400f791d11807a56"
+      },
+      "reports/hardware-time/hardware-time-data-memory-pre-barrier-cli-results.json": {
+        "bytes": 54313,
+        "working_tree_sha256": "2b4be39052f20600a40577d6a45d415a713a249348ee65ddab9f32847cac6a4f",
+        "git_blob": "16b16d3071588b0e5a380a94f694199d7e83a9d4"
+      },
+      "reports/hardware-time/hardware-time-data-memory-pre-barrier-runtime-results.csv": {
+        "bytes": 1926,
+        "working_tree_sha256": "62eb5f374717bc192030c51d311d1d230c648809fc64758407342004ed9fa0ec",
+        "git_blob": "db22dcfe064dd285f9b632b8623d595d31dc5cc3"
+      },
+      "reports/hardware-time/hardware-time-data-memory-pre-barrier-runtime-results.json": {
+        "bytes": 126317,
+        "working_tree_sha256": "5e4c4f1fdd9c2176dc5039a15c4f191941cbbdf1540decc75a576c96dedb1367",
+        "git_blob": "99f1c29c509605dfceb2a280d5651ad7c9ebc299"
+      },
+      "reports/hardware-time/hardware-time-data-memory-pre-barrier-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "9d8807b1d88989ab370cc28d6b4ca64764c289ebf28b0c5dc36b2196f1af1a12",
+        "git_blob": "46175db03af0b67d1433f71d3d54dfe5b5615dd3"
+      },
+      "reports/hardware-time/hardware-time-data-memory-pre-barrier-tempo-results.json": {
+        "bytes": 23338,
+        "working_tree_sha256": "be27ba8da430cfec409065f4f59df07c9ca10c857a8fe2a6384d722f48a03db7",
+        "git_blob": "a603366804c552c3c99e444885d26b18ba54e7f0"
+      },
+      "reports/hardware-time/hardware-time-data-memory-runtime-results.csv": {
+        "bytes": 1931,
+        "working_tree_sha256": "15b6b2b862af9cb46acb2c98483eb525e0f2b9ecccbd1c9234bb68572e5a3adf",
+        "git_blob": "94fa90bf4e61c5328ad6e95c418e4136ea990d05"
+      },
+      "reports/hardware-time/hardware-time-data-memory-runtime-results.json": {
+        "bytes": 126353,
+        "working_tree_sha256": "2c2c54a5cbd63b0041efaf5b9ba35cdce97f859ffacc2363822d8ed54524ea98",
+        "git_blob": "ff1267b815ca073599f5e5a98d9335b586823043"
+      },
+      "reports/hardware-time/hardware-time-data-memory-tempo-results.csv": {
+        "bytes": 346,
+        "working_tree_sha256": "925687fb7103b74e109b9ab78ddbd1f6dbc467ad7dead7ba19a23629ba29f6d2",
+        "git_blob": "f8941de9de9ca322878488f081ad3d0635e81541"
+      },
+      "reports/hardware-time/hardware-time-data-memory-tempo-results.json": {
+        "bytes": 23339,
+        "working_tree_sha256": "d29f725eb919bce33b694d85e4b59ac368ef5c6e1924b64d7355f2387a9f76cd",
+        "git_blob": "43a2b6405ab48be1f9988b7065028da15c50c608"
+      },
+      "reports/hardware-time/hardware-time-device-dma-cli-results.csv": {
+        "bytes": 1502,
+        "working_tree_sha256": "7691050cf7482d159c0e9e22f5f347caf64748d6b9436bf5693b6af26ff86ef6",
+        "git_blob": "57f3097fa74a129383c0791506e1a750fa755357"
+      },
+      "reports/hardware-time/hardware-time-device-dma-cli-results.json": {
+        "bytes": 54342,
+        "working_tree_sha256": "2297de6aea74314789dd5571d4ce644cd61fccebe5b7f51da8aa76c8ee5a3225",
+        "git_blob": "c6707e0279c2498cf0324029c7fcf29c550a69c9"
+      },
+      "reports/hardware-time/hardware-time-device-dma-runtime-results.csv": {
+        "bytes": 1914,
+        "working_tree_sha256": "c4cc426c653f4696e65f270b7e4ff9b6839357922f90af1475ed91fd7293ba0a",
+        "git_blob": "65e662704e526d1936172e25c0f89b5cf3ff349d"
+      },
+      "reports/hardware-time/hardware-time-device-dma-runtime-results.json": {
+        "bytes": 126323,
+        "working_tree_sha256": "4258679b0f672d309385d9d39f33fe5e590d7ea57752a621599867f898ffd7c6",
+        "git_blob": "e0719666776efecbcb2b433d18e0964110efc184"
+      },
+      "reports/hardware-time/hardware-time-device-dma-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "07287afda7ea2c3cca243bf762503e1b5e04004c3c2baa90fe0913e702001457",
+        "git_blob": "16386c42e6181c0bfac534cc4497bfabd2b978d1"
+      },
+      "reports/hardware-time/hardware-time-device-dma-tempo-results.json": {
+        "bytes": 23335,
+        "working_tree_sha256": "3949be2b57c1908cba76f833f63713dc0d934c362b08d1f1d72738cddeeffa72",
+        "git_blob": "d8930edef0c46c849ba10ece63f7520c1601cc04"
+      },
+      "reports/hardware-time/hardware-time-division-cli-results.csv": {
+        "bytes": 1498,
+        "working_tree_sha256": "0f0ca46ba145f5625363d53c9935982bf68db73c1db5341522fe9b9973859f14",
+        "git_blob": "749578d16f4cc2704f234cf39f1e337377114370"
+      },
+      "reports/hardware-time/hardware-time-division-runtime-results.csv": {
+        "bytes": 1930,
+        "working_tree_sha256": "70c8f1b49c6a5ebd9fa14fef3158fc43d03a490d17a26240b4ffc795e1d49a56",
+        "git_blob": "805046bfa0e870c2e2fb052af3e93fad81749666"
+      },
+      "reports/hardware-time/hardware-time-division-tempo-results.csv": {
+        "bytes": 340,
+        "working_tree_sha256": "2a55dcfa7d13b84df77e642f557a8496cb9d5d7244ade95d96ce6eb2d0193bf9",
+        "git_blob": "0c0f06fe0b758855e400e1c0fc7f5d3ea3d9290d"
+      },
+      "reports/hardware-time/hardware-time-driver-cli-earlier-results.csv": {
+        "bytes": 1499,
+        "working_tree_sha256": "e07a311173223ff6980f32763dfb90bc918a49e7074ad2f675134aeb175b49fd",
+        "git_blob": "716f900068150eb72878c380574295792a5f2c88"
+      },
+      "reports/hardware-time/hardware-time-driver-cli-earlier-results.json": {
+        "bytes": 54299,
+        "working_tree_sha256": "522c5026199263ddfcb2b434b982a70fbffd64263f287b092892943373da2107",
+        "git_blob": "ca18d830ccf3865aa21d857339473e4b14b4d8d6"
+      },
+      "reports/hardware-time/hardware-time-driver-cli-results.csv": {
+        "bytes": 1500,
+        "working_tree_sha256": "09a3dd853f79879d5a6253a933fd786816cd0a31b9ba7a4ebb272d01746e2a14",
+        "git_blob": "5b11d2a4e0f60e9c2d1da7b26a7bc83266da697b"
+      },
+      "reports/hardware-time/hardware-time-driver-runtime-earlier-repeat-results.csv": {
+        "bytes": 1931,
+        "working_tree_sha256": "a61d90556ff9c6a5ae2357252a131e748f4b1771b03adebc60cc0d0f4d5c4aa9",
+        "git_blob": "7ccf4e47c6e0572911a9ef0927768165ce15b93d"
+      },
+      "reports/hardware-time/hardware-time-driver-runtime-first-results.csv": {
+        "bytes": 1920,
+        "working_tree_sha256": "5b20c69ed96135c1f59b949613842373819fb38e5d86c54b7a11a1665a392ea0",
+        "git_blob": "d4fde6ac2408ec6ded81fd4886ccc60920143b75"
+      },
+      "reports/hardware-time/hardware-time-driver-runtime-results.csv": {
+        "bytes": 1927,
+        "working_tree_sha256": "49a251f07fd933772451367c549c06bb6d9a0b4598b0958512f47d99fed6470d",
+        "git_blob": "e94d7e1b901b62f5cc8548158725efbaa23bd7ce"
+      },
+      "reports/hardware-time/hardware-time-driver-tempo-results.csv": {
+        "bytes": 342,
+        "working_tree_sha256": "f6fbb359dd407722150502becf34fe6d75379ad67c478c610dc96d04ce27c6d5",
+        "git_blob": "8c2ecba5e06d4e06658403d52c17f708ff97fd14"
+      },
+      "reports/hardware-time/hardware-time-errors-cli-results.csv": {
+        "bytes": 1501,
+        "working_tree_sha256": "7c30c8678495c8dc7f659522979344785a0bb6f4896c2ad6c107da528a0246ab",
+        "git_blob": "e2eb73fa665c43c2486d9c6a9361212b5e28362d"
+      },
+      "reports/hardware-time/hardware-time-errors-runtime-results.csv": {
+        "bytes": 1933,
+        "working_tree_sha256": "1ba76b76828a09224d5dd94f39bba0a3f5ba4164f74985bec09c8de66c5430c1",
+        "git_blob": "c6581bacceeba2b231aad691d6075ab7f45d30f4"
+      },
+      "reports/hardware-time/hardware-time-errors-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "f3f163b07f83a89a5024bdf8dbc46a69c4975a64e2ce67bedd340ca79d136606",
+        "git_blob": "3ee79d41f028227ade6d350e6127b8dfce3b6c20"
+      },
+      "reports/hardware-time/hardware-time-fixed-sequences-cli-results.csv": {
+        "bytes": 1503,
+        "working_tree_sha256": "0465093efa59f9a1a6a99e9a3a86594bc876eff193d714f3f60c9136cce0ee07",
+        "git_blob": "15f6d046e6307da1fabf0ec87baf7201c54a1e8f"
+      },
+      "reports/hardware-time/hardware-time-fixed-sequences-cli-results.json": {
+        "bytes": 54318,
+        "working_tree_sha256": "d5c6602699b31ab3cae137fd807173e89942d4d51ed70e0d8768e3c542c96f29",
+        "git_blob": "7e6186c08e0b7595a223720f5faa546be4287543"
+      },
+      "reports/hardware-time/hardware-time-fixed-sequences-runtime-results.csv": {
+        "bytes": 1927,
+        "working_tree_sha256": "219ad5563811b9cdcc478766a211f16a0c7b804630856c835adf1d4e8aaaf60e",
+        "git_blob": "f4e991975d7eddeb26da0ec881c1aa03708fb1f8"
+      },
+      "reports/hardware-time/hardware-time-fixed-sequences-runtime-results.json": {
+        "bytes": 126309,
+        "working_tree_sha256": "1c3890989a89d521b2df97eed4799fbe5db049abdd81338625d4ef28c579f4a4",
+        "git_blob": "e420077671c0cbfd0ea0e2f7812ecaa56baed53b"
+      },
+      "reports/hardware-time/hardware-time-fixed-sequences-tempo-results.csv": {
+        "bytes": 341,
+        "working_tree_sha256": "88eab1bf7bf0a9dd57f5a6e17e007f3476f73b81f24d47582bf7942fa2e346ad",
+        "git_blob": "ca489710de49f261f9b990fcd75dbc462d0f3bbe"
+      },
+      "reports/hardware-time/hardware-time-fixed-sequences-tempo-results.json": {
+        "bytes": 23337,
+        "working_tree_sha256": "12cd171bd3e8a8ca08222ecdd206930236500f5ece0263b36417903a107a179f",
+        "git_blob": "89526b75e22bf394c2cc6cf05d7b7d0fedc056d9"
+      },
+      "reports/hardware-time/hardware-time-interruption-cli-results.csv": {
+        "bytes": 1507,
+        "working_tree_sha256": "ae3c3230e57c96b6dd96e86d8e37972d01edf9574abaa711d3652bf391f13a22",
+        "git_blob": "fafb805bd5dc025681a910db4fc57a780ff1d21a"
+      },
+      "reports/hardware-time/hardware-time-interruption-cli-results.json": {
+        "bytes": 72996,
+        "working_tree_sha256": "286b77cf3aa2073aeececa877f724fd947059d0ff162d411819007901cfbd4ef",
+        "git_blob": "1c2625d75a1b6ae102dc11b34497a78f6ca32ed2"
+      },
+      "reports/hardware-time/hardware-time-interruption-confirmation-cli-results.csv": {
+        "bytes": 541,
+        "working_tree_sha256": "cfd16a08e534f19dcbe97eb971a6a3f716617a704cdd38c1389a303c0125e867",
+        "git_blob": "dde556dfa1b6e257c828da9567a8bfb1009d265b"
+      },
+      "reports/hardware-time/hardware-time-interruption-confirmation-cli-results.json": {
+        "bytes": 27631,
+        "working_tree_sha256": "f7626ff60da2a1790778897e918777b2a9529996cbeb784f44d009fda2aaa714",
+        "git_blob": "e9102de37c2e5341908ea03e462024508fd6720c"
+      },
+      "reports/hardware-time/hardware-time-interruption-initial-cli-results.csv": {
+        "bytes": 1502,
+        "working_tree_sha256": "88b665bbe71dcb997e34a36a57ed5721d0bc8c362e981ca0bacc00e7a4464490",
+        "git_blob": "5b5ec25028341888eda231388af87404111375c4"
+      },
+      "reports/hardware-time/hardware-time-interruption-initial-cli-results.json": {
+        "bytes": 54305,
+        "working_tree_sha256": "f2b49d87a9988e06930eb5bd34880df776d7b51d0489b6211d67f2aa903aef48",
+        "git_blob": "016e9fa81940122f1a08ca75ffecd5ed81ed699b"
+      },
+      "reports/hardware-time/hardware-time-interruption-runtime-results.csv": {
+        "bytes": 1922,
+        "working_tree_sha256": "016cf58b8429bb361568aa8a323fc2f9ad0663de0042c4da533ca7ce253b0b52",
+        "git_blob": "1c4e43e18ebdfab4930a728da3a2ead4b6d65608"
+      },
+      "reports/hardware-time/hardware-time-interruption-runtime-results.json": {
+        "bytes": 126349,
+        "working_tree_sha256": "5afac888a35e13dfe97caaf3012fef59782b6b8d706a25edaf012bd8d962d0fa",
+        "git_blob": "aad4b76a730fe16f798233762bbd44b27ede021d"
+      },
+      "reports/hardware-time/hardware-time-interruption-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "5ee34e7e2e8ba961a24a84159569794059910dacae6ff1089c284893291e9005",
+        "git_blob": "5b42a2780138a5a13cabe5dbfdba292bb1614362"
+      },
+      "reports/hardware-time/hardware-time-interruption-tempo-results.json": {
+        "bytes": 23344,
+        "working_tree_sha256": "2b6172358b89594bea113683eab6a8d39aa5fe691a09fca91d54b3636bdcc65f",
+        "git_blob": "4f595b691f7ed8c8269cdf05797b5982eae1779c"
+      },
+      "reports/hardware-time/hardware-time-logical-input-cli-results.csv": {
+        "bytes": 1511,
+        "working_tree_sha256": "a35222fea0ac0cb73b159bcb2e44bc74ab44c3d5ca85af4cd6d029bc7ed85e9d",
+        "git_blob": "d8ff43ffa2f83d07eeb89d7e532b8cd76014af60"
+      },
+      "reports/hardware-time/hardware-time-logical-input-cli-results.json": {
+        "bytes": 54325,
+        "working_tree_sha256": "375d5c300873eb6ac04e01a0046c2672373a90b8b5bc0638bf16ea178ef793c3",
+        "git_blob": "8b9412a57bb2ef82224caf13a844619701246069"
+      },
+      "reports/hardware-time/hardware-time-logical-input-early-runtime-results.csv": {
+        "bytes": 1925,
+        "working_tree_sha256": "12a604e3b5588a982ff2b849753296a5059a6810034e650ca25835f356bb8cfb",
+        "git_blob": "93e19fd8a02ab29e70b590f0d0d586f9a1e9d34f"
+      },
+      "reports/hardware-time/hardware-time-logical-input-early-runtime-results.json": {
+        "bytes": 126313,
+        "working_tree_sha256": "cc35db6fda0959c0877ef675f9f78091bbbeb8cae69477fde59aadb0b7d9d727",
+        "git_blob": "a1502791eaed8e2516b06af1f520a8f11548783a"
+      },
+      "reports/hardware-time/hardware-time-logical-input-runtime-results.csv": {
+        "bytes": 1926,
+        "working_tree_sha256": "63e0df108983500798f21049994922cb359cf4e3474283da19ff6284b2df4eb0",
+        "git_blob": "dc81c3248f65920ff66066b9469a4eb6acb3f214"
+      },
+      "reports/hardware-time/hardware-time-logical-input-runtime-results.json": {
+        "bytes": 126329,
+        "working_tree_sha256": "888d987abf8b88feee863b08a49b25cdb6fc90c137b42eed7262a9c80dbf314a",
+        "git_blob": "1a7ec95653213ec92543b722c986ab094101ee68"
+      },
+      "reports/hardware-time/hardware-time-logical-input-tempo-results.csv": {
+        "bytes": 343,
+        "working_tree_sha256": "20647c99d228d579a9b29ce8ca478ef1447cefadac0dba13b39a6a9dfa47d890",
+        "git_blob": "a15a2b711de021edbce26111e5656be978059b46"
+      },
+      "reports/hardware-time/hardware-time-logical-input-tempo-results.json": {
+        "bytes": 23343,
+        "working_tree_sha256": "77fe590f5915cbb99cb8ce16710528d169f6f836f7d0a74122db327dee7f4581",
+        "git_blob": "dba2adf04a6ec537cdc016083fc854cf66cc6bc5"
+      },
+      "reports/hardware-time/hardware-time-machine-integration-cli-results.csv": {
+        "bytes": 1509,
+        "working_tree_sha256": "5d78b504833f601a76452dc0ab378044bc2bfb255dbd8eb05699114c787bacbc",
+        "git_blob": "17c6bf4d437cecb92a0e02802cc5dd6f17c3504f"
+      },
+      "reports/hardware-time/hardware-time-machine-integration-cli-results.json": {
+        "bytes": 54647,
+        "working_tree_sha256": "f18d514fea07726ebf240f95a81123447b1c19df0b67d4dc43480517a101cad2",
+        "git_blob": "543e32e6985e4e17ce87fa6ffebbd95f465bf1fb"
+      },
+      "reports/hardware-time/hardware-time-machine-integration-machine-results.csv": {
+        "bytes": 3619,
+        "working_tree_sha256": "58a87c311bdbe8666516d2078d39a85b1e12f95c8a44484e5382103936189ed5",
+        "git_blob": "5ebc82a456efdfa65e7000dd4fa2ec3c749d9702"
+      },
+      "reports/hardware-time/hardware-time-machine-integration-machine-results.json": {
+        "bytes": 10947,
+        "working_tree_sha256": "3719449a7bab51be7d26fb736b4a8c6718ecb82997069e973cc893e058739e79",
+        "git_blob": "031ab30131a2abc9822550ec58f0196783eac0b0"
+      },
+      "reports/hardware-time/hardware-time-machine-integration-runtime-results.csv": {
+        "bytes": 1920,
+        "working_tree_sha256": "31c2ffd21908fda652245f94d6d1f469009d96b4c5b1cc478aac949a4366be54",
+        "git_blob": "c7ea811075869d94849bad5f3007f9868e11784f"
+      },
+      "reports/hardware-time/hardware-time-machine-integration-runtime-results.json": {
+        "bytes": 126597,
+        "working_tree_sha256": "297a08c519c1dae8443a32fd17353aafaebd9b5089b9ec59aa1b12e969de5a7c",
+        "git_blob": "71ab1feee60d68c146f3ea4720796462376b412c"
+      },
+      "reports/hardware-time/hardware-time-machine-integration-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "33d2921637e6caa6ebbd17b46c02ecc834acaa114c375f0f1936ed719d85e8d9",
+        "git_blob": "e33a29b24c200ae3943a5af6487062e3aa6f2271"
+      },
+      "reports/hardware-time/hardware-time-machine-integration-tempo-results.json": {
+        "bytes": 23937,
+        "working_tree_sha256": "fd8bf9aa2216041864967272fb8a5e816d200911e48c56dac46cf1807fded55e",
+        "git_blob": "c949e5da959b5a57a802bab5df0d57c7ebd54706"
+      },
+      "reports/hardware-time/hardware-time-machine-results.csv": {
+        "bytes": 909,
+        "working_tree_sha256": "88c53d2fb22731ebd8a0757f0376a59e98cb155578eea2e7475f8e45b0963205",
+        "git_blob": "27dd2e7569aa66c809b940d2eb6dcacc965253b4"
+      },
+      "reports/hardware-time/hardware-time-machine-results.json": {
+        "bytes": 52822,
+        "working_tree_sha256": "5fd812342f609a665abc4a16636c6391ebd72dfb35f895a3809e218a5bd4aa5a",
+        "git_blob": "36e92f08eddd617f61bad6a6d79d68e918b4f126"
+      },
+      "reports/hardware-time/hardware-time-memory-buffers-cli-results.csv": {
+        "bytes": 1500,
+        "working_tree_sha256": "d22c50d29ec40035aa3d3c59d847e5a75f7c1c82f9f9a62feffa5e3c1340e592",
+        "git_blob": "2bea1398029555c93b06a89d22da52107e8ae44f"
+      },
+      "reports/hardware-time/hardware-time-memory-buffers-cli-results.json": {
+        "bytes": 54307,
+        "working_tree_sha256": "e97a3d685beb27769b473ff572e3154ecf4d1a31f999d89047de971abb9fef7e",
+        "git_blob": "5fc80e2f4f8c922e733863a24e4ff6f82d0927bd"
+      },
+      "reports/hardware-time/hardware-time-memory-buffers-runtime-results.csv": {
+        "bytes": 1924,
+        "working_tree_sha256": "dc6212d3ceed0203058a45d6860939b41f803f4f47c40c3a21ba71d83cd664cb",
+        "git_blob": "c313684a79756ab7d7908895c0adf513ec89670a"
+      },
+      "reports/hardware-time/hardware-time-memory-buffers-runtime-results.json": {
+        "bytes": 126308,
+        "working_tree_sha256": "7c07c02a57d86097a3059d3fd2ba7cd710dba7dcea16accbb55d0a5406838f37",
+        "git_blob": "aa5d3358da7471cdc778a5e59ccbb88b6aca8149"
+      },
+      "reports/hardware-time/hardware-time-memory-buffers-tempo-results.csv": {
+        "bytes": 341,
+        "working_tree_sha256": "a0b0d5c63a0cd96998ce6278ee4903de17421d757c1c701ada5f3f410226df5e",
+        "git_blob": "585ccc66bb8fc5452f274d2e3c0b9e69592d139a"
+      },
+      "reports/hardware-time/hardware-time-memory-buffers-tempo-results.json": {
+        "bytes": 23337,
+        "working_tree_sha256": "d0449f497e9882550e442f5bac26f8a1b6f898ad43c85340a078c40ef79cf65a",
+        "git_blob": "c6df7637535e2be12587fc2193c4351c65a5eae4"
+      },
+      "reports/hardware-time/hardware-time-mram-port-cli-results.csv": {
+        "bytes": 1501,
+        "working_tree_sha256": "07e261a5fc860bde1b540919460bd3590feb25e1c37fe5e70ae390d494f8a414",
+        "git_blob": "b874a1895babdb20b66046934488a1cfb0db0e68"
+      },
+      "reports/hardware-time/hardware-time-mram-port-cli-results.json": {
+        "bytes": 54306,
+        "working_tree_sha256": "c21987e156e2637f2bdb77d566abfaba27925fc41c29faa99bf24c2283bb4206",
+        "git_blob": "c24e8834e079e44733add9a02a374da361cd24fe"
+      },
+      "reports/hardware-time/hardware-time-mram-port-runtime-results.csv": {
+        "bytes": 1925,
+        "working_tree_sha256": "f7bae88e2e65b4ef6f1f746bd8542ee7fe0f86eb8ac3f973ca659a2d3c1bc3af",
+        "git_blob": "043ab68a55d4f18e7b84be955c8245c9d2546b71"
+      },
+      "reports/hardware-time/hardware-time-mram-port-runtime-results.json": {
+        "bytes": 126323,
+        "working_tree_sha256": "3aaba70a7e82667f7f17e3592d467613261d093db42ebe16f24d9b270dd29e48",
+        "git_blob": "529d4c75b92da8fb22a0b07587a7a3271d89c6f1"
+      },
+      "reports/hardware-time/hardware-time-mram-port-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "349c7fa175a507ad285d4191cde0fbfdcf6621238a1254b31aaa06e948cb0779",
+        "git_blob": "311ae87faf0bcc8494c39120053385a6f46459e3"
+      },
+      "reports/hardware-time/hardware-time-mram-port-tempo-results.json": {
+        "bytes": 23332,
+        "working_tree_sha256": "622bcbaec574806deb1da297e65f78b528e8ebcb0db8f22017d552f4b66058f1",
+        "git_blob": "202f1f26f175a6ce2bf9f455bd68402ea4065fde"
+      },
+      "reports/hardware-time/hardware-time-output-inlined-cli-results.csv": {
+        "bytes": 1506,
+        "working_tree_sha256": "902974d9df12c47583209d7dbab63fe713e2931b0e417a16cdf652e7d37bccd8",
+        "git_blob": "f762f35121131bc7eec2e5457a935a980b928b7c"
+      },
+      "reports/hardware-time/hardware-time-output-inlined-runtime-results.csv": {
+        "bytes": 3020,
+        "working_tree_sha256": "e8fadd30a8963dfd56d0e6a938c35c5b89dff10193dc2fb3285281cdd1baa2ba",
+        "git_blob": "ac0a632e304680fc502a14619023afeab7930fbc"
+      },
+      "reports/hardware-time/hardware-time-output-split-runtime-results.csv": {
+        "bytes": 1939,
+        "working_tree_sha256": "895234c2c0184a91f10c7960ce7046576224928dcc4d5480a8f4ee82b50f3b5a",
+        "git_blob": "e141a95e8673ba31265aecc4ba34e46a71a4c819"
+      },
+      "reports/hardware-time/hardware-time-output-tempo-results.csv": {
+        "bytes": 342,
+        "working_tree_sha256": "4adc82e72930e281adbb78ea48a37bc8c9d312e03d3fd40cf9b53beeed6b6cfa",
+        "git_blob": "c19a06ef525ca942c566b33a195472f0d7e146ac"
+      },
+      "reports/hardware-time/hardware-time-physical-binding-cli-results.csv": {
+        "bytes": 1511,
+        "working_tree_sha256": "a33aaa5a7cbe53eaf20245c199c2161291381e7422b9566897ce9649ed5c2eaf",
+        "git_blob": "919cb4c55dabbf9cc8210c96116bc213423ac2e6"
+      },
+      "reports/hardware-time/hardware-time-physical-binding-cli-results.json": {
+        "bytes": 54320,
+        "working_tree_sha256": "ed59f0d7e2e5da0a6ef613fb4ab63d4c4b58cc65c7e792c121e14660b00e56aa",
+        "git_blob": "cbabe98d4583a25ff38cdc5236f34b14bcaa4313"
+      },
+      "reports/hardware-time/hardware-time-physical-binding-runtime-results.csv": {
+        "bytes": 1925,
+        "working_tree_sha256": "f4df382a3909fe475c516f4ff5ed1f1a1e1e6765759f32f1c8862e3a2fcd4f26",
+        "git_blob": "1fa28026852b1b842bf2d7e1c9c1dbd13af23b7e"
+      },
+      "reports/hardware-time/hardware-time-physical-binding-runtime-results.json": {
+        "bytes": 126337,
+        "working_tree_sha256": "8b2509fc35f8b2f51ada49e829f98ba055b0262d18e74ed7d15e710cd18312fb",
+        "git_blob": "3e5fecdc87bc03c52990a8cd80b15ab0f6fa6e14"
+      },
+      "reports/hardware-time/hardware-time-physical-binding-tempo-results.csv": {
+        "bytes": 343,
+        "working_tree_sha256": "b40d0d1491aea2ea4884b94c140184127a87ff12b2051193a7b05c8a532a59f7",
+        "git_blob": "4473deed1600827210a8a4e7116e20ab9dd152a4"
+      },
+      "reports/hardware-time/hardware-time-physical-binding-tempo-results.json": {
+        "bytes": 23339,
+        "working_tree_sha256": "b8309bf7171dc8d5a88723e15b45222803827e732012729c659b63c67c9ffcd4",
+        "git_blob": "ccb174e1d8d14032d4aaf518da6ed59cfcbb1e2d"
+      },
+      "reports/hardware-time/hardware-time-preparation-cli-earlier-repeat-results.csv": {
+        "bytes": 1504,
+        "working_tree_sha256": "857ce38e1de1ce34f52a37af2e1bcbb6f9e95b9f91502b1a36a528a4e937e17f",
+        "git_blob": "8a787858189c37dabc6733abb5fbf3ef84df8ae2"
+      },
+      "reports/hardware-time/hardware-time-preparation-cli-first-results.csv": {
+        "bytes": 1507,
+        "working_tree_sha256": "3d3e6d3707169dfe4643d762a5058ebe077c83556404ead8909684cdd5fb6ee0",
+        "git_blob": "fdaa1feeb296ab37f7b8811e26a094a08a9516ec"
+      },
+      "reports/hardware-time/hardware-time-preparation-cli-results.csv": {
+        "bytes": 1503,
+        "working_tree_sha256": "1220e21f9ce6c7f7b1cc5cea0f0023973c80ae2ee647463f99d65c460be752f7",
+        "git_blob": "253ea4789ebee08e1bccc465b94e01d9f4d731a9"
+      },
+      "reports/hardware-time/hardware-time-preparation-runtime-results.csv": {
+        "bytes": 1933,
+        "working_tree_sha256": "c1ea453b6e144cedc874053732a452b4319c5f2fc064650d2137cb7245fb7979",
+        "git_blob": "e9ede13be38708ca2f545eb619b7c9085067a03b"
+      },
+      "reports/hardware-time/hardware-time-preparation-tempo-results.csv": {
+        "bytes": 342,
+        "working_tree_sha256": "027f97f41bace3b9c89052729f705e5b9a8e5721674bb0b301512fd71380a340",
+        "git_blob": "11a1cc10a23125b9156bacc89354081086f1c995"
+      },
+      "reports/hardware-time/hardware-time-publication-cli-results.csv": {
+        "bytes": 1512,
+        "working_tree_sha256": "56015a9a5263d6a91cdec016df85435d30f2465a4a47227b2ed971306714c8e3",
+        "git_blob": "56bcb199b55a4fc2391363f68ee5553377f2b804"
+      },
+      "reports/hardware-time/hardware-time-publication-earlier-cli-results.csv": {
+        "bytes": 1502,
+        "working_tree_sha256": "238a6e3387d130a5be6aff89d55460a2224c0bb602f5117a8d8f332dcabc521a",
+        "git_blob": "8da2752ddad8e82bfeaa517e044bfe99f9dfc77c"
+      },
+      "reports/hardware-time/hardware-time-publication-earlier-cli-results.json": {
+        "bytes": 54312,
+        "working_tree_sha256": "90d91acf487552df5c99e61833dd9b6315f8e7b73994d978bcecfc717bf40ab2",
+        "git_blob": "c171880fad206ae263d3e0bf698f883d163c8787"
+      },
+      "reports/hardware-time/hardware-time-publication-earlier-runtime-results.csv": {
+        "bytes": 1924,
+        "working_tree_sha256": "be8850814a4ea024040d5d30f721f8800cce707a6af1e955d1d8ff5721d2fc99",
+        "git_blob": "70e798c1630c15535ca3dd9afc3a7be0840cdf4b"
+      },
+      "reports/hardware-time/hardware-time-publication-earlier-runtime-results.json": {
+        "bytes": 126310,
+        "working_tree_sha256": "0b9b0fd0ddfac54d1f6e7361f2f56092b21c745171e9936de204f629b07075ac",
+        "git_blob": "5c718d4e98209b4e0ebc3758b5755de8d27525ca"
+      },
+      "reports/hardware-time/hardware-time-publication-earlier-tempo-results.csv": {
+        "bytes": 342,
+        "working_tree_sha256": "33ba6774491b173fe2b33fb84463c1daea86c9edf928d37b5e4bb0d15c2439de",
+        "git_blob": "fb811408e6426c7c02c0665860ba1ad2892a8ce0"
+      },
+      "reports/hardware-time/hardware-time-publication-earlier-tempo-results.json": {
+        "bytes": 23343,
+        "working_tree_sha256": "e1b40c0cea30b5761726ecf884d2d4361916c8a000504811b551ef9f8f0695aa",
+        "git_blob": "418913ea39c4e6c8134a65baa2b60379dd08db8c"
+      },
+      "reports/hardware-time/hardware-time-publication-runtime-results.csv": {
+        "bytes": 1931,
+        "working_tree_sha256": "6501233fe2ee7b865e1fec46c7e3c5f5ea9b07d714d48098dfbcaddb5326ef4c",
+        "git_blob": "34ff524e0f5857dbe08885af113187cff0c5a809"
+      },
+      "reports/hardware-time/hardware-time-publication-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "d2eff49628d29199461482dcd84e4949c044f132e9241cdc55b5797ce247b19b",
+        "git_blob": "dfffbc5f641c3068e4619dbe0a7a9dee0427409a"
+      },
+      "reports/hardware-time/hardware-time-quotient-cli-mp1-repeat-results.csv": {
+        "bytes": 346,
+        "working_tree_sha256": "bd42edca0c5d6d3847bbfbeb3d1558cae0eafb8ec153a258806c4d1e951cef78",
+        "git_blob": "0cddf0b2e0357b33e1bbbac09e02f5274cd4b8d0"
+      },
+      "reports/hardware-time/hardware-time-quotient-cli-results.csv": {
+        "bytes": 1507,
+        "working_tree_sha256": "ba6d67e8d79ea64b0dd38759c803f716ea31594ad39e0f5bea07c22d2a6ad5db",
+        "git_blob": "7ef0aadb4a6a677bd846d82064cd7e8bc2bc1a75"
+      },
+      "reports/hardware-time/hardware-time-quotient-runtime-results.csv": {
+        "bytes": 1914,
+        "working_tree_sha256": "d6c1d43940d2bac6a1ee04f611cc6c00901f4e8592be83767a5c70e2caaecc28",
+        "git_blob": "aab295d99a2722c421fa80ce6b133378cff231a1"
+      },
+      "reports/hardware-time/hardware-time-quotient-tempo-results.csv": {
+        "bytes": 343,
+        "working_tree_sha256": "11d182a3edccb38c00f17a6ad51f7a9858f79e127a3b62fd7645a2c42093e144",
+        "git_blob": "29fe10d02ca2e34c185af6bc0f7778d920532bac"
+      },
+      "reports/hardware-time/hardware-time-separation-cli-results.csv": {
+        "bytes": 1504,
+        "working_tree_sha256": "97001043331936538d1c85df3254a51178ba0ca23a2e985acc4f45a0feba6fad",
+        "git_blob": "79b26eead7d6842339a58242581e53ae9a686d61"
+      },
+      "reports/hardware-time/hardware-time-separation-runtime-results.csv": {
+        "bytes": 1924,
+        "working_tree_sha256": "8d123cf59c60ddb555a55cbeb94172ee4555f9d9b6fc641815312e439434e963",
+        "git_blob": "e7cc85dc2caad67824799e289a5dcb41f03eba63"
+      },
+      "reports/hardware-time/hardware-time-separation-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "11ae24e98868bcab9c3f764fcc1c0ff7a5c868dd8e3f26292d7abc094c4d72e7",
+        "git_blob": "1f1a6c3a5c045141bfeaa5362d022496debf45da"
+      },
+      "reports/hardware-time/hardware-time-special-expanded-aa-runtime-results.csv": {
+        "bytes": 654,
+        "working_tree_sha256": "d4787edbe0f2414171c4210fcfa8471d379bc6432823beefa5f9f53e81a4c574",
+        "git_blob": "571a725168a5dff1d1e25fcb37132e7558df920c"
+      },
+      "reports/hardware-time/hardware-time-special-expanded-aa-runtime-results.json": {
+        "bytes": 36525,
+        "working_tree_sha256": "5ed54d159caf2e872452ab84d9cc5e0442eb5feb982d3b9c16ac1fc2551c58e6",
+        "git_blob": "4d3950fd43eacaba0b22b8b049f116a408e3859e"
+      },
+      "reports/hardware-time/hardware-time-special-expanded-cli-confirmation-results.csv": {
+        "bytes": 1509,
+        "working_tree_sha256": "990499714d50c2136e0eb6ece38e4d0c981d694c295aeec45d86a3e995362626",
+        "git_blob": "a70c3f9085b83fbd7459358579722cdef904ca08"
+      },
+      "reports/hardware-time/hardware-time-special-expanded-cli-confirmation-results.json": {
+        "bytes": 54357,
+        "working_tree_sha256": "a6f1ee68127543e63fd6ac308b97b0d346bd98ddb41d48fdba9e30c97c3b2bff",
+        "git_blob": "416e2bc0cd3811adf4189adf363ff72e2764a037"
+      },
+      "reports/hardware-time/hardware-time-special-expanded-cli-results.csv": {
+        "bytes": 1499,
+        "working_tree_sha256": "1a8172fdcb9a3f36afd37caa44918738497a4461b0016f68bfe020ea8397db36",
+        "git_blob": "ffa8bc266fc5fdcef76387de89ff30c657bf8e2d"
+      },
+      "reports/hardware-time/hardware-time-special-expanded-cli-results.json": {
+        "bytes": 54332,
+        "working_tree_sha256": "bb82fac147b482f099946167a8513edbe0a63bd8f5753966a75fdea37466a63e",
+        "git_blob": "6119138571f00648c10241e94d0e354d00fae1d8"
+      },
+      "reports/hardware-time/hardware-time-special-expanded-runtime-confirmation-results.csv": {
+        "bytes": 1926,
+        "working_tree_sha256": "c77955acffe94cc2d9af61761ae9acfa6229ad2da3c9a869a916bcf42f300d5d",
+        "git_blob": "98a92e3267ec185f49e8e2d2a4517615a05f1a2d"
+      },
+      "reports/hardware-time/hardware-time-special-expanded-runtime-confirmation-results.json": {
+        "bytes": 126370,
+        "working_tree_sha256": "ea4f4d5486fe6e286d2c496265662ace8793d7724b7e6130a13a68f40e4f659e",
+        "git_blob": "491ee3fe905cc2284a6377d68744a1b5d733dda2"
+      },
+      "reports/hardware-time/hardware-time-special-expanded-runtime-results.csv": {
+        "bytes": 1926,
+        "working_tree_sha256": "79b7455d4012636aec4bff0cb141d68851542cc95c344820f1e29d0409e665ad",
+        "git_blob": "9a6ee07f798ac93bdc096cea774b997cd0302605"
+      },
+      "reports/hardware-time/hardware-time-special-expanded-runtime-results.json": {
+        "bytes": 126361,
+        "working_tree_sha256": "04a90a31832e3128893094fa737c26168a40eab51bc1e730faa013f69d0ec03b",
+        "git_blob": "f5708900c99c6b4b2f7877c0a1fa43f0e477f075"
+      },
+      "reports/hardware-time/hardware-time-special-expanded-tempo-results.csv": {
+        "bytes": 339,
+        "working_tree_sha256": "b513994652057472e454fda6e2b88f4c0187c00c56027603fd9a9501df1e0a98",
+        "git_blob": "438b3b0f4c02eb3e9144d831b4417e4596560870"
+      },
+      "reports/hardware-time/hardware-time-special-expanded-tempo-results.json": {
+        "bytes": 23329,
+        "working_tree_sha256": "2bc1733590a8b95655afc2ea5086d51ef24d95915dbc5ffa9fdfb75af6ff93a2",
+        "git_blob": "9ed08ee66ec24e03970b675cc8c438d3076599a8"
+      },
+      "reports/hardware-time/hardware-time-stage5-final-cli-results.csv": {
+        "bytes": 1507,
+        "working_tree_sha256": "fb70f01e1314699a86c0ac8eac6f7e06625dd9fab4db1c58f449dd892d79906d",
+        "git_blob": "978700157b4cba5ca96e7e6fbaedc9f7070c7280"
+      },
+      "reports/hardware-time/hardware-time-stage5-final-cli-results.json": {
+        "bytes": 54908,
+        "working_tree_sha256": "382d5fb78c838fd88feb349bce23e494bf03deb93ed84d441bd92df09011c1db",
+        "git_blob": "c2ab241ea441150f51ede610995c2948bae5ce4c"
+      },
+      "reports/hardware-time/hardware-time-stage5-final-machine-results.csv": {
+        "bytes": 3612,
+        "working_tree_sha256": "b40e21c6770db93ef9e6963ab6074b8bbf8fe6c1fd87d22f0a03b58411f0ac9e",
+        "git_blob": "b382e9b33498eea76186e5248bfc34f74298dad2"
+      },
+      "reports/hardware-time/hardware-time-stage5-final-machine-results.json": {
+        "bytes": 10940,
+        "working_tree_sha256": "3454764fd5a2c6942be9f93207c8cde50e3b7c885166c318a913f43a7efbd3cf",
+        "git_blob": "39ab9dd1e2ead53f1e345be053d8613c53d7e1dd"
+      },
+      "reports/hardware-time/hardware-time-stage5-final-runtime-first-results.csv": {
+        "bytes": 1920,
+        "working_tree_sha256": "b48b20827c665740643bf62566c4228f6a8affff100ff1b615ffdabbd3707433",
+        "git_blob": "9eb02a94f71736f22b67ac53d4eaacdef59f06ab"
+      },
+      "reports/hardware-time/hardware-time-stage5-final-runtime-first-results.json": {
+        "bytes": 126917,
+        "working_tree_sha256": "090c237b32fdb1210898ec30d14468a2d60fff9dc0f4dd26f2ac1ef9a10f539f",
+        "git_blob": "7f7494087296478660e31ae44ca1cb51a8330c08"
+      },
+      "reports/hardware-time/hardware-time-stage5-final-runtime-results.csv": {
+        "bytes": 1925,
+        "working_tree_sha256": "c6eb82bdb3cb9b4a4559ebaed6b7a057530d814b2ce185a80528a249df34f380",
+        "git_blob": "66d31f1a87273a9133801eb00ee31d0e6b9bc73f"
+      },
+      "reports/hardware-time/hardware-time-stage5-final-runtime-results.json": {
+        "bytes": 126929,
+        "working_tree_sha256": "79a3eb870a3a10b73ae43660a7048c8492505c14f3f476368515d5f965be44fc",
+        "git_blob": "c45bb7388aff0a04437d3472798cc6942d59df69"
+      },
+      "reports/hardware-time/hardware-time-stage5-final-tempo-results.csv": {
+        "bytes": 343,
+        "working_tree_sha256": "d86f355bf92ae89a04bc785e8936a2ac9a8e7d5a1aa6c46a1ab04e4b88187c11",
+        "git_blob": "de69000c5086d20e49e2739523ede1ad72c3bcf1"
+      },
+      "reports/hardware-time/hardware-time-stage5-final-tempo-results.json": {
+        "bytes": 23935,
+        "working_tree_sha256": "9812f8be2dcddc4772c2394b22b2077daa8b2248725b714df258d96f3d870d96",
+        "git_blob": "6eaf79d884f10d05c227291dba107f8e8b927a6c"
+      },
+      "reports/hardware-time/hardware-time-unit-cli-results.csv": {
+        "bytes": 1500,
+        "working_tree_sha256": "dd7f1d70c84554e73dc16589b1c9bdf502c2f81580880d337aa9f20f5d682233",
+        "git_blob": "8d4b344ddf8c5a51bf7283f47cd1deed9a20a708"
+      },
+      "reports/hardware-time/hardware-time-unit-runtime-results.csv": {
+        "bytes": 1922,
+        "working_tree_sha256": "ed5fbbb5811d1a7a9433d6335e6bc0968e9f98c25bbd50f1bf93f5715a39b07e",
+        "git_blob": "8433a9784feff03bacd6127cf043dba23c3326be"
+      },
+      "reports/hardware-time/hardware-time-unit-tempo-results.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "881f14b67e8eaf894d504d37b57e70bf73af70b5143929385f8c4bf238d5ce4e",
+        "git_blob": "ff0426fbd2062c686fdd793e14873b2d3b82939a"
+      },
+      "reports/memory-mapped-cli-benchmark.csv": {
+        "bytes": 1511,
+        "working_tree_sha256": "c9975ae6dcc48b6723d44818b28e9a5a564262f08d4a60d7bca31828c0c9ae6e",
+        "git_blob": "2cce6018fbb5070882f451538d234db0735ddee8"
+      },
+      "reports/memory-mapped-cli-dhrystone-repeat-benchmark.csv": {
+        "bytes": 541,
+        "working_tree_sha256": "c59af9eda69e19f07df3afbe5bbd61183ebfa9072083807eb969d6bc6330b6d0",
+        "git_blob": "97ff26eb3fc5285ffe2d6fa26468b99328ab9812"
+      },
+      "reports/memory-mapped-cli-repeat-benchmark.csv": {
+        "bytes": 1509,
+        "working_tree_sha256": "fb7156c845de14b54854491bbb81b8b7a6be442d620fbb649c8351fe29f07421",
+        "git_blob": "c58129cdd6c93942d68d69515b6d6b4f223fddd0"
+      },
+      "reports/memory-mapped-original-benchmark.csv": {
+        "bytes": 345,
+        "working_tree_sha256": "7eca4c1f42c4c83c38381daf1248e7425bcb14100a6af6b0cda510cade54e4d1",
+        "git_blob": "af15390ebe33cf4a96b07ffdebecb3128346c075"
+      },
+      "reports/memory-mapped-runtime-benchmark.csv": {
+        "bytes": 1932,
+        "working_tree_sha256": "27c60c350b0b8c78f95b007cd2a37e1e0b47c4dfdf5f69f9dc599a7059681812",
+        "git_blob": "d5c272438a61d6cbc820e62ce8f95d401d01dfc4"
+      },
+      "reports/memory-mapped-translated-benchmark.csv": {
+        "bytes": 270,
+        "working_tree_sha256": "f32560f6df2381a05b12fcbbb6012244c7b9800f9ec7b63b91c9c86e2da4197d",
+        "git_blob": "c46d0fa1a7fddb70b48987ddf5d3795cc0dce74f"
+      },
+      "reports/memory-models-cli-first-benchmark.csv": {
+        "bytes": 1552,
+        "working_tree_sha256": "0ec34903f929ec2e417ae70f3a38c7f916213966a99ec4565e2fb931282a7e17",
+        "git_blob": "428d4c3c81bc4a373f1822fefcefcfb7b0519d03"
+      },
+      "reports/memory-models-cli-repeat-benchmark.csv": {
+        "bytes": 1554,
+        "working_tree_sha256": "c8d58d0be487ef779e7f77b6734358ebcc5a92a3d112dec05eb38c24806e611a",
+        "git_blob": "c7a953c1d59a52dd57c17e7e0859806472a514b4"
+      },
+      "reports/memory-models-original-benchmark.csv": {
+        "bytes": 343,
+        "working_tree_sha256": "cea2bd70a73868333b0a840895e19fb11f4b8277a38f8607933cd8a27055585d",
+        "git_blob": "2900051c51712bc0dd0757a880fe39691783739b"
+      },
+      "reports/memory-models-runtime-benchmark.csv": {
+        "bytes": 1972,
+        "working_tree_sha256": "9011082a62550b2b14a81bf67884adce17d53343d81bc56d63814ba05465400e",
+        "git_blob": "7696482f49172cf6a9bc5188b295e2c94ccadf6f"
+      },
+      "reports/memory-names-report.md": {
+        "bytes": 1829,
+        "working_tree_sha256": "07b576856fea2119eb677ddaed19ab85c991c0a4fcd07ece2e5dc4429e888c27",
+        "git_blob": "a3c06870f42f16a5dcf1f11ca1b2aac56533c1ca"
+      },
+      "reports/memory-names-results.json": {
+        "bytes": 1511,
+        "working_tree_sha256": "a95f54859f0fc8b4e42a2f833756fdc09f78eb2cca7015b0931883de339e88d6",
+        "git_blob": "2687719c8b3390b8fd475fd759db7e3ff196734e"
+      },
+      "reports/memory-registers-report.md": {
+        "bytes": 3095,
+        "working_tree_sha256": "c3807ab93c6446043a5c2e33ab489d9ac9bd5bd4da3c6aca89e997ea1e9c18a8",
+        "git_blob": "8fafe1f0dded6be78b54e728448a61e4bc50783f"
+      },
+      "reports/memory-registers-results.csv": {
+        "bytes": 311,
+        "working_tree_sha256": "4bde6d5d16e98528bedb8cabd6c3df92665955aae6e026da4680c01992117587",
+        "git_blob": "bcf26fc27e19c1fd99ec2b9e1db8c17c3ecefae4"
+      },
+      "reports/memory-registers-results.json": {
+        "bytes": 2700,
+        "working_tree_sha256": "f0b045f37e660b881eade4fb16066fae97dd8a00d32ce3b0d5cd167bbe81f1ba",
+        "git_blob": "b67c72b6083a73e33af2a7b5f45ff85cd503dc5a"
+      },
+      "reports/memory-requests-report.md": {
+        "bytes": 4322,
+        "working_tree_sha256": "fccbaa488a1c5a4fff2d654d1e33888b57ea610a31f20c26657cc9d881725ae3",
+        "git_blob": "8c4cb686e59790a8e35ed2e67c93e7e71fb7d905"
+      },
+      "reports/memory-requests-results.csv": {
+        "bytes": 311,
+        "working_tree_sha256": "7ddb3ae33b2e7dc40837eb8584e1bcc6ae4df60c3874eedf0c6f70aef235c13a",
+        "git_blob": "e2b656adfb94811ec13f9a6b3e549a0a76ac2807"
+      },
+      "reports/memory-requests-results.json": {
+        "bytes": 3033,
+        "working_tree_sha256": "e2baf98e857748f0e4cd945323c1f8ab8fac47de8decc6d647a30b7a9b20fe6f",
+        "git_blob": "78db1599efb685e5a9215bf23ec30ff9800188d7"
+      },
+      "reports/memory/memory-mapped-cli-benchmark.csv": {
+        "bytes": 1511,
+        "working_tree_sha256": "c9975ae6dcc48b6723d44818b28e9a5a564262f08d4a60d7bca31828c0c9ae6e",
+        "git_blob": "2cce6018fbb5070882f451538d234db0735ddee8"
+      },
+      "reports/memory/memory-mapped-cli-dhrystone-repeat-benchmark.csv": {
+        "bytes": 541,
+        "working_tree_sha256": "c59af9eda69e19f07df3afbe5bbd61183ebfa9072083807eb969d6bc6330b6d0",
+        "git_blob": "97ff26eb3fc5285ffe2d6fa26468b99328ab9812"
+      },
+      "reports/memory/memory-mapped-cli-repeat-benchmark.csv": {
+        "bytes": 1509,
+        "working_tree_sha256": "fb7156c845de14b54854491bbb81b8b7a6be442d620fbb649c8351fe29f07421",
+        "git_blob": "c58129cdd6c93942d68d69515b6d6b4f223fddd0"
+      },
+      "reports/memory/memory-mapped-original-benchmark.csv": {
+        "bytes": 345,
+        "working_tree_sha256": "7eca4c1f42c4c83c38381daf1248e7425bcb14100a6af6b0cda510cade54e4d1",
+        "git_blob": "af15390ebe33cf4a96b07ffdebecb3128346c075"
+      },
+      "reports/memory/memory-mapped-runtime-benchmark.csv": {
+        "bytes": 1932,
+        "working_tree_sha256": "27c60c350b0b8c78f95b007cd2a37e1e0b47c4dfdf5f69f9dc599a7059681812",
+        "git_blob": "d5c272438a61d6cbc820e62ce8f95d401d01dfc4"
+      },
+      "reports/memory/memory-mapped-translated-benchmark.csv": {
+        "bytes": 270,
+        "working_tree_sha256": "f32560f6df2381a05b12fcbbb6012244c7b9800f9ec7b63b91c9c86e2da4197d",
+        "git_blob": "c46d0fa1a7fddb70b48987ddf5d3795cc0dce74f"
+      },
+      "reports/memory/memory-models-cli-first-benchmark.csv": {
+        "bytes": 1552,
+        "working_tree_sha256": "0ec34903f929ec2e417ae70f3a38c7f916213966a99ec4565e2fb931282a7e17",
+        "git_blob": "428d4c3c81bc4a373f1822fefcefcfb7b0519d03"
+      },
+      "reports/memory/memory-models-cli-repeat-benchmark.csv": {
+        "bytes": 1554,
+        "working_tree_sha256": "c8d58d0be487ef779e7f77b6734358ebcc5a92a3d112dec05eb38c24806e611a",
+        "git_blob": "c7a953c1d59a52dd57c17e7e0859806472a514b4"
+      },
+      "reports/memory/memory-models-original-benchmark.csv": {
+        "bytes": 343,
+        "working_tree_sha256": "cea2bd70a73868333b0a840895e19fb11f4b8277a38f8607933cd8a27055585d",
+        "git_blob": "2900051c51712bc0dd0757a880fe39691783739b"
+      },
+      "reports/memory/memory-models-runtime-benchmark.csv": {
+        "bytes": 1972,
+        "working_tree_sha256": "9011082a62550b2b14a81bf67884adce17d53343d81bc56d63814ba05465400e",
+        "git_blob": "7696482f49172cf6a9bc5188b295e2c94ccadf6f"
+      },
+      "reports/mpmflops-porting-report.md": {
+        "bytes": 70763,
+        "working_tree_sha256": "0ac7c12b08dcb66be9e5935fe514392bc06d7b8b747f4ed43edec28f1a76ff0c",
+        "git_blob": "aed3bcf08d579e7776b523f27d8237ea2df37df8"
+      },
+      "reports/processor-cpu-profile.md": {
+        "bytes": 14029,
+        "working_tree_sha256": "154a993d340cc63eec6167acefcfe7241debd318a2e8eba231c9996eefb3d2ca",
+        "git_blob": "580cee673f55e01d17d7673028f31049895f44b3"
+      },
+      "reports/processor-performance-analysis.md": {
+        "bytes": 14236,
+        "working_tree_sha256": "b45cf0d1aec7f3bf33fa2ebcdd52d5dd8ee301b3b6078d7416b25f3b6c1fb657",
+        "git_blob": "dc37725f427578183e6986e3f401144b3c461932"
+      },
+      "reports/processor-stage6/acceptance.json": {
+        "bytes": 8874,
+        "working_tree_sha256": "9cc0b03d223c791393809c7e44b133036dbf3210c264a25133641baac8c81259",
+        "git_blob": "b6bcbc6d0b80208a9b49acfcbc96d147e4264466"
+      },
+      "reports/processor-stage6/baseline-os-source-parity.json": {
+        "bytes": 89417,
+        "working_tree_sha256": "bf74b806a61b41bab622e402718e5dfa523a81d3a09e42fc066e58efe47f15a9",
+        "git_blob": "98c7f97949abfbb777724d5f11a3c385c2317882"
+      },
+      "reports/processor-stage6/completion-audit.json": {
+        "bytes": 8364,
+        "working_tree_sha256": "4b1975b9d8417514a936ce43ecb3722f11791cf08c2fe35319d2e46f278c433d",
+        "git_blob": "0061d8c63e38921c8c5b514f902ac950254e0041"
+      },
+      "reports/processor-stage6/experiment-series.json": {
+        "bytes": 83193,
+        "working_tree_sha256": "83dc7e59d0e09c6dd36cbf89afa4d0687bf7fb3b33fd2540fc63e0c94374159d",
+        "git_blob": "c802d8219b1fb7d64210286f81dea7d96d6d8373"
+      },
+      "reports/processor-stage6/experiments.csv": {
+        "bytes": 10196,
+        "working_tree_sha256": "a358228b1c255253a84cfccb6609abbf844f3aaab9215aac09e203035b4aae3e",
+        "git_blob": "e35d8ca4cd0f878bed56c6524278ffb364e83164"
+      },
+      "reports/processor-stage6/experiments.json": {
+        "bytes": 58786,
+        "working_tree_sha256": "a350bbb70c4879c09f4e0a8a1f0aee25b1fd020ac0fb8507ab2088e7f42a29ec",
+        "git_blob": "9cc2fe9af89e53ccc488ce258cdc3aeadbcc62c1"
+      },
+      "reports/processor-stage6/final-performance.csv": {
+        "bytes": 1591,
+        "working_tree_sha256": "f4c7ee22ae6afe3ef774bd2366f284f87ac69cd9de66edc8d940771446b1d477",
+        "git_blob": "c79b952655997272a3e28a4d4c1c6055aae8618a"
+      },
+      "reports/processor-stage6/hardware-os.json": {
+        "bytes": 3445,
+        "working_tree_sha256": "dce7185d2e96934a756000a35e4eaa4b1a06e629b2012118930f67c0f4e0e47e",
+        "git_blob": "8c9df58f90a547f7b953a17faa915d13bdd34cda"
+      },
+      "reports/processor-stage6/implementation-review.json": {
+        "bytes": 4212,
+        "working_tree_sha256": "1422e4d4fca25f9d6d51e5d8f202c142e80e1bec8088c2fb5d9f13b5b5193996",
+        "git_blob": "8acf5afc8badb8d747449211bbf0df3ab4176bc1"
+      },
+      "reports/processor-stage6/jit-baseline.json": {
+        "bytes": 2245,
+        "working_tree_sha256": "f65181487d58bcd5346b442797b4c93f4a40d2f998d7a9a94fa8e4ef1c1521c7",
+        "git_blob": "feba64540692c28e182e14ac66671783a0124dbd"
+      },
+      "reports/processor-stage6/jit-functional-baseline.json": {
+        "bytes": 2852,
+        "working_tree_sha256": "47d09d2c5adb16be387ad56cdebbd4eca0dbb472fe7ccde3b264c8ea80c1919c",
+        "git_blob": "8f2b2b4322fc646fc7d495febfc3b6037a6da4dc"
+      },
+      "reports/processor-stage6/jit-functional-hot.json": {
+        "bytes": 3081,
+        "working_tree_sha256": "283a7c5e4d892731a6dd2d7f8a36e3f50d3c32a0be284f33852e0a2cb27f5bd1",
+        "git_blob": "0daa1b785b5d1a2aece500541d54296a42be2e6f"
+      },
+      "reports/processor-stage6/jit-tombstones.json": {
+        "bytes": 2245,
+        "working_tree_sha256": "472c22a4418b95c4077c1558ab86a9f9ecc551b4451fb88f68cf7c2f7d7e2906",
+        "git_blob": "9d3770a33817743edd5758aa9acac22057b987b3"
+      },
+      "reports/processor-stage6/pacing.json": {
+        "bytes": 13681,
+        "working_tree_sha256": "ff5be36d3e23f69d91193eca293140a0e4e1258e8a34def74eea33ce75eeb952",
+        "git_blob": "a761e41e6db5e6f05932fa139d307f1233f006f9"
+      },
+      "reports/processor-stage6/performance.csv": {
+        "bytes": 21364,
+        "working_tree_sha256": "4b31a757ab85ed0ac7692c7f2938cd59dc927b66b7646a062729ac49d77faa2c",
+        "git_blob": "1e3d729079764178650d1f4bfbc15953c8aa85fd"
+      },
+      "reports/processor-stage6/performance.json": {
+        "bytes": 183345,
+        "working_tree_sha256": "6895e7657b198886f4eb3dc67cc4d3750e31a318fe4033e7ad8172a8883ef828",
+        "git_blob": "378faea55ea3e47d33e9f576e59060c90e17b0d2"
+      },
+      "reports/processor-stage6/profiles.json": {
+        "bytes": 402512,
+        "working_tree_sha256": "27b69e5276adaa29c3e9acba666b9240d545d7ed388a1bafb02c2f93065d0c3b",
+        "git_blob": "45b3b37df43825d097842f75d5adb5592df32b18"
+      },
+      "reports/processor-stage6/reproduction.json": {
+        "bytes": 4342,
+        "working_tree_sha256": "54c9ab50bef75456286ecb3c0a1a1a578bcf1f82d5087a147e5b75666c51d17f",
+        "git_blob": "c1af2e8e593b1c366d48a74df408cab211b8b2b8"
+      },
+      "reports/processor-stage6/summary.json": {
+        "bytes": 4130,
+        "working_tree_sha256": "7d9c6c4bbd522d800b7c0142158e82d222c07f31fded9998120b0ef2ae209b7e",
+        "git_blob": "8413173c3a0a1bf8cee0547ebea081a967bc285a"
+      },
+      "reports/processor-stage6/tests.json": {
+        "bytes": 4118,
+        "working_tree_sha256": "b1e30a8f2cba10f6aef2f373cb46ef1958ff10bd465b9e1c82b925a8413044f9",
+        "git_blob": "34ff60add6363dcdf3d6fdc73faa86f95e68bd69"
+      },
+      "reports/source-layout-results.json": {
+        "bytes": 35169,
+        "working_tree_sha256": "2f92f70b4c50b1b1aa2508939f00da16d68ed7ee3fe4ada075b833b0f9c1cefd",
+        "git_blob": "12d938e18d489209d6047aa8193e77357d7abe41"
+      },
+      "reports/stream-porting-report.md": {
+        "bytes": 49269,
+        "working_tree_sha256": "ec4f382b6277d08103975e1a91555e6419ef9d6bc4ec55dd97a7f1d58c8a3f47",
+        "git_blob": "71df5d24a9c480c5b0d6f8a4604b4edd12b5f360"
+      },
+      "reports/supervisor-cli-before-hot-path-fix.csv": {
+        "bytes": 1508,
+        "working_tree_sha256": "abafbb003185a178d5859b61dbbaebc3c00b56bdaddb3394f34d5ee641181db3",
+        "git_blob": "8bd27bf54ca7ea1a8583a5dcda212684e52199dc"
+      },
+      "reports/supervisor-cli-before-hot-path-fix.json": {
+        "bytes": 54306,
+        "working_tree_sha256": "f4cdf433718b7325e58a7fafd7662e0dce8f8aef474239c7cff23c842117240e",
+        "git_blob": "51d7b4407463484c8e8ee8a0e7385dab315fe51e"
+      },
+      "reports/supervisor-cli-benchmark.csv": {
+        "bytes": 1519,
+        "working_tree_sha256": "453746bc755feffb9638315012ea9558219d07f5846f3433a5cd520f28635c82",
+        "git_blob": "0fc33ee1854c330410c402b5b9f3134b8e1efc59"
+      },
+      "reports/supervisor-cli-benchmark.json": {
+        "bytes": 54353,
+        "working_tree_sha256": "0801b32d346463900c70a95371be253adfd0da6a0138340c1071bda6be6b4a22",
+        "git_blob": "5b11e639c2519943f3b984ddd085fa4c90a634a4"
+      },
+      "reports/supervisor-cli-mp3-combined.json": {
+        "bytes": 2361,
+        "working_tree_sha256": "250629b829dc19d8d8911b968140a2ffac75f5710b2eb0b77ec452da69ebaab7",
+        "git_blob": "fc83dd6f3fb8f00c25be523a443acfa54ff856e5"
+      },
+      "reports/supervisor-cli-mp3-confirmation.csv": {
+        "bytes": 341,
+        "working_tree_sha256": "4a733d22c4f834227fa949b580c8c251aee04281695603dc3e7f3308a0ca79c0",
+        "git_blob": "33d994b43772b7fa8a736183501a5d5c754940c3"
+      },
+      "reports/supervisor-cli-mp3-confirmation.json": {
+        "bytes": 14378,
+        "working_tree_sha256": "4b168997c75ec4b1f3465951c568fe79ec20a1c8d2aa4d92a035353e68413e4b",
+        "git_blob": "2abec41ed50c4d061ba1503dc4cd492647d724b5"
+      },
+      "reports/supervisor-cli-preliminary.csv": {
+        "bytes": 1536,
+        "working_tree_sha256": "7bb581f0554e53b45a57b4c267d872faf69b04be112a927f39aa43ca4c3abc63",
+        "git_blob": "bb835de6fddac4c6b3877281952d5c589d84e52b"
+      },
+      "reports/supervisor-cli-preliminary.json": {
+        "bytes": 54433,
+        "working_tree_sha256": "cfbf68d7c8ea94091a1c5ae1da8114a7691526f8bbf69b5d772314e761e6fdf1",
+        "git_blob": "546bf0c54997571689eb411f01880c56b294607a"
+      },
+      "reports/supervisor-execution-benchmark.csv": {
+        "bytes": 9288,
+        "working_tree_sha256": "053726553e2dbbbf2be84d0f180ae883728b8cb5ed1a624b144202d25a406785",
+        "git_blob": "9af2629d74939f1f8c614682bbff51afc37da2d8"
+      },
+      "reports/supervisor-execution-benchmark.json": {
+        "bytes": 342116,
+        "working_tree_sha256": "82d83c52926d2c3cc409006deb79f78fea0d8abd8efe121394a4cd237ef2d73a",
+        "git_blob": "439f0ffc8fada71ce4773e5b7d24b3661c6eac97"
+      },
+      "reports/supervisor-execution-preliminary.csv": {
+        "bytes": 9311,
+        "working_tree_sha256": "ce9197ee72fae186c071d71b5c31f0e95835f2c3c680aaa2e6b05576e1487bfc",
+        "git_blob": "cd9145df6b9e92a797b6b2f77d91cb1da9c3c240"
+      },
+      "reports/supervisor-execution-preliminary.json": {
+        "bytes": 342142,
+        "working_tree_sha256": "f0d00ae747404c8d59ba15d9ecc95914bb1e42f66a212eaa7860f305cd2f8f08",
+        "git_blob": "c576ae7d7dd85017241f81f7069e0a8253d7f6d9"
+      },
+      "reports/supervisor-original-before-hot-path-fix.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "ccc633c992184729e0c5fc3d9e1144a18867409d305b7b4c69d5678558ae0979",
+        "git_blob": "9782adfc5b61821dc5a97dec8c95b408dfc742e9"
+      },
+      "reports/supervisor-original-before-hot-path-fix.json": {
+        "bytes": 23332,
+        "working_tree_sha256": "d436c607fb08cc2a76f92123f87de2b7961f2f14189a1edf8548701c19dc1832",
+        "git_blob": "0fcf24c0e01c2926a2d523caa9234304e4338859"
+      },
+      "reports/supervisor-original-benchmark.csv": {
+        "bytes": 343,
+        "working_tree_sha256": "8914afb0a75b8ca777697079332428d6e27ceff1129f17e3b976032b63def360",
+        "git_blob": "175dff784d050ef5829ff9d34e4621f5d53d6603"
+      },
+      "reports/supervisor-original-benchmark.json": {
+        "bytes": 23339,
+        "working_tree_sha256": "d65639b8650f50dcd38af138dc3ac34e51e876ad7952e9162a912db1cfe82d67",
+        "git_blob": "c08c821d20fd6e5c1b71dc5292fb33099e030501"
+      },
+      "reports/supervisor-runtime-before-hot-path-fix.csv": {
+        "bytes": 1926,
+        "working_tree_sha256": "de3476b05e303fc1eeedbc370919b9c8ae41494f4d6397a0c69e1c5e1a9881b3",
+        "git_blob": "cb95f956356da342c7194078abe79435e5e63e62"
+      },
+      "reports/supervisor-runtime-before-hot-path-fix.json": {
+        "bytes": 126343,
+        "working_tree_sha256": "599f1b6eda94b2bb92a65350fb1adf228390d8e70b5ce8b78018b5207fbfe063",
+        "git_blob": "bce4c8da761ac20c4ea78b280f5481de204d6e16"
+      },
+      "reports/supervisor-runtime-benchmark.csv": {
+        "bytes": 1931,
+        "working_tree_sha256": "dfc42c0f678c9278706ea73dc764d1c5acf173ec7ad89a880bffb808351f1bb4",
+        "git_blob": "5d9e1fe82f44b2d5788d8490a776eaaff62b466a"
+      },
+      "reports/supervisor-runtime-benchmark.json": {
+        "bytes": 126335,
+        "working_tree_sha256": "9ca951055a87e35c302c9e1fe8046300fff9f7f1a636601c6d8c52ca792d6036",
+        "git_blob": "504b6585f7ffa5c057df7e261a4adc3bf5c2cf1b"
+      },
+      "reports/supervisor-runtime-first-hot-path-experiment.csv": {
+        "bytes": 1927,
+        "working_tree_sha256": "0bcfc608b2e5279e8ad3bd095eb37f7cd592576057ff798539143c2b395ad4a7",
+        "git_blob": "8c557ffac5e0b8d1b269ff311ca9350133399762"
+      },
+      "reports/supervisor-runtime-first-hot-path-experiment.json": {
+        "bytes": 126332,
+        "working_tree_sha256": "f351864cc05a968e7bc0aac562d3aac7ccf55d353833b4ab7e0f095f3c1f2158",
+        "git_blob": "11854dd7128e4ab6eef5c19efa532360439a37f6"
+      },
+      "reports/supervisor-runtime-frame-layout-experiment.csv": {
+        "bytes": 407,
+        "working_tree_sha256": "ebc9fab2d638d51eab62b15c0fba6d14074d5f41e3000ddfe65ab695d9a375c7",
+        "git_blob": "8737e9b765c0c682915e49492e16b1af19baab6b"
+      },
+      "reports/supervisor-runtime-frame-layout-experiment.json": {
+        "bytes": 41764,
+        "working_tree_sha256": "ad50b1fff8c7dedd8a16f7ac0ad0c236e113cce2a2e899e833324a9c10e5d969",
+        "git_blob": "3ca5b765dff6b6c63242292721d2c86b0e70c44e"
+      },
+      "reports/supervisor-runtime-mp3-before-hot-path-fix.csv": {
+        "bytes": 406,
+        "working_tree_sha256": "3c78d7e062bce4f3118922d5f48e8be40415fdc536d1b82016cbc50a2ece9286",
+        "git_blob": "879c7367c1a69ea88511d33fb14c8f9510e3b74d"
+      },
+      "reports/supervisor-runtime-mp3-before-hot-path-fix.json": {
+        "bytes": 41758,
+        "working_tree_sha256": "be738f8b936ebe45112980a0889fcf4aa8df0a1ee3f44850fa81ee769a28774f",
+        "git_blob": "fb9355357a5bb67a582bbec37070d68f985b5d50"
+      },
+      "reports/supervisor-runtime-preliminary.csv": {
+        "bytes": 1962,
+        "working_tree_sha256": "fe3171dff1426aff50b11f8f03fbb9dccf3965f956c0bcd9d565935f6e8a74c9",
+        "git_blob": "10b80f1c45a3a80dac628a96db2da3f378b17783"
+      },
+      "reports/supervisor-runtime-preliminary.json": {
+        "bytes": 126482,
+        "working_tree_sha256": "cf30639e0dacabc3b35c1c58547e6b162aaf76bc145aa0d138137d238acb7478",
+        "git_blob": "ae6766f67440546a7c19e10f08455054e687dce0"
+      },
+      "reports/supervisor-tests.csv": {
+        "bytes": 909,
+        "working_tree_sha256": "8efe56d4ec985d93925138599d7d252bf931d905a993774355200780375a525e",
+        "git_blob": "93448d62ec8f28b95c2d0f527cf5dcb1ebb556b2"
+      },
+      "reports/supervisor/supervisor-cli-before-hot-path-fix.csv": {
+        "bytes": 1508,
+        "working_tree_sha256": "abafbb003185a178d5859b61dbbaebc3c00b56bdaddb3394f34d5ee641181db3",
+        "git_blob": "8bd27bf54ca7ea1a8583a5dcda212684e52199dc"
+      },
+      "reports/supervisor/supervisor-cli-before-hot-path-fix.json": {
+        "bytes": 54306,
+        "working_tree_sha256": "f4cdf433718b7325e58a7fafd7662e0dce8f8aef474239c7cff23c842117240e",
+        "git_blob": "51d7b4407463484c8e8ee8a0e7385dab315fe51e"
+      },
+      "reports/supervisor/supervisor-cli-benchmark.csv": {
+        "bytes": 1519,
+        "working_tree_sha256": "453746bc755feffb9638315012ea9558219d07f5846f3433a5cd520f28635c82",
+        "git_blob": "0fc33ee1854c330410c402b5b9f3134b8e1efc59"
+      },
+      "reports/supervisor/supervisor-cli-benchmark.json": {
+        "bytes": 54353,
+        "working_tree_sha256": "0801b32d346463900c70a95371be253adfd0da6a0138340c1071bda6be6b4a22",
+        "git_blob": "5b11e639c2519943f3b984ddd085fa4c90a634a4"
+      },
+      "reports/supervisor/supervisor-cli-mp3-combined.json": {
+        "bytes": 2361,
+        "working_tree_sha256": "250629b829dc19d8d8911b968140a2ffac75f5710b2eb0b77ec452da69ebaab7",
+        "git_blob": "fc83dd6f3fb8f00c25be523a443acfa54ff856e5"
+      },
+      "reports/supervisor/supervisor-cli-mp3-confirmation.csv": {
+        "bytes": 341,
+        "working_tree_sha256": "4a733d22c4f834227fa949b580c8c251aee04281695603dc3e7f3308a0ca79c0",
+        "git_blob": "33d994b43772b7fa8a736183501a5d5c754940c3"
+      },
+      "reports/supervisor/supervisor-cli-mp3-confirmation.json": {
+        "bytes": 14378,
+        "working_tree_sha256": "4b168997c75ec4b1f3465951c568fe79ec20a1c8d2aa4d92a035353e68413e4b",
+        "git_blob": "2abec41ed50c4d061ba1503dc4cd492647d724b5"
+      },
+      "reports/supervisor/supervisor-cli-preliminary.csv": {
+        "bytes": 1536,
+        "working_tree_sha256": "7bb581f0554e53b45a57b4c267d872faf69b04be112a927f39aa43ca4c3abc63",
+        "git_blob": "bb835de6fddac4c6b3877281952d5c589d84e52b"
+      },
+      "reports/supervisor/supervisor-cli-preliminary.json": {
+        "bytes": 54433,
+        "working_tree_sha256": "cfbf68d7c8ea94091a1c5ae1da8114a7691526f8bbf69b5d772314e761e6fdf1",
+        "git_blob": "546bf0c54997571689eb411f01880c56b294607a"
+      },
+      "reports/supervisor/supervisor-execution-benchmark.csv": {
+        "bytes": 9288,
+        "working_tree_sha256": "053726553e2dbbbf2be84d0f180ae883728b8cb5ed1a624b144202d25a406785",
+        "git_blob": "9af2629d74939f1f8c614682bbff51afc37da2d8"
+      },
+      "reports/supervisor/supervisor-execution-benchmark.json": {
+        "bytes": 342116,
+        "working_tree_sha256": "82d83c52926d2c3cc409006deb79f78fea0d8abd8efe121394a4cd237ef2d73a",
+        "git_blob": "439f0ffc8fada71ce4773e5b7d24b3661c6eac97"
+      },
+      "reports/supervisor/supervisor-execution-preliminary.csv": {
+        "bytes": 9311,
+        "working_tree_sha256": "ce9197ee72fae186c071d71b5c31f0e95835f2c3c680aaa2e6b05576e1487bfc",
+        "git_blob": "cd9145df6b9e92a797b6b2f77d91cb1da9c3c240"
+      },
+      "reports/supervisor/supervisor-execution-preliminary.json": {
+        "bytes": 342142,
+        "working_tree_sha256": "f0d00ae747404c8d59ba15d9ecc95914bb1e42f66a212eaa7860f305cd2f8f08",
+        "git_blob": "c576ae7d7dd85017241f81f7069e0a8253d7f6d9"
+      },
+      "reports/supervisor/supervisor-original-before-hot-path-fix.csv": {
+        "bytes": 344,
+        "working_tree_sha256": "ccc633c992184729e0c5fc3d9e1144a18867409d305b7b4c69d5678558ae0979",
+        "git_blob": "9782adfc5b61821dc5a97dec8c95b408dfc742e9"
+      },
+      "reports/supervisor/supervisor-original-before-hot-path-fix.json": {
+        "bytes": 23332,
+        "working_tree_sha256": "d436c607fb08cc2a76f92123f87de2b7961f2f14189a1edf8548701c19dc1832",
+        "git_blob": "0fcf24c0e01c2926a2d523caa9234304e4338859"
+      },
+      "reports/supervisor/supervisor-original-benchmark.csv": {
+        "bytes": 343,
+        "working_tree_sha256": "8914afb0a75b8ca777697079332428d6e27ceff1129f17e3b976032b63def360",
+        "git_blob": "175dff784d050ef5829ff9d34e4621f5d53d6603"
+      },
+      "reports/supervisor/supervisor-original-benchmark.json": {
+        "bytes": 23339,
+        "working_tree_sha256": "d65639b8650f50dcd38af138dc3ac34e51e876ad7952e9162a912db1cfe82d67",
+        "git_blob": "c08c821d20fd6e5c1b71dc5292fb33099e030501"
+      },
+      "reports/supervisor/supervisor-runtime-before-hot-path-fix.csv": {
+        "bytes": 1926,
+        "working_tree_sha256": "de3476b05e303fc1eeedbc370919b9c8ae41494f4d6397a0c69e1c5e1a9881b3",
+        "git_blob": "cb95f956356da342c7194078abe79435e5e63e62"
+      },
+      "reports/supervisor/supervisor-runtime-before-hot-path-fix.json": {
+        "bytes": 126343,
+        "working_tree_sha256": "599f1b6eda94b2bb92a65350fb1adf228390d8e70b5ce8b78018b5207fbfe063",
+        "git_blob": "bce4c8da761ac20c4ea78b280f5481de204d6e16"
+      },
+      "reports/supervisor/supervisor-runtime-benchmark.csv": {
+        "bytes": 1931,
+        "working_tree_sha256": "dfc42c0f678c9278706ea73dc764d1c5acf173ec7ad89a880bffb808351f1bb4",
+        "git_blob": "5d9e1fe82f44b2d5788d8490a776eaaff62b466a"
+      },
+      "reports/supervisor/supervisor-runtime-benchmark.json": {
+        "bytes": 126335,
+        "working_tree_sha256": "9ca951055a87e35c302c9e1fe8046300fff9f7f1a636601c6d8c52ca792d6036",
+        "git_blob": "504b6585f7ffa5c057df7e261a4adc3bf5c2cf1b"
+      },
+      "reports/supervisor/supervisor-runtime-first-hot-path-experiment.csv": {
+        "bytes": 1927,
+        "working_tree_sha256": "0bcfc608b2e5279e8ad3bd095eb37f7cd592576057ff798539143c2b395ad4a7",
+        "git_blob": "8c557ffac5e0b8d1b269ff311ca9350133399762"
+      },
+      "reports/supervisor/supervisor-runtime-first-hot-path-experiment.json": {
+        "bytes": 126332,
+        "working_tree_sha256": "f351864cc05a968e7bc0aac562d3aac7ccf55d353833b4ab7e0f095f3c1f2158",
+        "git_blob": "11854dd7128e4ab6eef5c19efa532360439a37f6"
+      },
+      "reports/supervisor/supervisor-runtime-frame-layout-experiment.csv": {
+        "bytes": 407,
+        "working_tree_sha256": "ebc9fab2d638d51eab62b15c0fba6d14074d5f41e3000ddfe65ab695d9a375c7",
+        "git_blob": "8737e9b765c0c682915e49492e16b1af19baab6b"
+      },
+      "reports/supervisor/supervisor-runtime-frame-layout-experiment.json": {
+        "bytes": 41764,
+        "working_tree_sha256": "ad50b1fff8c7dedd8a16f7ac0ad0c236e113cce2a2e899e833324a9c10e5d969",
+        "git_blob": "3ca5b765dff6b6c63242292721d2c86b0e70c44e"
+      },
+      "reports/supervisor/supervisor-runtime-mp3-before-hot-path-fix.csv": {
+        "bytes": 406,
+        "working_tree_sha256": "3c78d7e062bce4f3118922d5f48e8be40415fdc536d1b82016cbc50a2ece9286",
+        "git_blob": "879c7367c1a69ea88511d33fb14c8f9510e3b74d"
+      },
+      "reports/supervisor/supervisor-runtime-mp3-before-hot-path-fix.json": {
+        "bytes": 41758,
+        "working_tree_sha256": "be738f8b936ebe45112980a0889fcf4aa8df0a1ee3f44850fa81ee769a28774f",
+        "git_blob": "fb9355357a5bb67a582bbec37070d68f985b5d50"
+      },
+      "reports/supervisor/supervisor-runtime-preliminary.csv": {
+        "bytes": 1962,
+        "working_tree_sha256": "fe3171dff1426aff50b11f8f03fbb9dccf3965f956c0bcd9d565935f6e8a74c9",
+        "git_blob": "10b80f1c45a3a80dac628a96db2da3f378b17783"
+      },
+      "reports/supervisor/supervisor-runtime-preliminary.json": {
+        "bytes": 126482,
+        "working_tree_sha256": "cf30639e0dacabc3b35c1c58547e6b162aaf76bc145aa0d138137d238acb7478",
+        "git_blob": "ae6766f67440546a7c19e10f08455054e687dce0"
+      },
+      "reports/supervisor/supervisor-tests.csv": {
+        "bytes": 909,
+        "working_tree_sha256": "8efe56d4ec985d93925138599d7d252bf931d905a993774355200780375a525e",
+        "git_blob": "93448d62ec8f28b95c2d0f527cf5dcb1ebb556b2"
+      },
+      "reports/whetstone-porting-report.md": {
+        "bytes": 54804,
+        "working_tree_sha256": "93d14bcb58688703120ec7d3c7e2226805cdb3304a28bc435c1ac2115e53f9d5",
+        "git_blob": "1d541f60e2ae71ad9804dcb49eb601b508b517a7"
+      }
+    },
+    "removed_plan_git_blob": "abe02023c9d49a0fb3de6a6a8cfe96168b8537c0"
   }
 }

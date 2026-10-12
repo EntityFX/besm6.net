@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Besm6.Runtime
 {
     /// <summary>
-    /// Неизменяемый идентификатор запланированного события (уровень B, Task B1).
+    /// Неизменяемый идентификатор запланированного события.
     /// Используется для отмены (<see cref="IEventScheduler.Cancel"/>).
     /// </summary>
     public readonly struct EventToken : IEquatable<EventToken>
@@ -20,8 +20,8 @@ namespace Besm6.Runtime
     }
 
     /// <summary>
-    /// Детерминированный планировщик событий на дискретном модельном времени
-    /// (уровень B, SuperPlan Task B1). События с одинаковым тиком исполняются
+    /// Детерминированный планировщик событий на дискретном модельном времени.
+    /// События с одинаковым тиком исполняются
     /// в порядке регистрации (monotonic sequence). Не зависит от DateTime,
     /// thread scheduling или скорости host-машины.
     /// </summary>
