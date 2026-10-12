@@ -148,6 +148,7 @@ public sealed class FastAccountingTests
     [TestMethod]
     [DataRow(ExecutionSpeed.Max)]
     [DataRow(ExecutionSpeed.Original)]
+    [DataRow(ExecutionSpeed.Virtual)]
     public void CallbackFailureRetainsAccountingAndReleasesTheRunSession(ExecutionSpeed speed)
     {
         var machine = new MachineCore();
@@ -184,6 +185,7 @@ public sealed class FastAccountingTests
     [TestMethod]
     [DataRow(ExecutionSpeed.Max)]
     [DataRow(ExecutionSpeed.Original)]
+    [DataRow(ExecutionSpeed.Virtual)]
     public void RepeatedRunsHaveIndependentCountsAndPreserveTheExternalListener(ExecutionSpeed speed)
     {
         var machine = new MachineCore();

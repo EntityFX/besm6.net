@@ -9,7 +9,7 @@ public sealed class MachineCommand : ICommand
 {
     public string Name => "machine";
     public string Description => "Run a standalone supervisor machine with functional or hardware execution";
-    public string Usage => "besm6 machine <machine.json> [--execution functional|hardware] [--speed original|max] [--limit N] [--stats]";
+    public string Usage => "besm6 machine <machine.json> [--execution functional|hardware] [--speed original|max|virtual] [--limit N] [--stats]";
 
     public int Execute(string[] args)
     {
@@ -25,7 +25,7 @@ public sealed class MachineCommand : ICommand
                     case "--execution": execution = MachineJobConfiguration.ParseExecutionModel(Value()); break;
                     case "--speed":
                         if (!ExecutionSpeedNames.TryParse(Value(), out var parsed))
-                            throw new ArgumentException("--speed requires 'original' or 'max'.");
+                            throw new ArgumentException("--speed requires 'original' or 'max' or 'virtual'.");
                         speed = parsed; break;
                     case "--limit":
                         if (!long.TryParse(Value(), out var count) || count < 1) throw new ArgumentException("--limit requires a positive integer.");

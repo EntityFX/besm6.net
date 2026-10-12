@@ -34,7 +34,9 @@ public sealed class ExecutionSpeedCliTests
     }
 
     [TestMethod]
-    public void Override_Profile_DumpAndRegisterTrace_WorkTogether()
+    [DataRow("max")]
+    [DataRow("virtual")]
+    public void Override_Profile_DumpAndRegisterTrace_WorkTogether(string speed)
     {
         string directory = Path.Combine(Path.GetTempPath(), "besm6-speed-cli-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
@@ -49,13 +51,13 @@ public sealed class ExecutionSpeedCliTests
             string registers = Path.Combine(directory, "registers.txt");
             var output = new StringWriter();
             var error = new StringWriter();
-            int result = CliApplication.Run(new[] { "run", job, "--config", config, "--speed", "max", "--stats", "--profile",
+            int result = CliApplication.Run(new[] { "run", job, "--config", config, "--speed", speed, "--stats", "--profile",
                 "--dump-mem", dump, "--dump-mem-at", "1", "--dump-mem-count", "2", "--trace-regs", registers }, output, error);
             Assert.AreEqual(0, result, error.ToString());
             string report = output.ToString().Split('\n').Single(line => line.StartsWith("Execution stats: "));
             using var json = JsonDocument.Parse(report["Execution stats: ".Length..]);
             var measured = json.RootElement.GetProperty("statistics");
-            Assert.AreEqual("max", measured.GetProperty("speed").GetString());
+            Assert.AreEqual(speed, measured.GetProperty("speed").GetString());
             Assert.AreEqual(2L, measured.GetProperty("completedInstructions").GetInt64());
             Assert.AreEqual(3L, measured.GetProperty("modelCycles").GetInt64());
             StringAssert.Contains(output.ToString(), "Инструкций: 2");

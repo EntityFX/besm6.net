@@ -82,14 +82,14 @@ def extract(output, returncode):
 
 def validate(program, family, scenario, part):
     unit = UNITS[family]
-    score = re.search(r"^GUEST MODEL " + re.escape(unit) + r":\s*(\S+)", program, re.M)
+    score = re.search(r"^GUEST (?:MODEL )?" + re.escape(unit) + r":\s*(\S+)", program, re.M)
     if scenario != "good":
         reason = "ZERO" if scenario == "zero" else "CONTROL VALUES DO NOT MATCH" if scenario == "bad" else "ENABLE --GUEST-CLOCK OR RUN LONGER"
         unavailable = re.search(r"^" + re.escape(unit + " UNAVAILABLE: " + reason) + r"(?:\s.*)?$", program, re.M)
         if score or not unavailable:
             raise ValueError("Guest rating guard failed")
         return {"rating": None, "guard": scenario}
-    seconds = re.search(r"^GUEST MODEL CPU SECONDS:\s*(\S+)", program, re.M)
+    seconds = re.search(r"^GUEST (?:MODEL )?CPU SECONDS:\s*(\S+)", program, re.M)
     if not score or not seconds:
         raise ValueError("Guest rating/time are missing")
     elapsed = bench.fortran_number(seconds[1])
@@ -133,7 +133,7 @@ def main():
     parser.add_argument("--dll", type=pathlib.Path, required=True)
     parser.add_argument("--output", type=pathlib.Path, required=True)
     parser.add_argument("--cases", nargs="+", choices=CASES, default=list(CASES))
-    parser.add_argument("--modes", nargs="+", choices=("max", "original"), default=["max", "original"])
+    parser.add_argument("--modes", nargs="+", choices=("max", "original", "virtual"), default=["max", "original"])
     parser.add_argument("--timeout", type=int, default=600)
     args = parser.parse_args()
     if args.output.exists():
@@ -143,7 +143,7 @@ def main():
     (args.output / "jobs").mkdir()
     config = args.output / "config.json"
     config.write_text(json.dumps({"tapes": str(ROOT / "tapes"), "useWallClock": False}), encoding="utf-8")
-    result = {"validated": False, "scope": "Guest formula/control/guard checks and model-speed parity; not throughput",
+    result = {"validated": False, "scope": "Guest formula/control/guard checks; exact parity only between model-clock speeds",
               "environment": bench.report_environment(), "dll_sha256": hashlib.sha256(args.dll.read_bytes()).hexdigest(),
               "cases": [], "minimum_guest_seconds": 0.04}
 
@@ -172,9 +172,10 @@ def main():
                 state = {"program_sha256": hashlib.sha256(program.encode()).hexdigest(), "halt_instructions": instructions,
                          "finalState": report["finalState"], "memorySha256": report["memorySha256"],
                          "instructions": report["statistics"]["completedInstructions"], "cycles": report["statistics"]["modelCycles"]}
-                if reference is not None and state != reference:
+                if speed != "virtual" and reference is not None and state != reference:
                     raise ValueError("Guest rating/state/count/time changed with speed")
-                reference = state
+                if speed != "virtual":
+                    reference = state
                 result["cases"].append({"case": case, "speed": speed, "clock": clock,
                                         "source_sha256": hashlib.sha256(source.encode()).hexdigest(),
                                         "state": state, **rated})

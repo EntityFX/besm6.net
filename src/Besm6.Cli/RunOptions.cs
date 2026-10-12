@@ -3,7 +3,7 @@ namespace Besm6.Cli;
 /// <summary>Immutable invocation data, separated from machine creation and execution.</summary>
 internal sealed record RunOptions
 {
-    internal const string Usage = "besm6 run <file.dub> [--speed original|max] [--stats] [--guest-clock] [--limit N] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--config path]";
+    internal const string Usage = "besm6 run <file.dub> [--speed original|max|virtual] [--stats] [--guest-clock] [--limit N] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--config path]";
     internal string JobFile { get; init; } = string.Empty;
     internal long Limit { get; init; }
     internal bool Verbose { get; init; }
@@ -65,7 +65,7 @@ internal sealed record RunOptions
                 case "--speed":
                     if (++i >= args.Length || !ExecutionSpeedNames.TryParse(args[i], out var parsedSpeed))
                     {
-                        error = "Error: --speed requires 'original' or 'max'.";
+                        error = "Error: --speed requires 'original' or 'max' or 'virtual'.";
                         return false;
                     }
                     speedOverride = parsedSpeed;

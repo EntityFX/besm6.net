@@ -7,7 +7,7 @@ c
 c     GUEST DMIPS: this deck uses the CTIME CPU timer, enabled by
 c     --guest-clock (JSON guestClock=true). Resolution is 0.02 seconds.
 c     DMIPS = passes / CPU seconds / 1757. The simulated clock has the
-c     same value in max and original. This is not host throughput.
+c     same value in max and original; virtual uses host elapsed time.
 c     Source: book/fortran-1976/02-fortran-dubna.md, time accounting.
 c     The original untimed benchmark remains unchanged for comparisons.
 c
@@ -525,8 +525,8 @@ c     ---- FORMAT statements (must live inside this program unit) ----
  1110 FORMAT ('PGLB.STR:  ', A1)
  1200 FORMAT ('ALL 18 CONTROL VALUES MATCH THE DHRYSTONE 2.1 SPEC')
  1210 FORMAT ('MISMATCHES: ', I6, ' - PORT FAILED VERIFICATION')
- 1220 FORMAT ('GUEST MODEL CPU SECONDS: ', F12.4)
- 1230 FORMAT ('GUEST MODEL DMIPS: ', F12.6)
+ 1220 FORMAT ('GUEST CPU SECONDS: ', F12.4)
+ 1230 FORMAT ('GUEST DMIPS: ', F12.6)
  1240 FORMAT ('DMIPS UNAVAILABLE: ENABLE --GUEST-CLOCK OR RUN LONGER')
  1250 FORMAT ('DMIPS UNAVAILABLE: CONTROL VALUES DO NOT MATCH')
  1260 FORMAT ('DMIPS UNAVAILABLE: ZERO PASSES')

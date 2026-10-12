@@ -38,7 +38,7 @@ public sealed class MachineJobConfiguration
     };
 
     public ExecutionSpeed ParseSpeed() => ExecutionSpeedNames.TryParse(Speed, out var speed) ? speed :
-        throw new ArgumentException("speed must be 'original' or 'max'.");
+        throw new ArgumentException("speed must be 'original' or 'max' or 'virtual'.");
 
     public MachineCore CreateMachine(MachineExecutionModel? executionOverride = null)
     {

@@ -8,13 +8,18 @@ import verify_guest_ratings as guest
 
 
 class GuestRatingVerificationTests(unittest.TestCase):
+    def test_clock_neutral_labels_and_legacy_model_labels_use_the_same_formula(self):
+        text = "ALL 18 CONTROL VALUES MATCH THE DHRYSTONE 2.1 SPEC\nGUEST CPU SECONDS: 1.52\nGUEST DMIPS: 1.872210"
+        self.assertEqual(guest.validate(text, "dh", "good", 1),
+                         guest.validate(text.replace("GUEST ", "GUEST MODEL "), "dh", "good", 1))
+
     def test_all_variants_have_unique_source_anchors_and_preserve_original_files(self):
         for case in guest.CASES:
             family, scenario, part, clock, source = guest.prepare(case)
             self.assertTrue(source.startswith("*name"), case)
             self.assertIn("call ctime", source.lower(), case)
             self.assertEqual(clock, scenario != "off", case)
-            self.assertIn(f"GUEST MODEL {guest.UNITS[family]}", source, case)
+            self.assertIn(f"GUEST {guest.UNITS[family]}", source, case)
 
     def test_guard_requires_executed_output_not_a_compiler_listing(self):
         self.assertEqual(guest.validate("MFLOPS UNAVAILABLE: ZERO KERNEL", "mp", "zero", 0)["guard"], "zero")

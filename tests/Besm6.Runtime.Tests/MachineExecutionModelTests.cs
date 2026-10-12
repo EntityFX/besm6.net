@@ -92,6 +92,20 @@ public sealed class MachineExecutionModelTests
     }
 
     [TestMethod]
+    public void HardwareVirtualPreservesModelTimeAndStateWithoutHostPacing()
+    {
+        var max = Machine(); var virtualMachine = Machine();
+        max.UseHardwareExecution(Timing()); virtualMachine.UseHardwareExecution(Timing());
+        var expected = max.RunInstructions(10);
+        var actual = virtualMachine.RunHardwareInstructions(10, ExecutionSpeed.Virtual, false, new FakeTime { Throw = true });
+        Assert.IsTrue(actual.Outcome.Stopped);
+        Assert.AreEqual(expected.Outcome.Instructions, actual.Outcome.Instructions);
+        Assert.AreEqual(State(max), State(virtualMachine));
+        Assert.AreEqual(max.HardwareTimeline.Now, virtualMachine.HardwareTimeline.Now);
+        Assert.IsNull(actual.Statistics);
+    }
+
+    [TestMethod]
     public void HardwareOriginalUsesNanosecondsAndRelativeRunDeadlines()
     {
         var original = Machine(); original.UseHardwareExecution(Timing(1_000_000_000)); var time = new FakeTime();

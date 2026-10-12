@@ -41,6 +41,9 @@ namespace Besm6.Runtime
         public Action<Opcode>? InstructionExecuted { get; set; }
         private ExecutionAccountingSession? _accounting;
         private long TotalCycles => _accounting?.TotalCycles ?? 0;
+        private IExecutionTimeSource? _guestHostClock;
+        // Injectable host clock for deterministic verification; never drives machine events.
+        internal IExecutionTimeSource? GuestHostTimeSource { get; set; }
 
         public Action<int, ulong>? InstructionTrace { get; set; }
         public Action<uint, bool, uint, uint>? CppInstructionTrace { get; set; }
@@ -65,7 +68,13 @@ namespace Besm6.Runtime
 
         // STIME/CTIME (счетное время): the documented resolution is 0.02 s.
         // Hosted Dubna has one logical CPU clock; this does not model device overlap.
-        private double ReadGuestTimeSeconds() => GuestClockEnabled ? (TotalCycles / 200_000) * 0.02 : 0;
+        private double ReadGuestTimeSeconds()
+        {
+            if (!GuestClockEnabled) return 0;
+            if (Speed == ExecutionSpeed.Virtual)
+                return Math.Floor((_guestHostClock?.ElapsedSeconds ?? 0) * 50) * 0.02;
+            return (TotalCycles / 200_000) * 0.02;
+        }
 
         internal ExecutionLoop(MachineCore machine) => _machine = machine;
 
@@ -77,11 +86,12 @@ namespace Besm6.Runtime
             _machine.EnsureExecutionAllowed();
             if (StepAttemptLimit is < 1) throw new ArgumentOutOfRangeException(nameof(StepAttemptLimit));
             Statistics = null;
-            bool countCycles = Speed == ExecutionSpeed.Original || CollectStatistics || GuestClockEnabled;
+            bool hostGuestClock = Speed == ExecutionSpeed.Virtual && GuestClockEnabled;
+            bool countCycles = Speed == ExecutionSpeed.Original || CollectStatistics || (GuestClockEnabled && !hostGuestClock);
             _accounting = countCycles ? new ExecutionAccountingSession(_machine.Cpu) : null;
             Action<Opcode>? observer = InstructionExecuted;
             var diagnostics = new ExecutionDiagnosticsSession(_machine, this);
-            var stopwatch = countCycles || WallClockLimitMs > 0 ? new Stopwatch() : null;
+            var stopwatch = countCycles || hostGuestClock || WallClockLimitMs > 0 ? new Stopwatch() : null;
             long allocatedBefore = CollectStatistics ? GC.GetAllocatedBytesForCurrentThread() : 0;
             int gen0Before = CollectStatistics ? GC.CollectionCount(0) : 0;
             bool previousInstructionCache = _machine.Cpu.InstructionCacheEnabled;
@@ -95,6 +105,7 @@ namespace Besm6.Runtime
             finally
             {
                 stopwatch?.Stop();
+                _guestHostClock = null;
                 if (countCycles)
                     Statistics = new ExecutionStatistics(Speed, _accounting!.TotalInstructions, TotalCycles,
                         stopwatch!.Elapsed.TotalSeconds,
@@ -132,6 +143,11 @@ namespace Besm6.Runtime
             diagnostics.AttachRuntimeObservers();
 
             wallStopwatch?.Start();
+            if (Speed == ExecutionSpeed.Virtual && GuestClockEnabled)
+            {
+                var source = GuestHostTimeSource ?? new StopwatchExecutionTimeSource(wallStopwatch!);
+                _guestHostClock = new RelativeExecutionTimeSource(source, source.ElapsedSeconds);
+            }
             while (InstructionsExecuted < limit && (attemptLimit is null || stepAttempts < attemptLimit.Value))
             {
                 try

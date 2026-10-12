@@ -67,6 +67,9 @@ dotnet $DLL run examples/algol.dub
 # Режимы скорости: max — быстрый (по умолчанию), original — темп как на железе
 dotnet $DLL run examples/algol.dub --speed original
 
+# Производительность эмуляции на текущем хосте через гостевой CTIME
+dotnet $DLL run examples/dhrystone-dmips.dub --speed virtual --guest-clock --stats --no-wall-clock
+
 # Со статистикой исполнения и профилем горячего пути
 dotnet $DLL run examples/algol.dub --stats --profile
 
@@ -146,4 +149,8 @@ dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/whetstone-mwips.d
 dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/memspeed-mbps.dub --guest-clock --speed max --no-wall-clock
 ```
 
-Вывод содержит модельные DMIPS, MFLOPS, MWIPS или MB/s. Производительность хоста измеряется отдельно внешними инструментами. Исходные нетаймированные задания сохраняются для сравнений. Формулы, защитные условия и совпадение состояния в обеих скоростях проверяются `tools/verify_guest_ratings.py`.
+В `max` и `original` вывод содержит модельные DMIPS, MFLOPS, MWIPS или MB/s. В `virtual` гостевой CTIME использует фактическое время исполнительного цикла на хосте: рейтинг показывает производительность эмуляции и зависит от компьютера и его нагрузки. Для этого замените `--speed max` на `--speed virtual`; `--guest-clock` остаётся обязательным. Таймер имеет разрешение 20 мс и обнуляется при каждом запуске. Загрузка и компиляция находятся вне времени тела теста; выключите трассировку и профиль для измерений.
+
+`--stats` дополнительно показывает `elapsedSeconds`, `modelSeconds` и `modelToWallRatio`: модельное время, делённое на фактическое. Значение меньше единицы означает, что эмуляция медленнее модели. Аппаратный `virtual` выполняется без ожиданий как `max`; аппаратные часы ОС и сроки устройств остаются модельными. `DATE*` независим от гостевого таймера.
+
+Исходные нетаймированные задания сохраняются для сравнений. Формулы и защитные условия проверяются `tools/verify_guest_ratings.py`; точное совпадение таймерных результатов требуется между `max` и `original`, но не с `virtual`. Отдельный план и результаты: [plans/Virtual.md](plans/Virtual.md).
