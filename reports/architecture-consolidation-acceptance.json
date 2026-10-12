@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "status": "intermediate_checkpoint",
+  "status": "local_acceptance_complete_waiting_external_N3350",
   "full_acceptance_complete": false,
   "baseline_commit": "c5b2239685ecf11aaf36b6091b2904b803bb002d",
   "candidate_parent_commit": "93153c898da01914556e86b9dcaa24ae318ed5dd",
@@ -5915,9 +5915,7 @@
     "authorized_removed_document_count": 6
   },
   "pending": [
-    "full hardware OS in both speeds",
-    "external N3350 rerun",
-    "final publication"
+    "external N3350 rerun and publication of its results"
   ],
   "fast_accounting_checkpoint_accepted": true,
   "measurement_interference": {
@@ -8965,5 +8963,135 @@
       ],
       "Besm6.Architecture": []
     }
+  },
+  "full_hardware_os": {
+    "validated": true,
+    "tested_candidate_source_commit": "0be2bc759bff47708ceed88db0b1007a18e4707a",
+    "baseline_commit": "c5b2239685ecf11aaf36b6091b2904b803bb002d",
+    "scope": "Complete pinned guest FORTRAN workload, continued OS operation and full guest state including streaming hash of all IO events; no hosted extracodes",
+    "hardware_configuration": "examples/dispak-logical-timing.json",
+    "memory_configuration": "Simh512K",
+    "instruction_attempt_limit": 360000000,
+    "completed_instructions": 359999879,
+    "instruction_clock_ticks": 0,
+    "hardware_time_ns": 430696050250,
+    "state_sha256": "aabcfbb1f29039e7a7a7faefebecd5493b9261a601c6a84c5c0bc22170c56ce1",
+    "full_io_history_sha256": "854bca068285ce82b14de0a4b377c4f3cf5f646be959a52df908e8c9f15553b6",
+    "printed_primes": [
+      9433,
+      19081,
+      29147,
+      39631,
+      50359,
+      61297,
+      72467,
+      83701,
+      95101
+    ],
+    "transfers": {
+      "disk": 329,
+      "header": 0,
+      "drum": 1504
+    },
+    "gate_checks": {
+      "explicit_supported_memory": true,
+      "hardware_dispatcher": true,
+      "hosted_extracodes_disabled": true,
+      "operator_ready": true,
+      "fortran_result": true,
+      "guest_job_completed": true,
+      "operating_system_alive": true,
+      "same_guest_state_original_max": true
+    },
+    "exact_baseline_and_both_speeds_match": true,
+    "comparison_fields": [
+      "guest_state",
+      "state_sha256",
+      "hardware_time_ns",
+      "completed_instructions",
+      "ticks",
+      "hardware_configuration_sha256",
+      "probe_source_sha256",
+      "printed_primes",
+      "guest_job_completed",
+      "operating_system_alive"
+    ],
+    "runs": {
+      "baseline-max": {
+        "speed": "Max",
+        "statistics": {
+          "Speed": "max",
+          "CompletedInstructions": 359999879,
+          "ModelCycles": null,
+          "ElapsedSeconds": 894.9225396,
+          "AllocatedBytes": 78008344040,
+          "Gen0Collections": 18643,
+          "HardwareModelSeconds": 430.69605025,
+          "ModelSeconds": 430.69605025,
+          "InstructionsPerSecond": 402269.31725387956,
+          "ModelToWallRatio": 0.48126628975341984,
+          "OriginalTempoMet": true
+        },
+        "runtime_sha256": "810b3e5e6aa3195648195baaad54e087d34281f518a6bcdeb74dd14329352e9c",
+        "processor_sha256": "bf86db26731b1a3f881c4deed92111f9d5bdc65e6adc98e13a22209646551fbb",
+        "architecture_sha256": "377722da02cec05245836d84653f1586080772b856b9158e13a03bc16992ba68",
+        "probe_source_sha256": "d4305dcbe03664ae61b101b38cf9a9c325701175a91e9d795409de89b40368bd",
+        "hardware_configuration_sha256": "c17ccffa72937157b78e00cb806bf12897b9a8961a0079e871cc908d77b7073a",
+        "raw_evidence_sha256": "4c961fffe6c3cb5d5ef48bdcd10284cfb99c69620fcbf27463076aeffccde7da"
+      },
+      "current-max": {
+        "speed": "Max",
+        "statistics": {
+          "Speed": "max",
+          "CompletedInstructions": 359999879,
+          "ModelCycles": null,
+          "ElapsedSeconds": 915.4494299,
+          "AllocatedBytes": 78008334160,
+          "Gen0Collections": 18646,
+          "HardwareModelSeconds": 430.69605025,
+          "ModelSeconds": 430.69605025,
+          "InstructionsPerSecond": 393249.33441634773,
+          "ModelToWallRatio": 0.47047497784454073,
+          "OriginalTempoMet": true
+        },
+        "runtime_sha256": "f36e74a35f921301f0751ed7dcbca490746b0e6068e18238a4a4fe278b056a66",
+        "processor_sha256": "051dd928418dcedcb18f9481ba7346c998431e85c1100dc796bf11c97557051f",
+        "architecture_sha256": "a1141d6cf254be3da89651aa50db653c22dfc94ed21af4867d91ca5bed376f4b",
+        "probe_source_sha256": "d4305dcbe03664ae61b101b38cf9a9c325701175a91e9d795409de89b40368bd",
+        "hardware_configuration_sha256": "c17ccffa72937157b78e00cb806bf12897b9a8961a0079e871cc908d77b7073a",
+        "raw_evidence_sha256": "2818f496b1c29da395773fd25045daa790ed9afb0153b2c47d5bbf81ebb19dc7"
+      },
+      "current-original": {
+        "speed": "Original",
+        "statistics": {
+          "Speed": "original",
+          "CompletedInstructions": 359999879,
+          "ModelCycles": null,
+          "ElapsedSeconds": 898.8874573,
+          "AllocatedBytes": 78008321408,
+          "Gen0Collections": 18644,
+          "HardwareModelSeconds": 430.69605025,
+          "ModelSeconds": 430.69605025,
+          "InstructionsPerSecond": 400494.940803086,
+          "ModelToWallRatio": 0.47914346423709964,
+          "OriginalTempoMet": false
+        },
+        "runtime_sha256": "f36e74a35f921301f0751ed7dcbca490746b0e6068e18238a4a4fe278b056a66",
+        "processor_sha256": "051dd928418dcedcb18f9481ba7346c998431e85c1100dc796bf11c97557051f",
+        "architecture_sha256": "a1141d6cf254be3da89651aa50db653c22dfc94ed21af4867d91ca5bed376f4b",
+        "probe_source_sha256": "d4305dcbe03664ae61b101b38cf9a9c325701175a91e9d795409de89b40368bd",
+        "hardware_configuration_sha256": "c17ccffa72937157b78e00cb806bf12897b9a8961a0079e871cc908d77b7073a",
+        "raw_evidence_sha256": "d30f4a949ebc7a6c8a494c781269427951a834696bd007050caf7bec4c64fc09"
+      }
+    },
+    "measurement_scope": "Correctness gate with full IO hashing; host elapsed times are capability observations, not the isolated repeated performance benchmark",
+    "original_host_kept_tempo": false
+  },
+  "local_acceptance_complete": true,
+  "publication": {
+    "verified_checkpoint_commit": "4031ca4fabe37e002832f17ba1967968913067fb",
+    "remote_ref": "refs/heads/main",
+    "local_and_remote_checkpoint_match": true,
+    "final_local_acceptance_commit_verification": "Checked against remote ref after push; exact final SHA is reported separately to avoid a self-referential commit hash in this artifact"
   }
 }
