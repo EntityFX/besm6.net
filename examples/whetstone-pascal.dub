@@ -1,0 +1,206 @@
+*name whetstone-pascal
+*pascal
+(* Eight-section Pascal port of examples/whetstone-mwips.dub.
+   Curnow/Wichmann workload; repository normalization: 15869*10 WIPS.
+   Each pass restores initial data; setup, checks and output untimed.
+   CTIME second output is CPU seconds. Use --guest-clock.
+   virtual measures host execution; max/original use model time.
+   Array/procedure sections retain Pascal arrays and var parameters. *)
+program whetst (output);
+const nruns = 100;
+      nops = 15869.0;
+type rvec = packed array [1..4] of real;
+     results = packed array [1..8] of real;
+var e: rvec;
+    tsec, nval, refval: results;
+    x, y, z, t, t1, t2, chk, ct0, ct1, rt0, rt1: real;
+    seconds, ops, score, total: real;
+    i, j, k, l, ipas, nbad: integer;
+
+procedure ctime (var commercial, cpu: real); fortran;
+
+procedure starttime;
+begin
+    ctime(ct0,rt0);
+end;
+
+procedure endtime (section: integer);
+begin
+    ctime(ct1,rt1);
+    tsec[section] := tsec[section]+rt1-rt0;
+end;
+
+procedure pa (var a: rvec; tt, u: real);
+var m: integer;
+begin
+    for m := 1 to 6 do
+    begin
+        a[1] := (a[1]+a[2]+a[3]-a[4])*tt;
+        a[2] := (a[1]+a[2]-a[3]+a[4])*tt;
+        a[3] := (a[1]-a[2]+a[3]+a[4])*tt;
+        a[4] := (-a[1]+a[2]+a[3]+a[4])/u;
+    end;
+end;
+
+procedure p3 (var px, py, pz: real; pt, pt1, pt2: real);
+begin
+    px := py;
+    py := pz;
+    px := pt*(px+py);
+    py := pt1*(px+py);
+    pz := (px+py)/pt2;
+end;
+
+procedure po (var a: rvec);
+begin
+    a[1] := a[2];
+    a[2] := a[3];
+    a[3] := a[1];
+end;
+
+begin
+    writeln('Whetstone Benchmark (Pascal for BESM-6)');
+    refval[1] := -1.13323943676865;
+    refval[2] := -1.13321819868110;
+    refval[3] := 0.0;
+    refval[4] := 12.0;
+    refval[5] := 0.49999052352564;
+    refval[6] := 0.99999988878912;
+    refval[7] := 3.0;
+    refval[8] := 0.75001003274361;
+    for i := 1 to 8 do
+    begin
+        tsec[i] := 0.0;
+        nval[i] := 0.0;
+    end;
+    nbad := 0;
+    chk := 0.0;
+    for ipas := 1 to nruns do
+    begin
+        t := 0.49999975;
+        t1 := 0.50000025;
+        t2 := 2.0;
+        chk := 0.0;
+        e[1] := 1.0;
+        e[2] := -1.0;
+        e[3] := -1.0;
+        e[4] := -1.0;
+        starttime;
+        for i := 1 to 120 do
+        begin
+            e[1] := (e[1]+e[2]+e[3]-e[4])*t;
+            e[2] := (e[1]+e[2]-e[3]+e[4])*t;
+            e[3] := (e[1]-e[2]+e[3]+e[4])*t;
+            e[4] := (-e[1]+e[2]+e[3]+e[4])*t;
+        end;
+        endtime(1);
+        nval[1] := e[4];
+        chk := chk+e[4];
+
+        starttime;
+        for i := 1 to 14 do pa(e,t,t2);
+        endtime(2);
+        nval[2] := e[4];
+        chk := chk+e[4];
+
+        j := 1;
+        starttime;
+        for i := 1 to 345 do
+        begin
+            if j = 1 then j := 2 else j := 3;
+            if j > 2 then j := 0 else j := 1;
+            if j < 1 then j := 1 else j := 0;
+        end;
+        endtime(3);
+        nval[3] := j;
+        chk := chk+j;
+
+        j := 1; k := 2; l := 3;
+        e[1] := 0.0; e[2] := 0.0;
+        starttime;
+        for i := 1 to 210 do
+        begin
+            j := j*(k-j)*(l-k);
+            k := l*k-(l-j)*k;
+            l := (l-k)*(k+j);
+            if l = 2 then e[2] := e[2]+j+k+l
+            else e[1] := e[1]+j+k+l;
+            if k = 2 then e[2] := e[2]+j*k*l
+            else e[1] := e[1]+j*k*l;
+        end;
+        x := (e[1]+e[2])/210.0;
+        endtime(4);
+        nval[4] := x;
+        chk := chk+x;
+
+        x := 0.5; y := 0.5;
+        starttime;
+        for i := 1 to 31 do
+        begin
+            x := t*arctan(t2*sin(x)*cos(x)/
+                 (cos(x+y)+cos(x-y)-1.0));
+            y := t*arctan(t2*sin(y)*cos(y)/
+                 (cos(x+y)+cos(x-y)-1.0));
+        end;
+        endtime(5);
+        nval[5] := y;
+        chk := chk+y;
+
+        x := 1.0; y := 1.0; z := 1.0;
+        starttime;
+        for i := 1 to 899 do p3(x,y,z,t,t1,t2);
+        endtime(6);
+        nval[6] := z;
+        chk := chk+z;
+
+        e[1] := 1.0; e[2] := 2.0;
+        e[3] := 3.0; e[4] := 0.0;
+        starttime;
+        for i := 1 to 616 do po(e);
+        endtime(7);
+        nval[7] := e[3];
+        chk := chk+e[3];
+
+        x := 0.75;
+        starttime;
+        for i := 1 to 93 do x := sqrt(exp(ln(x)/t1));
+        endtime(8);
+        nval[8] := x;
+        chk := chk+x;
+
+        for i := 1 to 8 do
+            if abs(nval[i]-refval[i]) > 0.00000001 then
+                nbad := nbad+1;
+        if abs(chk-14.9835428096086) > 0.0000001 then
+            nbad := nbad+1;
+    end;
+    seconds := 0.0;
+    for i := 1 to 8 do seconds := seconds+tsec[i];
+    ops := nops*nruns;
+    for i := 1 to 8 do
+        writeln('N',i:1,' VALUE ',nval[i]:24:12);
+    writeln('Check sum ',chk:24:12);
+    writeln('REPEAT PASSES=',nruns:6);
+    writeln('BAD CONTROL VALUES=',nbad:6);
+    if nruns <= 0 then
+        writeln('MWIPS UNAVAILABLE: ZERO PASSES')
+    else if nbad <> 0 then
+        writeln('MWIPS UNAVAILABLE: CONTROL VALUES DO NOT MATCH')
+    else
+    begin
+        writeln('ALL 8 CONTROL VALUES MATCH: YES');
+        if seconds < 0.04 then
+            writeln('MWIPS UNAVAILABLE: ENABLE --GUEST-CLOCK ',
+                    'OR RUN LONGER')
+        else
+        begin
+            score := ops*10.0/(seconds*1000000.0);
+            writeln('GUEST CPU SECONDS: ',seconds:20:8);
+            writeln('GUEST MWIPS: ',score:20:8);
+        end;
+    end;
+    stop;
+end.
+*library:22
+*execute
+*end file

@@ -147,6 +147,10 @@ dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/dhrystone-dmips.d
 dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/mpmflops-mflops.dub --guest-clock --speed max --no-wall-clock
 dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/whetstone-mwips.dub --guest-clock --speed max --no-wall-clock
 dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/memspeed-mbps.dub --guest-clock --speed max --no-wall-clock
+
+# Pascal: native records/strings in Dhrystone, arrays/procedures in Whetstone
+dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/dhrystone-pascal.dub --guest-clock --speed virtual --no-wall-clock
+dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/whetstone-pascal.dub --guest-clock --speed virtual --no-wall-clock
 ```
 
 В `max` и `original` вывод содержит модельные DMIPS, MFLOPS, MWIPS или MB/s. В `virtual` гостевой CTIME использует фактическое время исполнительного цикла на хосте: рейтинг показывает производительность эмуляции и зависит от компьютера и его нагрузки. Для этого замените `--speed max` на `--speed virtual`; `--guest-clock` остаётся обязательным. Таймер имеет разрешение 20 мс и обнуляется при каждом запуске. Загрузка и компиляция находятся вне времени тела теста; выключите трассировку и профиль для измерений.
@@ -154,3 +158,11 @@ dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/memspeed-mbps.dub
 `--stats` дополнительно показывает `elapsedSeconds`, `modelSeconds` и `modelToWallRatio`: модельное время, делённое на фактическое. Значение меньше единицы означает, что эмуляция медленнее модели. Аппаратный `virtual` выполняется без ожиданий как `max`; аппаратные часы ОС и сроки устройств остаются модельными. `DATE*` независим от гостевого таймера.
 
 Исходные нетаймированные задания сохраняются для сравнений. Формулы и защитные условия проверяются `tools/verify_guest_ratings.py`; точное совпадение таймерных результатов требуется между `max` и `original`, но не с `virtual`. Отдельный план и результаты: [plans/Virtual.md](plans/Virtual.md).
+
+Pascal-версии используют библиотеку №22 и второй выход CTIME (счётное время CPU). Dhrystone проверяет 18 основных значений и четыре строки; Whetstone — восемь секций и сумму. Проверить все три скорости, контрольные значения и отказ от рейтинга при выключенном таймере, нулевой/короткой нагрузке и неверном результате:
+
+```bash
+python tools/verify_pascal_benchmarks.py --dll src/Besm6.Cli/bin/Release/net8.0/besm6.dll --output tests-run/pascal-check
+```
+
+Параметры нагрузки находятся в исходниках: `numberofruns=5000` и `nruns=100`. Проверочный инструмент создаёт варианты во временном рабочем каталоге; исходные задания не переписывает. Рейтинг публикуется после контроля и при времени не менее 40 мс. Whetstone суммирует квантованные интервалы секций, поэтому для сравнительных измерений нужны повторные прогоны и достаточно длинная нагрузка.
