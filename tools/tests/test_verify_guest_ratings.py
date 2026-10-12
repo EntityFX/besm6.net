@@ -8,6 +8,12 @@ import verify_guest_ratings as guest
 
 
 class GuestRatingVerificationTests(unittest.TestCase):
+    def test_timed_decks_rate_cpu_output_instead_of_commercial_output(self):
+        for filename in guest.SOURCES.values():
+            source = (guest.ROOT / 'examples' / filename).read_text(encoding='utf-8').upper()
+            self.assertRegex(source, r'RT1\s*-\s*RT0', filename)
+            self.assertNotRegex(source, r'CT1\s*-\s*CT0', filename)
+
     def test_clock_neutral_labels_and_legacy_model_labels_use_the_same_formula(self):
         text = "ALL 18 CONTROL VALUES MATCH THE DHRYSTONE 2.1 SPEC\nGUEST CPU SECONDS: 1.52\nGUEST DMIPS: 1.872210"
         self.assertEqual(guest.validate(text, "dh", "good", 1),

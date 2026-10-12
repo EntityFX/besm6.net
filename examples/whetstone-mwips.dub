@@ -67,7 +67,7 @@ C     ---- section 1, floating point, array elements ----
          E3 = (-E0 + E1 + E2 + E3) * T
    10 CONTINUE
       CALL CTIME(CT1,RT1)
-      TSEC(1)=TSEC(1)+CT1-CT0
+      TSEC(1)=TSEC(1)+RT1-RT0
       NVAL(1)=E3
       CHK = CHK + E3
   130 FORMAT ('N1 floating point ', 1P, E20.12)
@@ -78,7 +78,7 @@ C     ---- section 2, floating point, array as parameter ----
          CALL PA (E0, E1, E2, E3, T, T2)
    20 CONTINUE
       CALL CTIME(CT1,RT1)
-      TSEC(2)=TSEC(2)+CT1-CT0
+      TSEC(2)=TSEC(2)+RT1-RT0
       NVAL(2)=E3
       CHK = CHK + E3
   140 FORMAT ('N2 floating point ', 1P, E20.12)
@@ -102,7 +102,7 @@ C     ---- section 3, conditional jumps ----
   206    CONTINUE
    30 CONTINUE
       CALL CTIME(CT1,RT1)
-      TSEC(3)=TSEC(3)+CT1-CT0
+      TSEC(3)=TSEC(3)+RT1-RT0
       NVAL(3)=J
       CHK = CHK + J
   150 FORMAT ('N3 if then else   ', I8)
@@ -130,7 +130,7 @@ C     ---- section 4, integer arithmetic ----
    40 CONTINUE
       X = (E0 + E1) / 210.0
       CALL CTIME(CT1,RT1)
-      TSEC(4)=TSEC(4)+CT1-CT0
+      TSEC(4)=TSEC(4)+RT1-RT0
       NVAL(4)=X
       CHK = CHK + X
   160 FORMAT ('N4 fixed point    ', 1P, E20.12)
@@ -146,7 +146,7 @@ C     ---- section 5, trigonometric functions ----
      $     / (COS(X + Y) + COS(X - Y) - 1.0))
    50 CONTINUE
       CALL CTIME(CT1,RT1)
-      TSEC(5)=TSEC(5)+CT1-CT0
+      TSEC(5)=TSEC(5)+RT1-RT0
       NVAL(5)=Y
       CHK = CHK + Y
   170 FORMAT ('N5 sin,cos etc.   ', 1P, E20.12)
@@ -160,7 +160,7 @@ C     ---- section 6, procedure calls ----
          CALL P3 (X, Y, Z, T, T1, T2)
    60 CONTINUE
       CALL CTIME(CT1,RT1)
-      TSEC(6)=TSEC(6)+CT1-CT0
+      TSEC(6)=TSEC(6)+RT1-RT0
       NVAL(6)=Z
       CHK = CHK + Z
   180 FORMAT ('N6 floating point ', 1P, E20.12)
@@ -176,7 +176,7 @@ C     ---- section 7, array references ----
          CALL PO (E0, E1, E2, E3)
    80 CONTINUE
       CALL CTIME(CT1,RT1)
-      TSEC(7)=TSEC(7)+CT1-CT0
+      TSEC(7)=TSEC(7)+RT1-RT0
       NVAL(7)=E2
       CHK = CHK + E2
   190 FORMAT ('N7 assignments    ', 1P, E20.12)
@@ -188,7 +188,7 @@ C     ---- section 8, standard functions ----
          X = SQRT(EXP(ALOG(X) / T1))
    70 CONTINUE
       CALL CTIME(CT1,RT1)
-      TSEC(8)=TSEC(8)+CT1-CT0
+      TSEC(8)=TSEC(8)+RT1-RT0
       NVAL(8)=X
       CHK = CHK + X
   200 FORMAT ('N8 exp,sqrt etc.  ', 1P, E20.12)
