@@ -56,6 +56,29 @@ def report_environment():
                                       subprocess.check_output(["dotnet", "--list-runtimes"], text=True))}
 
 
+def report_build_identity(dll):
+    """Identify measured binaries and source without host or checkout paths."""
+    dll = pathlib.Path(dll)
+    files = [dll] + [dll.parent / name for name in (
+        "Besm6.Runtime.dll", "Besm6.Processor.dll", "Besm6.Architecture.dll", "Besm6.Assembler.dll")]
+    binaries = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in files if path.is_file()}
+    try:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True, stderr=subprocess.DEVNULL).strip()
+    except (OSError, subprocess.CalledProcessError):
+        commit = None
+    digest = hashlib.sha256()
+    sources = sorted(path for path in (ROOT / "src").rglob("*")
+                     if path.suffix in (".cs", ".csproj") and not {"bin", "obj"}.intersection(path.parts))
+    for path in sources:
+        digest.update(path.relative_to(ROOT).as_posix().encode() + b"\0")
+        digest.update(path.read_bytes().replace(b"\r\n", b"\n") + b"\0")
+    return {"git_commit": commit, "binary_sha256": binaries,
+            "source_tree_sha256": digest.hexdigest(), "source_file_count": len(sources),
+            "source_hash_scope": "src/**/*.cs and csproj excluding bin/obj, repository-relative names and LF-normalized content"}
+
+
 def fortran_number(text):
     """FORTRAN-GDR writes 99.856051500828-02 without an E."""
     value = text.strip().replace("D", "E")
@@ -407,6 +430,7 @@ def main():
         paths.update(prepare_memory_jobs(args.output))
     probe = build_baseline_probe(args.baseline_dll.resolve(), args.output) if args.baseline_dll else None
     metadata = report_environment()
+    metadata["build"] = report_build_identity(args.dll)
     metadata["arguments"] = {k: report_path(v) if isinstance(v, pathlib.Path) else v for k, v in vars(args).items()}
     results = {"environment": metadata, "calibration": {}, "samples": {}, "measurements": [], "accepted": False}
 

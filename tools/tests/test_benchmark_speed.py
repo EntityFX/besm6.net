@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+import tempfile
 from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location("benchmark_speed", Path(__file__).resolve().parents[1] / "benchmark_speed.py")
@@ -9,6 +10,39 @@ SPEC.loader.exec_module(bench)
 
 
 class BenchmarkSpeedTests(unittest.TestCase):
+    def test_build_identity_records_binaries_and_source_without_checkout_paths(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "src").mkdir()
+            (root / "src/Processor.cs").write_bytes(b"public class Processor {}\r\n")
+            (root / "src/obj").mkdir()
+            (root / "src/obj/generated.cs").write_text("excluded", encoding="utf-8")
+            dll = root / "besm6.dll"
+            dll.write_bytes(b"measured binary")
+            with patch.object(bench, "ROOT", root), \
+                 patch.object(bench.subprocess, "check_output", return_value="a" * 40 + "\n"):
+                before = bench.report_build_identity(dll)
+                (root / "src/Processor.cs").write_bytes(b"public class Processor {}\n")
+                normalized = bench.report_build_identity(dll)
+                dll.write_bytes(b"different binary")
+                after = bench.report_build_identity(dll)
+            self.assertEqual(before, normalized)
+            self.assertEqual(before["source_file_count"], 1)
+            self.assertEqual(before["git_commit"], "a" * 40)
+            self.assertNotEqual(before["binary_sha256"], after["binary_sha256"])
+            self.assertNotIn(str(root), str(before))
+
+    def test_build_identity_supports_source_without_git(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            dll = root / "besm6.dll"
+            dll.write_bytes(b"binary")
+            with patch.object(bench, "ROOT", root), \
+                 patch.object(bench.subprocess, "check_output", side_effect=FileNotFoundError):
+                result = bench.report_build_identity(dll)
+            self.assertIsNone(result["git_commit"])
+            self.assertIn("besm6.dll", result["binary_sha256"])
+
     def test_metadata_keeps_versions_without_private_installation_paths(self):
         runtimes = ("  Microsoft.NETCore.App 8.0.24 [C:\\Users\\private-account\\.dotnet\\shared]\n"
                     "Microsoft.WindowsDesktop.App 8.0.24 [D:\\private-profile\\shared]\n"

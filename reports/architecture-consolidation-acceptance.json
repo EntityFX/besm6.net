@@ -8710,15 +8710,15 @@
       "lib2/z005",
       "lib2/z054"
     ],
-    "python_passed": 80,
+    "python_passed": 82,
     "golden": {
       "passed": 3,
       "failed": 0,
       "input_sha256": "e0e99a889a42742e12b460ce279afb9936398eb30cd1555149999bf49a647efc"
     },
     "python_source_sha256": {
-      "tools/benchmark_speed.py": "9bc1a59185de6687a613446c65aa00579889daf8ea948fa94a9f094ec9ee5364",
-      "tools/tests/test_benchmark_speed.py": "1052fff12cc3b1660cc6dfb53714994120079075cc0ad596a124db639720daac"
+      "tools/benchmark_speed.py": "efeda20d1c12304082bbbdb1ab273e49b35994ee526e4db72b2ec0e1ac340040",
+      "tools/tests/test_benchmark_speed.py": "dc2b840ba01b07f7e04aecaeb075ac01e3dcdb93cc3cb15a59929ba82789c2ff"
     }
   },
   "functional_pacing": {
@@ -9093,5 +9093,17 @@
     "remote_ref": "refs/heads/main",
     "local_and_remote_checkpoint_match": true,
     "final_local_acceptance_commit_verification": "Checked against remote ref after push; exact final SHA is reported separately to avoid a self-referential commit hash in this artifact"
+  },
+  "target_benchmark_provenance": {
+    "enabled": true,
+    "recorded_fields": [
+      "git_commit",
+      "binary_sha256",
+      "source_tree_sha256",
+      "source_file_count"
+    ],
+    "scope": "Captured before timed execution; no change to CLI or guest benchmark semantics",
+    "target_command": "bash tools/run_cpu_benchmark.sh --output tests-run/n3350-consolidation",
+    "python_tests_passed": 82
   }
 }
