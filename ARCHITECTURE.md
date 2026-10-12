@@ -10,17 +10,21 @@
 
 ## 2. Компонентная структура и зависимости
 
-Стрелка на диаграмме сборок означает зависимость потребителя от поставщика. Обратной зависимости Processor от Runtime нет: ядро процессора исполняется без загрузчика, системных лент и устройств машины.
+Стрелка на диаграмме локальных сборок означает прямую зависимость потребителя от поставщика, включая доступные через транзитивные ProjectReference ссылки CLR. Состав проверяется по метаданным собранных DLL. Обратной зависимости Processor от Runtime нет: ядро процессора исполняется без загрузчика, системных лент и устройств машины.
 
 ```mermaid
 flowchart TB
-    CLI["Besm6.Cli<br/>командный интерфейс"] --> Runtime["Besm6.Runtime<br/>машина и окружение исполнения"]
+    CLI["besm6.dll / Besm6.Cli<br/>командный интерфейс"] --> Runtime["Besm6.Runtime<br/>машина и окружение исполнения"]
     CLI --> Assembler["Besm6.Assembler<br/>ассемблирование и дизассемблирование"]
-    TUI["Besm6.Tui<br/>терминальный интерфейс"] --> Runtime
+    CLI --> Processor["Besm6.Processor<br/>общая семантика процессора"]
+    CLI --> Architecture["Besm6.Architecture<br/>слова, команды и архитектурные типы"]
+    TUI["besm6-tui.dll / Besm6.Tui<br/>терминальный интерфейс"] --> Runtime
     TUI --> Assembler
-    Runtime --> Processor["Besm6.Processor<br/>общая семантика процессора"]
+    TUI --> Processor
+    TUI --> Architecture
+    Runtime --> Processor
     Runtime --> Assembler
-    Runtime --> Architecture["Besm6.Architecture<br/>слова, команды и архитектурные типы"]
+    Runtime --> Architecture
     Processor --> Architecture
     Assembler --> Architecture
     Visualizer["Besm6.BitVisualizer<br/>представление чисел и команд"] --> Architecture
@@ -58,11 +62,14 @@ flowchart TB
     Hardware --> Timeline["HardwareTimeline<br/>календарь в наносекундах"]
     Hardware --> Buffers["HardwareBufferedMemory<br/>буферы команд, чисел и записи"]
     Buffers --> Port["MramMemoryPort<br/>запросы основной памяти — МОЗУ"]
+    Buffers --> Timeline
+    Port --> Timeline
     Port --> Physical["PhysicalMemory<br/>физические слова и контрольные разряды"]
     Memory -->|аппаратный профиль| Physical
     Machine --> IO["SupervisorIoController<br/>регистры устройств и общие прерывания"]
     IO --> DMA["TimedSupervisorDma<br/>аппаратный обмен"]
     DMA --> Port
+    DMA --> Timeline
     IO -->|аппаратный календарь| Timeline
     Functional --> Scheduler["EventScheduler<br/>календарь инструкционных тиков"]
 ```
@@ -75,9 +82,9 @@ flowchart TB
 
 Обозначим состояние CPU через
 
-\[
+$$
 S_{CPU}=(A,Y,R,C,\operatorname{ApplyC},M,K,H),
-\]
+$$
 
 где `A` — аккумулятор, `Y` — дополнительный регистр результата, `R` — режим арифметики, `C` и `ApplyC` — отложенная модификация адреса, `M` — индексные регистры, `K` — адрес командного слова, `H` — выбор левого или правого полуслова. Внутреннее состояние дополнительно содержит эффективный адрес, признаки защиты, диагностические условия и сведения о подготовленной команде.
 
@@ -89,12 +96,12 @@ S_{CPU}=(A,Y,R,C,\operatorname{ApplyC},M,K,H),
 
 ```mermaid
 sequenceDiagram
-    participant Loop as ExecutionLoop
+    participant Executor as ExecutionLoop
     participant Sim as FunctionalProcessorSimulation
     participant Events as EventScheduler
     participant CPU as Processor
     participant Mem as Память
-    Loop->>Sim: Step или ограниченная пачка
+    Executor->>Sim: Step или ограниченная пачка
     Sim->>Events: Доставить события текущего тика
     Sim->>CPU: Выборка и исполнение полуслова
     CPU->>Mem: Прочитать актуальные биты команды
@@ -103,7 +110,7 @@ sequenceDiagram
     Sim->>Sim: Обновить тик и счётчик завершённых шагов
     Sim->>Sim: Доставить диагностику завершённой команды
     Sim->>Events: Доставить события нового тика
-    Sim-->>Loop: Исход и точное число завершённых шагов
+    Sim-->>Executor: Исход и точное число завершённых шагов
 ```
 
 Один успешно завершённый функциональный шаг увеличивает `SimulationClock` на один тик, включая команду STOP. При исключении CPU дополнительный тик не начисляется. Счётчик уведомлений об исполненных командах имеет собственные точки фиксации; его нельзя автоматически приравнивать к числу успешно завершённых шагов, в частности на исключительном завершении hosted-экстракода.
@@ -175,9 +182,9 @@ sequenceDiagram
 
 Для функционального табличного времени применяется
 
-\[
+$$
 T_{model}=10^{-7}\sum_i c(op_i)\quad\text{секунд}.
-\]
+$$
 
 Инструкционный тик не является табличным тактом и не пересчитывается в наносекунды аппаратного календаря. Аппаратная модель вычисляет время из последовательности готовности ресурсов, а не из указанной суммы.
 
