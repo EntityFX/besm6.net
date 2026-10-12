@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "status": "local_acceptance_complete_waiting_external_N3350",
-  "full_acceptance_complete": false,
+  "status": "complete",
+  "full_acceptance_complete": true,
   "baseline_commit": "c5b2239685ecf11aaf36b6091b2904b803bb002d",
   "candidate_parent_commit": "93153c898da01914556e86b9dcaa24ae318ed5dd",
   "source_sha256": {
@@ -5914,9 +5914,7 @@
     "protected_file_count_verified": 151,
     "authorized_removed_document_count": 6
   },
-  "pending": [
-    "external N3350 rerun and publication of its results"
-  ],
+  "pending": [],
   "fast_accounting_checkpoint_accepted": true,
   "measurement_interference": {
     "series": "accounted-cli",
@@ -9089,7 +9087,7 @@
   },
   "local_acceptance_complete": true,
   "publication": {
-    "verified_checkpoint_commit": "4031ca4fabe37e002832f17ba1967968913067fb",
+    "verified_checkpoint_commit": "c9734135bdbd9d91cc85841e449042aa45b5f6f0",
     "remote_ref": "refs/heads/main",
     "local_and_remote_checkpoint_match": true,
     "final_local_acceptance_commit_verification": "Checked against remote ref after push; exact final SHA is reported separately to avoid a self-referential commit hash in this artifact"
@@ -9105,5 +9103,14 @@
     "scope": "Captured before timed execution; no change to CLI or guest benchmark semantics",
     "target_command": "bash tools/run_cpu_benchmark.sh --output tests-run/n3350-consolidation",
     "python_tests_passed": 82
-  }
+  },
+  "scope_decisions": [
+    {
+      "requirement": "Repeat benchmarks on Celeron N3350",
+      "decision": "Excluded from goal and acceptance by explicit user instruction",
+      "user_instruction": "\u041f\u0440\u043e\u043f\u0443\u0441\u043a N3350 (\u0432\u044b\u043d\u043e\u0441\u0438\u043c \u0438\u0437 \u0446\u0435\u043b\u0438).",
+      "date": "2026-10-12",
+      "result_claimed": false
+    }
+  ]
 }
