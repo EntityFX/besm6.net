@@ -1,0 +1,134 @@
+*name mpmflops-forex
+*forex
+c     MP-MFLOPS kernels, native FOREX 4.13 on BESM-6, 48-bit REAL.
+c     Adapted from the existing verified MP-MFLOPS Fortran port.
+c     Original: D. H. Carey, M. McMahon, P. Semanchuk, anybench.
+c     KPART=1/2/3: 2/8/32 FLOPs per word; 0 skips all kernels.
+c     9000 words, 30 passes, one BESM-6 processor.
+c     CTIME brackets unchanged kernels; checks/output are untimed.
+c     --guest-clock: model seconds in original/max, host in virtual.
+      program mpmfl
+      real x(9000)
+      real xv, av, bv, cv, dv, ev, fv, gv, hv, jv, kv, lv
+      real mv, ov, pv, qv, rv, sv, tv, uv, vv, wv, yv
+      real one, newd
+      integer kpart, nwrds, rpts, opwd, i, ipas, nbad
+      integer ncalc
+      real flops, ct0, ct1, rt0, rt1, secs, score, refval
+      data kpart/1/
+      data nwrds/9000/, rpts/30/, newd/0.999999/
+      data av/0.000020/, xv/0.999950/, bv/0.999980/, cv/0.000011/
+      data dv/1.000011/, ev/0.000012/, fv/0.999992/, gv/0.000013/
+      data hv/1.000013/, jv/0.000014/, kv/0.999994/, lv/0.000015/
+      data mv/1.000015/, ov/0.000016/, pv/0.999996/, qv/0.000017/
+      data rv/1.000017/, sv/0.000018/, tv/1.000018/, uv/0.000019/
+      data vv/1.000019/, wv/0.000021/, yv/1.000021/
+c
+      opwd = 0
+      if (kpart .eq. 1) opwd = 2
+      if (kpart .eq. 2) opwd = 8
+      if (kpart .eq. 3) opwd = 32
+c
+c     ---- data initialisation (identical for every part) ----
+      do 10 i = 1, nwrds
+         x(i) = newd
+ 10   continue
+c
+c     ---- the repeat passes ----
+      call ctime(ct0,rt0)
+      do 30 ipas = 1, rpts
+         if (kpart .eq. 1) then
+            do 20 i = 1, nwrds
+               x(i) = (x(i) + av) * xv
+   20       continue
+         else if (kpart .eq. 2) then
+            do 21 i = 1, nwrds
+               x(i) = (x(i) + av) * bv
+     +              - (x(i) + cv) * dv
+     +              + (x(i) + ev) * fv
+   21       continue
+         else if (kpart .eq. 3) then
+            do 22 i = 1, nwrds
+               x(i) = (x(i) + av) * bv
+     +              - (x(i) + cv) * dv
+     +              + (x(i) + ev) * fv
+     +              - (x(i) + gv) * hv
+     +              + (x(i) + jv) * kv
+     +              - (x(i) + lv) * mv
+     +              + (x(i) + ov) * pv
+     +              - (x(i) + qv) * rv
+     +              + (x(i) + sv) * tv
+     +              - (x(i) + uv) * vv
+     +              + (x(i) + wv) * yv
+   22       continue
+         endif
+   30 continue
+      call ctime(ct1,rt1)
+      secs=rt1-rt0
+c
+c     ---- validation: all elements must be identical ----
+      nbad = 0
+      one = x(1)
+      refval = newd
+      if (kpart .eq. 1) refval=0.99909962371626
+      if (kpart .eq. 2) refval=0.99945928792868
+      if (kpart .eq. 3) refval=0.99856051498457
+
+      if (nwrds .gt. 1) then
+      do 40 i = 2, nwrds
+         if (x(i) .ne. one) nbad = nbad + 1
+ 40   continue
+      endif
+      if (abs(one-refval) .gt. 0.000000001) nbad=nbad+1
+      if (nwrds .ne. 9000 .or. rpts .ne. 30) nbad=nbad+1
+      if (kpart .lt. 0 .or. kpart .gt. 3) nbad=nbad+1
+c     ---- flops actually performed (exact, as in the original) ----
+      ncalc = nwrds * rpts
+      flops = ncalc * opwd
+c
+      print 100, kpart
+      print 200, nwrds
+      print 210, opwd
+      print 220, rpts
+      print 300, flops
+      print 400, one
+      print 500, nbad
+      if (kpart .eq. 0) print 600
+      if (one .eq. newd) print 700
+      if (kpart .ne. 0 .and. one .ne. newd) print 800
+      if (nbad .eq. 0) print 900
+      if (nbad .ne. 0) print 950
+      if (nbad .ne. 0) then
+         print 1030
+      else if (kpart .eq. 0) then
+         print 1020
+      else if (secs .lt. 0.04) then
+         print 1040
+      else
+         score=flops/(secs*1000000.)
+         print 1000, secs
+         print 1010, score
+      endif
+      stop
+ 100  format ('MP-MFLOPS PART ', i2)
+ 200  format ('WORDS=', i6)
+ 210  format ('OPS/WORD=', i3)
+ 220  format ('REPEAT PASSES=', i6)
+ 300  format ('FLOPS=', f24.12)
+ 400  format ('FIRST RESULT=', f24.12)
+ 500  format ('BAD CONTROL VALUES=', i6)
+ 600  format ('BASELINE RUN: NO KERNEL EXECUTED')
+ 700  format ('ERROR - AT LEAST ONE FIRST RESULT OF 0.999999',
+     - ' - NO CALCULATIONS?')
+ 800  format ('CALCULATIONS PERFORMED')
+ 900  format ('ALL SAME: YES')
+ 950  format ('ALL SAME: NO')
+ 1000 format ('GUEST CPU SECONDS: ', f12.4)
+ 1010 format ('GUEST MFLOPS: ', f12.6)
+ 1020 format ('MFLOPS UNAVAILABLE: ZERO KERNEL')
+ 1030 format ('MFLOPS UNAVAILABLE: CONTROL VALUES DO NOT MATCH')
+ 1040 format ('MFLOPS UNAVAILABLE: ENABLE --GUEST-CLOCK',
+     + ' OR RUN LONGER')
+      end
+*execute
+*end file

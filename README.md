@@ -140,6 +140,32 @@ plans/        планы разработки
 
 ## Гостевые показатели производительности
 
+`examples/memspeed-forex.dub` и `examples/mpmflops-forex.dub` выполняются
+настоящим ФОРЕКС 4.13 и используют блочный `IF` для выбора ядра. Значение
+`data kpart/1/` выбирает первый тест; замените 1 на 2 или 3 для остальных
+ядер, на 0 — для запуска без ядра. Число итераций и арифметические
+выражения сохранены из проверенных портов `*ftn`.
+
+Программы самостоятельно печатают рейтинг после проверки результатов:
+Memspeed — `GUEST MB/S` (copy/add/multiply-add, 6 байт на слово БЭСМ-6),
+MPMFLOPS — `GUEST MFLOPS` (2/8/32 операции на слово).
+CTIME измеряет только исполнение ядра; компиляция, подготовка, проверки
+и печать находятся вне измеряемого интервала. При неверных контрольных
+значениях, выключенном таймере или времени менее 40 мс рейтинг не выдаётся.
+
+```powershell
+dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/memspeed-forex.dub --guest-clock --speed original --stats --no-wall-clock --limit 200000000
+dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/mpmflops-forex.dub --guest-clock --speed virtual --stats --no-wall-clock --limit 200000000
+./tools/verify_forex_kernels.ps1 -CheckGuards
+```
+
+Проверочный скрипт запускает все шесть ядер в `original`/`virtual`/`max`,
+сверяет независимые численные результаты, объём данных, число операций,
+формулы рейтингов и конечное состояние `original`/`max`. Защитные сценарии
+проверяются в `max`: нулевое/недопустимое ядро, короткая нагрузка,
+выключенный таймер и испорченный элемент. Для отдельного семейства:
+`-Benchmarks memspeed` или `-Benchmarks mpmflops`.
+
 `examples/dhrystone-forex.dub` — Dhrystone 2.1 для настоящего ФОРЕКС 4.13:
 восемь подпрограмм и три функции, строки `CHARACTER*30`, подстроки,
 сравнение строк, блочный `IF`, глобальные данные через `COMMON` и
