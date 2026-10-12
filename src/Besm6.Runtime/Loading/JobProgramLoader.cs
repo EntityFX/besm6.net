@@ -17,6 +17,7 @@ namespace Besm6.Runtime
 
         public const int DefaultLoadBase = 512;
         public int LoadedBase { get; private set; } = 0;
+        public bool ForexAsFortran { get; set; }
 
         public JobProgramLoader(MachineCore machine, TapeMountService tapes, Action<string>? verboseLog)
         {
@@ -47,7 +48,8 @@ namespace Besm6.Runtime
                 }
                 else
                 {
-                    if (trimmed.StartsWith("*forex", StringComparison.OrdinalIgnoreCase))
+                    if (ForexAsFortran && trimmed.StartsWith("*forex", StringComparison.OrdinalIgnoreCase)
+                        && (trimmed.Length == 6 || char.IsWhiteSpace(trimmed[6]) || trimmed[6] == ':'))
                         trimmed = "*fortran" + trimmed.Substring(6);
                     WriteCosyLine(drum, ref offset, trimmed);
                 }

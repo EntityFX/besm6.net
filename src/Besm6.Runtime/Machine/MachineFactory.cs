@@ -34,6 +34,7 @@ namespace Besm6
                 UseWallClock = cfg.UseWallClock,
                 Speed = cfg.Speed,
                 GuestClockEnabled = cfg.GuestClock,
+                ForexAsFortran = cfg.ForexAsFortran,
             };
         }
 

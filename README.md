@@ -140,6 +140,78 @@ plans/        планы разработки
 
 ## Гостевые показатели производительности
 
+`examples/dhrystone-forex.dub` — Dhrystone 2.1 для настоящего ФОРЕКС 4.13:
+восемь подпрограмм и три функции, строки `CHARACTER*30`, подстроки,
+сравнение строк, блочный `IF`, глобальные данные через `COMMON` и
+двумерный целочисленный массив. Записи представлены полями массивов,
+указатели — индексами двух узлов. Все 18 основных значений и четыре строки
+проверяются после измерения. В отличие от старого варианта `*ftn`, тело
+содержит реальные вызовы процедур; показатели разных портов зависят от
+представления данных и сгенерированного кода.
+
+```powershell
+dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/dhrystone-forex.dub --guest-clock --speed original --stats --no-wall-clock --limit 200000000
+dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/dhrystone-forex.dub --guest-clock --speed virtual --stats --no-wall-clock --limit 200000000
+./tools/verify_forex_dhrystone.ps1 -CheckGuards
+```
+
+Скрипт проверяет 5000 и 10000 проходов в `original`/`virtual`/`max`,
+независимые контрольные значения и строки, формулу DMIPS, одинаковое
+состояние `original`/`max` и защитные сценарии: нулевая/короткая нагрузка,
+выключенный таймер, неверное числовое значение и испорченная строка.
+
+Оригинальные ядра Whetstone Роя Лонгботтома (`whets.for`, 1996) адаптированы в
+`examples/whetstone-longbottom.dub`: 8 проходов × 100, массивы и обращения по
+индексам, чередование T, секционные MFLOPS/MOPS. N1 выполняется десятикратно,
+его время нормализуется делением на 10. MWIPS = 800 / (10 × сумма нормализованных
+времён); итоговый MFLOPS — геометрическое среднее MFLOPS секций N1, N2 и N6.
+REAL БЭСМ-6 имеет 48 бит (40 бит мантиссы), поэтому это не IEEE single precision.
+Автокалибровка длительности и интерактивный ввод сведений о хосте заменены
+фиксированной нагрузкой. Прежний `whetstone-mwips.dub` сохраняет старую методику;
+его MWIPS нельзя напрямую сравнивать с новым портом.
+
+```powershell
+dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/whetstone-longbottom.dub --guest-clock --speed original --stats --no-wall-clock --limit 2000000000
+dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run examples/whetstone-longbottom.dub --guest-clock --speed virtual --stats --no-wall-clock --limit 2000000000
+./tools/verify_longbottom_whetstone.ps1 -Modes original,virtual,max -CheckGuards
+```
+
+Проверочный скрипт сверяет независимые контрольные значения восьми секций,
+количество операций и формулы рейтингов, совпадение вывода `original`/`max`,
+отказ от итоговых рейтингов при выключенном таймере и неверном результате.
+
+Вариант с картами `*name форекс` / `*forex`:
+`examples/whetstone-longbottom-forex.dub`. По умолчанию карта `*forex`
+передаётся монитору без изменения и выбирает настоящий **ФОРЕКС 4.13
+от 11.09.85**, уже находящийся на штатных лентах. Для обратной совместимости
+можно явно включить прежнюю подмену на `*fortran` через JSON-конфигурацию:
+
+```json
+{"forexAsFortran": true}
+```
+
+Передайте этот файл через `--config`; без настройки (или при `false`)
+работает настоящий ФОРЕКС. Свойство также доступно в API как
+`Config.ForexAsFortran` и `DubnaLoader.ForexAsFortran`.
+
+Проверено: настоящий ФОРЕКС выполняет `Hello, World!`, присваивания,
+арифметику и Whetstone. Прежняя ошибка `Illegal instruction 002 рег/mod`
+была вызвана тремя машинными словами, заменёнными пробелами в bundled `monsys.9`;
+образ восстановлен из upstream, контрольная сумма обновлена.
+Результаты прежних прогонов с `forexAsFortran: true` относятся к
+Фортрану-Дубна в режиме совместимости, а не к настоящему ФОРЕКС.
+
+Для режима совместимости циклы N3/N6/N7 разбиты на 100 блоков,
+чтобы границы DO не превышали 32767; число операций сохранено, затраты
+на дополнительные циклы входят во время секций. Допуск контрольных значений
+5E-6 учитывает накопленное округление Фортрана-Дубна.
+
+```powershell
+./tools/verify_longbottom_whetstone.ps1 -Deck examples/whetstone-longbottom-forex.dub -ControlTolerance 0.000005 -Modes original,virtual,max -CheckGuards
+# Явный режим совместимости с Фортраном-Дубна:
+./tools/verify_longbottom_whetstone.ps1 -Deck examples/whetstone-longbottom-forex.dub -ForexAsFortran -ControlTolerance 0.000005 -Modes original,virtual,max -CheckGuards
+```
+
 Число операций и рейтинг вычисляет гостевая программа; специальные параметры рейтингов CLI больше не используются. Для hosted-таймера CTIME требуется `--guest-clock`:
 
 ```bash

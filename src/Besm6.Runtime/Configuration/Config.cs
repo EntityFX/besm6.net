@@ -52,6 +52,10 @@ namespace Besm6
         [JsonPropertyName("guestClock")]
         public bool GuestClock { get; set; }
 
+        /// <summary>Legacy compatibility: rewrite *forex as *fortran instead of invoking FOREX.</summary>
+        [JsonPropertyName("forexAsFortran")]
+        public bool ForexAsFortran { get; set; }
+
         [JsonIgnore]
         private string? SourceDirectory { get; set; }
 

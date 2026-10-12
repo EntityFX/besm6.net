@@ -113,7 +113,7 @@ namespace Besm6.Runtime
             {
                 Name = "monsys.9",
                 TapeId = TapeImage.TapeMonsys,
-                Sha256 = "cc27c8d982231442e4d5b2bb6672945cbcd8caaf47ff3be1e578c5de621908ec",
+                Sha256 = "e26a2036011bc33a2671b052ea63eaa60b6f577235cfe7080837978d1df1118b",
                 Provenance = "MONSYS «Дубна» — операционная система БЭСМ-6, лента 011 oct",
                 License = RuntimeAssetLicense.Bundled,
                 Required = true,

@@ -51,6 +51,8 @@ namespace Besm6.Runtime
         /// <summary>Enable CTIME/STIME: model time in max/original, host elapsed time in virtual.
         /// Independent of DATE*; 20 ms resolution and a new origin for every execution run.</summary>
         public bool GuestClockEnabled { get => _exec.GuestClockEnabled; set => _exec.GuestClockEnabled = value; }
+        /// <summary>Opt-in legacy mapping of *forex to *fortran. By default the monitor receives *forex unchanged.</summary>
+        public bool ForexAsFortran { get => _programLoader.ForexAsFortran; set => _programLoader.ForexAsFortran = value; }
         public ExecutionStatistics? Statistics => _exec.Statistics;
         public Action<Opcode>? InstructionExecuted { get => _exec.InstructionExecuted; set => _exec.InstructionExecuted = value; }
         public Action<string>? Output { get; set; }
