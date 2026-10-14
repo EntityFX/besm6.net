@@ -38,10 +38,12 @@ public sealed class GuestClockTests
             Assert.IsTrue(loader.RunLoaded().Success);
             Assert.IsTrue(loader.HaltedByStop);
             Assert.AreEqual(Word48.Zero, machine.Memory.Read(66)); // 0102: run begins at zero.
-            // 17 outer passes * 8193 inner passes * (NTR1 + VLM2), plus setup.
-            Assert.AreEqual(Word48.FromDouble(.04), machine.Memory.Read(64)); // 0100: commercial time.
-            Assert.AreEqual(Word48.FromDouble(.04), machine.Memory.Read(65)); // 0101: CPU time.
-            Assert.IsTrue(loader.Statistics!.ModelSeconds is > .04 and < .06);
+            // Max retains NTR1 + VLM2 legacy cycles. Original overlaps fetch
+            // with book UU durations and applies its documented calibration.
+            double expected = speed == ExecutionSpeed.Original ? .10 : .04;
+            Assert.AreEqual(Word48.FromDouble(expected), machine.Memory.Read(64)); // commercial time
+            Assert.AreEqual(Word48.FromDouble(expected), machine.Memory.Read(65)); // CPU time
+            Assert.IsTrue(loader.Statistics!.ModelSeconds > expected && loader.Statistics.ModelSeconds < expected + .02);
         }
     }
 

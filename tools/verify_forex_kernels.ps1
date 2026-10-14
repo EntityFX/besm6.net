@@ -78,7 +78,9 @@ try {
                 if($case.scenario -in @('off','short')){ $control=if($case.family -eq 'memspeed'){'ALL VALUES MATCH: YES'}else{'ALL SAME: YES'};if(-not $program.Contains($control)){throw 'Timer guard failed numerical controls'} }
             }
             $stats=[regex]::Match($output,'(?m)^Execution stats: (.+)$').Groups[1].Value | ConvertFrom-Json
-            $state=@{program=$program;finalState=$stats.finalState;memorySha256=$stats.memorySha256;instructions=$stats.statistics.completedInstructions;cycles=$stats.statistics.modelCycles} | ConvertTo-Json -Depth 20 -Compress
+            $state=if($case.scenario -eq 'off'){
+                @{program=$program;finalState=$stats.finalState;memorySha256=$stats.memorySha256;instructions=$stats.statistics.completedInstructions;cycles=$stats.statistics.modelCycles} | ConvertTo-Json -Depth 20 -Compress
+            }else{[regex]::Replace($program,'(?m)^GUEST (CPU SECONDS|MFLOPS|MB/S):[^\r\n]*(\r?\n)?','')}
             if($mode -ne 'virtual'){if($null -ne $modelState -and $modelState -cne $state){throw 'Original/max output or state differs'};$modelState=$state}
             $results+=[pscustomobject]@{benchmark=$case.family;part=$case.part;scenario=$case.scenario;mode=$mode;validated=$true;rating=$rating;unit=$unit;guestSeconds=$seconds;stats=$stats}
             $results | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath (Join-Path $OutputDirectory 'results.json') -Encoding utf8

@@ -109,7 +109,7 @@ def main():
     (args.output/'logs').mkdir()
     config = args.output/'config.json'
     config.write_text(json.dumps({'tapes': str(ROOT/'tapes'), 'useWallClock': False, 'guestClock': False}), encoding='utf-8')
-    result = {'validated': False, 'scope': 'Pascal controls, formulas, guards; exact parity for model clocks only',
+    result = {'validated': False, 'scope': 'Pascal controls, formulas, guards; exact state parity only with guest clock disabled',
               'environment': bench.report_environment(), 'build': bench.report_build_identity(args.dll), 'cases': []}
     def save():
         (args.output/'results.json').write_text(json.dumps(result, indent=2)+'\n', encoding='utf-8')
@@ -131,7 +131,7 @@ def main():
                 parity = {'program_sha256': hashlib.sha256(program.encode()).hexdigest(),
                           'halt_instructions': instructions, 'finalState': report['finalState'],
                           'memorySha256': report['memorySha256'], 'cycles': report['statistics']['modelCycles']}
-                if speed != 'virtual':
+                if scenario == 'off':
                     if reference is not None and parity != reference: raise ValueError('Pascal model-speed parity failed')
                     reference = parity
                 result['cases'].append({'case': case, 'speed': speed, 'passes': passes,

@@ -60,9 +60,13 @@ try {
                 if($case.scenario -in @('off','short') -and $program -notmatch 'BAD CONTROL VALUES=\s*0\b'){throw 'Timer guard did not reach valid controls'}
             }
             $stats=[regex]::Match($output,'(?m)^Execution stats: (.+)$').Groups[1].Value | ConvertFrom-Json
-            $state=@{program=$program;finalState=$stats.finalState;memorySha256=$stats.memorySha256;instructions=$stats.statistics.completedInstructions;cycles=$stats.statistics.modelCycles} | ConvertTo-Json -Depth 20 -Compress
+            # Timer variables, formatting paths and final memory intentionally
+            # differ between clock models. Retain exact state parity clock-off.
+            $state=if($case.scenario -eq 'off'){
+                @{program=$program;finalState=$stats.finalState;memorySha256=$stats.memorySha256;instructions=$stats.statistics.completedInstructions;cycles=$stats.statistics.modelCycles} | ConvertTo-Json -Depth 20 -Compress
+            }else{[regex]::Replace($program,'(?m)^GUEST (CPU SECONDS|DMIPS):[^\r\n]*(\r?\n)?','')}
             if($mode -ne 'virtual'){
-                if($null -ne $modelState -and $modelState -cne $state){throw 'Original/max guest output or final state differs'}
+                if($null -ne $modelState -and $modelState -cne $state){throw 'Original/max controls or clock-off state differ'}
                 $modelState=$state
             }
             $results+=[pscustomobject]@{case=$case.name;passes=$case.passes;mode=$mode;validated=$true;dmips=$rating;guestSeconds=$seconds;stats=$stats}
