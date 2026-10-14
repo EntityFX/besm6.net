@@ -5,7 +5,7 @@ namespace Besm6.Architecture.Machine
     /// <summary>
     /// Неизменяемый снимок регистров процессора до или после инструкции.
     /// </summary>
-    public sealed class ProcessorSnapshot : IRegisters
+    public sealed class ProcessorSnapshot : IProcessorState
     {
         public ProcessorSnapshot(IProcessorState state)
         {
@@ -19,32 +19,33 @@ namespace Besm6.Architecture.Machine
             EffectiveAddress = state.EffectiveAddress;
             InterceptCount = state.InterceptCount;
             InterceptAddress = state.InterceptAddress;
-            M = (uint[])state.M.Clone();
+            _m = state.M.ToArray();
+            M = Array.AsReadOnly(_m);
         }
 
         /// <summary>Счётчик команд K.</summary>
-        public uint K { get; set; }
+        public uint K { get; }
 
         /// <summary>Признак правого полуслова.</summary>
         public bool IsRightHalf { get; }
 
         /// <summary>Аккумулятор A.</summary>
-        public Word48 A { get; set; }
+        public Word48 A { get; }
 
         /// <summary>Регистр младших разрядов Y.</summary>
-        public Word48 Y { get; set; }
+        public Word48 Y { get; }
 
         /// <summary>Регистр режима R.</summary>
-        public uint R { get; set; }
+        public uint R { get; }
 
         /// <summary>Регистр модификации адреса C.</summary>
-        public uint C { get; set; }
+        public uint C { get; }
 
         /// <summary>Признак применения C к следующей инструкции.</summary>
-        public bool ApplyC { get; set; }
+        public bool ApplyC { get; }
 
         /// <summary>Последний исполнительный адрес.</summary>
-        public uint EffectiveAddress { get; set; }
+        public uint EffectiveAddress { get; }
 
         /// <summary>Счётчик перехвата арифметической ошибки.</summary>
         public int InterceptCount { get; }
@@ -53,6 +54,8 @@ namespace Besm6.Architecture.Machine
         public uint InterceptAddress { get; }
 
         /// <summary>Копия индексных регистров M0–M15.</summary>
-        public uint[] M { get; set; }
+        private readonly uint[] _m;
+        public IReadOnlyList<uint> M { get; }
+        ReadOnlySpan<uint> IReadOnlyRegisters.M => _m;
     }
 }

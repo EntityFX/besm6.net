@@ -86,7 +86,7 @@ public sealed class HardwareArithmeticPublicationTests
         Assert.AreEqual(Word48.FromDouble(3), machine.Cpu.A);
     }
 
-    private sealed class ObservedMemory : IMemory
+    private sealed class ObservedMemory : IOperandMemory
     {
         private readonly CoreMemory _memory = new();
         internal Action? Reading;
@@ -101,7 +101,7 @@ public sealed class HardwareArithmeticPublicationTests
         var memory = new ObservedMemory(); var cpu = new Processor(memory);
         memory.Write(1, new(Assembler.Legacy.Assembler.Asm("a+x 10, stop")));
         memory.Write(8, One); cpu.SetA(One.Value);
-        var model = new HardwareProcessorModel(cpu);
+        var model = new HardwareProcessorModel(cpu.PreparedExecution);
         var clock = new SimulationClock();
         var transitions = new List<bool>();
         model.ExecutionStateChanged = active => { transitions.Add(active); clock.AdvancementProhibited = active; };

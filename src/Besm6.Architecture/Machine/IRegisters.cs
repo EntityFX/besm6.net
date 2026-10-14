@@ -1,30 +1,15 @@
 using Besm6.Architecture.Numerics;
 
-namespace Besm6.Architecture.Machine
+namespace Besm6.Architecture.Machine;
+
+/// <summary>Explicit register editing. R writes retain only its six architectural bits.</summary>
+public interface IRegisters : IReadOnlyRegisters
 {
-    public interface IRegisters
-    {
-        /// <summary>
-        /// K — счётчик команд.
-        /// </summary>
-        uint K { get; set; }
-        /// <summary>A — аккумулятор.</summary>
-        Word48 A { get; set; }
-        /// <summary>Y — регистр младших разрядов.</summary>
-        Word48 Y { get; set; }
-        /// <summary>R — регистр режима арифметического устройства.</summary>
-        uint R { get; set; }
-        /// <summary>M — индексные регистры.</summary>
-        uint[] M { get; }
-        /// <summary>C — регистр модификации адреса.</summary>
-        uint C { get; set; }
-
-        bool ApplyC { get; set; }
-
-        /// <summary>
-        /// AEX
-        /// </summary>
-        uint EffectiveAddress { get; set; }
-
-    }
+    new uint K { get; set; }
+    new Word48 A { get; set; }
+    new Word48 Y { get; set; }
+    new uint R { get; set; }
+    new uint C { get; set; }
+    new bool ApplyC { get; set; }
+    new uint EffectiveAddress { get; set; }
 }

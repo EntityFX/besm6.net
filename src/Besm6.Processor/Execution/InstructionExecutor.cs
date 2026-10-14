@@ -1,4 +1,4 @@
-using Besm6.Architecture.Debug;
+using Besm6.Processor.Diagnostics;
 using Besm6.Architecture.Isa;
 using Besm6.Architecture.Machine;
 using Besm6.Architecture.Numerics;
@@ -13,8 +13,8 @@ namespace Besm6.Core
     /// </summary>
     public sealed partial class InstructionExecutor
     {
-        private readonly IProcessor _processor;
-        private readonly IProcessorState _state;
+        private readonly IInstructionHost _processor;
+        private readonly IMutableProcessorState _state;
         private readonly ProcessorMemoryAccess _memory;
         private readonly MemoryInstructionExecutor _memoryInstructions;
         private readonly IndexInstructionExecutor _indexInstructions;
@@ -36,8 +36,8 @@ namespace Besm6.Core
         }
 
         internal InstructionExecutor(
-            IProcessor processor,
-            IProcessorState state,
+            IInstructionHost processor,
+            IMutableProcessorState state,
             ProcessorMemoryAccess memory,
             IAlu alu)
         {

@@ -66,7 +66,7 @@ public sealed class MemoryModelTests
         Assert.AreEqual(original.Machine.Cpu.Y, max.Machine.Cpu.Y);
         Assert.AreEqual(original.Machine.Cpu.R, max.Machine.Cpu.R);
         Assert.AreEqual(original.Machine.Cpu.K, max.Machine.Cpu.K);
-        Assert.AreEqual(original.Machine.Cpu.State.IsRightHalf, max.Machine.Cpu.State.IsRightHalf);
+        Assert.AreEqual(original.Machine.Cpu.MutableState.IsRightHalf, max.Machine.Cpu.MutableState.IsRightHalf);
         Assert.AreEqual(original.Machine.Cpu.C, max.Machine.Cpu.C);
         Assert.AreEqual(original.Machine.Cpu.ApplyC, max.Machine.Cpu.ApplyC);
         for (int i = 0; i < 16; i++) Assert.AreEqual(original.Machine.Cpu.GetM(i), max.Machine.Cpu.GetM(i));
@@ -124,7 +124,7 @@ public sealed class MemoryModelTests
         machine.LoadProgram(new[] { Code("vtm 11(2), stop") }, 8);
         Assert.AreEqual(0, machine.BufferedMemory.Buffers.PendingWriteCount);
         Assert.AreEqual(0, machine.BufferedMemory.Buffers.GetInstructionSnapshot().Length);
-        Assert.IsFalse(machine.Cpu.State.IsRightHalf);
+        Assert.IsFalse(machine.Cpu.MutableState.IsRightHalf);
         machine.Step();
         Assert.IsTrue(machine.Step());
         Assert.AreEqual(9u, machine.Cpu.GetM(2)); // octal 11

@@ -166,7 +166,7 @@ public sealed class HardwareArithmeticBindingTests
     {
         var memory = new FailingMemory(); var cpu = new Processor(memory);
         memory.Write(1, new(Assembler.Legacy.Assembler.Asm("a+x 10, stop"))); cpu.SetA(One.Value);
-        var model = new HardwareProcessorModel(cpu); var command = model.PrepareNextInstruction();
+        var model = new HardwareProcessorModel(cpu.PreparedExecution); var command = model.PrepareNextInstruction();
         model.BindArithmeticInstruction(command, 0, new(100), true);
         var controller = model.CreateArithmeticController(new(100)); controller.GrantCommandPermission();
         var error = Assert.ThrowsExactly<ApplicationException>(() => model.AdvanceTo(new(300)));
@@ -180,7 +180,7 @@ public sealed class HardwareArithmeticBindingTests
         Assert.AreEqual(0UL, model.CompletedInstructions);
     }
 
-    private sealed class FailingMemory : IMemory
+    private sealed class FailingMemory : IOperandMemory
     {
         private readonly CoreMemory _memory = new();
         internal readonly ApplicationException Failure = new("operand read");

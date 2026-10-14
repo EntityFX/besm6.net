@@ -11,7 +11,7 @@ using Processor = global::Besm6.Processor.Cpu.Processor;
 [TestClass]
 public sealed class InstructionCacheTests
 {
-    private sealed class ChangingFetchMemory : IMemory
+    private sealed class ChangingFetchMemory : IOperandMemory
     {
         public int Reads { get; private set; }
         public int Size => 32768;

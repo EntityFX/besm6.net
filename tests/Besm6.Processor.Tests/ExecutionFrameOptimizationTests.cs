@@ -19,7 +19,7 @@ public sealed class ExecutionFrameOptimizationTests
             var memory = new CoreMemory();
             var cpu = new Processor(memory);
             memory.Write(1, new Word48(Assembler.Legacy.Assembler.Asm("vjm 10(2), vjm 10(2)")));
-            cpu.State.K = 1; cpu.State.IsRightHalf = right;
+            cpu.MutableState.K = 1; cpu.MutableState.IsRightHalf = right;
             cpu.SetA(123); cpu.SetY(456);
             cpu.Step();
             Assert.AreEqual(2u, cpu.GetM(2));
@@ -29,7 +29,7 @@ public sealed class ExecutionFrameOptimizationTests
             Assert.AreEqual(456UL, cpu.Y.Value);
 
             memory.Write(1, new Word48(Assembler.Legacy.Assembler.Asm("*50 3, *50 3")));
-            cpu.State.K = 1; cpu.State.IsRightHalf = right;
+            cpu.MutableState.K = 1; cpu.MutableState.IsRightHalf = right;
             ExtracodeCall? received = null;
             cpu.ExtracodeDispatch = call =>
             {
@@ -46,7 +46,7 @@ public sealed class ExecutionFrameOptimizationTests
         }
     }
 
-    private sealed class ObservedMemory : IMemory
+    private sealed class ObservedMemory : IOperandMemory
     {
         private readonly CoreMemory _memory = new();
         internal Action? OnReadOperand;
@@ -76,8 +76,8 @@ public sealed class ExecutionFrameOptimizationTests
         cpu.Step();
         Assert.AreEqual(123UL, cpu.A.Value);
         Assert.AreEqual(456UL, cpu.Y.Value);
-        Assert.AreEqual(7u, cpu.State.C);
-        Assert.IsTrue(cpu.State.ApplyC);
+        Assert.AreEqual(7u, cpu.MutableState.C);
+        Assert.IsTrue(cpu.MutableState.ApplyC);
     }
 
     [TestMethod]

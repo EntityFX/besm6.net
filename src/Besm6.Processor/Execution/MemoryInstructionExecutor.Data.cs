@@ -7,8 +7,6 @@ using System.Runtime.CompilerServices;
 
 namespace Besm6.Core;
 
-internal readonly record struct CpuMemoryTransfer(uint Address, bool Write, Word48 Word);
-
 /// <summary>One set of data transitions; UU (УУ) may wait between them.</summary>
 internal sealed partial class MemoryInstructionExecutor
 {

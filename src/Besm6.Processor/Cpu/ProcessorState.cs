@@ -1,4 +1,4 @@
-using Besm6.Architecture.Debug;
+using Besm6.Processor.Diagnostics;
 using Besm6.Architecture.Machine;
 using Besm6.Architecture.Numerics;
 using Besm6.Architecture.State;
@@ -8,14 +8,16 @@ namespace Besm6.Processor.Cpu
     /// <summary>
     /// Изменяемые архитектурные состояния процессора.
     /// </summary>
-    internal sealed class ProcessorState : IProcessorState
+    internal sealed class ProcessorState : IMutableProcessorState
     {
         public uint K { get; set; }
         public Word48 A { get; set; }
         public Word48 Y { get; set; }
-        public uint[] M { get; set; } = new uint[ArchitectureConstants.IndexRegCount];
+        public uint[] M { get; } = new uint[ArchitectureConstants.IndexRegCount];
+        ReadOnlySpan<uint> IReadOnlyRegisters.M => M;
         public uint C { get; set; }
-        public uint R { get; set; }
+        private uint _r;
+        public uint R { get => _r; set => _r = value & 0x3F; }
         public int InterceptCount { get; set; }
         public uint InterceptAddress { get; set; } = 16;
         public bool IsRightHalf { get; set; }

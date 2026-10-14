@@ -57,7 +57,7 @@ public sealed class HardwareAutomaticExecutionTests
         foreach (bool right in new[] { false, true })
         {
             var expected = Machine(code + ", " + code); var actual = Machine(code + ", " + code);
-            expected.Cpu.State.IsRightHalf = actual.Cpu.State.IsRightHalf = right;
+            expected.Cpu.MutableState.IsRightHalf = actual.Cpu.MutableState.IsRightHalf = right;
             expected.Cpu.Step(); actual.HardwareModel.ConfigureAutomaticExecution(Configuration());
             var result = actual.HardwareModel.AdvanceAutomaticTo(new(100000), 1);
             Assert.AreEqual(HardwareRunBoundary.InstructionLimit, result.Boundary, code);

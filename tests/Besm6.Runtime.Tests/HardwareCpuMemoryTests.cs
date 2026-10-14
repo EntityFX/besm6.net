@@ -90,7 +90,7 @@ public sealed class HardwareCpuMemoryTests
             var expected = Machine(code + ", " + code); var machine = Machine(code + ", " + code);
             foreach (var item in new[] { expected, machine })
             {
-                item.Cpu.State.IsRightHalf = right; item.Cpu.SetA(Word48.FromDouble(1.25).Value);
+                item.Cpu.MutableState.IsRightHalf = right; item.Cpu.SetA(Word48.FromDouble(1.25).Value);
                 item.MappedMemory!.PhysicalMemory.WriteRaw(16, MemoryWord50.Form(Word48.FromDouble(0.75), true, true));
             }
             expected.Cpu.Step(); var model = machine.HardwareModel;

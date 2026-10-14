@@ -19,7 +19,7 @@ namespace Besm6.Tests
     [TestCategory("Architecture")]
     public sealed class ProcessorBranchModeTests
     {
-        private sealed class LinearMemory : IMemory
+        private sealed class LinearMemory : IOperandMemory
         {
             private readonly Word48[] _words = new Word48[32768];
             public Word48 Read(uint address) => _words[address & 0x7FFF];

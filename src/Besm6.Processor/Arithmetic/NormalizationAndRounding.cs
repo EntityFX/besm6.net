@@ -21,9 +21,9 @@ namespace Besm6.Processor.Arithmetic
         private const ulong BITS40 = ArchitectureConstants.BITS40;
         private const ulong BITS41 = ArchitectureConstants.BITS41;
 
-        private readonly IProcessorState _state;
+        private readonly IRegisters _state;
 
-        internal NormalizationAndRounding(IProcessorState state)
+        internal NormalizationAndRounding(IRegisters state)
         {
             _state = state;
         }

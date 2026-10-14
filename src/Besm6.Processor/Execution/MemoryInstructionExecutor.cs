@@ -12,13 +12,13 @@ namespace Besm6.Core
     /// <summary>Исполняет короткие команды памяти и АЛУ 000–037.</summary>
     internal sealed partial class MemoryInstructionExecutor
     {
-        private readonly IProcessorState _state;
+        private readonly IMutableProcessorState _state;
         private readonly ProcessorMemoryAccess _memory;
         private readonly IAlu _alu;
         private readonly ISupervisorControl? _supervisor;
         private MemoryInstructionExecutor? _transferredInstructions;
 
-        internal MemoryInstructionExecutor(IProcessorState state, ProcessorMemoryAccess memory, IAlu alu, ISupervisorControl? supervisor = null)
+        internal MemoryInstructionExecutor(IMutableProcessorState state, ProcessorMemoryAccess memory, IAlu alu, ISupervisorControl? supervisor = null)
         {
             _state = state;
             _memory = memory;

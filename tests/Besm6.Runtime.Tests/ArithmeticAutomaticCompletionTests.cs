@@ -163,7 +163,7 @@ public sealed class ArithmeticAutomaticCompletionTests
         Assert.AreEqual(0UL, machine.Cpu.Y.Value);
         Assert.AreEqual(2UL, model.CompletedInstructions);
         Assert.AreEqual(2U, machine.Cpu.K);
-        Assert.IsFalse(machine.Cpu.State.IsRightHalf);
+        Assert.IsFalse(machine.Cpu.MutableState.IsRightHalf);
     }
 
     [TestMethod]
@@ -201,7 +201,7 @@ public sealed class ArithmeticAutomaticCompletionTests
         Assert.ThrowsExactly<ArgumentException>(() => model.BindArithmeticInstruction(command, new HardwareDuration(100), true,
             new ArithmeticOperandBuffer(ArithmeticOperandBufferKind.ReadNumbers, 2), automaticCompletion: true));
         Assert.AreEqual(1U, machine.Cpu.K);
-        Assert.IsFalse(machine.Cpu.State.IsRightHalf);
+        Assert.IsFalse(machine.Cpu.MutableState.IsRightHalf);
         Assert.AreEqual(0xAAUL, machine.Cpu.A.Value);
         Assert.IsNull(model.Timeline.NextEventTime);
         Assert.IsNull(model.LastIssuedArithmeticCommand);

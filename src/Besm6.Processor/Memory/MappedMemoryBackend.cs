@@ -10,7 +10,7 @@ namespace Besm6.Core;
 /// Shares ordinary instruction handlers; the supervisor profile attaches admission
 /// callbacks. In-flight memory requests and prefetch timing remain a later stage.
 /// </summary>
-public sealed partial class MappedMemoryBackend : IInstructionMemory
+public sealed partial class MappedMemoryBackend : IInstructionMemory, ICommandMemory
 {
     private readonly AddressBuffer _operands = new(8);
     private readonly AddressBuffer _instructions = new(4);
@@ -29,7 +29,7 @@ public sealed partial class MappedMemoryBackend : IInstructionMemory
 
     public PhysicalMemory PhysicalMemory { get; }
     public PageAssignment Assignment { get; }
-    public IMemory HostMemory { get; }
+    public IHostMemory HostMemory { get; }
     public int Size => (int)PhysicalMemory.CapacityWords;
     // Software bootstrap defaults, not hardware cold-reset semantics or CPU M17.
     public bool Supervisor { get; set; } = true;
@@ -237,7 +237,7 @@ public sealed partial class MappedMemoryBackend : IInstructionMemory
     }
 
     // Separate physical loader/debugger view: no protection, control checks or recency.
-    private sealed class HostView(MappedMemoryBackend backend) : IMemory
+    private sealed class HostView(MappedMemoryBackend backend) : IHostMemory
     {
         public int Size => backend.Size;
         public Word48 Read(uint address)

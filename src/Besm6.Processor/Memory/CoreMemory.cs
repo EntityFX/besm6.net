@@ -10,7 +10,7 @@ namespace Besm6.Processor.Memory
     /// Реализация основной оперативной памяти БЭСМ-6.
     /// Банки сохраняют прежнюю нумерацию; слова хранятся в одном массиве.
     /// </summary>
-    public class CoreMemory : IMemory
+    public class CoreMemory : IHostMemory, IOperandMemory, ICommandMemory
     {
         private readonly Word48[] _words;
         private const uint NumBanks = 8;
@@ -48,6 +48,8 @@ namespace Besm6.Processor.Memory
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowAccessViolation(uint address) =>
             throw new IndexOutOfRangeException($"Memory access violation at address 0x{address:X5} (Bank {address % NumBanks})");
+
+        public void StoreCommand(uint address, Word48 word) => Write(address, word);
 
         // Метод для симуляции задержек доступа при конфликтах в банках
         public long GetAccessTimeNs(int address)

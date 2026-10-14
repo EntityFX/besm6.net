@@ -1,4 +1,5 @@
-using Besm6.Architecture.Debug;
+using Besm6.Processor.Diagnostics;
+using Besm6.Processor.Execution;
 using Besm6.Architecture.Isa;
 using Besm6.Architecture.Machine;
 using Besm6.Architecture.Numerics;
@@ -11,34 +12,6 @@ public sealed partial class InstructionExecutor
 {
     private readonly record struct FetchedInstruction(uint Address, bool RightHalf,
         ulong RawWord, uint RawInstruction, DecodedInstruction Instruction, bool ShouldExecute);
-
-    /// <summary>
-    /// A single-use lease on a fetched command. The model driver may advance its
-    /// calendar before completion. Shared handlers either execute at completion
-    /// or accept an arithmetic operand at an explicit PVR boundary; the model
-    /// supplies the common result later. There is no second instruction interpreter.
-    /// </summary>
-    internal readonly struct PreparedInstruction
-    {
-        private readonly InstructionExecutor _owner;
-        private readonly ulong _generation;
-        internal uint Address { get; }
-        internal bool RightHalf { get; }
-        internal DecodedInstruction? Instruction { get; }
-
-        internal PreparedInstruction(InstructionExecutor owner, ulong generation,
-            uint address, bool rightHalf, DecodedInstruction? instruction)
-        {
-            _owner = owner;
-            _generation = generation;
-            Address = address;
-            RightHalf = rightHalf;
-            Instruction = instruction;
-        }
-
-        internal bool BelongsTo(InstructionExecutor owner, ulong generation) =>
-            ReferenceEquals(_owner, owner) && _generation == generation;
-    }
 
     private bool _preparationActive;
     private bool _preparationTransition;

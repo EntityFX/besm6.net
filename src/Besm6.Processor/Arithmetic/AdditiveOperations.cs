@@ -11,10 +11,10 @@ namespace Besm6.Processor.Arithmetic
     /// </summary>
     internal sealed class AdditiveOperations
     {
-        private readonly IProcessorState _state;
+        private readonly IRegisters _state;
         private readonly NormalizationAndRounding _normalizer;
 
-        internal AdditiveOperations(IProcessorState state, NormalizationAndRounding normalizer)
+        internal AdditiveOperations(IRegisters state, NormalizationAndRounding normalizer)
         {
             _state = state;
             _normalizer = normalizer;

@@ -1,4 +1,4 @@
-using CpuProcessor = Besm6.Processor.Cpu.Processor;
+using Besm6.Processor.Execution;
 using Besm6.Architecture.Machine;
 using Besm6.Processor.Memory;
 using Besm6.Runtime.Timing;
@@ -16,7 +16,7 @@ namespace Besm6.Runtime.Modeling;
 /// </summary>
 internal sealed partial class HardwareProcessorModel
 {
-    private readonly CpuProcessor _processor;
+    private readonly IPreparedProcessorExecution _processor;
     private ArithmeticUnitStages? _arithmeticUnitStages;
     private ArithmeticStageController? _arithmeticController;
     private ArithmeticInterruptionPort? _arithmeticInterruptions;
@@ -25,7 +25,7 @@ internal sealed partial class HardwareProcessorModel
     private readonly Action<HardwareBufferedRead> _fetchCompleted, _dataReadCompleted;
     private readonly Action _dataStoreCompleted;
 
-    internal HardwareProcessorModel(CpuProcessor processor, PhysicalMemory? physicalMemory = null, MappedMemoryBackend? mappedMemory = null)
+    internal HardwareProcessorModel(IPreparedProcessorExecution processor, PhysicalMemory? physicalMemory = null, MappedMemoryBackend? mappedMemory = null)
     {
         _processor = processor; _physicalMemory = physicalMemory; _mappedMemory = mappedMemory;
         _fetchBoundary = () => _timedFetchReply.HasValue || _cancellationRequested || !HasPendingInstruction;

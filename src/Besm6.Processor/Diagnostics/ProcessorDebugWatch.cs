@@ -13,10 +13,10 @@ namespace Besm6.Processor.Diagnostics
     /// </summary>
     internal sealed class ProcessorDebugWatch
     {
-        private readonly IProcessor _proc;
-        private readonly IProcessorState _state;
+        private readonly IProcessorDebug _proc;
+        private readonly IMutableProcessorState _state;
 
-        internal ProcessorDebugWatch(IProcessor proc, IProcessorState state)
+        internal ProcessorDebugWatch(IProcessorDebug proc, IMutableProcessorState state)
         {
             _proc = proc;
             _state = state;

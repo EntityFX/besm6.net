@@ -21,7 +21,7 @@ using Processor = global::Besm6.Processor.Cpu.Processor;
 [TestCategory("BookConformance")]
 public sealed class BookConformanceTests
 {
-    private sealed class Memory : IMemory
+    private sealed class Memory : IOperandMemory
     {
         public ulong[] Words { get; } = new ulong[32768];
         public Word48 Read(uint address) => new(Words[address & 32767]);
@@ -68,7 +68,7 @@ public sealed class BookConformanceTests
         from intercept in new[] { false, true }
         select new object[] { v.GetProperty("id").GetString()! + (intercept ? "/intercept" : "/fault"), speed, intercept, v.GetRawText() };
 
-    private static void Load(JsonElement v, IProcessor cpu, IMemory memory)
+    private static void Load(JsonElement v, Processor cpu, IMemory memory)
     {
         var initial = v.GetProperty("initial");
         uint start = initial.GetProperty("k").GetUInt32();
@@ -212,14 +212,14 @@ public sealed class BookConformanceTests
         return new MathematicalLoader(memory);
     }
 
-    private sealed class MathematicalLoader(MappedMemoryBackend memory) : IMemory
+    private sealed class MathematicalLoader(MappedMemoryBackend memory) : IHostMemory
     {
         public int Size => memory.Size;
         public Word48 Read(uint address) => memory.HostMemory.Read(memory.Assignment.TranslateRequest(new(address, false)));
         public void Write(uint address, Word48 word) => memory.HostMemory.Write(memory.Assignment.TranslateRequest(new(address, false)), word);
     }
 
-    private static void AssertState(JsonElement v, IProcessor cpu, bool checkPosition)
+    private static void AssertState(JsonElement v, Processor cpu, bool checkPosition)
     {
         string id = v.GetProperty("id").GetString()!;
         var e = v.GetProperty("expected");

@@ -14,13 +14,13 @@ internal sealed class ExecutionAccountingSession : IDisposable
 {
     private static readonly int[] Cycles = Enumerable.Range(0, 256)
         .Select(opcode => Besm6Timing.CyclesOf((Opcode)opcode)).ToArray();
-    private readonly IProcessor _cpu;
+    private readonly IInstructionAccountingSource _cpu;
     private readonly IProcessorInstructionAccounting _session;
     private bool _disposed;
     internal long TotalInstructions => _session.TotalInstructions;
     internal long TotalCycles => _session.TotalCycles;
 
-    internal ExecutionAccountingSession(IProcessor cpu)
+    internal ExecutionAccountingSession(IInstructionAccountingSource cpu)
     {
         _cpu = cpu;
         _session = cpu.BeginInstructionAccounting(Cycles, Besm6Timing.DefaultCycles);

@@ -1,4 +1,5 @@
 using Besm6.Architecture.Machine;
+using Besm6.Processor.Execution;
 using Besm6.Runtime.Modeling;
 
 namespace Besm6.Runtime.Execution;
@@ -12,11 +13,11 @@ namespace Besm6.Runtime.Execution;
 /// </summary>
 internal sealed class ProcessorExecutionOwnership
 {
-    private readonly IProcessor _cpu;
+    private readonly IExecutionGuard _cpu;
     private readonly FunctionalProcessorSimulation _simulation;
     private HardwareProcessorModel? _model;
 
-    internal ProcessorExecutionOwnership(IProcessor cpu, FunctionalProcessorSimulation simulation)
+    internal ProcessorExecutionOwnership(IExecutionGuard cpu, FunctionalProcessorSimulation simulation)
     {
         _cpu = cpu;
         _simulation = simulation;

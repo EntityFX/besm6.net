@@ -382,7 +382,7 @@ public sealed class ProcessorExtracodeTests
     // unchanged.
     // =====================================================================
 
-    private sealed class LinearMemory : IMemory
+    private sealed class LinearMemory : IOperandMemory
     {
         private readonly Word48[] _words = new Word48[32768];
         public Word48 Read(uint address) => _words[address & 0x7FFF];
@@ -391,18 +391,18 @@ public sealed class ProcessorExtracodeTests
     }
 
     // Память последнего созданного процессора (тесты класса исполняются последовательно).
-    private static IMemory _memory = null!;
+    private static IOperandMemory _memory = null!;
 
-    private static IProcessor CreateProcessor()
+    private static Processor CreateProcessor()
     {
         _memory = new LinearMemory();
         return new Processor(_memory);
     }
 
-    private static void Step(IProcessor cpu) => cpu.Step();
+    private static void Step(Processor cpu) => cpu.Step();
 
     private static void WriteInstructionWord(
-        IProcessor cpu,
+        Processor cpu,
         int address,
         uint left,
         uint right)
@@ -443,7 +443,7 @@ public sealed class ProcessorExtracodeTests
         return (uint)((word >> 24) & 0xFF_FFFFUL); // левое полу-слово = инструкция
     }
 
-    private static void SetMemoryWord(IProcessor cpu, int address, ulong value)
+    private static void SetMemoryWord(Processor cpu, int address, ulong value)
     {
         _memory.Write((uint)address, new Word48(value));
     }
@@ -454,7 +454,7 @@ public sealed class ProcessorExtracodeTests
     }
 
     private static void SetExecutionPoint(
-        IProcessor cpu,
+        Processor cpu,
         int k,
         bool rightHalf)
     {
@@ -474,27 +474,27 @@ public sealed class ProcessorExtracodeTests
         // Теперь: K = k, right_instr_flag = true — следующая Step() возьмёт RIGHT.
     }
 
-    private static int GetK(IProcessor cpu) => (int)cpu.K;
+    private static int GetK(Processor cpu) => (int)cpu.K;
 
-    private static bool IsRightHalfNext(IProcessor cpu) => cpu.RightInstruction;
+    private static bool IsRightHalfNext(Processor cpu) => cpu.RightInstruction;
 
-    private static void SetM(IProcessor cpu, int register, int value) => cpu.SetM(register, (uint)value);
+    private static void SetM(Processor cpu, int register, int value) => cpu.SetM(register, (uint)value);
 
-    private static int GetM(IProcessor cpu, int register) => (int)cpu.GetM(register);
+    private static int GetM(Processor cpu, int register) => (int)cpu.GetM(register);
 
-    private static ulong GetA(IProcessor cpu) => cpu.A.Value;
+    private static ulong GetA(Processor cpu) => cpu.A.Value;
 
-    private static void SetY(IProcessor cpu, ulong value) => cpu.SetY(value);
+    private static void SetY(Processor cpu, ulong value) => cpu.SetY(value);
 
-    private static ulong GetY(IProcessor cpu) => cpu.Y.Value;
+    private static ulong GetY(Processor cpu) => cpu.Y.Value;
 
-    private static void SetRAdditive(IProcessor cpu)
+    private static void SetRAdditive(Processor cpu)
     {
         // Аддитивный режим + сохранение non-mode флагов (как в арифметических тестах).
         cpu.SetR((ulong)(RFlags.OvfDisable | RFlags.RoundDisable | RFlags.Add));
     }
 
-    private static bool IsRLogical(IProcessor cpu)
+    private static bool IsRLogical(Processor cpu)
     {
         return (cpu.R & (uint)RFlags.Mode) == (uint)RFlags.Log;
     }

@@ -1,3 +1,4 @@
+using Besm6.Processor.Cpu;
 using Besm6.Architecture.Machine;
 using Besm6.Architecture.Numerics;
 using Besm6.Processor.Arithmetic;
@@ -17,6 +18,6 @@ internal struct CapturedArithmeticInstructionExecution(uint mode) : IArithmeticI
     public void AddExponent(int delta) => Operation = PreparedArithmeticOperation.AddExponent(delta, mode);
     public void Logical(ref ExecutionFrame frame, Word48 value, LogicalArithmeticOperation operation) =>
         Operation = PreparedArithmeticOperation.Logical(value, operation);
-    public void FinishLogical(IProcessorState state) => IsLogical = true;
-    public void Finish(ref ExecutionFrame frame, IProcessorState state, bool additive) => Additive = additive;
+    public void FinishLogical(IMutableProcessorState state) => IsLogical = true;
+    public void Finish(ref ExecutionFrame frame, IMutableProcessorState state, bool additive) => Additive = additive;
 }

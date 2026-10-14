@@ -30,7 +30,8 @@ namespace Besm6.Runtime
     /// </summary>
     public partial class MachineCore
     {
-        public IMemory Memory { get; }
+        public IHostMemory Memory { get; }
+        public ICommandMemory CommandMemory { get; }
         public MemoryModel MemoryModel { get; }
         /// <summary>Present only for the opt-in functional buffered memory backend.</summary>
         public BufferedMemoryBackend? BufferedMemory { get; }
@@ -70,7 +71,7 @@ namespace Besm6.Runtime
             get
             {
                 if (_hardwareModel is not null) return _hardwareModel;
-                var model = new Modeling.HardwareProcessorModel(Cpu, MappedMemory?.PhysicalMemory, MappedMemory);
+                var model = new Modeling.HardwareProcessorModel(Cpu.PreparedExecution, MappedMemory?.PhysicalMemory, MappedMemory);
                 _executionOwnership.Attach(model);
                 return _hardwareModel = model;
             }
@@ -131,13 +132,17 @@ namespace Besm6.Runtime
             if (!Enum.IsDefined(profile)) throw new ArgumentOutOfRangeException(nameof(profile));
             if (configuration != MemoryConfiguration.Classical32K && profile != ProcessorProfile.Supervisor)
                 throw new ArgumentException("Expanded geometry requires the explicit supervisor profile.", nameof(configuration));
-            IMemory cpuMemory;
-            IMemory hostMemory;
+            IOperandMemory cpuMemory;
+            IHostMemory hostMemory;
+            ICommandMemory commandMemory;
             MemoryModel = memoryModel;
             switch (memoryModel)
             {
                 case MemoryModel.Dubna:
-                    cpuMemory = hostMemory = new CoreMemory(memorySize);
+                    var coreMemory = new CoreMemory(memorySize);
+                    cpuMemory = coreMemory;
+                    hostMemory = coreMemory;
+                    commandMemory = coreMemory;
                     break;
                 case MemoryModel.Buffered:
                     if (memorySize != ArchitectureConstants.WordCount)
@@ -145,6 +150,7 @@ namespace Besm6.Runtime
                     BufferedMemory = new BufferedMemoryBackend();
                     cpuMemory = BufferedMemory;
                     hostMemory = BufferedMemory.HostMemory;
+                    commandMemory = BufferedMemory;
                     break;
                 case MemoryModel.Mapped:
                     if (memorySize != ConfigurationSize(configuration))
@@ -152,6 +158,7 @@ namespace Besm6.Runtime
                     MappedMemory = new MappedMemoryBackend(configuration);
                     cpuMemory = MappedMemory;
                     hostMemory = MappedMemory.HostMemory;
+                    commandMemory = MappedMemory;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(memoryModel));
@@ -164,8 +171,10 @@ namespace Besm6.Runtime
             Devices.RegisterDevice(0x3000, new MagneticDrumDevice("besm6_drum.bin"));
             Devices.RegisterDevice(0x4000, new TeletypeDevice(1));
 
-            // Используем системную шину для маршрутизации между памятью и устройствами.
-            Memory = new SystemBus(hostMemory, Devices);
+            // Host access remains memory-only; guest command publication has its own role.
+            var bus = new SystemBus(hostMemory, Devices);
+            Memory = bus;
+            CommandMemory = commandMemory;
 
             // The buffered backend separates CPU access from coherent host loading/observation.
             // Dubna still uses the original direct CoreMemory path without a bus hop.
@@ -174,8 +183,8 @@ namespace Besm6.Runtime
             Plotter = new Plotter();
 
             // B1: планировщик событий привязан к тем же модельным часам машины.
-            _simulation = new(Cpu, Memory);
-            _executionOwnership = new(Cpu, _simulation);
+            _simulation = new(Cpu.FunctionalExecution, Memory);
+            _executionOwnership = new(Cpu.FunctionalExecution, _simulation);
             if (Cpu.Supervisor is { } supervisor)
             {
                 SupervisorIo = new SupervisorIoController(MappedMemory!, _simulation.Scheduler, () => { });

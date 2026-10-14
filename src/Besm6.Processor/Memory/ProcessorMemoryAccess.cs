@@ -1,4 +1,3 @@
-using Besm6.Architecture.Debug;
 using Besm6.Architecture.Memory;
 using Besm6.Architecture.Numerics;
 using Besm6.Processor.Cpu;
@@ -17,14 +16,14 @@ namespace Besm6.Core
     internal sealed partial class ProcessorMemoryAccess
     {
         private readonly ProcessorDebugWatch _debugWatch;
-        private readonly IMemory _memory;
+        private readonly IOperandMemory _memory;
         private readonly CoreMemory? _coreMemory;
         private readonly IInstructionMemory? _instructionMemory;
         private readonly bool _allowZeroInstructionAddress;
         internal bool IsPlainCoreMemory { get; }
         internal MappedMemoryBackend? MappedBackend => _memory as MappedMemoryBackend;
 
-        internal ProcessorMemoryAccess(ProcessorDebugWatch debugWatch, IMemory memory, bool allowZeroInstructionAddress = false)
+        internal ProcessorMemoryAccess(ProcessorDebugWatch debugWatch, IOperandMemory memory, bool allowZeroInstructionAddress = false)
         {
             _allowZeroInstructionAddress = allowZeroInstructionAddress;
             _debugWatch = debugWatch;

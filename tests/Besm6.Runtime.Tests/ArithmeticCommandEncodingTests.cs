@@ -1,3 +1,4 @@
+using Besm6.Architecture.Debug;
 using System.Text.Json;
 using Besm6.Architecture.Isa;
 using Besm6.Architecture.Machine;
@@ -53,7 +54,7 @@ public sealed class ArithmeticCommandEncodingTests
             model.AdvanceTo(new(800));
             Assert.AreEqual(JsonSerializer.Serialize(new ProcessorSnapshot(serial.Cpu.State)),
                 JsonSerializer.Serialize(new ProcessorSnapshot(staged.Cpu.State)), instruction);
-            Assert.AreEqual(serial.Cpu.State.StackCorrection, staged.Cpu.State.StackCorrection);
+            Assert.AreEqual(serial.Cpu.MutableState.StackCorrection, staged.Cpu.MutableState.StackCorrection);
             Assert.AreEqual(serial.Memory.Read(8), staged.Memory.Read(8));
             CollectionAssert.AreEqual(serialTrace, stagedTrace);
             Assert.AreEqual(1UL, model.CompletedInstructions);
@@ -68,12 +69,12 @@ public sealed class ArithmeticCommandEncodingTests
         machine.Memory.Write(8, Word48.FromDouble(0.75));
         machine.Cpu.SetA(Word48.FromDouble(1.25).Value); machine.Cpu.SetY(0x123456789);
         machine.Cpu.SetM(15, 9); machine.Cpu.SetR(mode);
-        machine.Cpu.State.ApplyC = true; machine.Cpu.State.C = 0;
-        machine.Cpu.State.IsRightHalf = right;
+        machine.Cpu.MutableState.ApplyC = true; machine.Cpu.MutableState.C = 0;
+        machine.Cpu.MutableState.IsRightHalf = right;
         return machine;
     }
 
-    private static void Observe(IProcessor cpu, List<string> trace)
+    private static void Observe(IProcessorDebug cpu, List<string> trace)
     {
         cpu.InstructionTrace = record => trace.Add(JsonSerializer.Serialize(record));
         cpu.InstructionExecuted = opcode => trace.Add(opcode.ToString());
@@ -85,7 +86,7 @@ public sealed class ArithmeticCommandEncodingTests
     public void ImmediateIssueUsesSharedCIndexAndAddressWrappingWithoutAdvancing(bool right)
     {
         var machine = Machine("e+n 77777(3)", right);
-        machine.Cpu.SetM(3, 2); machine.Cpu.State.C = 64;
+        machine.Cpu.SetM(3, 2); machine.Cpu.MutableState.C = 64;
         var model = machine.HardwareModel; var cpu = model.PrepareNextInstruction();
         string before = JsonSerializer.Serialize(new ProcessorSnapshot(machine.Cpu.State));
         var handle = model.BindArithmeticInstruction(cpu, new HardwareDuration(100), false);
@@ -96,7 +97,7 @@ public sealed class ArithmeticCommandEncodingTests
         model.ScheduleBoundArithmeticCompletionAt(cpu, new(800)); model.AdvanceTo(new(800));
         Assert.AreEqual(Word48.FromDouble(2.5), machine.Cpu.A);
         Assert.IsFalse(machine.Cpu.ApplyC);
-        Assert.AreEqual(65u, machine.Cpu.State.EffectiveAddress);
+        Assert.AreEqual(65u, machine.Cpu.MutableState.EffectiveAddress);
     }
 
     [TestMethod]
@@ -149,7 +150,7 @@ public sealed class ArithmeticCommandEncodingTests
         Assert.ThrowsExactly<ArgumentException>(() => model.BindArithmeticInstruction(cpu, new ArithmeticCommandWord(0x3942), new(100), true));
         var handle = model.BindArithmeticInstruction(cpu, new HardwareDuration(100), true);
         var controller = model.CreateArithmeticController(new(100)); controller.GrantCommandPermission();
-        machine.Cpu.State.C = 1;
+        machine.Cpu.MutableState.C = 1;
         Assert.ThrowsExactly<InvalidOperationException>(() => controller.TryAcceptDirectOperand(handle));
         Assert.AreEqual(1u, machine.Cpu.K); Assert.IsFalse(machine.Cpu.RightInstruction);
         Assert.IsTrue(model.HasPendingInstruction);

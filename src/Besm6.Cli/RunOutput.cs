@@ -46,7 +46,7 @@ internal static class RunOutput
                 finalState = new { finalState.K, finalState.IsRightHalf, A = finalState.A.Value,
                     Y = finalState.Y.Value, finalState.R, finalState.C, finalState.ApplyC,
                     finalState.EffectiveAddress, finalState.InterceptCount, finalState.InterceptAddress,
-                    finalState.M, ClockTicks = machine.Clock.Tick },
+                    M = finalState.M.ToArray(), ClockTicks = machine.Clock.Tick },
                 memorySha256 = Convert.ToHexString(hash.GetHashAndReset()),
             };
             Console.WriteLine("Execution stats: " + JsonSerializer.Serialize(report,

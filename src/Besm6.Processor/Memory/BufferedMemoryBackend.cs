@@ -9,11 +9,11 @@ namespace Besm6.Processor.Memory;
 /// CPU Read/Write are operand accesses; HostMemory is a separate coherent loader view.
 /// This is not a supervisor/MMU profile or a hardware timing model.
 /// </summary>
-public sealed class BufferedMemoryBackend : IInstructionMemory
+public sealed class BufferedMemoryBackend : IInstructionMemory, ICommandMemory
 {
     public PhysicalMemory PhysicalMemory { get; } = new();
     public BufferedMemory Buffers { get; }
-    public IMemory HostMemory { get; }
+    public IHostMemory HostMemory { get; }
     public int Size => (int)ArchitectureConstants.WordCount;
 
     public BufferedMemoryBackend()
@@ -28,8 +28,9 @@ public sealed class BufferedMemoryBackend : IInstructionMemory
     public Word48 Read(uint address) => Buffers.LoadOperand(address);
     public void Write(uint address, Word48 word) => Buffers.Store(address, word, true, true);
     public Word48 FetchInstruction(uint address, bool rightHalf) => Buffers.FetchInstruction(address, rightHalf);
+    public void StoreCommand(uint address, Word48 word) => HostMemory.Write(address, word);
 
-    private sealed class HostView(BufferedMemoryBackend backend) : IMemory
+    private sealed class HostView(BufferedMemoryBackend backend) : IHostMemory
     {
         public int Size => backend.Size;
         public Word48 Read(uint address) => backend.Buffers.PeekOperand(address).Data;

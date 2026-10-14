@@ -1,4 +1,4 @@
-using CpuProcessor = Besm6.Processor.Cpu.Processor;
+using Besm6.Processor.Execution;
 using Besm6.Architecture.Machine;
 using Besm6.Architecture.Memory;
 
@@ -11,15 +11,15 @@ namespace Besm6.Runtime.Execution;
 /// </summary>
 internal sealed class FunctionalProcessorSimulation
 {
-    private readonly CpuProcessor Cpu;
-    private readonly IMemory Memory;
+    private readonly IFunctionalProcessorExecution Cpu;
+    private readonly IHostMemory Memory;
     private readonly SimulationClock _clock = new();
     private readonly EventScheduler _scheduler;
     private const ulong TicksPerInstruction = MachineCore.TicksPerInstruction;
     internal SimulationClock Clock => _clock;
     internal EventScheduler Scheduler => _scheduler;
 
-    internal FunctionalProcessorSimulation(CpuProcessor cpu, IMemory memory)
+    internal FunctionalProcessorSimulation(IFunctionalProcessorExecution cpu, IHostMemory memory)
     {
         Cpu = cpu;
         Memory = memory;
@@ -53,7 +53,7 @@ internal sealed class FunctionalProcessorSimulation
         _rtC = Cpu.C;
         _rtApplyC = Cpu.ApplyC;
         for (int index = 0; index < 16; index++)
-        _rtM[index] = Cpu.GetM(index);
+        _rtM[index] = Cpu.M[index];
     }
 
     private void EmitRegisterTrace()
@@ -76,7 +76,7 @@ internal sealed class FunctionalProcessorSimulation
         if (y != _rtY) sink("Y", y);
         for (int index = 0; index < 16; index++)
         {
-            uint value = Cpu.GetM(index);
+            uint value = Cpu.M[index];
             if (value != _rtM[index])
             sink("M" + Convert.ToString(index, 8), value);
         }
@@ -89,7 +89,7 @@ internal sealed class FunctionalProcessorSimulation
         _rtC = c;
         _rtApplyC = applyC;
         for (int index = 0; index < 16; index++)
-        _rtM[index] = Cpu.GetM(index);
+        _rtM[index] = Cpu.M[index];
     }
 
     public bool Step()

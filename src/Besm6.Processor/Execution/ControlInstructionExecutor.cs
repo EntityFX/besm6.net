@@ -8,11 +8,11 @@ namespace Besm6.Processor.Execution
     /// <summary>Исполняет длинные команды управления 0220–0370.</summary>
     internal sealed class ControlInstructionExecutor
     {
-        private readonly IProcessorState _state;
+        private readonly IMutableProcessorState _state;
         private readonly ProcessorMemoryAccess _memory;
         private readonly MemoryInstructionExecutor _data;
 
-        internal ControlInstructionExecutor(IProcessorState state, ProcessorMemoryAccess memory, MemoryInstructionExecutor data)
+        internal ControlInstructionExecutor(IMutableProcessorState state, ProcessorMemoryAccess memory, MemoryInstructionExecutor data)
         {
             _state = state;
             _memory = memory; _data = data;

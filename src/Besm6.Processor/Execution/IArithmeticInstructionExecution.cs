@@ -15,6 +15,6 @@ internal interface IArithmeticInstructionExecution
     void ChangeSign(bool negate);
     void AddExponent(int delta);
     void Logical(ref ExecutionFrame frame, Word48 value, LogicalArithmeticOperation operation);
-    void FinishLogical(IProcessorState state);
-    void Finish(ref ExecutionFrame frame, IProcessorState state, bool additive);
+    void FinishLogical(IMutableProcessorState state);
+    void Finish(ref ExecutionFrame frame, IMutableProcessorState state, bool additive);
 }

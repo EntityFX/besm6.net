@@ -8,11 +8,11 @@ namespace Besm6.Processor.Execution
     /// <summary>Исполняет индексные команды 040–047.</summary>
     internal sealed class IndexInstructionExecutor
     {
-        private readonly IProcessorState _state;
+        private readonly IMutableProcessorState _state;
         private readonly ProcessorMemoryAccess _memory;
         private readonly MemoryInstructionExecutor _data;
 
-        internal IndexInstructionExecutor(IProcessorState state, ProcessorMemoryAccess memory, MemoryInstructionExecutor data)
+        internal IndexInstructionExecutor(IMutableProcessorState state, ProcessorMemoryAccess memory, MemoryInstructionExecutor data)
         {
             _state = state;
             _memory = memory; _data = data;

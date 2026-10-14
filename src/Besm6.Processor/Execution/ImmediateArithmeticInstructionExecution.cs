@@ -19,8 +19,8 @@ internal readonly struct ImmediateArithmeticInstructionExecution(IAlu alu) : IAr
         frame.A = result.A.Value;
         frame.Y = result.Y.Value;
     }
-    public void FinishLogical(IProcessorState state) => state.SetLogical();
-    public void Finish(ref ExecutionFrame frame, IProcessorState state, bool additive)
+    public void FinishLogical(IMutableProcessorState state) => state.SetLogical();
+    public void Finish(ref ExecutionFrame frame, IMutableProcessorState state, bool additive)
     {
         frame.RegistersInState = true;
         if (additive) state.SetAdditive(); else state.SetMultiplicative();

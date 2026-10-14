@@ -20,12 +20,7 @@ namespace Besm6.Processor.Arithmetic
         private readonly MultiplicativeOperations _multiplicative;
         private readonly ShiftOperations _shift;
 
-        public Alu(IProcessor proc)
-            : this(proc.State)
-        {
-        }
-
-        internal Alu(IProcessorState state)
+        public Alu(IRegisters state)
         {
             _normalizer = new NormalizationAndRounding(state);
             _additive = new AdditiveOperations(state, _normalizer);

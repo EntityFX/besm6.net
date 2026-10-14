@@ -16,7 +16,7 @@ namespace Besm6.Tests
         /// <summary>
         /// Минимальная IMemory для unit-теста.
         /// </summary>
-        private sealed class TestMemory : IMemory
+        private sealed class TestMemory : IOperandMemory
         {
             private readonly Word48[] _words;
             public TestMemory(int size) { _words = new Word48[size]; }

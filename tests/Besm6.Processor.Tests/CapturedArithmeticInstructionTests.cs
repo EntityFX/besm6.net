@@ -1,3 +1,4 @@
+using Besm6.Processor.Execution;
 using Besm6.Architecture.Machine;
 using Besm6.Architecture.Memory;
 using Besm6.Architecture.Numerics;
@@ -22,7 +23,7 @@ public sealed class CapturedArithmeticInstructionTests
         cpu.SetA(Word48.FromDouble(1.25).Value);
         cpu.SetY(0x123456789);
         cpu.SetM(15, 9);
-        cpu.State.IsRightHalf = right;
+        cpu.MutableState.IsRightHalf = right;
         return cpu;
     }
     private static string? Failure(Action action)
@@ -30,7 +31,7 @@ public sealed class CapturedArithmeticInstructionTests
         try { action(); return null; }
         catch (ProcessorException failure) { return failure.GetType().Name + ":" + failure.Message; }
     }
-    private static void Finish(Processor cpu, in InstructionExecutor.PreparedInstruction command)
+    private static void Finish(Processor cpu, in PreparedInstruction command)
     {
         var operation = cpu.CaptureArithmeticOperand(in command);
         if (operation is { } input)
@@ -69,8 +70,8 @@ public sealed class CapturedArithmeticInstructionTests
             {
                 var records = ReferenceEquals(cpu, serial) ? a : b;
                 cpu.SetR(mode);
-                cpu.State.ApplyC = true;
-                cpu.State.C = 0;
+                cpu.MutableState.ApplyC = true;
+                cpu.MutableState.C = 0;
                 cpu.InstructionTrace = record => records.Add(JsonSerializer.Serialize(record));
                 cpu.InstructionExecuted = op => records.Add(op.ToString());
             }
@@ -82,7 +83,7 @@ public sealed class CapturedArithmeticInstructionTests
             phased.CanonPost(phased.K, phased.RightInstruction);
             Assert.AreEqual(JsonSerializer.Serialize(new ProcessorSnapshot(serial.State)),
                 JsonSerializer.Serialize(new ProcessorSnapshot(phased.State)), instruction);
-            Assert.AreEqual(serial.State.StackCorrection, phased.State.StackCorrection);
+            Assert.AreEqual(serial.MutableState.StackCorrection, phased.MutableState.StackCorrection);
             Assert.AreEqual(serial.LastStepCompleted, phased.LastStepCompleted);
             CollectionAssert.AreEqual(a, b);
         }
@@ -111,7 +112,7 @@ public sealed class CapturedArithmeticInstructionTests
         var command = cpu.PrepareInstruction();
         cpu.CaptureArithmeticOperand(in command);
         Assert.AreEqual(8u, cpu.GetM(15));
-        Assert.AreEqual(1, cpu.State.StackCorrection);
+        Assert.AreEqual(1, cpu.MutableState.StackCorrection);
         Assert.ThrowsExactly<InvalidOperationException>(() => cpu.CaptureArithmeticOperand(in command));
         cpu.SupplyArithmeticResult(in command, new(Word48.FromDouble(2), Word48.Zero, false, false), null);
         cpu.CompleteInstruction(in command);
@@ -179,7 +180,7 @@ public sealed class CapturedArithmeticInstructionTests
         Assert.AreEqual(Word48.FromDouble(0.75), load.A);
     }
 
-    private sealed class ObservedMemory : IMemory
+    private sealed class ObservedMemory : IOperandMemory
     {
         private readonly CoreMemory _memory = new();
         internal int OperandReads;
@@ -210,7 +211,7 @@ public sealed class CapturedArithmeticInstructionTests
         cpu.MemStore(8, Word48.FromDouble(99).Value);
         foreach (double operand in new[] { 0.5, 2.0, 1.0, 4.0, 0.5 })
         {
-            cpu.StartAt(1); cpu.State.IsRightHalf = right;
+            cpu.StartAt(1); cpu.MutableState.IsRightHalf = right;
             cpu.SetA(Word48.FromDouble(1).Value);
             var command = cpu.PrepareInstruction();
             var operation = cpu.CaptureTransferredArithmeticOperand(in command, 8, Word48.FromDouble(operand), null)!.Value;
@@ -279,7 +280,7 @@ public sealed class CapturedArithmeticInstructionTests
     public void NonzeroAddressModificationIsConsumedAtTheSameBoundary()
     {
         var serial = Create("a+x 1"); var phased = Create("a+x 1");
-        foreach (var cpu in new[] { serial, phased }) { cpu.State.C = 7; cpu.State.ApplyC = true; }
+        foreach (var cpu in new[] { serial, phased }) { cpu.MutableState.C = 7; cpu.MutableState.ApplyC = true; }
         serial.Step();
         var command = phased.PrepareInstruction();
         Finish(phased, in command);

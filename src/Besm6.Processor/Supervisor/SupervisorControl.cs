@@ -19,7 +19,7 @@ public sealed class SupervisorControl : ISupervisorControl
     public const uint SavedFlagsMask = 0x73F;
     public const uint SavedRightHalf = 0x100;
     public const uint SavedNextInstruction = 0x200;
-    private readonly IProcessorState _state;
+    private readonly IMutableProcessorState _state;
     private readonly MappedMemoryBackend _memory;
     private readonly uint[] _special = new uint[32];
     private ControlUnitStatus _status;
@@ -28,7 +28,7 @@ public sealed class SupervisorControl : ISupervisorControl
     private bool _instructionWatchActive;
     private bool _operandWatchActive;
 
-    internal SupervisorControl(IProcessorState state, MappedMemoryBackend memory)
+    internal SupervisorControl(IMutableProcessorState state, MappedMemoryBackend memory)
     {
         _state = state;
         _memory = memory;

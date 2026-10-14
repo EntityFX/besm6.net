@@ -1,4 +1,4 @@
-using Besm6.Architecture.Debug;
+using Besm6.Processor.Diagnostics;
 using Besm6.Architecture.Memory;
 using Besm6.Architecture.Numerics;
 using Besm6.Processor.Cpu;
@@ -37,7 +37,7 @@ internal sealed partial class ProcessorMemoryAccess
     internal void EndTransferredOperand() => _transferMemory!.End();
 
     // Only the synchronous capture owns this view. No calendar entry retains it.
-    private sealed class TransferredOperandMemory(int size) : IMemory
+    private sealed class TransferredOperandMemory(int size) : IOperandMemory
     {
         private bool _active, _consumed;
         private uint _address;

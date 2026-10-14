@@ -1,40 +1,34 @@
 using System;
 using System.Text;
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Extracodes
 {
     /// <summary>
     /// E64 instruction formatter.
     /// </summary>
-    public sealed partial class ExtracodeHandler
+    internal sealed partial class HostedPrintService
     {
-
         // --- Instructions ---
-
-        private int E64PrintInstructions(int startAddr, int endAddr,
-            int width, int repeat)
+        private int E64PrintInstructions(int startAddr, int endAddr, int width, int repeat)
         {
             while (startAddr != 0)
             {
                 if (endAddr != 0 && startAddr == endAddr + 1)
                     return startAddr;
-
                 if (_e64Position >= E64_LINE_WIDTH)
                 {
-                    if (endAddr == 0) return 0;
+                    if (endAddr == 0)
+                        return 0;
                     return startAddr;
                 }
 
                 long word = MemRead(startAddr);
                 startAddr++;
-
                 int a = (int)(word >> 24) & 0xFFFFFF;
                 int b = (int)(word & 0xFFFFFF);
-
                 E64PrintCmd(a);
                 E64PutChar(G_SPACE);
                 E64PrintCmd(b);
-
                 if (repeat == 0)
                 {
                     if (endAddr != 0 && startAddr <= endAddr)
@@ -47,10 +41,12 @@ namespace Besm6.Runtime
                         return startAddr;
                     }
                 }
+
                 repeat--;
                 if (width > 23)
                     _e64Position += width - 23;
             }
+
             return 0;
         }
 
@@ -73,6 +69,7 @@ namespace Besm6.Runtime
                 E64PutChar((cmd >> 12) & 7);
                 E64PutChar(G_SPACE);
             }
+
             E64PutChar((cmd >> 9) & 7);
             E64PutChar((cmd >> 6) & 7);
             E64PutChar((cmd >> 3) & 7);

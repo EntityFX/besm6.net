@@ -34,9 +34,10 @@ public sealed class ExecutionSpeedJsonConverter : JsonConverter<ExecutionSpeed>
     }
 }
 
-internal static class ExecutionSpeedNames
+/// <summary>Shared speed spellings accepted by configuration and command-line clients.</summary>
+public static class ExecutionSpeedNames
 {
-    internal static bool TryParse(string? text, out ExecutionSpeed speed)
+    public static bool TryParse(string? text, out ExecutionSpeed speed)
     {
         speed = ExecutionSpeed.Max;
         if (string.Equals(text, "max", StringComparison.OrdinalIgnoreCase)) return true;

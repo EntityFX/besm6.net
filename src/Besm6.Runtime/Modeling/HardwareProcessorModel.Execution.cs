@@ -1,3 +1,4 @@
+using Besm6.Processor.Execution;
 using Besm6.Architecture.Machine;
 using Besm6.Architecture.Isa;
 using Besm6.Processor.Arithmetic;
@@ -18,7 +19,7 @@ internal readonly struct HardwareInstructionHandle
     internal HardwareInstant PreparedAt { get; }
 
     internal HardwareInstructionHandle(object owner, ulong sequence,
-        in InstructionExecutor.PreparedInstruction instruction, HardwareInstant time)
+        in PreparedInstruction instruction, HardwareInstant time)
     {
         _owner = owner;
         Sequence = sequence;
@@ -48,7 +49,7 @@ internal sealed class HardwareExecutionObserverException : Exception
 
 internal sealed partial class HardwareProcessorModel
 {
-    private InstructionExecutor.PreparedInstruction? _pendingInstruction;
+    private PreparedInstruction? _pendingInstruction;
     private HardwareInstructionHandle _pendingHandle;
     private HardwareEventToken _readyEvent;
     private bool _completionReady;
@@ -100,7 +101,7 @@ internal sealed partial class HardwareProcessorModel
             if (_processor.Supervisor is not null && PendingArithmeticInterruption != 0)
                 throw new InvalidOperationException("The UU must accept the pending arithmetic interruption before the next fetch.");
             ulong sequence = checked(_sequence + 1);
-            InstructionExecutor.PreparedInstruction instruction;
+            PreparedInstruction instruction;
             bool prohibited = Timeline.AdvancementProhibited;
             Timeline.AdvancementProhibited = true;
             try { instruction = _processor.PrepareInstruction(); }
@@ -259,7 +260,7 @@ internal sealed partial class HardwareProcessorModel
             (_pendingInstruction.HasValue && !HasPendingInstruction) ? Timeline.Now :
             Timeline.NextEventTime ?? Timeline.Now);
 
-    private HardwareInstructionOutcome CompletePendingInstruction(in InstructionExecutor.PreparedInstruction instruction)
+    private HardwareInstructionOutcome CompletePendingInstruction(in PreparedInstruction instruction)
     {
         HardwareInstructionOutcome outcome;
         bool prohibited = Timeline.AdvancementProhibited;

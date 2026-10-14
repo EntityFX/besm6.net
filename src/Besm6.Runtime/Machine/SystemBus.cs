@@ -21,13 +21,13 @@ namespace Besm6.Runtime.Machine
     ///    0x1000 = 0o10000 = 4096 всё ещё перехватывался ConsoleDevice:
     ///    a400 (seq ~2.79M, xta 1(14)) читал mem[0o10000] и получал 0, тогда как
     /// </summary>
-    public class SystemBus : IMemory
+    public class SystemBus : IHostMemory
     {
-        private readonly IMemory _coreMemory;
+        private readonly IHostMemory _coreMemory;
 
         public int Size => _coreMemory.Size;
 
-        public SystemBus(IMemory coreMemory, DeviceManager? deviceManager = null)
+        public SystemBus(IHostMemory coreMemory, DeviceManager? deviceManager = null)
         {
             // deviceManager принимается ради совместимости фабрик, но для
             // маршрутизации памяти НЕ используется (см. комментарий выше).
@@ -43,5 +43,6 @@ namespace Besm6.Runtime.Machine
         {
             _coreMemory.Write(address, value);
         }
+
     }
 }

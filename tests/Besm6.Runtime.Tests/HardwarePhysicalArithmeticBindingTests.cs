@@ -21,7 +21,7 @@ public sealed class HardwarePhysicalArithmeticBindingTests
         machine.Cpu.Supervisor!.Status = new((ControlUnitFlags)0x403);
         machine.MappedMemory!.SetPanel(1, MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm(code + ", " + code)), false, false));
         machine.MappedMemory.PhysicalMemory.WriteRaw(8, MemoryWord50.Form(Word48.FromDouble(0.75), true, true));
-        machine.Cpu.StartAt(1); machine.Cpu.State.IsRightHalf = right;
+        machine.Cpu.StartAt(1); machine.Cpu.MutableState.IsRightHalf = right;
         machine.Cpu.SetA(large ? (127UL << 41) | (1UL << 39) : Word48.FromDouble(1.25).Value);
         machine.Cpu.SetY(123); machine.Cpu.SetM(15, 9);
         machine.Cpu.SetR(suppress ? (uint)RFlags.OvfDisable : 0);

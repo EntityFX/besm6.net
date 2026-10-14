@@ -16,12 +16,13 @@ namespace Besm6.Processor.Cpu
     /// <summary>
     /// Процессор БЭСМ-6
     /// </summary>
-    public class Processor : IRegisters, IAlu, IProcessor
+    public partial class Processor : IRegisterOps, IAlu, IProcessor, IProcessorDebug, IInstructionAccountingSource
     {
-        private readonly IProcessorState _state;
+        private readonly IMutableProcessorState _state;
         private readonly ProcessorTraceController _traceController;
 
-        public IProcessorState State => _state;
+        public IProcessorState State { get; }
+        internal IMutableProcessorState MutableState => _state;
 
         private readonly ProcessorDebugWatch _debugWatch;
         private readonly ProcessorMemoryAccess _memoryAccess;
@@ -88,19 +89,20 @@ namespace Besm6.Processor.Cpu
             set => _executor.ExtracodeDispatch = value;
         }
 
-        public Processor(IMemory memory) : this(memory, ProcessorProfile.Dubna) { }
+        public Processor(IOperandMemory memory) : this(memory, ProcessorProfile.Dubna) { }
 
         public ProcessorProfile Profile { get; }
         public ISupervisorControl? Supervisor { get; }
-        public bool LastStepCompleted { get; set; } = true;
+        public bool LastStepCompleted { get; internal set; } = true;
 
-        public Processor(IMemory memory, ProcessorProfile profile)
+        public Processor(IOperandMemory memory, ProcessorProfile profile)
         {
             if (!Enum.IsDefined(profile)) throw new ArgumentOutOfRangeException(nameof(profile));
             if (profile == ProcessorProfile.Supervisor && memory is not MappedMemoryBackend)
                 throw new ArgumentException("Supervisor execution requires mapped memory.", nameof(memory));
             Profile = profile;
             _state = new ProcessorState();
+            State = new ProcessorStateView(_state);
             if (profile == ProcessorProfile.Supervisor)
             {
                 ((MappedMemoryBackend)memory).EnableSupervisorWritePublication();
@@ -135,9 +137,9 @@ namespace Besm6.Processor.Cpu
         /// <summary>Y — регистр младших разрядов.</summary>
         public Word48 Y { get => _state.Y; set => _state.Y = value; }
         /// <summary>R — регистр режима арифметического устройства.</summary>
-        public uint R { get => _state.R; set => _state.R = value & 0x3F; }
+        public uint R { get => _state.R; set => _state.R = value; }
         /// <summary>M — индексные регистры.</summary>
-        public uint[] M => _state.M;
+        public ReadOnlySpan<uint> M => _state.M;
         /// <summary>C — регистр модификации адреса.</summary>
         public uint C { get => _state.C; set => _state.C = value; }
 
@@ -217,10 +219,10 @@ namespace Besm6.Processor.Cpu
         public void ArmDebugWatch(uint xfer, bool printInfo, uint mode, uint watch, uint cont)
             => _debugWatch.ArmDebugWatch(xfer, printInfo, mode, watch, cont);
 
-        public bool DebugCheckFetch(uint addr, uint opcode)
+        internal bool DebugCheckFetch(uint addr, uint opcode)
             => _debugWatch.DebugCheckFetch(addr, opcode);
 
-        public bool DebugCheckMemory(uint addr, uint mode)
+        internal bool DebugCheckMemory(uint addr, uint mode)
             => _debugWatch.DebugCheckMemory(addr, mode);
 
         #endregion
@@ -268,8 +270,8 @@ namespace Besm6.Processor.Cpu
         /// Выполняет одну инструкцию (левую или правую половину слова).
         /// Возвращает true, когда процессор остановлен (инструкция СТОП).
         /// </summary>
-        public bool ExecutionProhibited { get; set; }
-        public bool PreparedExecutionOnly { get; set; }
+        internal bool ExecutionProhibited { get; set; }
+        internal bool PreparedExecutionOnly { get; set; }
 
         public bool Step()
         {
@@ -288,61 +290,61 @@ namespace Besm6.Processor.Cpu
         internal bool ExecuteUnobservedBlock(int count, ref long completed, ref ulong tick) =>
             _executor.ExecuteUnobservedBlock(count, ref completed, ref tick);
 
-        internal InstructionExecutor.PreparedInstruction PrepareInstruction() => _executor.PrepareInstruction();
-        internal InstructionExecutor.PreparedInstruction BeginInstructionFetch() => _executor.BeginInstructionFetch();
-        internal InstructionExecutor.PreparedInstruction AcceptInstructionFetch(in InstructionExecutor.PreparedInstruction lease,
+        internal PreparedInstruction PrepareInstruction() => _executor.PrepareInstruction();
+        internal PreparedInstruction BeginInstructionFetch() => _executor.BeginInstructionFetch();
+        internal PreparedInstruction AcceptInstructionFetch(in PreparedInstruction lease,
             Word48 word, Exception? failure) => _executor.AcceptInstructionFetch(in lease, word, failure);
-        internal uint GetPreparedMemoryOperandAddress(in InstructionExecutor.PreparedInstruction instruction) =>
+        internal uint GetPreparedMemoryOperandAddress(in PreparedInstruction instruction) =>
             _executor.GetPreparedMemoryOperandAddress(in instruction);
-        internal PreparedArithmeticOperation? CaptureTransferredArithmeticOperand(in InstructionExecutor.PreparedInstruction instruction,
+        internal PreparedArithmeticOperation? CaptureTransferredArithmeticOperand(in PreparedInstruction instruction,
             uint address, Word48 word, Exception? failure) => _executor.CaptureArithmeticOperand(in instruction, address, word, failure);
-        internal bool IsPreparedInstructionSuppressed(in InstructionExecutor.PreparedInstruction instruction) =>
+        internal bool IsPreparedInstructionSuppressed(in PreparedInstruction instruction) =>
             _executor.IsPreparedInstructionSuppressed(in instruction);
-        internal bool CanBeginMemoryInstruction(in InstructionExecutor.PreparedInstruction instruction) =>
+        internal bool CanBeginMemoryInstruction(in PreparedInstruction instruction) =>
             _executor.CanBeginMemoryInstruction(in instruction);
-        internal bool CanCaptureArithmeticOperand(in InstructionExecutor.PreparedInstruction instruction) =>
+        internal bool CanCaptureArithmeticOperand(in PreparedInstruction instruction) =>
             _executor.CanCaptureArithmeticOperand(in instruction);
-        internal CpuMemoryTransfer? BeginMemoryInstruction(in InstructionExecutor.PreparedInstruction instruction) =>
+        internal CpuMemoryTransfer? BeginMemoryInstruction(in PreparedInstruction instruction) =>
             _executor.BeginMemoryInstruction(in instruction);
-        internal CpuMemoryTransfer? AcceptMemoryTransfer(in InstructionExecutor.PreparedInstruction instruction, Word48 word, Exception? failure) =>
+        internal CpuMemoryTransfer? AcceptMemoryTransfer(in PreparedInstruction instruction, Word48 word, Exception? failure) =>
             _executor.AcceptMemoryTransfer(in instruction, word, failure);
-        internal bool RequiresMemoryTransfer(in InstructionExecutor.PreparedInstruction instruction) =>
+        internal bool RequiresMemoryTransfer(in PreparedInstruction instruction) =>
             _executor.RequiresMemoryTransfer(in instruction);
         internal bool HasPreparedInstruction => _executor.HasPreparedInstruction;
 
-        internal PreparedArithmeticOperation? CaptureArithmeticOperand(in InstructionExecutor.PreparedInstruction instruction) =>
+        internal PreparedArithmeticOperation? CaptureArithmeticOperand(in PreparedInstruction instruction) =>
             _executor.CaptureArithmeticOperand(in instruction);
-        internal bool RequiresArithmeticResult(in InstructionExecutor.PreparedInstruction instruction) =>
+        internal bool RequiresArithmeticResult(in PreparedInstruction instruction) =>
             _executor.RequiresArithmeticResult(in instruction);
-        internal byte GetPreparedImmediateOperand(in InstructionExecutor.PreparedInstruction instruction) =>
+        internal byte GetPreparedImmediateOperand(in PreparedInstruction instruction) =>
             _executor.GetPreparedImmediateOperand(in instruction);
-        internal void SupplyArithmeticResult(in InstructionExecutor.PreparedInstruction instruction,
+        internal void SupplyArithmeticResult(in PreparedInstruction instruction,
             NormalizedArithmeticResult? result, ProcessorException? failure) =>
             _executor.SupplyArithmeticResult(in instruction, result, failure);
-        internal bool IsPreparedInstructionActive(in InstructionExecutor.PreparedInstruction instruction) =>
+        internal bool IsPreparedInstructionActive(in PreparedInstruction instruction) =>
             _executor.IsPreparedInstructionActive(in instruction);
-        internal bool CompleteInstruction(in InstructionExecutor.PreparedInstruction instruction) =>
+        internal bool CompleteInstruction(in PreparedInstruction instruction) =>
             _executor.CompleteInstruction(in instruction);
-        internal void CancelInstruction(in InstructionExecutor.PreparedInstruction instruction) =>
+        internal void CancelInstruction(in PreparedInstruction instruction) =>
             _executor.CancelInstruction(in instruction);
 
         #region Typed trace bridge
 
-        public void CanonPre(ulong word, uint rk, DecodedInstruction instruction)
+        internal void CanonPre(ulong word, uint rk, DecodedInstruction instruction)
         {
             InstructionAccounting?.Begin(instruction.Opcode);
             if (_traceController.IsEnabled)
                 _traceController.Begin(new Word48(word), rk, instruction);
         }
 
-        public void CanonPost(uint k, bool right)
+        internal void CanonPost(uint k, bool right)
         {
             InstructionAccounting?.Complete();
             if (_traceController.HasPending)
                 _traceController.Complete();
         }
 
-        public void CancelInstructionTrace()
+        internal void CancelInstructionTrace()
         {
             InstructionAccounting?.CancelPending();
             _traceController.CancelPending();

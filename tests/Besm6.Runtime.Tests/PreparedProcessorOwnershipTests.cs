@@ -40,7 +40,7 @@ public sealed class PreparedProcessorOwnershipTests
             model.Cpu.InstructionExecuted = _ => modelCount++;
             foreach (var machine in new[] { serial, model })
             {
-                machine.Cpu.State.IsRightHalf = right;
+                machine.Cpu.MutableState.IsRightHalf = right;
                 if (fetchFault) machine.MappedMemory!.PhysicalMemory.WriteRaw(8, new MemoryWord50(0));
             }
             bool expected = serial.Cpu.Step();

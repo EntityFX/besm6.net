@@ -1,6 +1,6 @@
-namespace Besm6.Architecture.Debug
+namespace Besm6.Processor.Diagnostics
 {
-    public sealed class DebugState
+    internal sealed class DebugState
     {
         public bool DebugFetchArmed { get; set; }
         public uint DebugFetchAddress { get; set; }

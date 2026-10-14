@@ -13,9 +13,9 @@ namespace Besm6.Processor.Arithmetic
     {
         private const ulong BITS48 = ArchitectureConstants.BITS48;
 
-        private readonly IProcessorState _state;
+        private readonly IRegisters _state;
 
-        internal ShiftOperations(IProcessorState state)
+        internal ShiftOperations(IRegisters state)
         {
             _state = state;
         }

@@ -20,7 +20,7 @@ public sealed class PreparedInstructionTests
         cpu.SetA(Word48.FromDouble(1.25).Value);
         cpu.SetY(0x123456789);
         cpu.SetM(15, 9);
-        cpu.State.IsRightHalf = right;
+        cpu.MutableState.IsRightHalf = right;
         return cpu;
     }
 
@@ -70,8 +70,8 @@ public sealed class PreparedInstructionTests
             {
                 var records = ReferenceEquals(cpu, serial) ? serialTrace : phasedTrace;
                 cpu.SetR(mode);
-                cpu.State.C = 0;
-                cpu.State.ApplyC = true; // Pending zero modification must retain its policy.
+                cpu.MutableState.C = 0;
+                cpu.MutableState.ApplyC = true; // Pending zero modification must retain its policy.
                 cpu.InstructionExecuted = op => records.Add(op.ToString());
                 cpu.InstructionTrace = record => records.Add(JsonSerializer.Serialize(record));
             }
@@ -90,7 +90,7 @@ public sealed class PreparedInstructionTests
             Assert.AreEqual(JsonSerializer.Serialize(new ProcessorSnapshot(serial.State)),
                 JsonSerializer.Serialize(new ProcessorSnapshot(phased.State)));
             Assert.AreEqual(serial.LastStepCompleted, phased.LastStepCompleted);
-            Assert.AreEqual(serial.State.StackCorrection, phased.State.StackCorrection);
+            Assert.AreEqual(serial.MutableState.StackCorrection, phased.MutableState.StackCorrection);
             for (uint address = 1; address < 32; address++)
                 Assert.AreEqual(serial.MemLoad(address), phased.MemLoad(address));
             CollectionAssert.AreEqual(serialTrace, phasedTrace);

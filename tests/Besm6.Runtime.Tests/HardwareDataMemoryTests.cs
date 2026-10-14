@@ -23,7 +23,7 @@ public sealed class HardwareDataMemoryTests
         machine.MappedMemory!.PhysicalMemory.WriteRaw(8,
             MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm(right ? "stop, " + code : code + ", stop")), false, false));
         for (uint i = 16; i < 40; i++) machine.MappedMemory.PhysicalMemory.WriteRaw(i, MemoryWord50.Form(new(i + 1), true, true));
-        machine.Cpu.StartAt(8); machine.Cpu.State.IsRightHalf = right;
+        machine.Cpu.StartAt(8); machine.Cpu.MutableState.IsRightHalf = right;
         machine.Cpu.SetM(15, 24); machine.Cpu.SetA(0x12345); machine.Cpu.SetY(0x56789);
         return machine;
     }
@@ -150,7 +150,7 @@ public sealed class HardwareDataMemoryTests
     public void AddressModificationAndZeroUseSharedHandlers(string code)
     {
         var expected = Machine(code); var actual = Machine(code);
-        foreach (var item in new[] { expected, actual }) { item.Cpu.State.C = 16; item.Cpu.State.ApplyC = true; }
+        foreach (var item in new[] { expected, actual }) { item.Cpu.MutableState.C = 16; item.Cpu.MutableState.ApplyC = true; }
         expected.Cpu.Step(); Begin(actual); Finish(actual); Equal(expected, actual);
     }
 
@@ -182,7 +182,7 @@ public sealed class HardwareDataMemoryTests
     {
         var expected = Machine("sti 20"); var actual = Machine("sti 20");
         expected.Cpu.Step(); Begin(actual); Finish(actual); Equal(expected, actual);
-        Assert.AreEqual(0x2345U, actual.Cpu.State.C);
+        Assert.AreEqual(0x2345U, actual.Cpu.MutableState.C);
     }
 
     [TestMethod]

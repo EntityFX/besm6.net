@@ -8,9 +8,9 @@ namespace Besm6.Processor.Execution
     /// <summary>Подготавливает typed-вызов экстракода, не реализуя host services.</summary>
     internal sealed class ExtracodeInstructionExecutor
     {
-        private readonly IProcessorState _state;
+        private readonly IMutableProcessorState _state;
 
-        internal ExtracodeInstructionExecutor(IProcessorState state)
+        internal ExtracodeInstructionExecutor(IMutableProcessorState state)
         {
             _state = state;
         }

@@ -75,6 +75,9 @@ namespace Besm6.Architecture.Tests
                 typeof(IRegisters),
                 typeof(IInstructionMemory),
                 typeof(IMemory),
+                typeof(IHostMemory),
+                typeof(IOperandMemory),
+                typeof(ICommandMemory),
             };
             foreach (Type contract in coreContracts)
                 Assert.AreEqual(asm, contract.Assembly, contract.FullName);
@@ -101,6 +104,34 @@ namespace Besm6.Architecture.Tests
                 .ToArray();
 
             CollectionAssert.DoesNotContain(publicFields, "BIT49");
+        }
+
+        [TestMethod]
+        public void ImplementationWatchStateDoesNotBelongToArchitecture()
+        {
+            Assembly architecture = typeof(IProcessor).Assembly;
+            Assert.IsFalse(architecture.GetTypes().Any(type =>
+                type.Name is "DebugState" or "DebugWatchAbortException"));
+        }
+
+        [TestMethod]
+        public void FriendAccessIsLimitedToExecutionIntegrationAndTests()
+        {
+            var processor = TryLoad("Besm6.Processor");
+            var runtime = TryLoad("Besm6.Runtime");
+            Assert.IsNotNull(processor);
+            Assert.IsNotNull(runtime);
+            static string[] Friends(Assembly assembly) => assembly
+                .GetCustomAttributes<System.Runtime.CompilerServices.InternalsVisibleToAttribute>()
+                .Select(attribute => attribute.AssemblyName).ToArray();
+            CollectionAssert.AreEquivalent(new[]
+            {
+                "Besm6.Processor.Tests", "Besm6.Runtime", "Besm6.Runtime.Tests"
+            }, Friends(processor));
+            CollectionAssert.AreEquivalent(new[]
+            {
+                "Besm6.Runtime.Tests", "Besm6.Integration.Tests"
+            }, Friends(runtime));
         }
 
         [TestMethod]
