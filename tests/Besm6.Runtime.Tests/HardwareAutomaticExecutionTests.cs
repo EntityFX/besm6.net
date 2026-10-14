@@ -1,6 +1,15 @@
 using System.Text.Json;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Architecture.Supervisor;
+using Besm6.Processor.Memory;
 using Besm6.Runtime.Modeling;
-using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic;
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Runtime.Timing.Memory;
 
 namespace Besm6.Tests;
 
@@ -17,7 +26,7 @@ public sealed class HardwareAutomaticExecutionTests
     {
         var machine = new MachineCore(ProcessorProfile.Supervisor);
         machine.Cpu.Supervisor!.Status = new((ControlUnitFlags)0x403);
-        machine.MappedMemory!.PhysicalMemory.WriteRaw(8, MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm(code)), false, false));
+        machine.MappedMemory!.PhysicalMemory.WriteRaw(8, MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm(code)), false, false));
         for (uint address = 16; address < 40; address++)
             machine.MappedMemory.PhysicalMemory.WriteRaw(address, MemoryWord50.Form(Word48.FromDouble(0.75), true, true));
         if (code.StartsWith("ext", StringComparison.Ordinal) || code.StartsWith("*33", StringComparison.Ordinal))
@@ -87,12 +96,12 @@ public sealed class HardwareAutomaticExecutionTests
     [TestMethod]
     public void DataReadCannotRetireBeforeControlPermission()
     {
-        var machine = Machine(); var original = machine.Cpu.GetA(); var model = machine.HardwareModel;
+        var machine = Machine(); var original = machine.Cpu.A; var model = machine.HardwareModel;
         model.ConfigureAutomaticExecution(Configuration(10000));
         Assert.AreEqual(HardwareRunBoundary.TimeLimit, model.AdvanceAutomaticTo(new(4000), 1).Boundary);
-        Assert.AreEqual(original, machine.Cpu.GetA()); Assert.IsTrue(model.HasPendingInstruction);
+        Assert.AreEqual(original, machine.Cpu.A); Assert.IsTrue(model.HasPendingInstruction);
         Assert.AreEqual(HardwareRunBoundary.InstructionLimit, model.AdvanceAutomaticTo(new(10900), 1).Boundary);
-        Assert.AreEqual(Word48.FromDouble(0.75), machine.Cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(0.75), machine.Cpu.A);
     }
 
     [TestMethod]
@@ -103,7 +112,7 @@ public sealed class HardwareAutomaticExecutionTests
         var result = model.AdvanceAutomaticTo(new(20000), 5);
         Assert.AreEqual(HardwareRunBoundary.Cancelled, result.Boundary); Assert.AreEqual(0UL, result.Completed);
         Assert.AreEqual(1UL, model.CancelledInstructions); Assert.IsFalse(machine.Cpu.HasPreparedInstruction);
-        Assert.AreEqual(Word48.Zero, machine.Cpu.GetA());
+        Assert.AreEqual(Word48.Zero, machine.Cpu.A);
     }
 
     [TestMethod]
@@ -113,7 +122,7 @@ public sealed class HardwareAutomaticExecutionTests
         var model = machine.HardwareModel; model.ConfigureAutomaticExecution(Configuration());
         var result = model.AdvanceAutomaticTo(new(10000), 10);
         Assert.AreEqual(HardwareRunBoundary.GuestFault, result.Boundary); Assert.AreEqual(0UL, result.Completed);
-        Assert.AreEqual(0x140U, machine.Cpu.GetK()); Assert.IsFalse(machine.Cpu.HasPreparedInstruction);
+        Assert.AreEqual(0x140U, machine.Cpu.K); Assert.IsFalse(machine.Cpu.HasPreparedInstruction);
     }
 
     [TestMethod]
@@ -159,7 +168,7 @@ public sealed class HardwareAutomaticExecutionTests
         Assert.AreEqual(before, machine.MappedMemory.ReadOperandBufferRegister(1));
         Assert.AreEqual(0UL, model.CompletedInstructions); Assert.IsTrue(model.HasPendingInstruction);
         Assert.AreEqual(HardwareRunBoundary.InstructionLimit, model.AdvanceAutomaticTo(new(1200), 1).Boundary);
-        Assert.AreEqual(machine.Cpu.GetA(), machine.MappedMemory.ReadOperandBufferRegister(1).Data);
+        Assert.AreEqual(machine.Cpu.A, machine.MappedMemory.ReadOperandBufferRegister(1).Data);
     }
     [TestMethod]
     public void MixedProgramRetiresConsecutivelyAndForwardsAcceptedStores()
@@ -167,8 +176,8 @@ public sealed class HardwareAutomaticExecutionTests
         var expected = Machine("xta 20, aax 21"); var actual = Machine("xta 20, aax 21");
         foreach (var machine in new[] { expected, actual })
         {
-            machine.MappedMemory!.PhysicalMemory.WriteRaw(9, MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm("atx 22, xta 22")), false, false));
-            machine.MappedMemory.PhysicalMemory.WriteRaw(10, MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm("e+n 100, stop")), false, false));
+            machine.MappedMemory!.PhysicalMemory.WriteRaw(9, MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm("atx 22, xta 22")), false, false));
+            machine.MappedMemory.PhysicalMemory.WriteRaw(10, MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm("e+n 100, stop")), false, false));
         }
         for (int i = 0; i < 6; i++) expected.Cpu.Step();
         var model = actual.HardwareModel; model.ConfigureAutomaticExecution(Configuration());
@@ -256,7 +265,7 @@ public sealed class HardwareAutomaticExecutionTests
             machine.Cpu.Supervisor.Status = new(ControlUnitFlags.ProtectionBlocked | ControlUnitFlags.ExternalInterruptsBlocked);
             machine.MappedMemory!.Assignment.SetPhysicalPage(0, 511);
             machine.MappedMemory.PhysicalMemory.WriteRaw(511 * 1024 + 8,
-                MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm("xta 20, stop")), false, false));
+                MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm("xta 20, stop")), false, false));
             machine.MappedMemory.PhysicalMemory.WriteRaw(511 * 1024 + 16, MemoryWord50.Form(new(12345), true, true));
             machine.Cpu.StartAt(8); return machine;
         }
@@ -265,7 +274,7 @@ public sealed class HardwareAutomaticExecutionTests
             new(100), new(100), Enum.GetValues<Opcode>().ToDictionary(opcode => opcode, _ => new HardwareDuration(300))));
         var result = actual.HardwareModel.AdvanceAutomaticTo(new(100000), 10);
         Assert.AreEqual(HardwareRunBoundary.Stop, result.Boundary); Assert.AreEqual(2UL, result.Completed);
-        Assert.AreEqual(CpuState(expected), CpuState(actual)); Assert.AreEqual(12345UL, actual.Cpu.GetA().Value);
+        Assert.AreEqual(CpuState(expected), CpuState(actual)); Assert.AreEqual(12345UL, actual.Cpu.A.Value);
         Assert.AreEqual(0UL, actual.Clock.Tick);
     }
 

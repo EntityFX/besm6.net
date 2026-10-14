@@ -1,4 +1,4 @@
-namespace Besm6.Runtime.Timing;
+namespace Besm6.Runtime.Timing.Calendar;
 
 /// <summary>A duration in integer nanoseconds, independent of legacy instruction ticks.</summary>
 public readonly record struct HardwareDuration(ulong Nanoseconds)

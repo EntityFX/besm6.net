@@ -1,3 +1,8 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Arithmetic;
+using Besm6.Processor.Cpu;
+
 namespace Besm6.Tests;
 
 [TestClass]
@@ -6,16 +11,16 @@ public sealed class DivisionOptimizationTests
     private static MantissaExponent LegacyDivide(MantissaExponent n, MantissaExponent d)
     {
         var q = new MantissaExponent(0, 0);
-        if (d.Mantissa == MantissaExponent.BIT40)
+        if (d.Mantissa == ArchitectureConstants.BIT40)
             return new MantissaExponent(n.Exponent - d.Exponent + 65, n.Mantissa);
         n.Mantissa <<= 1;
         d.Mantissa <<= 1;
         if (Math.Abs(n.Mantissa) >= Math.Abs(d.Mantissa)) n.NormalizeToTheRight();
         q.Exponent = n.Exponent - d.Exponent + 64;
-        for (long bit = MantissaExponent.BIT40; bit > 0; bit >>= 1)
+        for (long bit = ArchitectureConstants.BIT40; bit > 0; bit >>= 1)
         {
             if (n.Mantissa == 0) break;
-            if (Math.Abs(n.Mantissa) < MantissaExponent.BIT40) n.Mantissa *= 2;
+            if (Math.Abs(n.Mantissa) < ArchitectureConstants.BIT40) n.Mantissa *= 2;
             else if ((n.Mantissa > 0) == (d.Mantissa > 0))
             { q.Mantissa += bit; n.Mantissa = n.Mantissa * 2 - d.Mantissa; }
             else { q.Mantissa -= bit; n.Mantissa = n.Mantissa * 2 + d.Mantissa; }
@@ -27,8 +32,8 @@ public sealed class DivisionOptimizationTests
     public void Division_MatchesLegacyRecurrenceAndExponent()
     {
         var random = new Random(4140);
-        long[] edges = [0, 1, -1, MantissaExponent.BIT40 - 1, MantissaExponent.BIT40,
-            -MantissaExponent.BIT40, MantissaExponent.BIT41 - 1, -MantissaExponent.BIT41];
+        long[] edges = [0, 1, -1, ArchitectureConstants.BIT40 - 1, ArchitectureConstants.BIT40,
+            -ArchitectureConstants.BIT40, ArchitectureConstants.BIT41 - 1, -ArchitectureConstants.BIT41];
         void Check(long a, long b)
         {
             var n = new MantissaExponent((uint)random.Next(128), a);
@@ -39,12 +44,12 @@ public sealed class DivisionOptimizationTests
             Assert.AreEqual(expected.Exponent, actual.Exponent);
         }
         foreach (long a in edges)
-            foreach (long b in edges.Where(b => Math.Abs(b) >= MantissaExponent.BIT40)) Check(a, b);
+            foreach (long b in edges.Where(b => Math.Abs(b) >= ArchitectureConstants.BIT40)) Check(a, b);
         for (int i = 0; i < 50_000; i++)
         {
-            long b = random.NextInt64(MantissaExponent.BIT40, MantissaExponent.BIT41);
+            long b = random.NextInt64(ArchitectureConstants.BIT40, ArchitectureConstants.BIT41);
             if (i % 2 != 0) b = -b;
-            Check(random.NextInt64(-MantissaExponent.BIT41, MantissaExponent.BIT41), b);
+            Check(random.NextInt64(-ArchitectureConstants.BIT41, ArchitectureConstants.BIT41), b);
         }
     }
 

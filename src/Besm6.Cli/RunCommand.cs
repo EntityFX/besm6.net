@@ -1,8 +1,12 @@
 using System;
 using System.IO;
 using System.Text;
-using Besm6.Assembler;
-using Besm6.Core;
+using Besm6.Architecture.Machine;
+using Besm6.Assembler.Disassembly;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Execution;
+using Besm6.Runtime.Loading;
+using Besm6.Runtime.Machine;
 namespace Besm6.Cli
 {
     /// <summary>

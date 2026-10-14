@@ -1,3 +1,8 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Memory;
+
 namespace Besm6.Tests;
 
 [TestClass]
@@ -75,12 +80,12 @@ public sealed class HardwareMemoryTests
     public void PhysicalAddressesKeepControlAndBankIdentity()
     {
         var memory = new PhysicalMemory();
-        for (uint address = 0; address < PhysicalMemory.WordCount; address++)
+        for (uint address = 0; address < ArchitectureConstants.WordCount; address++)
         {
             ulong raw = address | ((ulong)(address % 4) << 48);
             memory.WriteRaw(address, new(raw));
         }
-        for (uint address = 0; address < PhysicalMemory.WordCount; address++)
+        for (uint address = 0; address < ArchitectureConstants.WordCount; address++)
         {
             Assert.AreEqual(address | ((ulong)(address % 4) << 48), memory.ReadRaw(address).RawValue);
             Assert.AreEqual(address % 8, PhysicalMemory.GetBank(address));

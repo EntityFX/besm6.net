@@ -1,4 +1,8 @@
-﻿namespace Besm6.Runtime
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Encoding;
+
+namespace Besm6.Runtime
 {
     public sealed partial class ExtracodeHandler
     {
@@ -112,7 +116,7 @@
             bool printInfo = ((word >> 23) & 1) != 0;
             uint mode = (uint)(word >> 20) & 3;
             uint watch = (uint)word & 0x7FFF;
-            uint cont = cpu.GetK();
+            uint cont = cpu.K;
 
             cpu.ArmDebugWatch(xfer, printInfo, mode, watch, cont);
         }
@@ -138,9 +142,9 @@
             if (addr > 0)
             {
                 if (_machine.MappedMemory is { } mapped)
-                    mapped.StoreCommand((uint)addr, cpu.GetA());
+                    mapped.StoreCommand((uint)addr, cpu.A);
                 else
-                    _machine.Memory.Write((uint)addr, new Word48(cpu.GetA().Value));
+                    _machine.Memory.Write((uint)addr, new Word48(cpu.A.Value));
 
                 // addr == 020 oct (16 dec) → enable intercept for overflow/div-zero.
                 if (addr == 16)

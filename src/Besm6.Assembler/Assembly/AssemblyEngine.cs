@@ -1,4 +1,9 @@
-namespace Besm6.Assembler;
+using Besm6.Architecture.Isa;
+using Besm6.Assembler.Api;
+using Besm6.Assembler.Detection;
+using Besm6.Assembler.Parsing;
+
+namespace Besm6.Assembler.Assembly;
 
 /// <summary>
 /// Общий движок ассемблирования БЭСМ-6. Оркестрирует Lexer → Parser → SymbolTable

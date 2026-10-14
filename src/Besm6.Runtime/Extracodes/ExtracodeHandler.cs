@@ -1,3 +1,7 @@
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Storage;
 using System;
 namespace Besm6.Runtime
 {
@@ -115,7 +119,7 @@ namespace Besm6.Runtime
 
         public bool Handle(ExtracodeCall call)
         {
-            long k = _machine.Cpu.GetK();
+            long k = _machine.Cpu.K;
             int opcode = (int)call.Code;
             uint aex = call.EffectiveAddress;
             Extracode code = call.Code;

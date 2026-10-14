@@ -1,3 +1,6 @@
+using Besm6.Architecture.Numerics;
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Runtime.Execution;
 using Besm6.Runtime.Timing;
 
 namespace Besm6.Tests;
@@ -9,7 +12,7 @@ public sealed class MachineHardwareTimelineTests
     private static MachineCore LoadedMachine()
     {
         var machine = new MachineCore();
-        machine.LoadProgram(new[] { new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), stop")) }, 1);
+        machine.LoadProgram(new[] { new Word48(Assembler.Legacy.Assembler.Asm("vtm 1(1), stop")) }, 1);
         return machine;
     }
 
@@ -26,7 +29,7 @@ public sealed class MachineHardwareTimelineTests
             Assert.ThrowsExactly<InvalidOperationException>(() => machine.Scheduler.AdvanceTo(0));
             Assert.ThrowsExactly<InvalidOperationException>(() => ((SimulationClock)machine.Clock).Advance(1));
             Assert.ThrowsExactly<InvalidOperationException>(() => timeline.AdvanceTo(new(100)));
-            Assert.AreEqual(1U, machine.Cpu.GetK());
+            Assert.AreEqual(1U, machine.Cpu.K);
         });
         timeline.AdvanceTo(new(100));
         Assert.AreEqual(0UL, machine.Clock.Tick);

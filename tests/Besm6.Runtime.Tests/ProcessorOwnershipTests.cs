@@ -1,3 +1,5 @@
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Architecture.Numerics;
 using Besm6.Runtime.Timing;
 
 namespace Besm6.Tests;
@@ -12,7 +14,7 @@ public sealed class ProcessorOwnershipTests
     public void FunctionalBlocksDoNotConstructOrAdvancePhysicalModel()
     {
         var machine = new MachineCore();
-        machine.LoadProgram([new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), stop"))], 1);
+        machine.LoadProgram([new Word48(Assembler.Legacy.Assembler.Asm("vtm 1(1), stop"))], 1);
         Assert.IsNull(machine.ExistingHardwareModel);
         long completed = 0;
         Assert.IsTrue(machine.ExecuteBlock(20, ref completed));
@@ -28,7 +30,7 @@ public sealed class ProcessorOwnershipTests
     public void FunctionalInstructionsAndPhysicalPreparationHaveSeparateTransientState()
     {
         var machine = new MachineCore();
-        machine.LoadProgram([new Word48(Besm6.Asm.Assembler.Asm("xta 3, stop"))], 1);
+        machine.LoadProgram([new Word48(Assembler.Legacy.Assembler.Asm("xta 3, stop"))], 1);
         machine.Memory.Write(3, Two);
         machine.Cpu.SetA(One.Value);
         var unit = machine.CreateArithmeticUnitStages(new(100));
@@ -37,14 +39,14 @@ public sealed class ProcessorOwnershipTests
         Assert.IsTrue(unit.TryReadOutput(out var initial));
         Assert.AreEqual(One, initial.A);
         Assert.IsFalse(machine.Step());
-        Assert.AreEqual(Two, machine.Cpu.GetA());
+        Assert.AreEqual(Two, machine.Cpu.A);
         Assert.AreEqual(new HardwareInstant(0), model.Timeline.Now);
         Assert.IsTrue(unit.TryReadOutput(out var prepared));
         Assert.AreEqual(initial, prepared);
         unit.ApplyGeneralClearSignal();
         Assert.IsTrue(unit.TryReadOutput(out var cleared));
         Assert.AreEqual(Word48.Zero, cleared.A);
-        Assert.AreEqual(Two, machine.Cpu.GetA()); // No physical retirement driver has issued a CPU write.
+        Assert.AreEqual(Two, machine.Cpu.A); // No physical retirement driver has issued a CPU write.
         Assert.AreEqual(1UL, machine.Clock.Tick);
         Assert.AreEqual(Two, machine.Memory.Read(3));
     }
@@ -67,7 +69,7 @@ public sealed class ProcessorOwnershipTests
         model.Timeline.AdvanceTo(new(100));
         Assert.AreEqual(1, events);
         Assert.AreEqual(0UL, machine.Clock.Tick);
-        machine.LoadProgram([new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), stop"))], 1);
+        machine.LoadProgram([new Word48(Assembler.Legacy.Assembler.Asm("vtm 1(1), stop"))], 1);
         machine.Step();
         Assert.AreEqual(1, traces);
         Assert.AreEqual(new HardwareInstant(100), model.Timeline.Now);

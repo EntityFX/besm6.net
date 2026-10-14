@@ -1,3 +1,7 @@
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Processor.Arithmetic;
+
 namespace Besm6.Tests;
 
 [TestClass]

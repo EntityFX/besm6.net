@@ -1,6 +1,11 @@
+using Besm6.Architecture.Numerics;
+using Besm6.Runtime.Devices;
+using Besm6.Processor.Memory;
 using System;
 using System.IO;
 using System.Text;
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Encoding;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests
@@ -25,7 +30,7 @@ namespace Besm6.Tests
                 var handler = MakeHandler(machine);
                 machine.Cpu.SetM(14, (uint)addr);
                 handler.Handle(E65, 0);
-                Assert.AreEqual(0UL, machine.Cpu.GetA().Value, $"addr=0{Convert.ToString(addr, 8)}");
+                Assert.AreEqual(0UL, machine.Cpu.A.Value, $"addr=0{Convert.ToString(addr, 8)}");
             }
         }
 
@@ -36,7 +41,7 @@ namespace Besm6.Tests
             var handler = MakeHandler(machine);
             machine.Cpu.SetM(14, 342);
             handler.Handle(E65, 0);
-            Assert.AreEqual(3072UL, machine.Cpu.GetA().Value);
+            Assert.AreEqual(3072UL, machine.Cpu.A.Value);
         }
 
         [TestMethod]
@@ -54,7 +59,7 @@ namespace Besm6.Tests
             var handler = MakeHandler(machine);
             machine.Cpu.SetM(14, (uint)addr);
             handler.Handle(E65, 0);
-            Assert.AreEqual(expected, machine.Cpu.GetA().Value, $"addr=0{Convert.ToString(addr, 8)}");
+            Assert.AreEqual(expected, machine.Cpu.A.Value, $"addr=0{Convert.ToString(addr, 8)}");
         }
 
         [TestMethod]
@@ -68,7 +73,7 @@ namespace Besm6.Tests
                 var handler = MakeHandler(machine);
                 machine.Cpu.SetM(14, (uint)(baseAddr + idx));
                 handler.Handle(E65, 0);
-                Assert.AreEqual((ulong)CosyCodec.AllToIso[idx], machine.Cpu.GetA().Value, $"idx={idx}");
+                Assert.AreEqual((ulong)CosyCodec.AllToIso[idx], machine.Cpu.A.Value, $"idx={idx}");
             }
         }
 
@@ -86,7 +91,7 @@ namespace Besm6.Tests
             var handler = MakeHandler(machine);
             machine.Cpu.SetM(14, (uint)addr);
             handler.Handle(E65, 0);
-            Assert.AreEqual(expected, machine.Cpu.GetA().Value, $"addr=0{Convert.ToString(addr, 8)}");
+            Assert.AreEqual(expected, machine.Cpu.A.Value, $"addr=0{Convert.ToString(addr, 8)}");
         }
 
         [TestMethod]

@@ -1,6 +1,7 @@
+using Besm6.Architecture.Numerics;
 using System.Numerics;
 
-namespace Besm6.Architecture;
+namespace Besm6.Architecture.Memory;
 
 /// <summary>
 /// The 48 payload bits and two control bits described in TO-8 (1967), §4.5–4.8.

@@ -1,6 +1,9 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
 using System;
 
-namespace Besm6.Core
+namespace Besm6.Processor.Arithmetic
 {
     /// <summary>
     /// Сдвиговые операции АЛУ: арифметический/логический сдвиг регистров A/Y.
@@ -10,9 +13,9 @@ namespace Besm6.Core
     {
         private const ulong BITS48 = ArchitectureConstants.BITS48;
 
-        private readonly ProcessorState _state;
+        private readonly IProcessorState _state;
 
-        internal ShiftOperations(ProcessorState state)
+        internal ShiftOperations(IProcessorState state)
         {
             _state = state;
         }

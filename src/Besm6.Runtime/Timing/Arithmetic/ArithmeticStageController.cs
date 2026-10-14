@@ -1,16 +1,9 @@
-namespace Besm6.Runtime.Timing;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Arithmetic;
+using Besm6.Runtime.Timing.Calendar;
 
-internal readonly record struct ArithmeticCommandHandle(object? Owner, ulong Sequence);
-internal enum ArithmeticStageTransitionKind { OperandAccepted, OperandRejected, Started, Completed }
-internal readonly record struct ArithmeticStageTransition(ArithmeticCommandHandle Command,
-    uint Code, ArithmeticStageTransitionKind Kind, HardwareInstant Time,
-    NormalizedArithmeticResult? Output, ArithmeticUnitFault? Fault);
-
-internal sealed class ArithmeticStageObserverException(ArithmeticStageTransition transition, Exception cause)
-    : Exception("Arithmetic stage observer failed after the transition.", cause)
-{
-    internal ArithmeticStageTransition Transition { get; } = transition;
-}
+namespace Besm6.Runtime.Timing.Arithmetic;
 
 /// <summary>
 /// АУ — арифметическое устройство; БАК — буфер арифметических команд.

@@ -1,6 +1,5 @@
 using System.Globalization;
-
-using Besm6.Architecture;
+using Besm6.Architecture.Numerics;
 
 namespace Besm6.BitVisualizer;
 

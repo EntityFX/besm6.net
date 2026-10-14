@@ -1,4 +1,9 @@
+using CpuProcessor = Besm6.Processor.Cpu.Processor;
+using Besm6.Architecture.Machine;
+using Besm6.Processor.Memory;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic;
+using Besm6.Runtime.Timing.Calendar;
 
 namespace Besm6.Runtime.Modeling;
 
@@ -11,7 +16,7 @@ namespace Besm6.Runtime.Modeling;
 /// </summary>
 internal sealed partial class HardwareProcessorModel
 {
-    private readonly Processor _processor;
+    private readonly CpuProcessor _processor;
     private ArithmeticUnitStages? _arithmeticUnitStages;
     private ArithmeticStageController? _arithmeticController;
     private ArithmeticInterruptionPort? _arithmeticInterruptions;
@@ -20,7 +25,7 @@ internal sealed partial class HardwareProcessorModel
     private readonly Action<HardwareBufferedRead> _fetchCompleted, _dataReadCompleted;
     private readonly Action _dataStoreCompleted;
 
-    internal HardwareProcessorModel(Processor processor, PhysicalMemory? physicalMemory = null, MappedMemoryBackend? mappedMemory = null)
+    internal HardwareProcessorModel(CpuProcessor processor, PhysicalMemory? physicalMemory = null, MappedMemoryBackend? mappedMemory = null)
     {
         _processor = processor; _physicalMemory = physicalMemory; _mappedMemory = mappedMemory;
         _fetchBoundary = () => _timedFetchReply.HasValue || _cancellationRequested || !HasPendingInstruction;
@@ -52,7 +57,7 @@ internal sealed partial class HardwareProcessorModel
             return existing;
         }
         var interruptions = errorPolicy.HasValue ? new ArithmeticInterruptionPort(_processor.Supervisor) : null;
-        var unit = new ArithmeticUnitStages(Timeline, cycle, _processor.GetA(), _processor.GetY(), errorPolicy, interruptions);
+        var unit = new ArithmeticUnitStages(Timeline, cycle, _processor.A, _processor.Y, errorPolicy, interruptions);
         _arithmeticInterruptions = interruptions;
         return _arithmeticUnitStages = unit;
     }

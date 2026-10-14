@@ -1,7 +1,8 @@
+using Besm6.Architecture.Machine;
 using System;
 using System.Numerics;
 
-namespace Besm6.Architecture
+namespace Besm6.Architecture.Numerics
 {
     /// <summary>
     /// Вспомогательная структура для работы с числом БЭСМ-6 в формате "порядок и мантисса".
@@ -13,22 +14,16 @@ namespace Besm6.Architecture
         public uint Exponent;
         public long Mantissa;
 
-        public const long BITS40 = 0xFFFFFFFFFFL;    // биты 40..1 - мантисса (2^40-1)
-        public const long BITS41 = 0x1FFFFFFFFFFL;   // биты 41..1 - мантисса и знак (2^41-1)
-        public const long BITS42 = 0x3FFFFFFFFFFL;   // биты 42..1 - мантисса и оба знака (2^42-1)
-        public const long BIT40 = 1L << 39;         // 40-й бит - старший разряд мантиссы
-        public const long BIT41 = 1L << 40;         // 41-й бит - знак
-        public const long BIT42 = 1L << 41;         // 42-й бит - дубль-знак в мантиссе
 
         public MantissaExponent(Word48 word)
         {
             ulong val = word.Value;
             Exponent = (uint)((val >> 41) & 0x7F);
-            Mantissa = (long)(val & BITS41);
+            Mantissa = (long)(val & ArchitectureConstants.BITS41);
 
             // Sign extend: 41-битное значение (биты 40..0, знак в бите 40) -> 64 бита.
-            Mantissa <<= 64 - 41;
-            Mantissa >>= 64 - 41;
+            Mantissa <<= ArchitectureConstants.ExponentBias - ArchitectureConstants.ExponentStartBit;
+            Mantissa >>= ArchitectureConstants.ExponentBias - ArchitectureConstants.ExponentStartBit;
         }
 
         public MantissaExponent(uint exponent, long mantissa)
@@ -50,7 +45,7 @@ namespace Besm6.Architecture
         /// </summary>
         public bool IsNegative()
         {
-            return (Mantissa & BIT42) != 0;
+            return (Mantissa & ArchitectureConstants.BIT42) != 0;
         }
 
         /// <summary>
@@ -59,7 +54,7 @@ namespace Besm6.Architecture
         /// </summary>
         public bool IsDenormal()
         {
-            return (((Mantissa >> 40) ^ (Mantissa >> 41)) & 1) != 0;
+            return (((Mantissa >> 40) ^ (Mantissa >> ArchitectureConstants.ExponentStartBit)) & 1) != 0;
         }
 
         public void NormalizeToTheRight()
@@ -97,16 +92,16 @@ namespace Besm6.Architecture
             mr += (Mantissa & 0xFFFFF) << 20;
             Mantissa >>= 20;
             Mantissa += mr >> 40;
-            mr &= BITS40;
+            mr &= ArchitectureConstants.BITS40;
 
             // Negate.
             if (negative != 0)
             {
                 Mantissa = ~Mantissa;
-                mr ^= BITS40;
+                mr ^= ArchitectureConstants.BITS40;
                 mr += 1;
                 Mantissa += mr >> 40;
-                mr &= BITS40;
+                mr &= ArchitectureConstants.BITS40;
             }
             return mr;
         }

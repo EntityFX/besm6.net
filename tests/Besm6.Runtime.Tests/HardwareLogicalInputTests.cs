@@ -1,4 +1,6 @@
-using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Architecture.State;
+using Besm6.Runtime.Timing.Arithmetic;
 
 namespace Besm6.Tests;
 
@@ -13,27 +15,27 @@ public sealed class HardwareLogicalInputTests
     public void LogicalOperandIsSampledOnceAndPublishedOnlyAtCompletion(string opcode, ulong expectedA, ulong expectedY)
     {
         var machine = new MachineCore();
-        machine.LoadProgram([new(Besm6.Asm.Assembler.Asm(opcode + ", stop"))], 1);
+        machine.LoadProgram([new(Assembler.Legacy.Assembler.Asm(opcode + ", stop"))], 1);
         machine.Memory.Write(8, new(0xCC));
         machine.Cpu.SetA(0xAA); machine.Cpu.SetY(0x123);
         machine.Cpu.SetR((uint)RFlags.OvfDisable);
-        uint beforeR = machine.Cpu.GetR();
+        uint beforeR = machine.Cpu.R;
         var model = machine.HardwareModel;
         var command = model.PrepareNextInstruction();
         model.BindArithmeticInstruction(command, new HardwareDuration(100), true,
             new ArithmeticOperandBuffer(ArithmeticOperandBufferKind.ReadNumbers, 2));
         model.CreateArithmeticController(new(100)).GrantCommandPermission();
         model.AdvanceTo(new(300)); // Explicit buffer phase; SPOP calculates, but does not publish.
-        Assert.AreEqual(0xAAUL, machine.Cpu.GetA().Value);
-        Assert.AreEqual(0x123UL, machine.Cpu.GetY().Value);
-        Assert.AreEqual(beforeR, machine.Cpu.GetR());
+        Assert.AreEqual(0xAAUL, machine.Cpu.A.Value);
+        Assert.AreEqual(0x123UL, machine.Cpu.Y.Value);
+        Assert.AreEqual(beforeR, machine.Cpu.R);
         machine.Memory.Write(8, new(0xF0));
         model.ScheduleBoundArithmeticCompletionAt(command, new(800)); // Synthetic IZOP until diagrams are specified.
         model.AdvanceTo(new(799));
-        Assert.AreEqual(0xAAUL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(0xAAUL, machine.Cpu.A.Value);
         model.AdvanceTo(new(800));
-        Assert.AreEqual(expectedA, machine.Cpu.GetA().Value);
-        Assert.AreEqual(expectedY, machine.Cpu.GetY().Value);
+        Assert.AreEqual(expectedA, machine.Cpu.A.Value);
+        Assert.AreEqual(expectedY, machine.Cpu.Y.Value);
         Assert.AreEqual(0xF0UL, machine.Memory.Read(8).Value);
         Assert.AreEqual(1UL, model.CompletedInstructions);
         Assert.AreEqual(0UL, machine.Clock.Tick);

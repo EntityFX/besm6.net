@@ -1,3 +1,5 @@
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Encoding;
 using System;
 using System.Text;
 namespace Besm6.Runtime

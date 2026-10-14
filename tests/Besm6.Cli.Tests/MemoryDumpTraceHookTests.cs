@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests
 {
+
     /// <summary>
     /// Регрессия: --dump-mem-at и --profile подписываются на один и тот же хук
     /// <c>Processor.InstructionTrace</c>. Раньше --profile присваивал хук вторым и

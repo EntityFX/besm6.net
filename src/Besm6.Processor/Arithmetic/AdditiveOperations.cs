@@ -1,6 +1,9 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
 using System;
 
-namespace Besm6.Core
+namespace Besm6.Processor.Arithmetic
 {
     /// <summary>
     /// Аддитивные операции АЛУ: сложение/вычитание, изменение экспоненты и знака.
@@ -8,13 +11,10 @@ namespace Besm6.Core
     /// </summary>
     internal sealed class AdditiveOperations
     {
-        private const ulong BITS40 = ArchitectureConstants.BITS40;
-        private const ulong BITS42 = ArchitectureConstants.BITS42;
-
-        private readonly ProcessorState _state;
+        private readonly IProcessorState _state;
         private readonly NormalizationAndRounding _normalizer;
 
-        internal AdditiveOperations(ProcessorState state, NormalizationAndRounding normalizer)
+        internal AdditiveOperations(IProcessorState state, NormalizationAndRounding normalizer)
         {
             _state = state;
             _normalizer = normalizer;
@@ -87,24 +87,24 @@ namespace Besm6.Core
             }
             else if (diff <= 40)
             {
-                y = Word48.FromInt48((ulong)(a1.Mantissa << (40 - diff)) & BITS40);
+                y = Word48.FromInt48((ulong)(a1.Mantissa << (40 - diff)) & ArchitectureConstants.BITS40);
                 roundFlag = y.Value != 0;
-                a1.Mantissa = (long)((ulong)((a1.Mantissa >> diff) | (neg ? (~0L << (40 - diff)) : 0)) & BITS42);
+                a1.Mantissa = (long)((ulong)((a1.Mantissa >> diff) | (neg ? (~0L << (40 - diff)) : 0)) & ArchitectureConstants.BITS42);
             }
             else if (diff <= 80)
             {
                 int d2 = diff - 40;
                 roundFlag = a1.Mantissa != 0;
-                y = Word48.FromInt48((ulong)((a1.Mantissa >> d2) | (neg ? (~0L << (40 - d2)) : 0)) & BITS40);
-                a1.Mantissa = neg ? (long)BITS42 : 0;
+                y = Word48.FromInt48((ulong)((a1.Mantissa >> d2) | (neg ? (~0L << (40 - d2)) : 0)) & ArchitectureConstants.BITS40);
+                a1.Mantissa = neg ? (long)ArchitectureConstants.BITS42 : 0;
             }
             else
             {
                 roundFlag = a1.Mantissa != 0;
                 if (neg)
                 {
-                    y = Word48.FromInt48(BITS40);
-                    a1.Mantissa = (long)BITS42;
+                    y = Word48.FromInt48(ArchitectureConstants.BITS40);
+                    a1.Mantissa = (long)ArchitectureConstants.BITS42;
                 }
                 else
                 {

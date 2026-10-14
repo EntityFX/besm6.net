@@ -1,8 +1,16 @@
+using Besm6.Architecture.Memory;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Besm6.Runtime.Timing;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.State;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Machine;
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Runtime.Timing.Devices;
+using Besm6.Runtime.Timing.Memory;
 
-namespace Besm6.Runtime;
+namespace Besm6.Runtime.Loading;
 
 /// <summary>Standalone supervisor machine image and explicit logical timing.
 /// Addresses and duration values are decimal; words contain raw 50-bit controls.</summary>
@@ -50,15 +58,15 @@ public sealed class MachineJobConfiguration
         }
         var memory = MemoryConfiguration switch
         {
-            "classical32k" => Besm6.Core.MemoryConfiguration.Classical32K,
-            "simh512k" => Besm6.Core.MemoryConfiguration.Simh512K,
+            "classical32k" => Processor.Memory.MemoryConfiguration.Classical32K,
+            "simh512k" => Processor.Memory.MemoryConfiguration.Simh512K,
             _ => throw new ArgumentException("memoryConfiguration must be 'classical32k' or 'simh512k'.")
         };
-        if (InstructionLimit < 1 || EntryAddress >= PhysicalMemory.WordCount)
+        if (InstructionLimit < 1 || EntryAddress >= ArchitectureConstants.WordCount)
             throw new ArgumentException("Instruction limit must be positive and CPU entry address must fit 15 bits.");
         var status = new ControlUnitStatus((ControlUnitFlags)ControlFlags);
         ArgumentNullException.ThrowIfNull(MemoryWords);
-        uint capacity = memory == Besm6.Core.MemoryConfiguration.Classical32K ? 32768U : 524288U;
+        uint capacity = memory == Processor.Memory.MemoryConfiguration.Classical32K ? 32768U : 524288U;
         var addresses = new HashSet<(bool Panel, uint Address)>();
         foreach (var word in MemoryWords)
         {

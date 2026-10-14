@@ -1,4 +1,4 @@
-namespace Besm6.Runtime.Timing;
+namespace Besm6.Runtime.Timing.Arithmetic;
 
 internal enum ArithmeticCommandSource { BufferRead, Immediate, BufferWrite, IndexRegister, ExternalDevice }
 internal enum ArithmeticOperandRoute { Buffered, Direct }

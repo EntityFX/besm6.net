@@ -1,5 +1,7 @@
+using Besm6.Runtime.Loading;
 using System.Text.Json;
-using Besm6;
+using Besm6.Architecture.Numerics;
+using Besm6.Runtime.Configuration;
 
 namespace Besm6.Tests;
 
@@ -8,13 +10,13 @@ public sealed class GuestClockTests
 {
     private static readonly Word48[] Program =
     [
-        new(Besm6.Asm.Assembler.Asm("*50 70210, atx 102")),
-        new(Besm6.Asm.Assembler.Asm("vtm 77760(2), ntr 6")),
-        new(Besm6.Asm.Assembler.Asm("vtm 60000(1), utc")),
-        new(Besm6.Asm.Assembler.Asm("ntr 6, vlm 4(1)")),
-        new(Besm6.Asm.Assembler.Asm("vlm 3(2), *50 70077")),
-        new(Besm6.Asm.Assembler.Asm("atx 100, *50 70210")),
-        new(Besm6.Asm.Assembler.Asm("atx 101, stop")),
+        new(Assembler.Legacy.Assembler.Asm("*50 70210, atx 102")),
+        new(Assembler.Legacy.Assembler.Asm("vtm 77760(2), ntr 6")),
+        new(Assembler.Legacy.Assembler.Asm("vtm 60000(1), utc")),
+        new(Assembler.Legacy.Assembler.Asm("ntr 6, vlm 4(1)")),
+        new(Assembler.Legacy.Assembler.Asm("vlm 3(2), *50 70077")),
+        new(Assembler.Legacy.Assembler.Asm("atx 100, *50 70210")),
+        new(Assembler.Legacy.Assembler.Asm("atx 101, stop")),
     ];
 
     [TestMethod]

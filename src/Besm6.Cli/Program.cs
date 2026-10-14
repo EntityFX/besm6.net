@@ -1,5 +1,4 @@
-using Besm6.Cli;
-namespace Besm6
+namespace Besm6.Cli
 {
     static class Program
     {

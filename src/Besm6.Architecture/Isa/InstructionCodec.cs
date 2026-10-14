@@ -1,4 +1,6 @@
-namespace Besm6.Architecture
+using Besm6.Architecture.Machine;
+
+namespace Besm6.Architecture.Isa
 {
     /// <summary>
     /// Кодирует и декодирует команды БЭСМ-6 без зависимости от процессора или ассемблера.

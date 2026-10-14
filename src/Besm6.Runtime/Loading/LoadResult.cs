@@ -1,4 +1,4 @@
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Loading
 {
     /// <summary>
     /// Результат загрузки/выполнения.

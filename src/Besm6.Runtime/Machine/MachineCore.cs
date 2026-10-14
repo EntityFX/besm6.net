@@ -1,3 +1,16 @@
+using CpuProcessor = Besm6.Processor.Cpu.Processor;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Memory;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Devices;
+using Besm6.Runtime.Execution;
+using Besm6.Runtime.Machine;
+using Besm6.Runtime.Timing.Arithmetic;
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Runtime.Timing.Devices;
+using Besm6.Runtime.Timing.Memory;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,7 +36,7 @@ namespace Besm6.Runtime
         public BufferedMemoryBackend? BufferedMemory { get; }
         /// <summary>Mathematical memory, optionally coupled to the supervisor CPU profile.</summary>
         public MappedMemoryBackend? MappedMemory { get; }
-        public Processor Cpu { get; }
+        public CpuProcessor Cpu { get; }
         public DeviceManager Devices { get; }
         public Puncher Puncher { get; }
         public Plotter Plotter { get; }
@@ -41,8 +54,8 @@ namespace Besm6.Runtime
         /// Explicit construction for the hardware owner; functional CPU execution
         /// neither creates it nor reads its state. CPU reset preserves it.
         /// </summary>
-        internal Timing.ArithmeticUnitStages CreateArithmeticUnitStages(Timing.HardwareDuration cycle,
-            Timing.ArithmeticErrorPolicy? errorPolicy = null)
+        internal ArithmeticUnitStages CreateArithmeticUnitStages(HardwareDuration cycle,
+            ArithmeticErrorPolicy? errorPolicy = null)
         {
             if (cycle.Nanoseconds == 0 || (cycle.Nanoseconds & 1) != 0)
                 throw new ArgumentOutOfRangeException(nameof(cycle), "A positive even cycle is required.");
@@ -77,7 +90,7 @@ namespace Besm6.Runtime
         public IEventScheduler Scheduler => _simulation.Scheduler;
 
         // Свойство-мост для совместимости с существующим Debugger.
-        public Processor Processor => Cpu;
+        public CpuProcessor Processor => Cpu;
 
         public Action<int, ulong>? StepTrace
         { get => _simulation.StepTrace; set => _simulation.StepTrace = value; }
@@ -105,7 +118,7 @@ namespace Besm6.Runtime
 
         private static uint ConfigurationSize(MemoryConfiguration configuration) => configuration switch
         {
-            MemoryConfiguration.Classical32K => PhysicalMemory.WordCount,
+            MemoryConfiguration.Classical32K => ArchitectureConstants.WordCount,
             MemoryConfiguration.Simh512K => 524288,
             _ => throw new ArgumentOutOfRangeException(nameof(configuration))
         };
@@ -127,7 +140,7 @@ namespace Besm6.Runtime
                     cpuMemory = hostMemory = new CoreMemory(memorySize);
                     break;
                 case MemoryModel.Buffered:
-                    if (memorySize != PhysicalMemory.WordCount)
+                    if (memorySize != ArchitectureConstants.WordCount)
                         throw new ArgumentOutOfRangeException(nameof(memorySize), "Buffered requires 32768 words.");
                     BufferedMemory = new BufferedMemoryBackend();
                     cpuMemory = BufferedMemory;
@@ -156,7 +169,7 @@ namespace Besm6.Runtime
 
             // The buffered backend separates CPU access from coherent host loading/observation.
             // Dubna still uses the original direct CoreMemory path without a bus hop.
-            Cpu = new Processor(cpuMemory, profile);
+            Cpu = new CpuProcessor(cpuMemory, profile);
             Puncher = new Puncher(Memory, puncherOutputDir);
             Plotter = new Plotter();
 
@@ -177,7 +190,7 @@ namespace Besm6.Runtime
 
         /// <summary>Use the CPU model's shared nanosecond calendar and MRAM port for devices.
         /// CPU execution selection remains independent; device attachments and registers survive.</summary>
-        public void UseHardwareDeviceTiming(Timing.MramPortConfiguration memory, Timing.SupervisorIoHardwareTiming devices)
+        public void UseHardwareDeviceTiming(MramPortConfiguration memory, SupervisorIoHardwareTiming devices)
         {
             ArgumentNullException.ThrowIfNull(devices);
             EnsureExecutionAllowed();

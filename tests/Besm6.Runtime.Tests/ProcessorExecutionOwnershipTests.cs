@@ -1,3 +1,4 @@
+using Besm6.Runtime.Timing.Calendar;
 using Besm6.Runtime.Modeling;
 using Besm6.Runtime.Timing;
 
@@ -12,8 +13,8 @@ public sealed class ProcessorExecutionOwnershipTests
     {
         var machine = new MachineCore();
         machine.LoadProgram([
-            new(Besm6.Asm.Assembler.Asm("xta 10, atx 11")),
-            new(Besm6.Asm.Assembler.Asm("stop, stop"))], 1);
+            new(Assembler.Legacy.Assembler.Asm("xta 10, atx 11")),
+            new(Assembler.Legacy.Assembler.Asm("stop, stop"))], 1);
         machine.Memory.Write(8, new(123));
         var cpu = machine.Cpu;
         var memory = machine.Memory;
@@ -24,7 +25,7 @@ public sealed class ProcessorExecutionOwnershipTests
         Assert.ThrowsExactly<InvalidOperationException>(() => machine.Step());
         model.ScheduleCompletionAt(load, new(100));
         Assert.AreEqual(HardwareInstructionStatus.Completed, model.AdvanceTo(new(100))!.Value.Status);
-        Assert.AreEqual(123UL, cpu.GetA().Value);
+        Assert.AreEqual(123UL, cpu.A.Value);
         Assert.AreEqual(0UL, machine.Clock.Tick);
 
         Assert.IsFalse(machine.Step());
@@ -48,8 +49,8 @@ public sealed class ProcessorExecutionOwnershipTests
     {
         var first = new MachineCore();
         var second = new MachineCore();
-        first.LoadProgram([new(Besm6.Asm.Assembler.Asm("vtm 1(1), stop"))], 1);
-        second.LoadProgram([new(Besm6.Asm.Assembler.Asm("vtm 2(1), stop"))], 1);
+        first.LoadProgram([new(Assembler.Legacy.Assembler.Asm("vtm 1(1), stop"))], 1);
+        second.LoadProgram([new(Assembler.Legacy.Assembler.Asm("vtm 2(1), stop"))], 1);
         first.HardwareTimeline.ScheduleAt(new(100), () =>
         {
             Assert.ThrowsExactly<InvalidOperationException>(() => first.Step());

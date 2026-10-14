@@ -1,4 +1,6 @@
+using Besm6.Architecture.Numerics;
 using System;
+using Besm6.Architecture.Memory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Besm6.Tests
 {

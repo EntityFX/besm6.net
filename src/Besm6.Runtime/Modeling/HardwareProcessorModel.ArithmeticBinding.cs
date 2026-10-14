@@ -1,4 +1,8 @@
+using Besm6.Architecture.Isa;
+using Besm6.Processor.Arithmetic;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic;
+using Besm6.Runtime.Timing.Calendar;
 
 namespace Besm6.Runtime.Modeling;
 
@@ -117,7 +121,7 @@ internal sealed partial class HardwareProcessorModel
             throw new ArgumentException("The AU operand source does not match the shared CPU instruction.", nameof(route));
         var controller = CreateArithmeticController(cycle, errorPolicy);
         if (!controller.TryBind(this, code, () => SampleBoundOperand(instruction), operandReady,
-            _processor.GetA(), _processor.GetY(), transition => AcceptBoundTransition(instruction, transition),
+            _processor.A, _processor.Y, transition => AcceptBoundTransition(instruction, transition),
             out var command, route, completionDelay, () => IsCurrent(in instruction) && !_cancellationRequested))
             throw new InvalidOperationException("The idle arithmetic controller could not receive its CPU command.");
         _boundArithmetic = controller; _boundArithmeticCommand = command;

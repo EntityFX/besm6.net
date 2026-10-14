@@ -1,4 +1,8 @@
-﻿namespace Besm6.Runtime
+﻿using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Extracodes;
+
+namespace Besm6.Runtime
 {
     public sealed partial class ExtracodeHandler
     {
@@ -12,7 +16,7 @@
         {
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16) & 0x7FFF;
-            ulong arg = cpu.GetA().Value;
+            ulong arg = cpu.A.Value;
             switch (addr)
             {
                 case 0: cpu.SetA(Besm6Math.Sqrt(arg)); break;
@@ -132,8 +136,8 @@
             long addr = cpu.GetM(M16);
             switch (addr)
             {
-                case 0: cpu.SetA(Besm6Math.Sin(cpu.GetA().Value)); return;
-                case 1: cpu.SetA(Besm6Math.Cos(cpu.GetA().Value)); return;
+                case 0: cpu.SetA(Besm6Math.Sin(cpu.A.Value)); return;
+                case 1: cpu.SetA(Besm6Math.Cos(cpu.A.Value)); return;
                 default: throw new ProcessorException($"Unimplemented extracode *51 {Convert.ToString(addr, 8)}");
             }
         }
@@ -143,7 +147,7 @@
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *52 {Convert.ToString(addr, 8)}");
-            cpu.SetA(Besm6Math.Cos(cpu.GetA().Value));
+            cpu.SetA(Besm6Math.Cos(cpu.A.Value));
         }
 
         private void E53()
@@ -151,7 +155,7 @@
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *53 {Convert.ToString(addr, 8)}");
-            cpu.SetA(Besm6Math.Atan(cpu.GetA().Value));
+            cpu.SetA(Besm6Math.Atan(cpu.A.Value));
         }
 
         private void E54()
@@ -159,7 +163,7 @@
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *54 {Convert.ToString(addr, 8)}");
-            cpu.SetA(Besm6Math.Asin(cpu.GetA().Value));
+            cpu.SetA(Besm6Math.Asin(cpu.A.Value));
         }
 
         private void E55()
@@ -167,7 +171,7 @@
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *55 {Convert.ToString(addr, 8)}");
-            cpu.SetA(Besm6Math.Log(cpu.GetA().Value));
+            cpu.SetA(Besm6Math.Log(cpu.A.Value));
         }
 
         private void E56()
@@ -175,7 +179,7 @@
             var cpu = _machine.Cpu;
             long addr = cpu.GetM(M16);
             if (addr != 0) throw new ProcessorException($"Unimplemented extracode *56 {Convert.ToString(addr, 8)}");
-            cpu.SetA(Besm6Math.Exp(cpu.GetA().Value));
+            cpu.SetA(Besm6Math.Exp(cpu.A.Value));
         }
 
     }

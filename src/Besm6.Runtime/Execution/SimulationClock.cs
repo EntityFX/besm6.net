@@ -1,6 +1,6 @@
 using System;
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Execution
 {
     /// <summary>
     /// Дискретное модельное время симулятора.

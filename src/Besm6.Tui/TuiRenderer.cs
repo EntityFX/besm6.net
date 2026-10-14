@@ -1,5 +1,6 @@
 using System.Text;
-using Besm6.Assembler;
+using Besm6.Architecture.Numerics;
+using Besm6.Assembler.Disassembly;
 
 namespace Besm6.Tui
 {

@@ -1,4 +1,5 @@
 using System;
+using Besm6.Runtime.Loading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Besm6.Tests
 {
@@ -81,11 +82,11 @@ namespace Besm6.Tests
             _loader.BootMsDubna();
 
             var cpu = _machine.Cpu;
-            Assert.AreEqual(1032u, cpu.GetK(), "K должен быть 02010 oct = 1032 dec");
-            Assert.IsFalse(cpu.OnRightInstruction, "half = LEFT (правая половина ещё не исполнялась)");
-            Assert.AreEqual(0UL, cpu.GetA().Value & 0xFFFF_FFFF_FFFFUL, "A = 0");
-            Assert.AreEqual(0UL, cpu.GetY().Value & 0xFFFF_FFFF_FFFFUL, "Y = 0");
-            Assert.AreEqual(0u, cpu.GetR(), "R = 0 (нет режима)");
+            Assert.AreEqual(1032u, cpu.K, "K должен быть 02010 oct = 1032 dec");
+            Assert.IsFalse(cpu.RightInstruction, "half = LEFT (правая половина ещё не исполнялась)");
+            Assert.AreEqual(0UL, cpu.A.Value & 0xFFFF_FFFF_FFFFUL, "A = 0");
+            Assert.AreEqual(0UL, cpu.Y.Value & 0xFFFF_FFFF_FFFFUL, "Y = 0");
+            Assert.AreEqual(0u, cpu.R, "R = 0 (нет режима)");
             Assert.AreEqual(0L, cpu.C, "C = 0");
             Assert.IsFalse(cpu.ApplyC, "apply_c_reg = false");
             for (int i = 0; i < 16; i++)

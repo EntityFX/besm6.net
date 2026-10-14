@@ -1,4 +1,6 @@
-namespace Besm6.Runtime
+using Besm6.Architecture.Isa;
+
+namespace Besm6.Runtime.Profiling
 {
     /// <summary>
     /// Документированная модель времени выполнения команд БЭСМ-6 в тактах.

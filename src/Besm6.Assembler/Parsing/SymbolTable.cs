@@ -1,4 +1,4 @@
-namespace Besm6.Assembler
+namespace Besm6.Assembler.Parsing
 {
     /// <summary>
     /// Двухпроходная таблица символов: сборка адресов лейблов в pass 1,

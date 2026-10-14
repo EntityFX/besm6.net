@@ -1,4 +1,8 @@
+using Besm6.Runtime.Timing.Arithmetic;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Arithmetic;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic.Division;
 
 namespace Besm6.Tests;
 

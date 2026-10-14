@@ -1,11 +1,13 @@
-namespace Besm6.Core
+using Besm6.Architecture.Numerics;
+
+namespace Besm6.Architecture.Machine
 {
     /// <summary>
     /// Неизменяемый снимок регистров процессора до или после инструкции.
     /// </summary>
-    public sealed class ProcessorSnapshot
+    public sealed class ProcessorSnapshot : IRegisters
     {
-        internal ProcessorSnapshot(ProcessorState state)
+        public ProcessorSnapshot(IProcessorState state)
         {
             K = state.K;
             IsRightHalf = state.IsRightHalf;
@@ -17,32 +19,32 @@ namespace Besm6.Core
             EffectiveAddress = state.EffectiveAddress;
             InterceptCount = state.InterceptCount;
             InterceptAddress = state.InterceptAddress;
-            M = Array.AsReadOnly((uint[])state.M.Clone());
+            M = (uint[])state.M.Clone();
         }
 
         /// <summary>Счётчик команд K.</summary>
-        public uint K { get; }
+        public uint K { get; set; }
 
         /// <summary>Признак правого полуслова.</summary>
         public bool IsRightHalf { get; }
 
         /// <summary>Аккумулятор A.</summary>
-        public Word48 A { get; }
+        public Word48 A { get; set; }
 
         /// <summary>Регистр младших разрядов Y.</summary>
-        public Word48 Y { get; }
+        public Word48 Y { get; set; }
 
         /// <summary>Регистр режима R.</summary>
-        public uint R { get; }
+        public uint R { get; set; }
 
         /// <summary>Регистр модификации адреса C.</summary>
-        public uint C { get; }
+        public uint C { get; set; }
 
         /// <summary>Признак применения C к следующей инструкции.</summary>
-        public bool ApplyC { get; }
+        public bool ApplyC { get; set; }
 
         /// <summary>Последний исполнительный адрес.</summary>
-        public uint EffectiveAddress { get; }
+        public uint EffectiveAddress { get; set; }
 
         /// <summary>Счётчик перехвата арифметической ошибки.</summary>
         public int InterceptCount { get; }
@@ -51,6 +53,6 @@ namespace Besm6.Core
         public uint InterceptAddress { get; }
 
         /// <summary>Копия индексных регистров M0–M15.</summary>
-        public IReadOnlyList<uint> M { get; }
+        public uint[] M { get; set; }
     }
 }

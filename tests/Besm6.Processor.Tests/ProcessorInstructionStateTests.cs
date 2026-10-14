@@ -1,7 +1,13 @@
 using System;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Runtime.Extracodes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Besm6.Tests
 {
+    using Processor = global::Besm6.Processor.Cpu.Processor;
+
     /// <summary>
     /// P1: Y-побочные эффекты и R-матрица на уровне отдельных инструкций.
     /// Референс: ref/processor.cpp (case 004..047) — точные эффекты на A/Y/R.
@@ -30,7 +36,7 @@ namespace Besm6.Tests
             _cpu = new Processor(_memory);
         }
 
-        private static ulong Asm(string source) => Besm6.Asm.Assembler.Asm(source);
+        private static ulong Asm(string source) => Assembler.Legacy.Assembler.Asm(source);
         private static uint O(string octal) => Convert.ToUInt32(octal, 8);
         private void StoreWord(string address, string source) => _memory.Write(O(address), new Word48(Asm(source)));
         private void StoreData(string address, ulong value) => _memory.Write(O(address), new Word48(value));
@@ -50,13 +56,13 @@ namespace Besm6.Tests
             StoreWord("10", "нтж 2000, стоп");
             StoreData("2000", operand);
             _cpu.SetA(oldA);
-            _cpu.SetK(K);
+            _cpu.K = K;
 
             _cpu.Step();
 
-            Assert.AreEqual(oldA, _cpu.GetY().Value, "Y обязан сохранить A до нтж");
-            Assert.AreEqual(oldA ^ operand, _cpu.GetA().Value);
-            Assert.AreEqual((uint)RFlags.Log, _cpu.GetR() & (uint)RFlags.Mode);
+            Assert.AreEqual(oldA, _cpu.Y.Value, "Y обязан сохранить A до нтж");
+            Assert.AreEqual(oldA ^ operand, _cpu.A.Value);
+            Assert.AreEqual((uint)RFlags.Log, _cpu.R & (uint)RFlags.Mode);
         }
 
         [TestMethod]
@@ -71,11 +77,11 @@ namespace Besm6.Tests
             StoreData("2000", 1UL);
             _cpu.SetA(0x200030004UL);
             _cpu.SetY(0x400050006UL);
-            _cpu.SetK(K);
+            _cpu.K = K;
 
             _cpu.Step();
 
-            Assert.AreEqual(0UL, _cpu.GetY().Value, instruction + ": Y обязан обнулиться");
+            Assert.AreEqual(0UL, _cpu.Y.Value, instruction + ": Y обязан обнулиться");
         }
 
         /// <summary>счмр (031/yta), логический режим: A := Y (ref: a = y).</summary>
@@ -89,11 +95,11 @@ namespace Besm6.Tests
             _cpu.SetA(0x600070008UL);
             _cpu.SetY(rmrValue);
             _cpu.SetR((ulong)RFlags.Log);
-            _cpu.SetK(K);
+            _cpu.K = K;
 
             _cpu.Step();
 
-            Assert.AreEqual(rmrValue, _cpu.GetA().Value, "в логическом режиме счмр копирует Y в A");
+            Assert.AreEqual(rmrValue, _cpu.A.Value, "в логическом режиме счмр копирует Y в A");
         }
 
         /// <summary>счмр (031/yta), НЕ логический режим: мантисса (40 бит) берётся из Y,
@@ -111,12 +117,12 @@ namespace Besm6.Tests
             _cpu.SetA(expField | (1UL << 39));
             _cpu.SetY(rmrValue);
             _cpu.SetR((ulong)RFlags.Add);
-            _cpu.SetK(K);
+            _cpu.K = K;
 
             _cpu.Step();
 
-            Assert.AreEqual(expected, _cpu.GetA().Value, "экспонента A + 40-битная мантисса Y");
-            Assert.AreEqual((uint)RFlags.Add, _cpu.GetR() & (uint)RFlags.Mode,
+            Assert.AreEqual(expected, _cpu.A.Value, "экспонента A + 40-битная мантисса Y");
+            Assert.AreEqual((uint)RFlags.Add, _cpu.R & (uint)RFlags.Mode,
                 "в не-логическом режиме счмр НЕ переключает R");
         }
 
@@ -129,14 +135,14 @@ namespace Besm6.Tests
             StoreWord("10", "нед 2000, стоп");
             StoreData("2000", 5UL);
             _cpu.SetA(a);
-            _cpu.SetK(K);
+            _cpu.K = K;
 
             _cpu.Step();
 
             if (expectZeroY)
-                Assert.AreEqual(0UL, _cpu.GetY().Value, "нед при A==0 обнуляет Y");
+                Assert.AreEqual(0UL, _cpu.Y.Value, "нед при A==0 обнуляет Y");
             else
-                Assert.AreNotEqual(0UL, _cpu.GetY().Value, "нед при A!=0 кладёт в Y степень сдвига");
+                Assert.AreNotEqual(0UL, _cpu.Y.Value, "нед при A!=0 кладёт в Y степень сдвига");
         }
 
         // ─── R-матрица: инструкция → итоговый режим АЛУ ──────────────────
@@ -168,11 +174,11 @@ namespace Besm6.Tests
             _cpu.SetA(0UL);
             // Старт в НЕ-ожидаемом режиме: итог обязан измениться именно инструкцией.
             _cpu.SetR((ulong)(RFlags.OvfDisable | RFlags.RoundDisable | RFlags.Mult));
-            _cpu.SetK(K);
+            _cpu.K = K;
 
             _cpu.Step();
 
-            uint mode = _cpu.GetR() & (uint)RFlags.Mode;
+            uint mode = _cpu.R & (uint)RFlags.Mode;
             Assert.AreEqual((uint)expectedMode, mode, instruction);
         }
     }

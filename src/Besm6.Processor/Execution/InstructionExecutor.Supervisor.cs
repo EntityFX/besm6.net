@@ -1,3 +1,13 @@
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.State;
+using Besm6.Architecture.Supervisor;
+using Besm6.Processor.Cpu;
+using Besm6.Processor.Diagnostics;
+using Besm6.Processor.Execution;
+using Besm6.Processor.Memory;
+using Besm6.Processor.Supervisor;
+
 namespace Besm6.Core;
 
 public sealed partial class InstructionExecutor
@@ -30,7 +40,7 @@ public sealed partial class InstructionExecutor
          cpuFailure.Message.StartsWith("Unknown instruction", StringComparison.Ordinal) ||
          cpuFailure.Message == "Division by zero" || cpuFailure.Message == "Arithmetic overflow");
 
-    private bool HandleSupervisorFailure(SupervisorControl supervisor, Exception exception, uint start, bool right)
+    private bool HandleSupervisorFailure(ISupervisorControl supervisor, Exception exception, uint start, bool right)
     {
         var fault = DescribeSupervisorFailure(exception, start, right);
         return InterruptFailedStep(supervisor, fault.Signal, fault.ReturnWord, fault.Flags);
@@ -84,7 +94,7 @@ public sealed partial class InstructionExecutor
     }
 
 
-    private bool InterruptFailedStep(SupervisorControl supervisor, ulong signal, uint returnWord, uint flags)
+    private bool InterruptFailedStep(ISupervisorControl supervisor, ulong signal, uint returnWord, uint flags)
     {
         _processor.CancelInstructionTrace();
         _processor.LastStepCompleted = false;
@@ -92,7 +102,7 @@ public sealed partial class InstructionExecutor
         return false;
     }
 
-    private InstructionOutcome DispatchSupervisor(SupervisorControl supervisor, ref ExecutionFrame frame)
+    private InstructionOutcome DispatchSupervisor(ISupervisorControl supervisor, ref ExecutionFrame frame)
     {
         Opcode opcode = frame.Instruction.Opcode;
         int reg = frame.Instruction.Register;

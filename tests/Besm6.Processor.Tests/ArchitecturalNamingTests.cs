@@ -1,11 +1,17 @@
+using Besm6.Architecture.Numerics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Besm6.Asm;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.State;
+using Besm6.Assembler.Legacy;
+using Besm6.Runtime.Loading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests
 {
+    using Processor = global::Besm6.Processor.Cpu.Processor;
+
     [TestClass]
     public class ArchitecturalNamingTests
     {
@@ -66,7 +72,7 @@ namespace Besm6.Tests
             var machine = new MachineCore();
             ulong utcOne = (((ulong)Opcode.Utc << 12) | 1UL) << 24;
             machine.Memory.Write(1, new Word48(utcOne));
-            machine.Cpu.SetK(1);
+            machine.Cpu.K = 1;
 
             var names = new List<string>();
             machine.RegisterTrace = (name, _) => names.Add(name);

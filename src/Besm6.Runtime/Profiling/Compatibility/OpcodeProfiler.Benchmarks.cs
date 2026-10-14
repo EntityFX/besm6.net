@@ -1,3 +1,4 @@
+using Besm6.Runtime.Profiling;
 using System.Text;
 
 namespace Besm6.Runtime

@@ -1,6 +1,6 @@
-namespace Besm6.Asm
+namespace Besm6.Assembler.Legacy
 {
-    using global::Besm6.Assembler;
+    using Besm6.Assembler.Detection;
 
     /// <summary>Устаревший результат ассемблирования программы.</summary>
     [Obsolete("Используйте Besm6.Assembler.AssemblyResult")]

@@ -1,4 +1,6 @@
 using System;
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Extracodes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests
@@ -70,7 +72,7 @@ namespace Besm6.Tests
             }
 
             // Состояние не трогается — остановка, а не обработка.
-            Assert.AreEqual(accBefore, machine.Cpu.GetA().Value);
+            Assert.AreEqual(accBefore, machine.Cpu.A.Value);
         }
 
         // ─── E73 / E20 / E21: no-op контракты (P1-9) ───────────────────────
@@ -89,7 +91,7 @@ namespace Besm6.Tests
             bool handled = handler.Handle(code, 0);
 
             Assert.IsTrue(handled, $"э{Convert.ToString(code, 8)} обязан обработываться как no-op");
-            Assert.AreEqual(accBefore, machine.Cpu.GetA().Value, "no-op не меняет A");
+            Assert.AreEqual(accBefore, machine.Cpu.A.Value, "no-op не меняет A");
             Assert.AreEqual(0x2001u, machine.Cpu.GetM(15), "no-op не меняет M[15]");
         }
 
@@ -111,7 +113,7 @@ namespace Besm6.Tests
             machine.Cpu.SetM(14, 28800); // 070200 oct
 
             Assert.IsTrue(handler.Handle(E50, 0));
-            Assert.AreEqual(0x8000UL, machine.Cpu.GetA().Value,
+            Assert.AreEqual(0x8000UL, machine.Cpu.A.Value,
                 "E50 070200 must return the capability mask used by the C++ reference");
         }
 
@@ -182,7 +184,7 @@ namespace Besm6.Tests
             machine.Cpu.SetM(14, addr); // M[016] oct — адрес подкоманды
 
             Assert.IsTrue(handler.Handle(code, 0), "valid addr обязан обработаться");
-            Assert.AreEqual(fn(word), machine.Cpu.GetA().Value,
+            Assert.AreEqual(fn(word), machine.Cpu.A.Value,
                 $"э{Convert.ToString(code, 8)} addr=0{Convert.ToString(addr, 8)} обязан применить fn к A");
         }
 

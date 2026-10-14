@@ -1,21 +1,19 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
 using System;
 
-namespace Besm6.Core
+namespace Besm6.Processor.Arithmetic
 {
     /// <summary>
-    /// Мультипликативные операции АЛУ: умножение и деление. Вынесено из Alu.cs
-    /// (Этап 4 рефакторинга).
+    /// Мультипликативные операции АЛУ: умножение и деление.
     /// </summary>
     internal sealed class MultiplicativeOperations
     {
-        private const ulong BIT41  = ArchitectureConstants.BIT41;
-        private const ulong BITS40 = ArchitectureConstants.BITS40;
-        private const ulong BITS48 = ArchitectureConstants.BITS48;
-
-        private readonly ProcessorState _state;
+        private readonly IProcessorState _state;
         private readonly NormalizationAndRounding _normalizer;
 
-        internal MultiplicativeOperations(ProcessorState state, NormalizationAndRounding normalizer)
+        internal MultiplicativeOperations(IProcessorState state, NormalizationAndRounding normalizer)
         {
             _state = state;
             _normalizer = normalizer;
@@ -85,7 +83,7 @@ namespace Besm6.Core
         private static void ComputeDivide<TSink>(Word48 accumulator, Word48 val, ref TSink sink)
             where TSink : struct, IArithmeticResultSink
         {
-            if (((val.Value ^ (val.Value << 1)) & BIT41) == 0)
+            if (((val.Value ^ (val.Value << 1)) & ArchitectureConstants.BIT41) == 0)
                 throw new ProcessorException("Division by zero");
 
             MantissaExponent dividend = new MantissaExponent(accumulator);
@@ -99,7 +97,7 @@ namespace Besm6.Core
         {
             MantissaExponent quot = new MantissaExponent(0, 0);
 
-            if (d.Mantissa == MantissaExponent.BIT40)
+            if (d.Mantissa == ArchitectureConstants.BIT40)
             {
                 quot.Mantissa = n.Mantissa;
                 quot.Exponent = n.Exponent - d.Exponent + 64 + 1;
@@ -117,15 +115,15 @@ namespace Besm6.Core
             long remainder = n.Mantissa;
             long divisor = d.Mantissa;
             long quotient = 0;
-            for (long bitmask = MantissaExponent.BIT40; bitmask > 0; bitmask >>= 1)
+            for (long bitmask = ArchitectureConstants.BIT40; bitmask > 0; bitmask >>= 1)
             {
                 if (remainder == 0)
                     break;
 
                 // The unsigned range excludes both +/- BIT40 without computing
                 // an absolute value on every step of non-restoring division.
-                if ((ulong)(remainder + MantissaExponent.BIT40 - 1) <
-                    (ulong)(2 * MantissaExponent.BIT40 - 1))
+                if ((ulong)(remainder + ArchitectureConstants.BIT40 - 1) <
+                    (ulong)(2 * ArchitectureConstants.BIT40 - 1))
                 {
                     remainder *= 2;
                 }

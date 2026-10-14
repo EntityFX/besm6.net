@@ -1,7 +1,14 @@
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
+using Besm6.Processor.Memory;
 using Besm6.Runtime.Modeling;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic;
 
 namespace Besm6.Tests;
+using Processor = global::Besm6.Processor.Cpu.Processor;
+
 
 [TestClass]
 public sealed class HardwareArithmeticBindingTests
@@ -10,7 +17,7 @@ public sealed class HardwareArithmeticBindingTests
     private static MachineCore Machine(string operation = "a+x 10")
     {
         var machine = new MachineCore();
-        machine.LoadProgram([new(Besm6.Asm.Assembler.Asm(operation + ", stop"))], 1);
+        machine.LoadProgram([new(Assembler.Legacy.Assembler.Asm(operation + ", stop"))], 1);
         machine.Memory.Write(8, One);
         machine.Cpu.SetA(One.Value);
         return machine;
@@ -41,9 +48,9 @@ public sealed class HardwareArithmeticBindingTests
         model.Timeline.ScheduleAt(new(400), () => machine.Memory.Write(8, Word48.FromDouble(99)));
         model.Timeline.ScheduleAt(new(800), controller.CompleteOperation);
         Assert.IsNull(model.AdvanceTo(new(799)));
-        Assert.AreEqual(One, machine.Cpu.GetA());
+        Assert.AreEqual(One, machine.Cpu.A);
         Assert.AreEqual(HardwareInstructionStatus.Completed, model.AdvanceNextEvent()!.Value.Status);
-        Assert.AreEqual(Word48.FromDouble(2), machine.Cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(2), machine.Cpu.A);
         CollectionAssert.AreEqual(new[] { ArithmeticStageTransitionKind.OperandAccepted,
             ArithmeticStageTransitionKind.Started, ArithmeticStageTransitionKind.Completed }, transitions);
         Assert.AreEqual(0UL, machine.Clock.Tick);
@@ -61,9 +68,9 @@ public sealed class HardwareArithmeticBindingTests
         model.Timeline.ScheduleAt(new(800), controller.CompleteOperation);
         var error = Assert.ThrowsExactly<HardwareCallbackException>(() => model.AdvanceTo(new(800)));
         Assert.IsInstanceOfType<ArithmeticStageObserverException>(error.InnerException);
-        Assert.AreEqual(One, machine.Cpu.GetA());
+        Assert.AreEqual(One, machine.Cpu.A);
         Assert.AreEqual(HardwareInstructionStatus.Completed, model.AdvanceNextEvent()!.Value.Status);
-        Assert.AreEqual(Word48.FromDouble(2), machine.Cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(2), machine.Cpu.A);
         Assert.AreEqual(1UL, model.CompletedInstructions);
     }
 
@@ -76,7 +83,7 @@ public sealed class HardwareArithmeticBindingTests
         var error = Assert.ThrowsExactly<ProcessorException>(() => model.AdvanceTo(new(800)));
         Assert.AreEqual("Division by zero", error.Message);
         Assert.AreEqual(HardwareInstructionStatus.GuestFault, model.LastOutcome!.Value.Status);
-        Assert.AreEqual(One, machine.Cpu.GetA());
+        Assert.AreEqual(One, machine.Cpu.A);
         Assert.AreEqual(0UL, model.CompletedInstructions);
         Assert.IsFalse(model.HasPendingInstruction);
     }
@@ -97,7 +104,7 @@ public sealed class HardwareArithmeticBindingTests
         Assert.IsTrue(model.TryRequestCancellation(in cpu));
         Assert.AreEqual(HardwareInstructionStatus.Cancelled, model.AdvanceTo(new(900))!.Value.Status);
         Assert.IsTrue(delivered);
-        Assert.AreEqual(One, machine.Cpu.GetA());
+        Assert.AreEqual(One, machine.Cpu.A);
         Assert.AreEqual(0UL, machine.Clock.Tick);
         Assert.AreEqual(900UL, model.Timeline.Now.Nanoseconds);
         Assert.IsNull(model.Timeline.NextEventTime);
@@ -108,7 +115,7 @@ public sealed class HardwareArithmeticBindingTests
         model.CreateArithmeticController(new(100)).GrantCommandPermission();
         model.Timeline.ScheduleAt(new(1600), model.CreateArithmeticController(new(100)).CompleteOperation);
         model.AdvanceTo(new(1600));
-        Assert.AreEqual(One, machine.Cpu.GetA());
+        Assert.AreEqual(One, machine.Cpu.A);
         Assert.AreEqual(1UL, model.CompletedInstructions);
     }
 
@@ -131,7 +138,7 @@ public sealed class HardwareArithmeticBindingTests
         var controller = model.CreateArithmeticController(new(100)); controller.GrantCommandPermission();
         model.Timeline.ScheduleAt(new(1700), controller.CompleteOperation);
         model.AdvanceTo(new(1700));
-        Assert.AreEqual(Word48.FromDouble(5), machine.Cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(5), machine.Cpu.A);
         Assert.AreEqual(1UL, model.CancelledInstructions);
     }
 
@@ -139,17 +146,17 @@ public sealed class HardwareArithmeticBindingTests
     public void FunctionalInstructionBetweenBindingsSuppliesCurrentRegisters()
     {
         var machine = Machine();
-        machine.Memory.Write(1, new(Besm6.Asm.Assembler.Asm("a+x 10, xta 20")));
-        machine.Memory.Write(2, new(Besm6.Asm.Assembler.Asm("a+x 10, stop")));
+        machine.Memory.Write(1, new(Assembler.Legacy.Assembler.Asm("a+x 10, xta 20")));
+        machine.Memory.Write(2, new(Assembler.Legacy.Assembler.Asm("a+x 10, stop")));
         machine.Memory.Write(16, Word48.FromDouble(4));
         var (model, controller, _, _) = Bind(machine);
         model.Timeline.ScheduleAt(new(800), controller.CompleteOperation); model.AdvanceTo(new(800));
-        Assert.AreEqual(Word48.FromDouble(2), machine.Cpu.GetA());
-        machine.Step(); Assert.AreEqual(Word48.FromDouble(4), machine.Cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(2), machine.Cpu.A);
+        machine.Step(); Assert.AreEqual(Word48.FromDouble(4), machine.Cpu.A);
         var next = model.PrepareNextInstruction(); model.BindArithmeticInstruction(next, 0, new(100), true);
         controller.GrantCommandPermission();
         model.Timeline.ScheduleAt(new(1600), controller.CompleteOperation); model.AdvanceTo(new(1600));
-        Assert.AreEqual(Word48.FromDouble(5), machine.Cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(5), machine.Cpu.A);
         Assert.AreEqual(1UL, machine.Clock.Tick);
         Assert.AreEqual(2UL, model.CompletedInstructions);
     }
@@ -158,7 +165,7 @@ public sealed class HardwareArithmeticBindingTests
     public void OperandReadFailureReleasesCpuWithoutStartingArithmetic()
     {
         var memory = new FailingMemory(); var cpu = new Processor(memory);
-        memory.Write(1, new(Besm6.Asm.Assembler.Asm("a+x 10, stop"))); cpu.SetA(One.Value);
+        memory.Write(1, new(Assembler.Legacy.Assembler.Asm("a+x 10, stop"))); cpu.SetA(One.Value);
         var model = new HardwareProcessorModel(cpu); var command = model.PrepareNextInstruction();
         model.BindArithmeticInstruction(command, 0, new(100), true);
         var controller = model.CreateArithmeticController(new(100)); controller.GrantCommandPermission();
@@ -169,7 +176,7 @@ public sealed class HardwareArithmeticBindingTests
         Assert.IsNull(controller.PreparedCommand);
         Assert.AreEqual(HardwareInstructionStatus.HostFailure, model.LastOutcome!.Value.Status);
         Assert.AreEqual(1, memory.Reads);
-        Assert.AreEqual(One, cpu.GetA());
+        Assert.AreEqual(One, cpu.A);
         Assert.AreEqual(0UL, model.CompletedInstructions);
     }
 
@@ -205,7 +212,7 @@ public sealed class HardwareArithmeticBindingTests
         Assert.AreEqual(550UL, model.CreateArithmeticUnitStages(new(100)).StartedAt!.Value.Nanoseconds);
         model.ScheduleBoundArithmeticCompletionAt(cpu, new(800));
         model.AdvanceNextEvent();
-        Assert.AreEqual(Word48.FromDouble(2), machine.Cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(2), machine.Cpu.A);
         Assert.AreEqual(800UL, model.CreateArithmeticUnitStages(new(100)).CompletedAt!.Value.Nanoseconds);
     }
 
@@ -216,7 +223,7 @@ public sealed class HardwareArithmeticBindingTests
         var completion = model.ScheduleBoundArithmeticCompletionAt(cpu, new(800));
         machine.ResetCpu();
         model.Timeline.AdvanceTo(new(800));
-        Assert.AreEqual(Word48.Zero, machine.Cpu.GetA());
+        Assert.AreEqual(Word48.Zero, machine.Cpu.A);
         Assert.IsNull(controller.ActiveCommand);
         Assert.AreEqual(ArithmeticStageTransitionKind.OperandRejected, controller.LastTransition!.Value.Kind);
         Assert.IsFalse(model.Timeline.Cancel(completion));

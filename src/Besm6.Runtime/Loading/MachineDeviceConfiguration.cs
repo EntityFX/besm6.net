@@ -1,7 +1,8 @@
+using Besm6.Runtime.Machine;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Besm6.Runtime;
+namespace Besm6.Runtime.Loading;
 
 /// <summary>Explicit startup attachments. File names resolve against the job file,
 /// images remain in memory, and no media is written back to a host path.</summary>

@@ -1,11 +1,16 @@
 using Besm6;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Execution;
+using Besm6.Runtime.Loading;
 
 namespace Besm6.Tests;
 
 [TestClass]
 public sealed class MachineEventTests
 {
-    private static Word48 Word(string instructions) => new(Besm6.Asm.Assembler.Asm(instructions));
+    private static Word48 Word(string instructions) => new(Assembler.Legacy.Assembler.Asm(instructions));
 
     [TestMethod]
     public void EventsObserveCommittedCountsAndStopBeforeReturning()
@@ -40,7 +45,7 @@ public sealed class MachineEventTests
             machine.Scheduler.Schedule(4, () => events.Add($"stop:{machine.Clock.Tick}:{count}"));
             if (block) Assert.IsTrue(machine.ExecuteBlock(256, ref count));
             else while (!machine.Step(ref count)) { }
-            return (events, machine.Cpu.GetA().Value, machine.Memory.Read(5).Value,
+            return (events, machine.Cpu.A.Value, machine.Memory.Read(5).Value,
                 machine.Cpu.GetM(2), machine.Clock.Tick, count);
         }
         var single = Run(false);
@@ -256,7 +261,7 @@ public sealed class MachineEventTests
         Assert.AreEqual(1L, loader.InstructionsExecuted);
         Assert.AreEqual(1L, loader.Statistics!.CompletedInstructions);
         Assert.AreEqual(1, machine.Cpu.InterceptCount);
-        Assert.AreEqual(1u, machine.Cpu.GetK());
+        Assert.AreEqual(1u, machine.Cpu.K);
         Assert.AreEqual(1UL, machine.Clock.Tick);
     }
 
@@ -291,7 +296,7 @@ public sealed class MachineEventTests
         Assert.AreEqual(1L, loader.InstructionsExecuted);
         Assert.AreEqual(1L, loader.Statistics!.CompletedInstructions);
         Assert.AreEqual(7u, machine.Cpu.GetM(2));
-        Assert.AreEqual(1u, machine.Cpu.GetK());
+        Assert.AreEqual(1u, machine.Cpu.K);
         Assert.AreEqual(1UL, machine.Clock.Tick);
     }
 

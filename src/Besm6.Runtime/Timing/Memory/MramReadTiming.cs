@@ -1,4 +1,8 @@
-namespace Besm6.Runtime.Timing;
+using Besm6.Architecture.Machine;
+using Besm6.Processor.Memory;
+using Besm6.Runtime.Timing.Calendar;
+
+namespace Besm6.Runtime.Timing.Memory;
 
 /// <summary>One accepted read; data return and bank availability are separate instants.</summary>
 public readonly record struct MramReadReservation(int Bank, HardwareInstant Started,
@@ -37,7 +41,7 @@ public sealed class MramReadTiming
             throw new ArgumentOutOfRangeException(nameof(bankCycle));
         if (readLatency.Nanoseconds == 0 || readLatency.Nanoseconds > bankCycle.Nanoseconds)
             throw new ArgumentOutOfRangeException(nameof(readLatency));
-        _capacity = configuration == MemoryConfiguration.Classical32K ? PhysicalMemory.WordCount : 512U * 1024;
+        _capacity = configuration == MemoryConfiguration.Classical32K ? ArchitectureConstants.WordCount : 512U * 1024;
         BankCycle = bankCycle;
         ReadLatency = readLatency;
     }

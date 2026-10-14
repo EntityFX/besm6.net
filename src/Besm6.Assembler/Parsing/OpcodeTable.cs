@@ -1,4 +1,7 @@
-namespace Besm6.Assembler;
+using Besm6.Architecture.Isa;
+using Besm6.Assembler.Api;
+
+namespace Besm6.Assembler.Parsing;
 
 /// <summary>
 /// Таблица мнемоник инструкций БЭСМ-6 (MADLEN + БЭМШ) с учётом выбранного
@@ -58,7 +61,7 @@ internal static class OpcodeTable
         // Совместимый числовой псевдоним прежней таблицы для документированного EXT.
         if (opname == "*32")
         {
-            opcode = (int)Besm6.Architecture.Opcode.Ext;
+            opcode = (int)Opcode.Ext;
             return true;
         }
 

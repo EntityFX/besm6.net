@@ -1,4 +1,8 @@
-namespace Besm6.Core;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+
+namespace Besm6.Processor.Memory;
 
 /// <summary>
 /// Opt-in functional memory backend: direct 15-bit addressing, control, BRZ and BRS.
@@ -10,12 +14,12 @@ public sealed class BufferedMemoryBackend : IInstructionMemory
     public PhysicalMemory PhysicalMemory { get; } = new();
     public BufferedMemory Buffers { get; }
     public IMemory HostMemory { get; }
-    public int Size => (int)PhysicalMemory.WordCount;
+    public int Size => (int)ArchitectureConstants.WordCount;
 
     public BufferedMemoryBackend()
     {
         // Software initialization for this backend, not historical cold-reset semantics.
-        for (uint address = 0; address < PhysicalMemory.WordCount; address++)
+        for (uint address = 0; address < ArchitectureConstants.WordCount; address++)
             PhysicalMemory.Store(address, Word48.Zero, true, true);
         Buffers = new BufferedMemory(PhysicalMemory);
         HostMemory = new HostView(this);

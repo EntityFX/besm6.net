@@ -1,4 +1,4 @@
-namespace Besm6.Assembler
+namespace Besm6.Assembler.Parsing
 {
     /// <summary>
     /// Токенизация строки исходного кода без знания диалекта.

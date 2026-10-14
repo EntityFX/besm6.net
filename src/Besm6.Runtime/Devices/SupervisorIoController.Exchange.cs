@@ -1,3 +1,5 @@
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
 using System.Buffers.Binary;
 using System.Numerics;
 

@@ -1,3 +1,8 @@
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Arithmetic;
+using Besm6.Processor.Execution;
 using System.Runtime.CompilerServices;
 
 namespace Besm6.Core;
@@ -161,7 +166,7 @@ internal sealed partial class MemoryInstructionExecutor
         uint address = BeginLoad(ref frame);
         if (frame.A != 0)
         {
-            int bit = Processor.Besm6HighestBit(frame.A);
+            int bit = ProcessorBitOperations.Besm6HighestBit(frame.A);
             _alu.Shift(48 - bit); frame.Y = _state.Y.Value; frame.A = (ulong)bit;
         }
         else frame.Y = 0;
@@ -170,7 +175,7 @@ internal sealed partial class MemoryInstructionExecutor
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void FinishCyclic(ref ExecutionFrame frame, ulong word, bool count)
     {
-        frame.A = CyclicAdd(count ? (ulong)Processor.Besm6CountOnes(frame.A) : frame.A, word); frame.Y = 0;
+        frame.A = CyclicAdd(count ? (ulong)ProcessorBitOperations.Besm6CountOnes(frame.A) : frame.A, word); frame.Y = 0;
         if (count) _state.SetLogical(); else _state.SetMultiplicative();
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

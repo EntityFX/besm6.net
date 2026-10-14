@@ -1,4 +1,4 @@
-namespace Besm6.Architecture
+namespace Besm6.Architecture.Isa
 {
     /// <summary>
     /// Декодированное 24-битное полуслово команды БЭСМ-6.

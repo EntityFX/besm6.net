@@ -1,3 +1,4 @@
+using Besm6.Architecture.Numerics;
 using Besm6.Tui;
 
 namespace Besm6.Tui.Tests
@@ -32,7 +33,7 @@ namespace Besm6.Tui.Tests
         public void Render_WithMachine_ShowsRegistersAndMemoryWindow()
         {
             var machine = new MachineCore(4096);
-            machine.Cpu.SetK(0x100);
+            machine.Cpu.K = 0x100;
             machine.Cpu.SetA(0x12345);
             machine.Cpu.SetM(0, 0x55);
             machine.Memory.Write(0x100, new Word48(0x100200));

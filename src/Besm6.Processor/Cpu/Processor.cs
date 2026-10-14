@@ -1,54 +1,44 @@
+using Besm6.Architecture.Debug;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.Supervisor;
+using Besm6.Core;
+using Besm6.Processor.Arithmetic;
+using Besm6.Processor.Diagnostics;
+using Besm6.Processor.Execution;
+using Besm6.Processor.Supervisor;
 using System;
 
-namespace Besm6.Core
+namespace Besm6.Processor.Cpu
 {
     /// <summary>
-    /// и dubna/arithmetic.cpp). Полный набор инструкций.
+    /// Процессор БЭСМ-6
     /// </summary>
-    public class Processor
+    public class Processor : IRegisters, IAlu, IProcessor
     {
-        // Биты (нумерация БЭСМ-6: 40-й бит = битовый индекс 39 и т.д.)
-        private const ulong BIT41 = ArchitectureConstants.BIT41;
-        private const ulong BIT48 = ArchitectureConstants.BIT48;
-        private const ulong BIT49 = 1UL << 48;
-        private const ulong BITS40 = ArchitectureConstants.BITS40;
-        private const ulong BITS41 = ArchitectureConstants.BITS41;
-        private const ulong BITS48 = ArchitectureConstants.BITS48;
-
-        private readonly ProcessorState _state;
+        private readonly IProcessorState _state;
         private readonly ProcessorTraceController _traceController;
 
-        // Временные ref-мосты сохраняют внутренний API на время разбиения executor/ALU.
-        // Единственным владельцем значений остаётся ProcessorState.
-        internal ref uint _k => ref _state.K;
-        internal Word48 _a { get => _state.A; set => _state.A = value; }
-        internal Word48 _y { get => _state.Y; set => _state.Y = value; }
-        internal uint[] _m => _state.M;
-        internal ref uint _c => ref _state.C;
-        internal ref uint _r => ref _state.R;
-        internal ref int _interceptCount => ref _state.InterceptCount;
-        internal ref uint _interceptAddr => ref _state.InterceptAddress;
-        internal ref bool _rightInstrFlag => ref _state.IsRightHalf;
-        internal ref bool _applyC => ref _state.ApplyC;
-        internal ref int _corrStack => ref _state.StackCorrection;
-        internal ref uint _rk => ref _state.RawInstruction;
-        internal ref uint _aex => ref _state.EffectiveAddress;
-        internal ProcessorState State => _state;
+        public IProcessorState State => _state;
 
         private readonly ProcessorDebugWatch _debugWatch;
         private readonly ProcessorMemoryAccess _memoryAccess;
-        internal readonly Alu _alu;
+        internal readonly IAlu _alu;
         internal readonly InstructionExecutor _executor;
-        internal ProcessorInstructionAccounting? InstructionAccounting { get; private set; }
+        public IProcessorInstructionAccounting? InstructionAccounting { get; private set; }
 
-        internal ProcessorInstructionAccounting BeginInstructionAccounting(ReadOnlySpan<int> cycles, int defaultCycles)
+        public void PublishPreparedResult(NormalizedArithmeticResult result) => _alu.PublishPreparedResult(result);
+
+        public IProcessorInstructionAccounting BeginInstructionAccounting(ReadOnlySpan<int> cycles, int defaultCycles)
         {
             if (InstructionAccounting is not null)
                 throw new InvalidOperationException("A CPU accounting session is already active.");
             return InstructionAccounting = new ProcessorInstructionAccounting(cycles, defaultCycles);
         }
 
-        internal void EndInstructionAccounting(ProcessorInstructionAccounting session)
+        public void EndInstructionAccounting(IProcessorInstructionAccounting session)
         {
             if (!ReferenceEquals(InstructionAccounting, session))
                 throw new InvalidOperationException("The accounting session belongs to another run.");
@@ -101,8 +91,8 @@ namespace Besm6.Core
         public Processor(IMemory memory) : this(memory, ProcessorProfile.Dubna) { }
 
         public ProcessorProfile Profile { get; }
-        public SupervisorControl? Supervisor { get; }
-        public bool LastStepCompleted { get; internal set; } = true;
+        public ISupervisorControl? Supervisor { get; }
+        public bool LastStepCompleted { get; set; } = true;
 
         public Processor(IMemory memory, ProcessorProfile profile)
         {
@@ -139,34 +129,36 @@ namespace Besm6.Core
         #region Доступ к регистрам (для тестов)
 
         /// <summary>K — счётчик команд.</summary>
-        public uint K { get => _k; set => _k = value; }
+        public uint K { get => _state.K; set => _state.K = value; }
         /// <summary>A — аккумулятор.</summary>
-        public Word48 A { get => _a; set => _a = value; }
+        public Word48 A { get => _state.A; set => _state.A = value; }
         /// <summary>Y — регистр младших разрядов.</summary>
-        public Word48 Y => _y;
+        public Word48 Y { get => _state.Y; set => _state.Y = value; }
         /// <summary>R — регистр режима арифметического устройства.</summary>
-        public uint R { get => _r; set => _r = value & 0x3F; }
+        public uint R { get => _state.R; set => _state.R = value & 0x3F; }
         /// <summary>M — индексные регистры.</summary>
-        public ReadOnlySpan<uint> M => _m;
+        public uint[] M => _state.M;
         /// <summary>C — регистр модификации адреса.</summary>
-        public uint C => _c;
-        public bool OnRightInstruction => _rightInstrFlag;
+        public uint C { get => _state.C; set => _state.C = value; }
+
+        public uint EffectiveAddress { get => _state.EffectiveAddress; set => _state.EffectiveAddress = value; }
+
 
         /// <summary>Признак применения регистра C к следующей инструкции.</summary>
-        public bool ApplyC => _applyC;
+        public bool ApplyC { get => _state.ApplyC; set => _state.ApplyC = value; }
 
         /// <summary>Человекочитаемый режим регистра R.</summary>
         public string RMode => IsLogical() ? "LOG" : (IsMultiplicative() ? "MUL" : "ADD");
         /// <summary>Сигнальный флаг правого полу-слова.</summary>
-        public bool RightInstruction => _rightInstrFlag;
+        public bool RightInstruction => _state.IsRightHalf;
         /// <summary>
         /// Счётчик перехвата (intercept_count): 0 — перехват отключён,
         /// 1 — перехватить следующую ошибку арифметики (overflow/div-by-zero).
         /// </summary>
-        public int InterceptCount { get => _interceptCount; set => _interceptCount = value; }
+        public int InterceptCount { get => _state.InterceptCount; set => _state.InterceptCount = value; }
         /// <summary>Потребить перехват (после срабатывания ошибки).</summary>
-        public void ConsumeIntercept() => _interceptCount = 0;
-        public uint InterceptAddr { get => _interceptAddr; set => _interceptAddr = value; }
+        public void ConsumeIntercept() => _state.InterceptCount = 0;
+        public uint InterceptAddr { get => _state.InterceptAddress; set => _state.InterceptAddress = value; }
 
         /// <summary>
         /// Перехват арифметической ошибки (overflow / div-zero). Точный порт
@@ -177,100 +169,78 @@ namespace Besm6.Core
         /// </summary>
         public bool Intercept(string message)
         {
-            if (_interceptCount > 0 &&
+            if (_state.InterceptCount > 0 &&
                 (message == "Arithmetic overflow" || message == "Division by zero"))
             {
-                _interceptCount--;
-                _k = _interceptAddr & 0x7FFF;
-                _rightInstrFlag = false;
-                _applyC = false;
-                _c = 0;
+                _state.InterceptCount--;
+                _state.K = _state.InterceptAddress & 0x7FFF;
+                _state.IsRightHalf = false;
+                _state.ApplyC = false;
+                _state.C = 0;
                 return true;
             }
             return false;
         }
 
         /// <summary>
-        /// (dubna/processor.cpp:127-131): core.M[017] += corr_stack; corr_stack = 0.
+        /// core.M[017] += corr_stack; corr_stack = 0.
         /// corr_stack выставляется инструкциями, предварительно изменившими M[017]
         /// (сл/вч/.../стx: +1, счм: -1, уим/мод(стек): +1) и сбрасывается в начале
         /// недоисполненное изменение стека.
         /// </summary>
         public void StackCorrection()
         {
-            _m[15] = (uint)(_m[15] + _corrStack);
-            _corrStack = 0;
+            _state.M[15] = (uint)(_state.M[15] + _state.StackCorrection);
+            _state.StackCorrection = 0;
         }
 
-        /// <summary>Устанавливает счётчик команд K.</summary>
-        public void SetK(uint val) => _k = val;
         /// <summary>Starts at the left instruction of a word, preserving other registers.</summary>
         public void StartAt(uint address)
         {
             _state.K = ArchitectureConstants.NormalizeAddress(address);
             _state.IsRightHalf = false;
         }
-        /// <summary>Устанавливает индексный регистр M с указанным номером.</summary>
-        public void SetM(int index, uint val) => _m[index & 0xF] = val;
+
         /// <summary>Устанавливает регистр режима R.</summary>
-        public void SetR(ulong val) => _r = (uint)(val & 0x3F);
+        public void SetR(ulong val) => R = (uint)val;
         /// <summary>Устанавливает аккумулятор A.</summary>
-        public void SetA(ulong val) => _a = Word48.FromInt48(val & BITS48);
+        public void SetA(ulong val) => _state.A = Word48.FromInt48(val & ArchitectureConstants.BITS48);
         /// <summary>Устанавливает регистр младших разрядов Y.</summary>
-        public void SetY(ulong val) => _y = Word48.FromInt48(val & BITS48);
+        public void SetY(ulong val) => _state.Y = Word48.FromInt48(val & ArchitectureConstants.BITS48);
 
-        /// <summary>Возвращает счётчик команд K.</summary>
-        public uint GetK() => _k;
+        /// <summary>Устанавливает индексный регистр M с указанным номером.</summary>
+        public void SetM(int index, uint val) => _state.M[index & 0xF] = val;
+
         /// <summary>Возвращает индексный регистр M с указанным номером.</summary>
-        public uint GetM(int index) => _m[index & 0xF];
-        /// <summary>Возвращает регистр режима R.</summary>
-        public uint GetR() => _r;
-        /// <summary>Возвращает аккумулятор A.</summary>
-        public Word48 GetA() => _a;
-        /// <summary>Возвращает регистр младших разрядов Y.</summary>
-        public Word48 GetY() => _y;
+        public uint GetM(int index) => _state.M[index & 0xF];
 
-        internal sealed class DebugWatchAbortException : Exception
-        {
-        }
-
-        internal void ArmDebugWatch(uint xfer, bool printInfo, uint mode, uint watch, uint cont)
+        public void ArmDebugWatch(uint xfer, bool printInfo, uint mode, uint watch, uint cont)
             => _debugWatch.ArmDebugWatch(xfer, printInfo, mode, watch, cont);
 
-        internal bool DebugCheckFetch(uint addr, uint opcode)
+        public bool DebugCheckFetch(uint addr, uint opcode)
             => _debugWatch.DebugCheckFetch(addr, opcode);
 
-        internal bool DebugCheckMemory(uint addr, uint mode)
+        public bool DebugCheckMemory(uint addr, uint mode)
             => _debugWatch.DebugCheckMemory(addr, mode);
 
         #endregion
 
         #region Арифметика АЛУ (делегирование в Alu)
 
-        public void ArithAdd(Word48 val, bool negateA, bool negateVal) => _alu.Add(val, negateA, negateVal);
-        public void ArithAddExponent(int val) => _alu.AddExponent(val);
-        public void ArithChangeSign(bool negateA) => _alu.ChangeSign(negateA);
-        public void ArithMultiply(Word48 val) => _alu.Multiply(val);
-        public void ArithDivide(Word48 val) => _alu.Divide(val);
-        public void ArithShift(int nbits) => _alu.Shift(nbits);
+        public void Add(Word48 val, bool negateA, bool negateVal) => _alu.Add(val, negateA, negateVal);
+        public void AddExponent(int val) => _alu.AddExponent(val);
+        public void ChangeSign(bool negateA) => _alu.ChangeSign(negateA);
+        public void Multiply(Word48 val) => _alu.Multiply(val);
+        public void Divide(Word48 val) => _alu.Divide(val);
+        public void Shift(int nbits) => _alu.Shift(nbits);
+
+        public void NormalizeAndRound(MantissaExponent a, ulong y, bool roundFlag)
+        {
+            _alu.NormalizeAndRound(a, y, roundFlag);
+        }
 
         #endregion
 
-        #region Вспомогательные операции (делегирование в ProcessorBitOperations)
-
-        private static uint Addr(uint x) => ProcessorBitOperations.Addr(x);
-
-        private static ulong OnBit(int n) => ProcessorBitOperations.OnBit(n);
-
-        internal static int Besm6HighestBit(ulong val) => ProcessorBitOperations.Besm6HighestBit(val);
-
-        internal static int Besm6CountOnes(ulong word) => ProcessorBitOperations.Besm6CountOnes(word);
-
-        internal static ulong Besm6Pack(ulong val, ulong mask) => ProcessorBitOperations.Besm6Pack(val, mask);
-
-        internal static ulong Besm6Unpack(ulong val, ulong mask) => ProcessorBitOperations.Besm6Unpack(val, mask);
-
-        #endregion
 
         #region Режим АЛУ
 
@@ -298,8 +268,8 @@ namespace Besm6.Core
         /// Выполняет одну инструкцию (левую или правую половину слова).
         /// Возвращает true, когда процессор остановлен (инструкция СТОП).
         /// </summary>
-        internal bool ExecutionProhibited { get; set; }
-        internal bool PreparedExecutionOnly { get; set; }
+        public bool ExecutionProhibited { get; set; }
+        public bool PreparedExecutionOnly { get; set; }
 
         public bool Step()
         {
@@ -313,7 +283,7 @@ namespace Besm6.Core
             _memoryAccess.IsPlainCoreMemory && TraceInstruction is null &&
             !_traceController.IsEnabled && !_traceController.HasPending &&
             InstructionAccounting?.HasPending != true &&
-            !_state.DebugFetchArmed && !_state.DebugMemoryArmed;
+            !_state.DebugState.DebugFetchArmed && !_state.DebugState.DebugMemoryArmed;
 
         internal bool ExecuteUnobservedBlock(int count, ref long completed, ref ulong tick) =>
             _executor.ExecuteUnobservedBlock(count, ref completed, ref tick);
@@ -339,6 +309,7 @@ namespace Besm6.Core
         internal bool RequiresMemoryTransfer(in InstructionExecutor.PreparedInstruction instruction) =>
             _executor.RequiresMemoryTransfer(in instruction);
         internal bool HasPreparedInstruction => _executor.HasPreparedInstruction;
+
         internal PreparedArithmeticOperation? CaptureArithmeticOperand(in InstructionExecutor.PreparedInstruction instruction) =>
             _executor.CaptureArithmeticOperand(in instruction);
         internal bool RequiresArithmeticResult(in InstructionExecutor.PreparedInstruction instruction) =>
@@ -357,21 +328,21 @@ namespace Besm6.Core
 
         #region Typed trace bridge
 
-        internal void CanonPre(ulong word, uint rk, DecodedInstruction instruction)
+        public void CanonPre(ulong word, uint rk, DecodedInstruction instruction)
         {
             InstructionAccounting?.Begin(instruction.Opcode);
             if (_traceController.IsEnabled)
                 _traceController.Begin(new Word48(word), rk, instruction);
         }
 
-        internal void CanonPost(uint k, bool right)
+        public void CanonPost(uint k, bool right)
         {
             InstructionAccounting?.Complete();
             if (_traceController.HasPending)
                 _traceController.Complete();
         }
 
-        internal void CancelInstructionTrace()
+        public void CancelInstructionTrace()
         {
             InstructionAccounting?.CancelPending();
             _traceController.CancelPending();

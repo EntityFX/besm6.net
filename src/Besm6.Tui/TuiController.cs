@@ -1,5 +1,11 @@
+using Besm6.Architecture.Numerics;
+using Besm6.Assembler.Detection;
 using System.Globalization;
 using Besm6.Assembler;
+using Besm6.Assembler.Disassembly;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Loading;
+using Besm6.Runtime.Machine;
 
 namespace Besm6.Tui
 {

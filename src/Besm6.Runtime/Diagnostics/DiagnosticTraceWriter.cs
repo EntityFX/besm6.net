@@ -1,5 +1,6 @@
+using Besm6.Architecture.Machine;
 using System.Text;
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Diagnostics
 {
     /// <summary>
     /// Записывает человекочитаемую диагностическую трассировку инструкций.

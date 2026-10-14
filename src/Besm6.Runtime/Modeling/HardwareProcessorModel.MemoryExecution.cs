@@ -1,4 +1,10 @@
-using Besm6.Runtime.Timing;
+using Besm6.Processor.Arithmetic;
+using Besm6.Processor.Cpu;
+using Besm6.Processor.Diagnostics;
+using Besm6.Processor.Memory;
+using Besm6.Runtime.Timing.Arithmetic;
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Runtime.Timing.Memory;
 
 namespace Besm6.Runtime.Modeling;
 

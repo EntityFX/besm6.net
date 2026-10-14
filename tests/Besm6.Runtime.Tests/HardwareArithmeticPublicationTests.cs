@@ -1,7 +1,14 @@
-using Besm6.Runtime.Timing;
+using Besm6.Runtime.Execution;
 using Besm6.Runtime.Modeling;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.Memory;
+using Besm6.Runtime.Timing.Arithmetic;
+using Besm6.Processor.Memory;
+using Besm6.Processor.Cpu;
 
 namespace Besm6.Tests;
+using Processor = global::Besm6.Processor.Cpu.Processor;
+
 
 [TestClass]
 public sealed class HardwareArithmeticPublicationTests
@@ -11,7 +18,7 @@ public sealed class HardwareArithmeticPublicationTests
     private static MachineCore Machine(string instruction = "a+x 10")
     {
         var machine = new MachineCore();
-        machine.LoadProgram([new(Besm6.Asm.Assembler.Asm(instruction + ", stop"))], 1);
+        machine.LoadProgram([new(Assembler.Legacy.Assembler.Asm(instruction + ", stop"))], 1);
         machine.Memory.Write(8, One);
         machine.Cpu.SetA(One.Value);
         return machine;
@@ -33,11 +40,11 @@ public sealed class HardwareArithmeticPublicationTests
         model.Timeline.ScheduleAt(new(500), () => machine.Memory.Write(8, Word48.FromDouble(100)));
         model.Timeline.ScheduleAt(new(800), controller.CompleteOperation);
         model.AdvanceTo(new(799));
-        Assert.AreEqual(One, machine.Cpu.GetA());
+        Assert.AreEqual(One, machine.Cpu.A);
         Assert.IsFalse(model.TryIndicateCompletionReady(in command));
         var outcome = model.AdvanceNextEvent();
         Assert.AreEqual(HardwareInstructionStatus.Completed, outcome!.Value.Status);
-        Assert.AreEqual(Two, machine.Cpu.GetA());
+        Assert.AreEqual(Two, machine.Cpu.A);
         Assert.AreEqual(1UL, model.CompletedInstructions);
         Assert.AreEqual(0UL, machine.Clock.Tick);
     }
@@ -50,14 +57,14 @@ public sealed class HardwareArithmeticPublicationTests
         model.Timeline.ScheduleAt(new(100), () =>
         {
             var operation = model.CaptureArithmeticOperand(command)!.Value;
-            var cause = Assert.ThrowsExactly<ProcessorException>(() => operation.Evaluate(machine.Cpu.GetA(), machine.Cpu.GetY()));
+            var cause = Assert.ThrowsExactly<ProcessorException>(() => operation.Evaluate(machine.Cpu.A, machine.Cpu.Y));
             Assert.IsTrue(model.TryIndicateArithmeticCompletion(command, null, cause));
         });
         var failure = Assert.ThrowsExactly<ProcessorException>(() => model.AdvanceNextEvent());
         Assert.AreEqual("Division by zero", failure.Message);
         Assert.AreEqual(HardwareInstructionStatus.GuestFault, model.LastOutcome!.Value.Status);
         Assert.AreEqual(0UL, model.CompletedInstructions);
-        Assert.AreEqual(One, machine.Cpu.GetA());
+        Assert.AreEqual(One, machine.Cpu.A);
     }
 
     [TestMethod]
@@ -73,10 +80,10 @@ public sealed class HardwareArithmeticPublicationTests
         machine.Memory.Write(8, Two);
         var command = model.PrepareNextInstruction();
         var operation = model.CaptureArithmeticOperand(command)!.Value;
-        var expected = operation.Evaluate(machine.Cpu.GetA(), machine.Cpu.GetY());
+        var expected = operation.Evaluate(machine.Cpu.A, machine.Cpu.Y);
         model.TryIndicateArithmeticCompletion(command, expected);
         model.AdvanceNextEvent();
-        Assert.AreEqual(Word48.FromDouble(3), machine.Cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(3), machine.Cpu.A);
     }
 
     private sealed class ObservedMemory : IMemory
@@ -92,7 +99,7 @@ public sealed class HardwareArithmeticPublicationTests
     public void OperandReaderCannotReenterItsExecutionOwnerOrAdvanceCalendars()
     {
         var memory = new ObservedMemory(); var cpu = new Processor(memory);
-        memory.Write(1, new(Besm6.Asm.Assembler.Asm("a+x 10, stop")));
+        memory.Write(1, new(Assembler.Legacy.Assembler.Asm("a+x 10, stop")));
         memory.Write(8, One); cpu.SetA(One.Value);
         var model = new HardwareProcessorModel(cpu);
         var clock = new SimulationClock();
@@ -115,9 +122,9 @@ public sealed class HardwareArithmeticPublicationTests
         Assert.IsFalse(clock.AdvancementProhibited);
         Assert.IsFalse(model.Timeline.AdvancementProhibited);
         Assert.IsTrue(model.HasPendingInstruction);
-        model.TryIndicateArithmeticCompletion(command, operation.Evaluate(cpu.GetA(), cpu.GetY()));
+        model.TryIndicateArithmeticCompletion(command, operation.Evaluate(cpu.A, cpu.Y));
         model.AdvanceNextEvent();
-        Assert.AreEqual(Two, cpu.GetA());
+        Assert.AreEqual(Two, cpu.A);
     }
 
     [TestMethod]
@@ -131,11 +138,11 @@ public sealed class HardwareArithmeticPublicationTests
             Assert.IsFalse(model.TryIndicateArithmeticCompletion(command, new(Two, Word48.Zero, false, false)));
         });
         machine.Scheduler.AdvanceTo(0);
-        Assert.AreEqual(1u, machine.Cpu.GetK());
+        Assert.AreEqual(1u, machine.Cpu.K);
         Assert.IsFalse(machine.Cpu.RightInstruction);
         var operation = model.CaptureArithmeticOperand(command)!.Value;
-        model.TryIndicateArithmeticCompletion(command, operation.Evaluate(machine.Cpu.GetA(), machine.Cpu.GetY()));
+        model.TryIndicateArithmeticCompletion(command, operation.Evaluate(machine.Cpu.A, machine.Cpu.Y));
         model.AdvanceNextEvent();
-        Assert.AreEqual(Two, machine.Cpu.GetA());
+        Assert.AreEqual(Two, machine.Cpu.A);
     }
 }

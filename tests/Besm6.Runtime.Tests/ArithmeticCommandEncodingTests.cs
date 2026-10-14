@@ -1,6 +1,11 @@
 using System.Text.Json;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
 using Besm6.Runtime.Modeling;
-using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic;
+using Besm6.Runtime.Timing.Calendar;
 
 namespace Besm6.Tests;
 
@@ -59,7 +64,7 @@ public sealed class ArithmeticCommandEncodingTests
     private static MachineCore Machine(string instruction = "a+x 10", bool right = false, uint mode = 0)
     {
         var machine = new MachineCore();
-        machine.LoadProgram([new(Besm6.Asm.Assembler.Asm(instruction + ", " + instruction))], 1);
+        machine.LoadProgram([new(Assembler.Legacy.Assembler.Asm(instruction + ", " + instruction))], 1);
         machine.Memory.Write(8, Word48.FromDouble(0.75));
         machine.Cpu.SetA(Word48.FromDouble(1.25).Value); machine.Cpu.SetY(0x123456789);
         machine.Cpu.SetM(15, 9); machine.Cpu.SetR(mode);
@@ -68,7 +73,7 @@ public sealed class ArithmeticCommandEncodingTests
         return machine;
     }
 
-    private static void Observe(Processor cpu, List<string> trace)
+    private static void Observe(IProcessor cpu, List<string> trace)
     {
         cpu.InstructionTrace = record => trace.Add(JsonSerializer.Serialize(record));
         cpu.InstructionExecuted = opcode => trace.Add(opcode.ToString());
@@ -89,7 +94,7 @@ public sealed class ArithmeticCommandEncodingTests
         var controller = model.CreateArithmeticController(new(100)); controller.GrantCommandPermission();
         Assert.IsTrue(controller.TryAcceptDirectOperand(handle));
         model.ScheduleBoundArithmeticCompletionAt(cpu, new(800)); model.AdvanceTo(new(800));
-        Assert.AreEqual(Word48.FromDouble(2.5), machine.Cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(2.5), machine.Cpu.A);
         Assert.IsFalse(machine.Cpu.ApplyC);
         Assert.AreEqual(65u, machine.Cpu.State.EffectiveAddress);
     }
@@ -133,7 +138,7 @@ public sealed class ArithmeticCommandEncodingTests
     {
         var machine = Machine(); var model = machine.HardwareModel; var cpu = model.PrepareNextInstruction();
         Assert.ThrowsExactly<ArgumentException>(() => model.BindArithmeticInstruction(cpu, new ArithmeticCommandWord(raw), new(100), true));
-        Assert.AreEqual(1u, machine.Cpu.GetK()); Assert.IsFalse(machine.Cpu.RightInstruction);
+        Assert.AreEqual(1u, machine.Cpu.K); Assert.IsFalse(machine.Cpu.RightInstruction);
         Assert.IsNull(model.Timeline.NextEventTime); Assert.IsNull(model.LastIssuedArithmeticCommand);
     }
 
@@ -146,11 +151,11 @@ public sealed class ArithmeticCommandEncodingTests
         var controller = model.CreateArithmeticController(new(100)); controller.GrantCommandPermission();
         machine.Cpu.State.C = 1;
         Assert.ThrowsExactly<InvalidOperationException>(() => controller.TryAcceptDirectOperand(handle));
-        Assert.AreEqual(1u, machine.Cpu.GetK()); Assert.IsFalse(machine.Cpu.RightInstruction);
+        Assert.AreEqual(1u, machine.Cpu.K); Assert.IsFalse(machine.Cpu.RightInstruction);
         Assert.IsTrue(model.HasPendingInstruction);
         Assert.IsNull(controller.ActiveCommand); Assert.IsNull(controller.PreparedCommand);
         Assert.IsTrue(model.TryRequestCancellation(in cpu));
         Assert.AreEqual(HardwareInstructionStatus.Cancelled, model.AdvanceNextEvent()!.Value.Status);
-        Assert.AreEqual(Word48.FromDouble(1.25), machine.Cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(1.25), machine.Cpu.A);
     }
 }

@@ -1,3 +1,4 @@
+using Besm6.Runtime.Configuration;
 using Besm6.Tui;
 
 namespace Besm6.Tui.Tests

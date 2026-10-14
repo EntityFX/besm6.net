@@ -1,50 +1,49 @@
-namespace Besm6.Core
+using Besm6.Architecture.Debug;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+
+namespace Besm6.Processor.Cpu
 {
     /// <summary>
-    /// Единственный владелец изменяемого архитектурного состояния процессора.
+    /// Изменяемые архитектурные состояния процессора.
     /// </summary>
-    internal sealed class ProcessorState
+    internal sealed class ProcessorState : IProcessorState
     {
-        internal uint K;
-        internal Word48 A;
-        internal Word48 Y;
-        internal readonly uint[] M = new uint[ArchitectureConstants.IndexRegCount];
-        internal uint C;
-        internal uint R;
-        internal int InterceptCount;
-        internal uint InterceptAddress = 16;
-        internal bool IsRightHalf;
-        internal bool ApplyC;
-        internal int StackCorrection;
-        internal uint RawInstruction;
-        internal uint EffectiveAddress;
-        internal bool DebugFetchArmed;
-        internal uint DebugFetchAddress;
-        internal uint DebugFetchContinuation;
-        internal bool DebugFetchPrintInfo;
-        internal bool DebugMemoryArmed;
-        internal uint DebugMemoryAddress;
-        internal uint DebugMemoryContinuation;
-        internal bool DebugMemoryPrintInfo;
-        internal uint DebugMemoryMode;
-        internal bool DebugWatchSuppressed;
-        internal uint PreviousDebugAbort;
+        public uint K { get; set; }
+        public Word48 A { get; set; }
+        public Word48 Y { get; set; }
+        public uint[] M { get; set; } = new uint[ArchitectureConstants.IndexRegCount];
+        public uint C { get; set; }
+        public uint R { get; set; }
+        public int InterceptCount { get; set; }
+        public uint InterceptAddress { get; set; } = 16;
+        public bool IsRightHalf { get; set; }
+        public bool ApplyC { get; set; }
+        public int StackCorrection { get; set; }
+        public uint RawInstruction { get; set; }
+        public uint EffectiveAddress { get; set; }
+        public uint PreviousDebugAbort
+        {
+            get; set;
+        }
+        public DebugState DebugState { get; } = new();
 
-        internal bool IsAdditive => (R & (uint)RFlags.Add) != 0;
-        internal bool IsMultiplicative =>
+        public bool IsAdditive => (R & (uint)RFlags.Add) != 0;
+        public bool IsMultiplicative =>
             (R & ((uint)RFlags.Add | (uint)RFlags.Mult)) == (uint)RFlags.Mult;
-        internal bool IsLogical => (R & (uint)RFlags.Mode) == (uint)RFlags.Log;
+        public bool IsLogical => (R & (uint)RFlags.Mode) == (uint)RFlags.Log;
 
-        internal void SetAdditive() =>
+        public void SetAdditive() =>
             R = (R & ~(uint)RFlags.Mode) | (uint)RFlags.Add;
 
-        internal void SetMultiplicative() =>
+        public void SetMultiplicative() =>
             R = (R & ~(uint)RFlags.Mode) | (uint)RFlags.Mult;
 
-        internal void SetLogical() =>
+        public void SetLogical() =>
             R = (R & ~(uint)RFlags.Mode) | (uint)RFlags.Log;
 
-        internal void Reset()
+        public void Reset()
         {
             K = 1;
             A = Word48.Zero;
@@ -58,9 +57,9 @@ namespace Besm6.Core
             StackCorrection = 0;
             RawInstruction = 0;
             EffectiveAddress = 0;
-            DebugFetchArmed = false;
-            DebugMemoryArmed = false;
-            DebugWatchSuppressed = false;
+            DebugState.DebugFetchArmed = false;
+            DebugState.DebugMemoryArmed = false;
+            DebugState.DebugWatchSuppressed = false;
             PreviousDebugAbort = 0;
         }
     }

@@ -1,7 +1,4 @@
-namespace Besm6.Core;
-
-/// <summary>Execution semantics; host pacing remains an independent setting.</summary>
-public enum ProcessorProfile { Dubna, Supervisor }
+namespace Besm6.Architecture.Supervisor;
 
 /// <summary>TO-8: supervisor is the union of extracode and interrupt modes.</summary>
 [Flags]

@@ -1,7 +1,14 @@
 using System;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Extracodes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Besm6.Tests
 {
+    using Processor = global::Besm6.Processor.Cpu.Processor;
+
     /// <summary>
     /// Короткие state-machine тесты для R, C и stack correction.
     /// Они намеренно намного меньше полных cpu_test/CERNLIB сценариев.
@@ -28,7 +35,7 @@ namespace Besm6.Tests
             _cpu = new Processor(_memory);
         }
 
-        private static ulong Asm(string source) => Besm6.Asm.Assembler.Asm(source);
+        private static ulong Asm(string source) => Assembler.Legacy.Assembler.Asm(source);
         private static uint O(string octal) => Convert.ToUInt32(octal, 8);
         private void StoreWord(string address, string source) => _memory.Write(O(address), new Word48(Asm(source)));
         private void StoreData(string address, ulong value) => _memory.Write(O(address), new Word48(value));
@@ -81,11 +88,11 @@ namespace Besm6.Tests
             // Старт в режиме, отличном от ожидаемого: итог обязан измениться инструкцией.
             uint start = expectedMode == (int)RFlags.Log ? (uint)RFlags.Add : (uint)RFlags.Log;
             _cpu.SetR((ulong)(RFlags.OvfDisable | RFlags.RoundDisable | (RFlags)start));
-            _cpu.SetK(O("10"));
+            _cpu.K = O("10");
 
             _cpu.Step();
 
-            uint mode = _cpu.GetR() & (uint)RFlags.Mode;
+            uint mode = _cpu.R & (uint)RFlags.Mode;
             Assert.AreEqual((uint)expectedMode, mode, instruction);
         }
 
@@ -97,7 +104,7 @@ namespace Besm6.Tests
             // Следующее слово: VTM (2) уже не должно видеть предыдущий C.
             StoreWord("10", "мода 1, уиа (1)");
             StoreWord("11", "уиа (2), стоп");
-            _cpu.SetK(O("10"));
+            _cpu.K = O("10");
 
             _cpu.Step(); // UTC
             Assert.IsTrue(_cpu.ApplyC, "После UTC модификатор должен ждать следующую инструкцию.");
@@ -116,7 +123,7 @@ namespace Besm6.Tests
         {
             StoreWord("10", "мода 1, мода 2");
             StoreWord("11", "уиа (1), stop");
-            _cpu.SetK(O("10"));
+            _cpu.K = O("10");
 
             _cpu.Step(); // C=1 for next instruction
             _cpu.Step(); // second UTC sees previous C: its own addr becomes 3, then emits C=3
@@ -138,7 +145,7 @@ namespace Besm6.Tests
             _cpu.SetA(0);
             StoreData("2000", 0); // divisor = 0
             StoreWord("10", "дел (17), stop");
-            _cpu.SetK(O("10"));
+            _cpu.K = O("10");
 
             ProcessorException? error = null;
             try

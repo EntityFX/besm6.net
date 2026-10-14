@@ -1,8 +1,12 @@
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Execution;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Loading
 {
     /// <summary>
     /// Загрузчик программ Dubna (.dub job-скрипты).
@@ -141,7 +145,7 @@ namespace Besm6.Runtime
             _programLoader.WriteScriptToDrum(job, rawLines);
             _tapes.MountScriptTapes(job);
             _mons.Boot();
-            return _machine.Cpu.GetK();
+            return _machine.Cpu.K;
         }
 
         public LoadResult RunLoaded()

@@ -1,16 +1,21 @@
-namespace Besm6.Core
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
+
+namespace Besm6.Processor.Diagnostics
 {
     /// <summary>
     /// Уведомляет об исполненных опкодах; снимки создаёт только для полной трассировки.
     /// </summary>
     internal sealed class ProcessorTraceController
     {
-        private readonly ProcessorState _state;
+        private readonly IProcessorState _state;
         private PendingTrace? _pending;
         private Opcode? _pendingOpcode;
         private ulong _sequence;
 
-        internal ProcessorTraceController(ProcessorState state)
+        internal ProcessorTraceController(IProcessorState state)
         {
             _state = state;
         }

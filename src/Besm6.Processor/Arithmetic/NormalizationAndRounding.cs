@@ -1,6 +1,11 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Core;
+using Besm6.Processor.Cpu;
 using System;
 
-namespace Besm6.Core
+namespace Besm6.Processor.Arithmetic
 {
     /// <summary>
     /// Нормализация и округление результата АЛУ (порт dubna). Вынесено из Alu.cs
@@ -16,9 +21,9 @@ namespace Besm6.Core
         private const ulong BITS40 = ArchitectureConstants.BITS40;
         private const ulong BITS41 = ArchitectureConstants.BITS41;
 
-        private readonly ProcessorState _state;
+        private readonly IProcessorState _state;
 
-        internal NormalizationAndRounding(ProcessorState state)
+        internal NormalizationAndRounding(IProcessorState state)
         {
             _state = state;
         }

@@ -1,4 +1,4 @@
-namespace Besm6.Architecture
+namespace Besm6.Architecture.Isa
 {
     /// <summary>
     /// Коды экстракодов БЭСМ-6 (восьмеричные номера, как в оригинале).

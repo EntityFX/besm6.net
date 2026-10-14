@@ -1,3 +1,6 @@
+using Besm6.Architecture.Memory;
+using Besm6.Processor.Memory;
+
 namespace Besm6.Tests;
 
 [TestClass]

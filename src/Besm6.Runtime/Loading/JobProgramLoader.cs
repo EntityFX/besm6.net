@@ -1,10 +1,14 @@
+using Besm6.Assembler.Detection;
+using Besm6.Architecture.Numerics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Besm6.Assembler;
+using Besm6.Runtime.Encoding;
+using Besm6.Runtime.Storage;
 #pragma warning disable CS0618
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Loading
 {
     /// <summary>
     /// Загрузка программ: raw words, assembler sections, запись script на drum.

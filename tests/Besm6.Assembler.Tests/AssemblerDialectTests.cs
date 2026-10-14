@@ -1,3 +1,8 @@
+using Besm6.Architecture.Isa;
+using Besm6.Assembler.Api;
+using Besm6.Assembler.Assembly;
+using Besm6.Assembler.Detection;
+
 namespace Besm6.Assembler.Tests;
 
 /// <summary>
@@ -49,7 +54,7 @@ public sealed class AssemblerDialectTests
     public void Star32_AndExt_BothGiveExtOpcode()
     {
         Assert.AreEqual(Madlen.AssembleWord("*32"), Madlen.AssembleWord("ext"));
-        Assert.AreEqual((ulong)Besm6.Architecture.Opcode.Ext << 12, Madlen.AssembleWord("*32"));
+        Assert.AreEqual((ulong)Opcode.Ext << 12, Madlen.AssembleWord("*32"));
     }
 
     [TestMethod]

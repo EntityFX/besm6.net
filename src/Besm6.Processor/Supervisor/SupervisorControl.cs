@@ -1,15 +1,25 @@
-namespace Besm6.Core;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Architecture.Supervisor;
+using Besm6.Core;
+using Besm6.Processor.Cpu;
+using Besm6.Processor.Diagnostics;
+using Besm6.Processor.Memory;
+
+namespace Besm6.Processor.Supervisor;
 
 /// <summary>
 /// Untimed supervisor state from TO-8 §§3.55–3.60, 6.16, 6.35 and 7.5–7.21.
 /// This is not a model of overlapped RK/RR acceptance or asynchronous arithmetic unit execution.
 /// </summary>
-public sealed class SupervisorControl
+public sealed class SupervisorControl : ISupervisorControl
 {
     public const uint SavedFlagsMask = 0x73F;
     public const uint SavedRightHalf = 0x100;
     public const uint SavedNextInstruction = 0x200;
-    private readonly ProcessorState _state;
+    private readonly IProcessorState _state;
     private readonly MappedMemoryBackend _memory;
     private readonly uint[] _special = new uint[32];
     private ControlUnitStatus _status;
@@ -18,7 +28,7 @@ public sealed class SupervisorControl
     private bool _instructionWatchActive;
     private bool _operandWatchActive;
 
-    internal SupervisorControl(ProcessorState state, MappedMemoryBackend memory)
+    internal SupervisorControl(IProcessorState state, MappedMemoryBackend memory)
     {
         _state = state;
         _memory = memory;
@@ -91,7 +101,8 @@ public sealed class SupervisorControl
             case 17: Status = new((ControlUnitFlags)(value & ControlUnitStatus.KnownMask)); break;
             case 23: _special[23] = value & SavedFlagsMask; break;
             case 26: case 27: _special[register] = value; break;
-            case 28: case 29:
+            case 28:
+            case 29:
                 // The comparison address retains the assignment mode at its write.
                 _special[register] = value | (Status.AssignmentBlocked ? 0x8000u : 0);
                 if (register == 28)
@@ -167,11 +178,11 @@ public sealed class SupervisorControl
     }
 
     // РГПр — главный регистр прерывания. Cause storage is distinct from UU acceptance.
-    internal void LatchInternalCause(ulong interruptFlags) =>
+    public void LatchInternalCause(ulong interruptFlags) =>
         InternalInterrupts |= interruptFlags & Word48.Mask48;
 
     // УУ — устройство управления. Shared stop policy for serial faults and hardware input.
-    internal void AcceptInternalInterrupt(ulong signal, uint returnWord, uint savedFlags)
+    public void AcceptInternalInterrupt(ulong signal, uint returnWord, uint savedFlags)
     {
         bool arithmetic = (signal & (3UL << 21)) != 0;
         bool control = (signal & ((1UL << 20) | (1UL << 14))) != 0;

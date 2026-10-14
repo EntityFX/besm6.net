@@ -1,4 +1,7 @@
-namespace Besm6.Assembler;
+using Besm6.Assembler.Api;
+using Besm6.Assembler.Assembly;
+
+namespace Besm6.Assembler.Detection;
 
 /// <summary>
 /// Ассемблер с автоматическим определением диалекта: принимает и английские,

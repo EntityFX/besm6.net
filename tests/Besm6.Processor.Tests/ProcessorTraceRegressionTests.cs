@@ -2,9 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Besm6.Tests
 {
+    using Processor = global::Besm6.Processor.Cpu.Processor;
+
     /// <summary>
     /// Регрессии instrumentation: trace обязан описывать именно исполняемую инструкцию,
     /// а не уже изменённые K/half после предварительного advance.
@@ -53,8 +60,8 @@ namespace Besm6.Tests
         [TestMethod]
         public void TraceInstruction_ReportsPreExecutionKAndExecutedHalf()
         {
-            _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), vtm 2(2)")));
-            _cpu.SetK(O("10"));
+            _memory.Write(O("10"), new Word48(Assembler.Legacy.Assembler.Asm("vtm 1(1), vtm 2(2)")));
+            _cpu.K = O("10");
 
             var trace = new List<(uint K, bool Right, uint Rk, uint Opcode)>();
             _cpu.TraceInstruction = (pc, right, rk, opcode) => trace.Add((pc, right, rk, opcode));
@@ -77,9 +84,9 @@ namespace Besm6.Tests
         [TestMethod]
         public void TraceInstruction_RkMatchesActualLeftAndRightHalfWords()
         {
-            ulong word = Besm6.Asm.Assembler.Asm("vtm 1(1), vtm 2(2)");
+            ulong word = Assembler.Legacy.Assembler.Asm("vtm 1(1), vtm 2(2)");
             _memory.Write(O("10"), new Word48(word));
-            _cpu.SetK(O("10"));
+            _cpu.K = O("10");
 
             var trace = new List<(uint Rk, bool Right)>();
             _cpu.TraceInstruction = (_, right, rk, _) => trace.Add((rk, right));
@@ -106,8 +113,8 @@ namespace Besm6.Tests
             try
             {
                 writer = AttachCanonicalTrace(path);
-                _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), vtm 2(2)")));
-                _cpu.SetK(O("10"));
+                _memory.Write(O("10"), new Word48(Assembler.Legacy.Assembler.Asm("vtm 1(1), vtm 2(2)")));
+                _cpu.K = O("10");
 
                 _cpu.Step();
                 DetachCanonicalTrace(writer);
@@ -147,8 +154,8 @@ namespace Besm6.Tests
             try
             {
                 writer = AttachCanonicalTrace(path, 1);
-                _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), vtm 2(2)")));
-                _cpu.SetK(O("10"));
+                _memory.Write(O("10"), new Word48(Assembler.Legacy.Assembler.Asm("vtm 1(1), vtm 2(2)")));
+                _cpu.K = O("10");
 
                 _cpu.Step();
                 _cpu.Step();
@@ -174,8 +181,8 @@ namespace Besm6.Tests
             try
             {
                 writer = AttachCanonicalTrace(path);
-                _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("stop, vtm 2(2)")));
-                _cpu.SetK(O("10"));
+                _memory.Write(O("10"), new Word48(Assembler.Legacy.Assembler.Asm("stop, vtm 2(2)")));
+                _cpu.K = O("10");
 
                 Assert.IsTrue(_cpu.Step());
                 DetachCanonicalTrace(writer);
@@ -207,8 +214,8 @@ namespace Besm6.Tests
             try
             {
                 writer = AttachCanonicalTrace(path);
-                _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("*74, vtm 2(2)")));
-                _cpu.SetK(O("10"));
+                _memory.Write(O("10"), new Word48(Assembler.Legacy.Assembler.Asm("*74, vtm 2(2)")));
+                _cpu.K = O("10");
                 _cpu.ExtracodeDispatch = _ => throw new ProcessorException("");
 
                 ProcessorException? exception = null;
@@ -253,8 +260,8 @@ namespace Besm6.Tests
             try
             {
                 writer = AttachCanonicalTrace(path);
-                _memory.Write(O("10"), new Word48(Besm6.Asm.Assembler.Asm("*50, stop")));
-                _cpu.SetK(O("10"));
+                _memory.Write(O("10"), new Word48(Assembler.Legacy.Assembler.Asm("*50, stop")));
+                _cpu.K = O("10");
                 _cpu.InterceptCount = 1;
                 _cpu.InterceptAddr = O("20");
                 _cpu.ExtracodeDispatch = _ => throw new ProcessorException("Division by zero");
@@ -271,7 +278,7 @@ namespace Besm6.Tests
                 Assert.IsNotNull(exception);
                 _cpu.StackCorrection();
                 Assert.IsTrue(_cpu.Intercept(exception.Message));
-                _cpu.CanonPost(_cpu.GetK(), _cpu.RightInstruction);
+                _cpu.CanonPost(_cpu.K, _cpu.RightInstruction);
                 DetachCanonicalTrace(writer);
                 writer = null;
 

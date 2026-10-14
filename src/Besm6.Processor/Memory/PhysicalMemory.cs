@@ -1,22 +1,18 @@
-namespace Besm6.Core;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
 
-/// <summary>Explicit storage/assignment configurations; SIMH expansion is an
-/// experimental compatibility contract, not historical bank wiring or timing.</summary>
-public enum MemoryConfiguration { Classical32K, Simh512K }
+namespace Besm6.Processor.Memory;
 
 /// <summary>
 /// MRAM storage: МОЗУ — магнитное оперативное запоминающее устройство.
-/// Untimed physical storage. Default 32K follows TO-8 §4.1, §4.5–4.8;
+/// Default 32K follows TO-8 §4.1, §4.5–4.8;
 /// the explicit SIMH configuration supplies expanded capacity only.
 /// Deliberately not IMemory: command fetch and operand access have different control.
 /// CPU adapters provide separate buffer/addressing policies; this storage has no timing.
 /// </summary>
 public sealed class PhysicalMemory
 {
-    /// <summary>Legacy mathematical/classical capacity. Use CapacityWords for storage bounds.</summary>
-    public const uint WordCount = 32768;
-    /// <summary>Classical bank count; no expanded physical bank geometry is specified.</summary>
-    public const uint BankCount = 8;
     private readonly MemoryWord50[] _words;
     public MemoryConfiguration Configuration { get; }
     public uint CapacityWords { get; }
@@ -27,7 +23,7 @@ public sealed class PhysicalMemory
     {
         CapacityWords = configuration switch
         {
-            MemoryConfiguration.Classical32K => WordCount,
+            MemoryConfiguration.Classical32K => ArchitectureConstants.WordCount,
             MemoryConfiguration.Simh512K => 512 * 1024,
             _ => throw new ArgumentOutOfRangeException(nameof(configuration))
         };
@@ -82,7 +78,7 @@ public sealed class PhysicalMemory
 
     private static void ValidateAddress(uint physicalAddress)
     {
-        if (physicalAddress >= WordCount)
+        if (physicalAddress >= ArchitectureConstants.WordCount)
             throw new ArgumentOutOfRangeException(nameof(physicalAddress));
     }
 

@@ -1,9 +1,21 @@
+using Besm6.Runtime.Timing.Calendar;
 using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.State;
+using Besm6.Architecture.Supervisor;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Execution;
+using Besm6.Runtime.Machine;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Memory;
 
 namespace Besm6.Tests;
+using Processor = global::Besm6.Processor.Cpu.Processor;
+
 
 /// <summary>
 /// The existing fixture derives bits from printed examples and exact Fraction
@@ -23,6 +35,13 @@ public sealed class MachineBookVectorTests
         return document.RootElement.Clone();
     }
 
+    // Pass JSON text across test discovery; parse it in the execution process.
+    private static JsonElement ParseVector(string vectorJson)
+    {
+        using var document = JsonDocument.Parse(vectorJson);
+        return document.RootElement.Clone();
+    }
+
     private static ulong Hex(JsonElement value) => ulong.Parse(value.GetString()!, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
     private static IEnumerable<(bool Hardware, ExecutionSpeed Speed)> Owners() =>
         from hardware in new[] { false, true }
@@ -34,19 +53,19 @@ public sealed class MachineBookVectorTests
         where v.GetProperty("expected").GetProperty("error").ValueKind == JsonValueKind.Null
             && !v.TryGetProperty("dispatch", out _)
         from owner in Owners()
-        select new object[] { v.GetProperty("id").GetString()!, owner.Hardware, owner.Speed, v };
+        select new object[] { v.GetProperty("id").GetString()!, owner.Hardware, owner.Speed, v.GetRawText() };
 
     public static IEnumerable<object[]> FaultVectors() =>
         from v in Fixture.GetProperty("vectors").EnumerateArray()
         where v.GetProperty("expected").GetProperty("error").ValueKind != JsonValueKind.Null
         from owner in Owners()
-        select new object[] { v.GetProperty("id").GetString()!, owner.Hardware, owner.Speed, v };
+        select new object[] { v.GetProperty("id").GetString()!, owner.Hardware, owner.Speed, v.GetRawText() };
 
     public static IEnumerable<object[]> ExtracodeVectors() =>
         from v in Fixture.GetProperty("vectors").EnumerateArray()
         where v.TryGetProperty("dispatch", out var dispatch) && dispatch.GetBoolean()
         from owner in Owners()
-        select new object[] { v.GetProperty("id").GetString()!, owner.Hardware, owner.Speed, v };
+        select new object[] { v.GetProperty("id").GetString()!, owner.Hardware, owner.Speed, v.GetRawText() };
 
     public static string CaseName(MethodInfo method, object[] data) =>
         $"{method.Name} ({data[0]}, {((bool)data[1] ? "hardware" : "functional")}, {data[2]})";
@@ -65,7 +84,7 @@ public sealed class MachineBookVectorTests
         machine.Cpu.Supervisor!.Status = new((ControlUnitFlags)0x403);
         var memory = machine.MappedMemory!.PhysicalMemory;
         var initial = vector.GetProperty("initial");
-        var expected = new ulong[PhysicalMemory.WordCount];
+        var expected = new ulong[ArchitectureConstants.WordCount];
         uint address = initial.GetProperty("k").GetUInt32();
         foreach (var word in vector.GetProperty("program").EnumerateArray())
         {
@@ -102,9 +121,9 @@ public sealed class MachineBookVectorTests
 
     private static void AssertRegisters(JsonElement e, Processor cpu, string id)
     {
-        Assert.AreEqual(Hex(e.GetProperty("a")), cpu.GetA().Value, id + ": A");
-        Assert.AreEqual(Hex(e.GetProperty("y")), cpu.GetY().Value, id + ": Y");
-        Assert.AreEqual(e.GetProperty("r").GetUInt32(), cpu.GetR(), id + ": R");
+        Assert.AreEqual(Hex(e.GetProperty("a")), cpu.A.Value, id + ": A");
+        Assert.AreEqual(Hex(e.GetProperty("y")), cpu.Y.Value, id + ": Y");
+        Assert.AreEqual(e.GetProperty("r").GetUInt32(), cpu.R, id + ": R");
         Assert.AreEqual(e.GetProperty("c").GetUInt32(), cpu.C, id + ": C");
         Assert.AreEqual(e.GetProperty("applyC").GetBoolean(), cpu.ApplyC, id + ": ApplyC");
         int index = 0;
@@ -114,21 +133,22 @@ public sealed class MachineBookVectorTests
 
     [TestMethod]
     [DynamicData(nameof(OrdinaryVectors), DynamicDataDisplayName = nameof(CaseName))]
-    public void SharedOwnersMatchIndependentBitsAndVisibleWrites(string id, bool hardware, ExecutionSpeed speed, JsonElement vector)
+    public void SharedOwnersMatchIndependentBitsAndVisibleWrites(string id, bool hardware, ExecutionSpeed speed, string vectorJson)
     {
+        var vector = ParseVector(vectorJson);
         var (machine, expectedMemory) = Load(vector, hardware); long notifications = 0;
         machine.Cpu.InstructionExecuted += _ => notifications++;
         var result = Run(machine, vector.GetProperty("steps").GetInt32(), hardware, speed);
         var expected = vector.GetProperty("expected");
         AssertRegisters(expected, machine.Cpu, id);
-        Assert.AreEqual(expected.GetProperty("k").GetUInt32(), machine.Cpu.GetK(), id + ": K");
+        Assert.AreEqual(expected.GetProperty("k").GetUInt32(), machine.Cpu.K, id + ": K");
         Assert.AreEqual(expected.GetProperty("right").GetBoolean(), machine.Cpu.RightInstruction, id + ": half");
         Assert.AreEqual(expected.GetProperty("stop").GetBoolean(), result.Outcome.Stopped, id);
         long count = expected.GetProperty("ticks").GetInt64();
         Assert.AreEqual(count, result.Outcome.Instructions); Assert.AreEqual(count, notifications);
         Assert.AreEqual(hardware ? 0UL : (ulong)count, machine.Clock.Tick);
         var mapped = machine.MappedMemory!;
-        var visible = Enumerable.Range(0, (int)PhysicalMemory.WordCount)
+        var visible = Enumerable.Range(0, (int)ArchitectureConstants.WordCount)
             .Select(address => mapped.PhysicalMemory.ReadRaw((uint)address).Data.Value).ToArray();
         // Observe forwarded values without issuing reads or changing buffer recency.
         foreach (var entry in mapped.GetOperandSnapshot())
@@ -138,23 +158,24 @@ public sealed class MachineBookVectorTests
         {
             Assert.IsFalse(string.IsNullOrWhiteSpace(difference.GetProperty("issue").GetString()), id);
             string field = difference.GetProperty("field").GetString()!;
-            if (field == "y") Assert.AreNotEqual(Hex(difference.GetProperty("book")), machine.Cpu.GetY().Value, id);
-            else if (field == "r") Assert.AreNotEqual(difference.GetProperty("book").GetUInt32(), machine.Cpu.GetR(), id);
+            if (field == "y") Assert.AreNotEqual(Hex(difference.GetProperty("book")), machine.Cpu.Y.Value, id);
+            else if (field == "r") Assert.AreNotEqual(difference.GetProperty("book").GetUInt32(), machine.Cpu.R, id);
             else Assert.Fail("Unclassified book difference: " + field);
         }
     }
 
     [TestMethod]
     [DynamicData(nameof(FaultVectors), DynamicDataDisplayName = nameof(CaseName))]
-    public void ArithmeticFaultsEnterSupervisorVectorWithoutCountingCommand(string id, bool hardware, ExecutionSpeed speed, JsonElement vector)
+    public void ArithmeticFaultsEnterSupervisorVectorWithoutCountingCommand(string id, bool hardware, ExecutionSpeed speed, string vectorJson)
     {
+        var vector = ParseVector(vectorJson);
         var (machine, _) = Load(vector, hardware); long notifications = 0;
         machine.Cpu.InstructionExecuted += _ => notifications++;
         var result = Run(machine, 1, hardware, speed);
         Assert.IsTrue(result.Outcome.LimitExceeded); Assert.AreEqual(0L, result.Outcome.Instructions);
         Assert.AreEqual(0L, notifications); Assert.AreEqual(0UL, machine.Clock.Tick);
         AssertRegisters(vector.GetProperty("expected"), machine.Cpu, id);
-        Assert.AreEqual(0x140u, machine.Cpu.GetK()); Assert.IsFalse(machine.Cpu.RightInstruction);
+        Assert.AreEqual(0x140u, machine.Cpu.K); Assert.IsFalse(machine.Cpu.RightInstruction);
         var snapshot = machine.Cpu.Supervisor!.Snapshot();
         Assert.AreEqual(SupervisorMode.Interrupt, snapshot.Mode);
         Assert.AreEqual(vector.GetProperty("initial").GetProperty("k").GetUInt32(), snapshot.SpecialRegisters[11]);
@@ -164,19 +185,36 @@ public sealed class MachineBookVectorTests
 
     [TestMethod]
     [DynamicData(nameof(ExtracodeVectors), DynamicDataDisplayName = nameof(CaseName))]
-    public void SupervisorExtracodePreservesRAndSavesNextWord(string id, bool hardware, ExecutionSpeed speed, JsonElement vector)
+    public void SupervisorExtracodePreservesRAndSavesNextWord(string id, bool hardware, ExecutionSpeed speed, string vectorJson)
     {
+        var vector = ParseVector(vectorJson);
         var (machine, _) = Load(vector, hardware);
         int steps = vector.GetProperty("steps").GetInt32(); var result = Run(machine, steps, hardware, speed);
         var initial = vector.GetProperty("initial");
         Assert.AreEqual((long)steps, result.Outcome.Instructions); Assert.IsFalse(result.Outcome.Stopped);
-        Assert.AreEqual(Hex(initial.GetProperty("a")), machine.Cpu.GetA().Value);
-        Assert.AreEqual(Hex(initial.GetProperty("y")), machine.Cpu.GetY().Value);
-        Assert.AreEqual(51u, machine.Cpu.GetR()); Assert.AreEqual(17u, machine.Cpu.GetM(14));
-        Assert.AreEqual(0x168u, machine.Cpu.GetK()); Assert.IsFalse(machine.Cpu.RightInstruction);
+        Assert.AreEqual(Hex(initial.GetProperty("a")), machine.Cpu.A.Value);
+        Assert.AreEqual(Hex(initial.GetProperty("y")), machine.Cpu.Y.Value);
+        Assert.AreEqual(51u, machine.Cpu.R); Assert.AreEqual(17u, machine.Cpu.GetM(14));
+        Assert.AreEqual(0x168u, machine.Cpu.K); Assert.IsFalse(machine.Cpu.RightInstruction);
         var snapshot = machine.Cpu.Supervisor!.Snapshot();
         Assert.AreEqual(SupervisorMode.Extracode, snapshot.Mode); Assert.AreEqual(9u, snapshot.SpecialRegisters[10]);
         Assert.AreEqual(hardware ? 0UL : (ulong)steps, machine.Clock.Tick);
+    }
+
+    [TestMethod]
+    public void VectorArgumentsSurviveDiscoverySerialization()
+    {
+        var serializer = new System.Runtime.Serialization.DataContractSerializer(
+            typeof(object[]), new[] { typeof(ExecutionSpeed) });
+        foreach (var row in OrdinaryVectors().Concat(FaultVectors()).Concat(ExtracodeVectors()))
+        {
+            using var stream = new MemoryStream();
+            serializer.WriteObject(stream, row);
+            stream.Position = 0;
+            var restored = (object[])serializer.ReadObject(stream)!;
+            CollectionAssert.AreEqual(row, restored);
+            Assert.AreEqual(restored[0], ParseVector((string)restored[3]).GetProperty("id").GetString());
+        }
     }
 
     [TestMethod]

@@ -1,4 +1,8 @@
-namespace Besm6.Assembler
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Assembler.Api;
+
+namespace Besm6.Assembler.Parsing
 {
     /// <summary>
     /// Разбор токенов полуслова в <see cref="DecodedInstruction"/> или данные.

@@ -1,4 +1,6 @@
-namespace Besm6.Assembler
+using Besm6.Assembler.Api;
+
+namespace Besm6.Assembler.Detection
 {
     /// <summary>
     /// Определяет диалект ассемблирования по первой директиве программы.

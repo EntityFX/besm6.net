@@ -1,4 +1,7 @@
-namespace Besm6.Runtime.Timing;
+using Besm6.Architecture.Isa;
+using Besm6.Runtime.Timing.Calendar;
+
+namespace Besm6.Runtime.Timing.Specifications;
 
 /// <summary>Published arithmetic unit range (АУ — арифметическое устройство); average is statistical, never an execution deadline.</summary>
 public readonly record struct ArithmeticTimingEnvelope(

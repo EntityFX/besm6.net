@@ -1,11 +1,16 @@
+using Besm6.Processor.Cpu;
 using Besm6;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Numerics;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Execution;
 
 namespace Besm6.Tests;
 
 [TestClass]
 public sealed class FastAccountingTests
 {
-    private static Word48 Code(string text) => new(Besm6.Asm.Assembler.Asm(text));
+    private static Word48 Code(string text) => new(Assembler.Legacy.Assembler.Asm(text));
 
     [TestMethod]
     public void AlreadyReachedCycleBoundaryDeliversDueEventsWithoutExecutingACommand()
@@ -36,7 +41,7 @@ public sealed class FastAccountingTests
         Assert.AreEqual(3UL, machine.Clock.Tick);
         Assert.AreEqual(4L, accounting.TotalCycles);
         Assert.AreEqual(3L, accounting.TotalInstructions);
-        Assert.AreEqual(2u, machine.Cpu.GetK());
+        Assert.AreEqual(2u, machine.Cpu.K);
         Assert.IsTrue(machine.Cpu.RightInstruction);
         Assert.IsTrue(machine.ExecuteBlock(256, ref completed));
         Assert.AreEqual(4L, completed);
@@ -62,9 +67,9 @@ public sealed class FastAccountingTests
             Assert.IsNull(machine.Cpu.InstructionAccounting);
         }
         Assert.AreEqual(6, seen.Count);
-        Assert.AreEqual(machines[0].Cpu.GetA(), machines[1].Cpu.GetA());
-        Assert.AreEqual(machines[0].Cpu.GetY(), machines[1].Cpu.GetY());
-        Assert.AreEqual(machines[0].Cpu.GetR(), machines[1].Cpu.GetR());
+        Assert.AreEqual(machines[0].Cpu.A, machines[1].Cpu.A);
+        Assert.AreEqual(machines[0].Cpu.Y, machines[1].Cpu.Y);
+        Assert.AreEqual(machines[0].Cpu.R, machines[1].Cpu.R);
         Assert.AreEqual(machines[0].Cpu.C, machines[1].Cpu.C);
         Assert.AreEqual(machines[0].Cpu.ApplyC, machines[1].Cpu.ApplyC);
         for (int index = 0; index < 16; index++)
@@ -167,7 +172,7 @@ public sealed class FastAccountingTests
         Assert.AreEqual(1L, loop.InstructionsExecuted);
         Assert.AreEqual(1L, loop.Statistics!.CompletedInstructions);
         Assert.AreEqual(1L, loop.Statistics.ModelCycles);
-        Assert.AreEqual(1u, machine.Cpu.GetK());
+        Assert.AreEqual(1u, machine.Cpu.K);
         Assert.IsTrue(machine.Cpu.RightInstruction);
         Assert.AreEqual(1, machine.Cpu.InterceptCount);
         Assert.IsNull(machine.Cpu.InstructionAccounting);

@@ -1,4 +1,4 @@
-namespace Besm6.Runtime.Timing;
+namespace Besm6.Runtime.Timing.Arithmetic;
 
 /// <summary>
 /// АУ — арифметическое устройство.

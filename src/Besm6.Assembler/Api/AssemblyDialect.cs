@@ -1,4 +1,4 @@
-namespace Besm6.Assembler;
+namespace Besm6.Assembler.Api;
 
 /// <summary>
 /// Диалект языка ассемблера БЭСМ-6.

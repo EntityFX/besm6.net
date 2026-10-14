@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Besm6.Cli;
 using Besm6.Core;
-using Besm6.Architecture;
-using Besm6.Runtime;
+using Besm6.Architecture.Memory;
+using Besm6.Runtime.Loading;
 
 namespace Besm6.Tests;
 
@@ -13,7 +13,7 @@ public sealed class MachineCommandTests
     private static MachineJobConfiguration Job(string model = "functional", string speed = "max") => new()
     {
         ExecutionModel = model, Speed = speed, InstructionLimit = 10,
-        MemoryWords = new() { new() { Address = 8, Raw50 = MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm("vtm 1(1), stop")), false, false).RawValue } },
+        MemoryWords = new() { new() { Address = 8, Raw50 = MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm("vtm 1(1), stop")), false, false).RawValue } },
         Timing = new()
         {
             BankCycleNs = 2000, ReadLatencyNs = 900, WriteVisibilityNs = 1500, BufferHitNs = 100, ArithmeticCycleNs = 100,

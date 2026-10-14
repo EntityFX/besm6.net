@@ -1,15 +1,17 @@
 using System;
 using System.Numerics;
 
-namespace Besm6.Architecture
+namespace Besm6.Architecture.Numerics
 {
     /// <summary>
     /// Представляет 48-битное машинное слово БЭСМ-6.
     /// </summary>
     public struct Word48 : IEquatable<Word48>, IComparable<Word48>
     {
-        // Используем long для хранения 48-битного значения.
-        // Значение всегда хранится в диапазоне [0, 2^48 - 1].
+        /// <summary>
+        /// Используем long для хранения 48-битного значения.
+        /// Значение всегда хранится в диапазоне [0, 2^48 - 1].
+        /// </summary>
         private readonly ulong _value;
 
         public const ulong Mask48 = (1L << 48) - 1;

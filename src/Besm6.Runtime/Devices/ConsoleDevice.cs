@@ -1,7 +1,8 @@
+using Besm6.Architecture.Numerics;
 using System;
 using System.Text;
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Devices
 {
     /// <summary>
     /// Эмуляция консольного устройства ввода-вывода для БЭСМ-6.

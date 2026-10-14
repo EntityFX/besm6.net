@@ -1,4 +1,8 @@
-namespace Besm6.Core;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+
+namespace Besm6.Processor.Arithmetic;
 
 /// <summary>
 /// Immutable input accepted by the arithmetic unit (АУ — арифметическое устройство).

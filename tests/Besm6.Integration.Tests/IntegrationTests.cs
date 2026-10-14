@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using Besm6.Runtime.Loading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests

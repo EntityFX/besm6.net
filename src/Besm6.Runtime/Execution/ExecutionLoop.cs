@@ -1,8 +1,14 @@
 using System;
 using System.IO;
 using System.Diagnostics;
+using Besm6.Architecture.Isa;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Loading;
+using Besm6.Runtime.Diagnostics;
+using Besm6.Processor.Cpu;
+using Besm6.Architecture.Machine;
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Execution
 {
     /// <summary>
     /// Единый bounded execution loop: instruction/wall-clock/hang/loop limits,
@@ -171,23 +177,23 @@ namespace Besm6.Runtime
                     if (pacer is not null && (stopped || TotalCycles >= nextCheckpoint))
                     {
                         if (!pacer.Synchronize(TotalCycles, wallLimitSeconds))
-                            return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
+                            return LoadResult.StoppedByLimit(_machine.Cpu.K, InstructionsExecuted);
                         nextCheckpoint = TotalCycles + ExecutionPacer.CheckpointCycles;
                     }
                     if (stopped)
                     {
                         HaltedByStop = true;
-                        return LoadResult.Halt(_machine.Cpu.GetK(), InstructionsExecuted);
+                        return LoadResult.Halt(_machine.Cpu.K, InstructionsExecuted);
                     }
 
                     if (wallLimitMs > 0 && (InstructionsExecuted & 4095) == 0
                         && wallStopwatch!.ElapsedMilliseconds > wallLimitMs)
                     {
                         if (_verboseLog != null) _verboseLog("");
-                        return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
+                        return LoadResult.StoppedByLimit(_machine.Cpu.K, InstructionsExecuted);
                     }
 
-                    long currentK = kHistory is not null || progressOutput is not null ? _machine.Cpu.GetK() : 0;
+                    long currentK = kHistory is not null || progressOutput is not null ? _machine.Cpu.K : 0;
                     if (kHistory is not null)
                     {
                         kHistory[kHistIdx] = currentK;
@@ -229,34 +235,34 @@ namespace Besm6.Runtime
 
                     if (string.IsNullOrEmpty(ex.Message))
                     {
-                        _machine.Cpu.CanonPost(_machine.Cpu.GetK(), _machine.Cpu._rightInstrFlag);
+                        _machine.Cpu.CanonPost(_machine.Cpu.K, _machine.Cpu.State.IsRightHalf);
                         if (pacer is not null && !pacer.Synchronize(TotalCycles, wallLimitSeconds))
-                            return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
+                            return LoadResult.StoppedByLimit(_machine.Cpu.K, InstructionsExecuted);
                         HaltedByStop = true;
-                        return LoadResult.Halt(_machine.Cpu.GetK(), InstructionsExecuted);
+                        return LoadResult.Halt(_machine.Cpu.K, InstructionsExecuted);
                     }
 
                     if (_machine.Cpu.Intercept(ex.Message))
                     {
-                        _machine.Cpu.CanonPost(_machine.Cpu.GetK(), _machine.Cpu._rightInstrFlag);
+                        _machine.Cpu.CanonPost(_machine.Cpu.K, _machine.Cpu.State.IsRightHalf);
                         if (pacer is not null && TotalCycles >= nextCheckpoint)
                         {
                             if (!pacer.Synchronize(TotalCycles, wallLimitSeconds))
-                                return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
+                                return LoadResult.StoppedByLimit(_machine.Cpu.K, InstructionsExecuted);
                             nextCheckpoint = TotalCycles + ExecutionPacer.CheckpointCycles;
                         }
                         if (_verboseLog != null)
-                            _verboseLog($"\r  [INTERCEPT @ 0{_machine.Cpu.GetK():X4}] {ex.Message} → 0{_machine.Cpu.GetK():X4}\n");
+                            _verboseLog($"\r  [INTERCEPT @ 0{_machine.Cpu.K:X4}] {ex.Message} → 0{_machine.Cpu.K:X4}\n");
                         continue;
                     }
 
-                    _machine.Cpu.CanonPost(_machine.Cpu.GetK(), _machine.Cpu._rightInstrFlag);
+                    _machine.Cpu.CanonPost(_machine.Cpu.K, _machine.Cpu.State.IsRightHalf);
                     if (_verboseLog != null) _verboseLog("");
-                    return LoadResult.Failed(ex.Message, _machine.Cpu.GetK(), InstructionsExecuted);
+                    return LoadResult.Failed(ex.Message, _machine.Cpu.K, InstructionsExecuted);
                 }
             }
             if (_verboseLog != null) _verboseLog("");
-            return LoadResult.StoppedByLimit(_machine.Cpu.GetK(), InstructionsExecuted);
+            return LoadResult.StoppedByLimit(_machine.Cpu.K, InstructionsExecuted);
         }
     }
 }

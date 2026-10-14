@@ -1,3 +1,4 @@
+using Besm6.Runtime.Loading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests

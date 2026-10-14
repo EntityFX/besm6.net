@@ -1,7 +1,10 @@
+using Besm6.Processor.Memory;
+using Besm6.Architecture.Memory;
+using Besm6.Runtime.Encoding;
 using System;
 using System.IO;
 using System.Text;
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Devices
 {
     /// <summary>
     /// Вывод перфокарт (порт dubna/puncher.cpp).

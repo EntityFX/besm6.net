@@ -1,3 +1,5 @@
+using Besm6.Runtime.Configuration;
+
 namespace Besm6.Tui
 {
     /// <summary>

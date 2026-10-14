@@ -1,8 +1,16 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Loading;
 using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 
 namespace Besm6.Tests;
+using Processor = global::Besm6.Processor.Cpu.Processor;
+
 
 /// <summary>
 /// Expected bits come from printed examples and exact Fraction arithmetic in
@@ -30,11 +38,18 @@ public sealed class BookConformanceTests
         return document.RootElement.Clone();
     }
 
+    // Pass JSON text across test discovery; parse it in the execution process.
+    private static JsonElement ParseVector(string vectorJson)
+    {
+        using var document = JsonDocument.Parse(vectorJson);
+        return document.RootElement.Clone();
+    }
+
     private static ulong Hex(JsonElement value) => ulong.Parse(value.GetString()!, NumberStyles.HexNumber);
     public static IEnumerable<object[]> Vectors() =>
         from v in Fixture.GetProperty("vectors").EnumerateArray()
         from path in new[] { "step", "uncached", "trace", "block" }
-        select new object[] { v.GetProperty("id").GetString()!, path, v };
+        select new object[] { v.GetProperty("id").GetString()!, path, v.GetRawText() };
 
     public static IEnumerable<object[]> LoadedVectors() =>
         from v in Fixture.GetProperty("vectors").EnumerateArray()
@@ -42,7 +57,7 @@ public sealed class BookConformanceTests
             && v.GetProperty("expected").GetProperty("error").ValueKind == JsonValueKind.Null
             && v.GetProperty("sources").EnumerateArray().Any(s => s.GetString()!.EndsWith("section-5"))
         from speed in new[] { ExecutionSpeed.Max, ExecutionSpeed.Original }
-        select new object[] { v.GetProperty("id").GetString()!, speed, v };
+        select new object[] { v.GetProperty("id").GetString()!, speed, v.GetRawText() };
 
     public static string CaseName(MethodInfo method, object[] data) => $"{method.Name} ({data[0]}, {data[1]})";
 
@@ -51,9 +66,9 @@ public sealed class BookConformanceTests
         where v.GetProperty("expected").GetProperty("error").ValueKind != JsonValueKind.Null
         from speed in new[] { ExecutionSpeed.Max, ExecutionSpeed.Original }
         from intercept in new[] { false, true }
-        select new object[] { v.GetProperty("id").GetString()! + (intercept ? "/intercept" : "/fault"), speed, intercept, v };
+        select new object[] { v.GetProperty("id").GetString()! + (intercept ? "/intercept" : "/fault"), speed, intercept, v.GetRawText() };
 
-    private static void Load(JsonElement v, Processor cpu, IMemory memory)
+    private static void Load(JsonElement v, IProcessor cpu, IMemory memory)
     {
         var initial = v.GetProperty("initial");
         uint start = initial.GetProperty("k").GetUInt32();
@@ -74,8 +89,9 @@ public sealed class BookConformanceTests
 
     [TestMethod]
     [DynamicData(nameof(Vectors), DynamicDataDisplayName = nameof(CaseName))]
-    public void DefinedBookBitsAndDubnaContracts(string id, string path, JsonElement v)
+    public void DefinedBookBitsAndDubnaContracts(string id, string path, string vectorJson)
     {
+        var v = ParseVector(vectorJson);
         var memory = new Memory();
         var cpu = new Processor(memory) { InstructionCacheEnabled = path != "uncached" };
         Load(v, cpu, memory);
@@ -118,18 +134,18 @@ public sealed class BookConformanceTests
 
     [TestMethod]
     [DynamicData(nameof(LoadedVectors), DynamicDataDisplayName = nameof(CaseName))]
-    public void OriginalAndMaxPreserveBookArithmetic(string id, ExecutionSpeed speed, JsonElement v)
-        => CheckLoadedArithmetic(id, speed, v, MemoryModel.Dubna);
+    public void OriginalAndMaxPreserveBookArithmetic(string id, ExecutionSpeed speed, string vectorJson)
+        => CheckLoadedArithmetic(id, speed, ParseVector(vectorJson), MemoryModel.Dubna);
 
     [TestMethod]
     [DynamicData(nameof(LoadedVectors), DynamicDataDisplayName = nameof(CaseName))]
-    public void BufferedOriginalAndMaxPreserveBookArithmetic(string id, ExecutionSpeed speed, JsonElement v)
-        => CheckLoadedArithmetic(id, speed, v, MemoryModel.Buffered);
+    public void BufferedOriginalAndMaxPreserveBookArithmetic(string id, ExecutionSpeed speed, string vectorJson)
+        => CheckLoadedArithmetic(id, speed, ParseVector(vectorJson), MemoryModel.Buffered);
 
     [TestMethod]
     [DynamicData(nameof(LoadedVectors), DynamicDataDisplayName = nameof(CaseName))]
-    public void MappedOriginalAndMaxPreserveBookArithmetic(string id, ExecutionSpeed speed, JsonElement v)
-        => CheckLoadedArithmetic(id, speed, v, MemoryModel.Mapped);
+    public void MappedOriginalAndMaxPreserveBookArithmetic(string id, ExecutionSpeed speed, string vectorJson)
+        => CheckLoadedArithmetic(id, speed, ParseVector(vectorJson), MemoryModel.Mapped);
 
     private static void CheckLoadedArithmetic(string id, ExecutionSpeed speed, JsonElement v, MemoryModel memoryModel)
     {
@@ -147,18 +163,18 @@ public sealed class BookConformanceTests
 
     [TestMethod]
     [DynamicData(nameof(FaultVectors), DynamicDataDisplayName = nameof(CaseName))]
-    public void AvostStateAndInterceptionMatchBetweenSpeeds(string id, ExecutionSpeed speed, bool intercept, JsonElement v)
-        => CheckLoadedFault(id, speed, intercept, v, MemoryModel.Dubna);
+    public void AvostStateAndInterceptionMatchBetweenSpeeds(string id, ExecutionSpeed speed, bool intercept, string vectorJson)
+        => CheckLoadedFault(id, speed, intercept, ParseVector(vectorJson), MemoryModel.Dubna);
 
     [TestMethod]
     [DynamicData(nameof(FaultVectors), DynamicDataDisplayName = nameof(CaseName))]
-    public void BufferedAvostStateAndInterceptionMatchBetweenSpeeds(string id, ExecutionSpeed speed, bool intercept, JsonElement v)
-        => CheckLoadedFault(id, speed, intercept, v, MemoryModel.Buffered);
+    public void BufferedAvostStateAndInterceptionMatchBetweenSpeeds(string id, ExecutionSpeed speed, bool intercept, string vectorJson)
+        => CheckLoadedFault(id, speed, intercept, ParseVector(vectorJson), MemoryModel.Buffered);
 
     [TestMethod]
     [DynamicData(nameof(FaultVectors), DynamicDataDisplayName = nameof(CaseName))]
-    public void MappedAvostStateAndInterceptionMatchBetweenSpeeds(string id, ExecutionSpeed speed, bool intercept, JsonElement v)
-        => CheckLoadedFault(id, speed, intercept, v, MemoryModel.Mapped);
+    public void MappedAvostStateAndInterceptionMatchBetweenSpeeds(string id, ExecutionSpeed speed, bool intercept, string vectorJson)
+        => CheckLoadedFault(id, speed, intercept, ParseVector(vectorJson), MemoryModel.Mapped);
 
     private static void CheckLoadedFault(string id, ExecutionSpeed speed, bool intercept, JsonElement v, MemoryModel memoryModel)
     {
@@ -203,7 +219,7 @@ public sealed class BookConformanceTests
         public void Write(uint address, Word48 word) => memory.HostMemory.Write(memory.Assignment.TranslateRequest(new(address, false)), word);
     }
 
-    private static void AssertState(JsonElement v, Processor cpu, bool checkPosition)
+    private static void AssertState(JsonElement v, IProcessor cpu, bool checkPosition)
     {
         string id = v.GetProperty("id").GetString()!;
         var e = v.GetProperty("expected");

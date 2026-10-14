@@ -1,6 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Besm6.Runtime;
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Loading;
+using Besm6.Runtime.Machine;
 
 namespace Besm6.Cli;
 
@@ -52,8 +55,8 @@ public sealed class MachineCommand : ICommand
                 executionModel = machine.ExecutionModel, speed = selectedSpeed,
                 result.Outcome.Success, result.Outcome.Stopped, result.Outcome.LimitExceeded,
                 result.Outcome.Instructions, result.Outcome.ErrorMessage,
-                state = new { k = state.GetK(), a = state.GetA().Value, y = state.GetY().Value, r = state.GetR(),
-                    c = state.C, rightHalf = state.OnRightInstruction, m = Enumerable.Range(0, 16).Select(state.GetM).ToArray() },
+                state = new { k = state.K, a = state.A.Value, y = state.Y.Value, r = state.R,
+                    c = state.C, rightHalf = state.RightInstruction, m = Enumerable.Range(0, 16).Select(state.GetM).ToArray() },
                 functionalTicks = machine.Clock.Tick,
                 hardwareNanoseconds = machine.ExecutionModel == MachineExecutionModel.Hardware ? machine.HardwareTimeline.Now.Nanoseconds : (ulong?)null,
                 statistics = result.Statistics,
@@ -61,7 +64,7 @@ public sealed class MachineCommand : ICommand
             }, json));
             return result.Outcome.Success ? 0 : 1;
         }
-        catch (Exception error) when (error is ArgumentException or InvalidOperationException or JsonException or IOException or OverflowException or NotSupportedException or Besm6.Core.ProcessorException)
+        catch (Exception error) when (error is ArgumentException or InvalidOperationException or JsonException or IOException or OverflowException or NotSupportedException or ProcessorException)
         {
             Console.Error.WriteLine(error.Message); return 1;
         }

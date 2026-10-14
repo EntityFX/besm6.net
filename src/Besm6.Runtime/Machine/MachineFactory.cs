@@ -1,6 +1,7 @@
-using Besm6.Runtime;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Loading;
 
-namespace Besm6
+namespace Besm6.Runtime.Machine
 {
     /// <summary>
     /// Фабрика создания симулятора БЭСМ-6 из конфигурации.

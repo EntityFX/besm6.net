@@ -1,4 +1,4 @@
-namespace Besm6.Core
+namespace Besm6.Processor.Cpu
 {
     /// <summary>
     /// Причина остановки процессора или ограниченного цикла исполнения.

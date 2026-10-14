@@ -1,6 +1,11 @@
 using System;
 using System.IO;
 using System.Text;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Encoding;
+using Besm6.Runtime.Loading;
+using Besm6.Runtime.Machine;
+using Besm6.Runtime.Storage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests;

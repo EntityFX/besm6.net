@@ -1,8 +1,11 @@
-namespace Besm6.Core;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
 
-internal enum LogicalArithmeticOperation { And, Xor, Or, Pack, Unpack }
+namespace Besm6.Processor.Arithmetic;
 
-// АУ — арифметическое устройство. Shared logical result, without register publication.
+/// <summary>
+/// АУ — арифметическое устройство. Shared logical result, without register publication.
+/// </summary>
 internal static class LogicalArithmeticOperations
 {
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -12,8 +15,8 @@ internal static class LogicalArithmeticOperations
         LogicalArithmeticOperation.And => new(new(accumulator.Value & operand.Value), Word48.Zero, false, false),
         LogicalArithmeticOperation.Xor => new(new(accumulator.Value ^ operand.Value), accumulator, false, false),
         LogicalArithmeticOperation.Or => new(new(accumulator.Value | operand.Value), Word48.Zero, false, false),
-        LogicalArithmeticOperation.Pack => new(new(Processor.Besm6Pack(accumulator.Value, operand.Value)), Word48.Zero, false, false),
-        LogicalArithmeticOperation.Unpack => new(new(Processor.Besm6Unpack(accumulator.Value, operand.Value)), Word48.Zero, false, false),
+        LogicalArithmeticOperation.Pack => new(new(ProcessorBitOperations.Pack(accumulator.Value, operand.Value)), Word48.Zero, false, false),
+        LogicalArithmeticOperation.Unpack => new(new(ProcessorBitOperations.Unpack(accumulator.Value, operand.Value)), Word48.Zero, false, false),
         _ => throw new ArgumentOutOfRangeException(nameof(operation))
     };
 }

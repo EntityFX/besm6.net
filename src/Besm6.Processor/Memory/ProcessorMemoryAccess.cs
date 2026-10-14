@@ -1,3 +1,9 @@
+using Besm6.Architecture.Debug;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
+using Besm6.Processor.Diagnostics;
+using Besm6.Processor.Memory;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -53,7 +59,7 @@ namespace Besm6.Core
         {
             addr &= 0x7FFF;
             if (_debugWatch.MemoryWatchArmed && _debugWatch.DebugCheckMemory(addr, 2))
-                throw new Processor.DebugWatchAbortException();
+                throw new DebugWatchAbortException();
             if (addr == 0)
                 return 0;
             return _coreMemory is { } core ? core.Read(addr).Value : _memory.Read(addr).Value;
@@ -65,7 +71,7 @@ namespace Besm6.Core
         {
             addr &= 0x7FFF;
             if (_debugWatch.MemoryWatchArmed && _debugWatch.DebugCheckMemory(addr, 1))
-                throw new Processor.DebugWatchAbortException();
+                throw new DebugWatchAbortException();
             if (addr == 0)
                 return;
             if (_coreMemory is { } core) core.Write(addr, new Word48(val));

@@ -1,3 +1,6 @@
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Runtime.Profiling;
 using System;
 using System.Collections.Generic;
 using System.Globalization;

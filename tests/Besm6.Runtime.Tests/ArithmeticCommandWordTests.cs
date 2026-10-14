@@ -1,5 +1,8 @@
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Architecture.Numerics;
 using Besm6.Runtime.Modeling;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic;
 
 namespace Besm6.Tests;
 
@@ -65,7 +68,7 @@ public sealed class ArithmeticCommandWordTests
     public void ImmediateOperandWaitsForExplicitAcceptanceWithoutBufferDelay(string opcode, double expected)
     {
         var machine = new MachineCore();
-        machine.LoadProgram([new(Besm6.Asm.Assembler.Asm(opcode + ", stop"))], 1);
+        machine.LoadProgram([new(Assembler.Legacy.Assembler.Asm(opcode + ", stop"))], 1);
         machine.Cpu.SetA(Word48.FromDouble(1).Value);
         var model = machine.HardwareModel; var cpu = model.PrepareNextInstruction();
         uint code = opcode.StartsWith("e+n", StringComparison.Ordinal) ? 0x3941u : 0x3B41u;
@@ -84,7 +87,7 @@ public sealed class ArithmeticCommandWordTests
         Assert.AreEqual(new HardwareInstant(1000), model.CreateArithmeticUnitStages(new(100)).StartedAt);
         model.ScheduleBoundArithmeticCompletionAt(cpu, new(1400));
         model.AdvanceNextEvent();
-        Assert.AreEqual(Word48.FromDouble(expected), machine.Cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(expected), machine.Cpu.A);
         Assert.AreEqual(0UL, machine.Clock.Tick);
     }
 
@@ -96,11 +99,11 @@ public sealed class ArithmeticCommandWordTests
     public void UnsupportedOrWrongSourceCannotAdvanceSharedCpu(uint raw)
     {
         var machine = new MachineCore();
-        machine.LoadProgram([new(Besm6.Asm.Assembler.Asm("e+n 101, stop"))], 1);
+        machine.LoadProgram([new(Assembler.Legacy.Assembler.Asm("e+n 101, stop"))], 1);
         var model = machine.HardwareModel; var cpu = model.PrepareNextInstruction();
         Assert.ThrowsExactly<ArgumentException>(() => model.BindArithmeticInstruction(cpu,
             new ArithmeticCommandWord(raw), new(100), true));
-        Assert.AreEqual(1u, machine.Cpu.GetK());
+        Assert.AreEqual(1u, machine.Cpu.K);
         Assert.IsFalse(machine.Cpu.RightInstruction);
         Assert.IsTrue(model.HasPendingInstruction);
         Assert.IsNull(model.Timeline.NextEventTime);

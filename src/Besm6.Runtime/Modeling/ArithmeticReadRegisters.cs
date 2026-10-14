@@ -1,4 +1,5 @@
-using Besm6.Runtime.Timing;
+using Besm6.Architecture.Memory;
+using Besm6.Runtime.Timing.Arithmetic;
 
 namespace Besm6.Runtime.Modeling;
 

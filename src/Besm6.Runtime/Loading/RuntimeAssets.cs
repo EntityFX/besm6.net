@@ -1,3 +1,5 @@
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Storage;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Loading
 {
     /// <summary>
     /// Класс лицензии runtime-ресурса:
@@ -21,7 +23,7 @@ namespace Besm6.Runtime
     }
 }
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Loading
 {
     /// <summary>
     /// Описание одного обязательного runtime-образа (лента/диск) с контрольной суммой,
@@ -53,7 +55,7 @@ namespace Besm6.Runtime
     }
 }
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Loading
 {
     /// <summary>Результат успешного разрешения: каталог + полный путь и фактический checksum каждого ресурса.</summary>
     public sealed class ResolvedRuntimeAssets
@@ -70,7 +72,7 @@ namespace Besm6.Runtime
     }
 }
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Loading
 {
     /// <summary>
     /// Ошибка проверки runtime-ресурсов: перечисляет каждый отсутствующий
@@ -93,7 +95,7 @@ namespace Besm6.Runtime
     }
 }
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Loading
 {
     /// <summary>
     /// Каталог обязательных runtime-образов и их fail-fast разрешение.

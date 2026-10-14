@@ -1,4 +1,8 @@
+using Besm6.Processor.Memory;
+using Besm6.Architecture.Numerics;
 namespace Besm6.Tests;
+using Processor = global::Besm6.Processor.Cpu.Processor;
+
 
 [TestClass]
 public sealed class ProcessorStartTests
@@ -7,8 +11,8 @@ public sealed class ProcessorStartTests
     public void StartAtNormalizesAddressSelectsLeftAndPreservesOtherRegisters()
     {
         var memory = new CoreMemory();
-        memory.Write(1, new Word48(Besm6.Asm.Assembler.Asm("utc 21, stop")));
-        memory.Write(3, new Word48(Besm6.Asm.Assembler.Asm("vtm 7(2), stop")));
+        memory.Write(1, new Word48(Assembler.Legacy.Assembler.Asm("utc 21, stop")));
+        memory.Write(3, new Word48(Assembler.Legacy.Assembler.Asm("vtm 7(2), stop")));
         var cpu = new Processor(memory);
         cpu.SetM(2, 1);
         cpu.Step(); // next command is the right half
@@ -16,10 +20,10 @@ public sealed class ProcessorStartTests
         cpu.SetY(456);
         cpu.SetR(0x23);
         cpu.StartAt(0x8003);
-        Assert.AreEqual(3u, cpu.GetK());
-        Assert.AreEqual(123UL, cpu.GetA().Value);
-        Assert.AreEqual(456UL, cpu.GetY().Value);
-        Assert.AreEqual(0x23UL, cpu.GetR());
+        Assert.AreEqual(3u, cpu.K);
+        Assert.AreEqual(123UL, cpu.A.Value);
+        Assert.AreEqual(456UL, cpu.Y.Value);
+        Assert.AreEqual(0x23UL, cpu.R);
         Assert.AreEqual(17u, cpu.C);
         Assert.IsTrue(cpu.ApplyC);
         Assert.AreEqual(1u, cpu.GetM(2));

@@ -1,4 +1,11 @@
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
+using Besm6.Processor.Memory;
+
 namespace Besm6.Tests;
+using Processor = global::Besm6.Processor.Cpu.Processor;
+
 
 [TestClass]
 public sealed class ProcessorFetchOptimizationTests
@@ -10,7 +17,7 @@ public sealed class ProcessorFetchOptimizationTests
         Word48 IMemory.Read(uint address)
         {
             if (++Reads == 2)
-                Write(1, new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), vtm 7(2)")));
+                Write(1, new Word48(Assembler.Legacy.Assembler.Asm("vtm 1(1), vtm 7(2)")));
             return Read(address);
         }
     }
@@ -21,10 +28,10 @@ public sealed class ProcessorFetchOptimizationTests
     public void DerivedCoreMemoryRetainsInterfaceFetchSideEffects(bool cached)
     {
         var memory = new ObservedCoreMemory();
-        memory.Write(1, new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), vtm 2(2)")));
+        memory.Write(1, new Word48(Assembler.Legacy.Assembler.Asm("vtm 1(1), vtm 2(2)")));
         var cpu = new Processor(memory) { InstructionCacheEnabled = cached };
         Assert.IsFalse(cpu.CanExecuteUnobservedBlock);
-        cpu.SetK(1);
+        cpu.K = 1;
         Assert.IsFalse(cpu.Step());
         Assert.IsFalse(cpu.Step());
         Assert.AreEqual(2, memory.Reads);
@@ -39,16 +46,16 @@ public sealed class ProcessorFetchOptimizationTests
     {
         var cpu = new Processor(new CoreMemory(8)) { InstructionCacheEnabled = cached };
         cpu.SetA(123); cpu.SetY(456);
-        cpu.SetK(0);
+        cpu.K = 0;
         Assert.AreEqual("Jump to zero",
             Assert.ThrowsExactly<ProcessorException>(() => cpu.Step()).Message);
         Assert.IsFalse(cpu.RightInstruction);
-        cpu.SetK(9);
+        cpu.K = 9;
         Assert.AreEqual("Memory access violation at address 0x00009 (Bank 1)",
             Assert.ThrowsExactly<IndexOutOfRangeException>(() => cpu.Step()).Message);
-        Assert.AreEqual(9u, cpu.GetK());
+        Assert.AreEqual(9u, cpu.K);
         Assert.IsFalse(cpu.RightInstruction);
-        Assert.AreEqual(123UL, cpu.GetA().Value);
-        Assert.AreEqual(456UL, cpu.GetY().Value);
+        Assert.AreEqual(123UL, cpu.A.Value);
+        Assert.AreEqual(456UL, cpu.Y.Value);
     }
 }

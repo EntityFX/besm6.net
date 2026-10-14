@@ -1,5 +1,12 @@
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.State;
+using Besm6.Processor.Memory;
 using Besm6.Runtime.Modeling;
-using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic;
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Runtime.Timing.Memory;
 
 namespace Besm6.Tests;
 
@@ -64,7 +71,7 @@ public sealed class ArithmeticReadRegistersTests
         Assert.IsFalse(model.ReadRegisters.Inspect(3).Ready);
         model.ScheduleBoundArithmeticCompletionAt(instruction, new(3500));
         model.AdvanceTo(new(3500));
-        Assert.AreEqual(0x88UL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(0x88UL, machine.Cpu.A.Value);
         Assert.AreEqual(0UL, machine.Clock.Tick);
     }
 
@@ -82,7 +89,7 @@ public sealed class ArithmeticReadRegistersTests
         model.AdvanceTo(new(4000));
         Assert.AreEqual(0UL, model.ReadRegisters.Inspect(1).Owner);
         Assert.IsFalse(model.ReadRegisters.Inspect(1).Ready);
-        Assert.AreEqual(0UL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(0UL, machine.Cpu.A.Value);
         Assert.AreEqual(0UL, model.CompletedInstructions);
     }
 
@@ -104,7 +111,7 @@ public sealed class ArithmeticReadRegistersTests
         Assert.AreEqual(new HardwareInstant(3050), controller.Errors!.InputCheckedAt);
         Assert.AreEqual(ArithmeticErrorSignals.None, controller.Errors.Signals);
         model.ScheduleBoundArithmeticCompletionAt(instruction, new(3500)); model.AdvanceTo(new(3500));
-        Assert.AreEqual(0x88UL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(0x88UL, machine.Cpu.A.Value);
         Assert.AreEqual(0UL, model.PendingArithmeticInterruption);
     }
 
@@ -116,7 +123,7 @@ public sealed class ArithmeticReadRegistersTests
         var machine = new MachineCore(ProcessorProfile.Supervisor);
         machine.Cpu.Supervisor!.Status = new((ControlUnitFlags)0x403);
         machine.MappedMemory!.PhysicalMemory.WriteRaw(8,
-            MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm("aax 20, stop")), false, false));
+            MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm("aax 20, stop")), false, false));
         machine.MappedMemory.PhysicalMemory.WriteRaw(16, MemoryWord50.Form(new(0xCC), true, true));
         machine.Cpu.StartAt(8); machine.Cpu.SetA(0xAA);
         return machine;
@@ -127,7 +134,7 @@ public sealed class ArithmeticReadRegistersTests
     {
         var machine = Machine();
         foreach (var (address, code) in new[] { (8U, "aax 20, e+n 100"), (9U, "aox 20, aex 20"), (10U, "aax 20, stop") })
-            machine.MappedMemory!.PhysicalMemory.WriteRaw(address, MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm(code)), false, false));
+            machine.MappedMemory!.PhysicalMemory.WriteRaw(address, MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm(code)), false, false));
         var model = machine.HardwareModel;
         model.ConfigureAutomaticExecution(new(Configuration, new(100), new(100),
             new Dictionary<Opcode, HardwareDuration> { [Opcode.Aax] = new(100), [Opcode.Aox] = new(100),

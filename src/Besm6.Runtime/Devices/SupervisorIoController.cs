@@ -1,3 +1,7 @@
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Memory;
+using Besm6.Runtime.Devices;
+using Besm6.Runtime.Execution;
 using System.Buffers.Binary;
 using System.Numerics;
 

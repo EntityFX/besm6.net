@@ -1,3 +1,4 @@
+using Besm6.Processor.Memory;
 using System;
 using System.Text;
 

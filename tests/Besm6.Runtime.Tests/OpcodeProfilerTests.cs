@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Besm6.Architecture.Isa;
+using Besm6.Runtime.Profiling;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests;

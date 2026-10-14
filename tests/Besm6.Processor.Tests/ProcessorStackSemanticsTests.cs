@@ -1,7 +1,13 @@
 using System;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Runtime.Extracodes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Besm6.Tests
 {
+    using Processor = global::Besm6.Processor.Cpu.Processor;
+
     /// <summary>
     /// P1: PrepareStack-wiring — все 20 инструкций, использующих PrepareStack
     /// (src/Besm6.Processor/Core/InstructionExecutor.cs), обязаны делать pre-decrement
@@ -33,7 +39,7 @@ namespace Besm6.Tests
             _cpu = new Processor(_memory);
         }
 
-        private static ulong Asm(string source) => Besm6.Asm.Assembler.Asm(source);
+        private static ulong Asm(string source) => Assembler.Legacy.Assembler.Asm(source);
         private static uint O(string octal) => Convert.ToUInt32(octal, 8);
         private void StoreWord(string address, string source) => _memory.Write(O(address), new Word48(Asm(source)));
         private void StoreData(string address, ulong value) => _memory.Write(O(address), new Word48(value));
@@ -61,7 +67,7 @@ namespace Besm6.Tests
             StoreData("2000", Besm6Math.DoubleToBesm6(1.0));
             _cpu.SetM(15, StackTop);
             _cpu.SetA(0UL);
-            _cpu.SetK(K);
+            _cpu.K = K;
 
             _cpu.Step();
 
@@ -82,7 +88,7 @@ namespace Besm6.Tests
             StoreData("4001", Besm6Math.DoubleToBesm6(1.0)); // 4001 oct = 2000 oct + M[15](2001 oct) = aex
             _cpu.SetM(15, StackTop);
             _cpu.SetA(0UL);
-            _cpu.SetK(K);
+            _cpu.K = K;
 
             _cpu.Step();
 
@@ -103,7 +109,7 @@ namespace Besm6.Tests
             StoreWord("10", "зп (17), стоп");
             _cpu.SetM(15, OperandAddr); // стек-указатель = 2000 oct
             _cpu.SetA(a);
-            _cpu.SetK(K);
+            _cpu.K = K;
 
             _cpu.Step();
 
@@ -123,14 +129,14 @@ namespace Besm6.Tests
             _cpu.SetM(15, StackTop); // 2001 oct
             _cpu.SetA(a);
             _cpu.SetR((ulong)RFlags.Mult);
-            _cpu.SetK(K);
+            _cpu.K = K;
 
             _cpu.Step();
 
             Assert.AreEqual(a, _memory.Read(0x0600).Value, "zpm writes A at Aex"); // 3000 oct = 1536 dec = 0x0600
             Assert.AreEqual(OperandAddr, _cpu.GetM(15), "зпм делает pre-decrement M[17 oct]");
-            Assert.AreEqual(operand, _cpu.GetA().Value, "зпм загружает A со стека");
-            Assert.AreEqual((uint)RFlags.Log, _cpu.GetR() & (uint)RFlags.Mode);
+            Assert.AreEqual(operand, _cpu.A.Value, "зпм загружает A со стека");
+            Assert.AreEqual((uint)RFlags.Log, _cpu.R & (uint)RFlags.Mode);
         }
 
         // ─── уим (041/sti): rg==15 vs rg!=15 ───────────────────────────────
@@ -146,12 +152,12 @@ namespace Besm6.Tests
             StoreData("100", memory); // 0100 oct = 64 dec = ad
             _cpu.SetM(15, StackTop);
             _cpu.SetA(a);
-            _cpu.SetK(K);
+            _cpu.K = K;
 
             _cpu.Step();
 
             // Различение веток: A прочитан по ad (не со стека — там 0).
-            Assert.AreEqual(memory, _cpu.GetA().Value, "уим 17(0): rg==15 → A := MemLoad(ad)");
+            Assert.AreEqual(memory, _cpu.A.Value, "уим 17(0): rg==15 → A := MemLoad(ad)");
             Assert.AreEqual(a, _cpu.GetM(15), "уим 17(0) кладёт адрес возврата в M[15]");
         }
 
@@ -167,13 +173,13 @@ namespace Besm6.Tests
             StoreData("2000", operand);
             _cpu.SetM(15, StackTop);
             _cpu.SetA(a);
-            _cpu.SetK(K);
+            _cpu.K = K;
 
             _cpu.Step();
 
             Assert.AreEqual(OperandAddr, _cpu.GetM(15), "уим 14(0) делает pre-decrement M[15]");
             Assert.AreEqual(a, _cpu.GetM(12), "уим 14(0) кладёт адрес возврата в M[12]");
-            Assert.AreEqual(operand, _cpu.GetA().Value, "уим 14(0) берёт A из нового M[15]");
+            Assert.AreEqual(operand, _cpu.A.Value, "уим 14(0) берёт A из нового M[15]");
         }
     }
 }

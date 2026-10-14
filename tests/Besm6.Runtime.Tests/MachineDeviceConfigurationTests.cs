@@ -1,6 +1,12 @@
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text.Json;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Runtime.Devices;
+using Besm6.Runtime.Execution;
+using Besm6.Runtime.Loading;
+using Besm6.Runtime.Machine;
 using Besm6.Runtime.Timing;
 
 namespace Besm6.Tests;
@@ -113,7 +119,7 @@ public sealed class MachineDeviceConfigurationTests
     private static MachineJobConfiguration Job(bool hardware) => new()
     {
         ExecutionModel = hardware ? "hardware" : "functional",
-        MemoryWords = new() { new() { Address = 8, Raw50 = MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm("stop, stop")), false, false).RawValue } },
+        MemoryWords = new() { new() { Address = 8, Raw50 = MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm("stop, stop")), false, false).RawValue } },
         Timing = new()
         {
             BankCycleNs = 2000, ReadLatencyNs = 900, WriteVisibilityNs = 1500,
@@ -128,7 +134,7 @@ public sealed class MachineDeviceConfigurationTests
     public void HardwareIoDecoratorMustIdentifyTheActualSharedBus(bool foreign)
     {
         var job = Job(true);
-        job.MemoryWords[0].Raw50 = MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm("ext 4003, stop")), false, false).RawValue;
+        job.MemoryWords[0].Raw50 = MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm("ext 4003, stop")), false, false).RawValue;
         job.Timing!.ControlDurationsNs["Ext"] = 300;
         var machine = job.CreateMachine();
         var controller = foreign ? Job(false).CreateMachine().SupervisorIo! : machine.SupervisorIo!;

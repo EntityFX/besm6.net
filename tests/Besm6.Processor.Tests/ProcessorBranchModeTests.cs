@@ -1,9 +1,13 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Besm6.Core;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.State;
 
 namespace Besm6.Tests
 {
+    using Processor = global::Besm6.Processor.Cpu.Processor;
+
     /// <summary>
     /// P0: истинностные таблицы условных переходов по/пе (0260/0270) для всех
     /// R-режимов + малые control-flow тесты пио/пино/э36/цикл.
@@ -33,7 +37,7 @@ namespace Besm6.Tests
             _cpu = new Processor(_memory);
         }
 
-        private static ulong Asm(string source) => Besm6.Asm.Assembler.Asm(source);
+        private static ulong Asm(string source) => Assembler.Legacy.Assembler.Asm(source);
         private static uint O(string octal) => Convert.ToUInt32(octal, 8);
         private void StoreWord(string address, string source) => _memory.Write(O(address), new Word48(Asm(source)));
 
@@ -79,27 +83,27 @@ namespace Besm6.Tests
             StoreWord("10", branchMnemonic + ", стоп");
             _cpu.SetA(a);
             _cpu.SetR((ulong)mode);
-            _cpu.SetK(pcStart);
+            _cpu.K = pcStart;
 
             _cpu.Step();
 
             // Y = A — всегда, до решения о переходе (ref L750/L768).
-            Assert.AreEqual(a, _cpu.GetY().Value, "Y обязан получить A до ветвления");
+            Assert.AreEqual(a, _cpu.Y.Value, "Y обязан получить A до ветвления");
 
             // Ветвление только читает состояние: A и R-режим обязаны не измениться (ref L748-783).
-            Assert.AreEqual(a, _cpu.GetA().Value, "по/пе не меняют A");
-            Assert.AreEqual((uint)mode & (uint)RFlags.Mode, _cpu.GetR() & (uint)RFlags.Mode,
+            Assert.AreEqual(a, _cpu.A.Value, "по/пе не меняют A");
+            Assert.AreEqual((uint)mode & (uint)RFlags.Mode, _cpu.R & (uint)RFlags.Mode,
                 "по/пе не меняют R-режим");
 
             if (expectBranch)
             {
-                Assert.AreEqual(target, _cpu.GetK(), "переход должен попасть в Aex");
-                Assert.IsFalse(_cpu.OnRightInstruction, "цель перехода — LEFT-половина");
+                Assert.AreEqual(target, _cpu.K, "переход должен попасть в Aex");
+                Assert.IsFalse(_cpu.RightInstruction, "цель перехода — LEFT-половина");
             }
             else
             {
-                Assert.AreEqual(pcStart, _cpu.GetK(), "без перехода K не меняется");
-                Assert.IsTrue(_cpu.OnRightInstruction, "без перехода продолжается RIGHT-половина того же слова");
+                Assert.AreEqual(pcStart, _cpu.K, "без перехода K не меняется");
+                Assert.IsTrue(_cpu.RightInstruction, "без перехода продолжается RIGHT-половина того же слова");
             }
         }
 
@@ -118,19 +122,19 @@ namespace Besm6.Tests
 
             StoreWord("10", mnemonic + " 3000(2)");
             _cpu.SetM(2, regValue);
-            _cpu.SetK(pcStart);
+            _cpu.K = pcStart;
 
             _cpu.Step();
 
             if (expectBranch)
             {
-                Assert.AreEqual(target, _cpu.GetK(), mnemonic);
-                Assert.IsFalse(_cpu.OnRightInstruction, mnemonic);
+                Assert.AreEqual(target, _cpu.K, mnemonic);
+                Assert.IsFalse(_cpu.RightInstruction, mnemonic);
             }
             else
             {
-                Assert.AreEqual(pcStart, _cpu.GetK(), mnemonic);
-                Assert.IsTrue(_cpu.OnRightInstruction, mnemonic);
+                Assert.AreEqual(pcStart, _cpu.K, mnemonic);
+                Assert.IsTrue(_cpu.RightInstruction, mnemonic);
             }
         }
 
@@ -143,12 +147,12 @@ namespace Besm6.Tests
 
             StoreWord("10", "втбрз 3000(3)");
             _cpu.SetM(3, 0);
-            _cpu.SetK(pcStart);
+            _cpu.K = pcStart;
 
             _cpu.Step();
 
-            Assert.AreEqual(target, _cpu.GetK());
-            Assert.IsFalse(_cpu.OnRightInstruction);
+            Assert.AreEqual(target, _cpu.K);
+            Assert.IsFalse(_cpu.RightInstruction);
         }
 
         // ─── цикл (0370/vlm) ────────────────────────────────────────────────
@@ -161,12 +165,12 @@ namespace Besm6.Tests
 
             StoreWord("10", "цикл 3000(4)");
             _cpu.SetM(4, 0);
-            _cpu.SetK(pcStart);
+            _cpu.K = pcStart;
 
             _cpu.Step();
 
-            Assert.AreEqual(pcStart, _cpu.GetK());
-            Assert.IsTrue(_cpu.OnRightInstruction);
+            Assert.AreEqual(pcStart, _cpu.K);
+            Assert.IsTrue(_cpu.RightInstruction);
             Assert.AreEqual(0u, _cpu.GetM(4), "цикл при M[reg]==0 не трогает счётчик");
         }
 
@@ -178,13 +182,13 @@ namespace Besm6.Tests
 
             StoreWord("10", "цикл 3000(4)");
             _cpu.SetM(4, 5);
-            _cpu.SetK(pcStart);
+            _cpu.K = pcStart;
 
             _cpu.Step();
 
             Assert.AreEqual(6u, _cpu.GetM(4));
-            Assert.AreEqual(target, _cpu.GetK());
-            Assert.IsFalse(_cpu.OnRightInstruction);
+            Assert.AreEqual(target, _cpu.K);
+            Assert.IsFalse(_cpu.RightInstruction);
         }
     }
 }

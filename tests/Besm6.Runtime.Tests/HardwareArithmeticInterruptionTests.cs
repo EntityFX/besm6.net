@@ -1,5 +1,14 @@
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Architecture.Supervisor;
+using Besm6.Processor.Arithmetic;
+using Besm6.Processor.Supervisor;
 using Besm6.Runtime.Modeling;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic;
 
 namespace Besm6.Tests;
 
@@ -15,7 +24,7 @@ public sealed class HardwareArithmeticInterruptionTests
         var machine = new MachineCore(ProcessorProfile.Supervisor);
         machine.Cpu.Supervisor!.Status = new((ControlUnitFlags)0x403);
         machine.Cpu.StartAt(1); machine.Cpu.SetA(Large.Value); machine.Cpu.SetY(123);
-        var code = new Word48(Besm6.Asm.Assembler.Asm("xta, stop"));
+        var code = new Word48(Assembler.Legacy.Assembler.Asm("xta, stop"));
         machine.MappedMemory!.PhysicalMemory.WriteRaw(1, MemoryWord50.Form(code, false, false));
         machine.MappedMemory.PhysicalMemory.WriteRaw(0x140, MemoryWord50.Form(code, false, false));
         var model = machine.HardwareModel;
@@ -52,12 +61,12 @@ public sealed class HardwareArithmeticInterruptionTests
         model.AdvanceTo(new(1000)); // Explicit synthetic IZOP position, not an inferred duration.
         Assert.AreEqual(0UL, model.PendingArithmeticInterruption);
         Assert.AreEqual(0UL, machine.Cpu.Supervisor!.InternalInterrupts);
-        Assert.AreEqual(1U, machine.Cpu.GetK());
+        Assert.AreEqual(1U, machine.Cpu.K);
         unit.CompleteOperation();
         Assert.AreEqual(expected, model.PendingArithmeticInterruption);
         Assert.AreEqual(expected, machine.Cpu.Supervisor.InternalInterrupts);
         Assert.AreEqual(expected == 0 ? 0UL : 1UL, model.ReceivedArithmeticInterruptions);
-        Assert.AreEqual(Large, machine.Cpu.GetA()); Assert.AreEqual(123UL, machine.Cpu.GetY().Value);
+        Assert.AreEqual(Large, machine.Cpu.A); Assert.AreEqual(123UL, machine.Cpu.Y.Value);
         Assert.AreEqual(0UL, machine.Clock.Tick);
         Assert.AreEqual(0UL, model.CompletedInstructions);
         if (expected == 0)
@@ -69,7 +78,7 @@ public sealed class HardwareArithmeticInterruptionTests
         Assert.ThrowsExactly<InvalidOperationException>(() => model.PrepareNextInstruction());
         Assert.AreEqual(0UL, model.IssuedInstructions);
         Assert.IsTrue(model.AcceptArithmeticInterruption(42, SupervisorControl.SavedRightHalf));
-        Assert.AreEqual(0x140U, machine.Cpu.GetK()); Assert.IsFalse(machine.Cpu.RightInstruction);
+        Assert.AreEqual(0x140U, machine.Cpu.K); Assert.IsFalse(machine.Cpu.RightInstruction);
         Assert.AreEqual(42U, machine.Cpu.Supervisor.ReadModifier(27));
         Assert.AreEqual(SupervisorControl.SavedRightHalf, machine.Cpu.Supervisor.SavedFlags & 0x300);
         Assert.AreEqual(expected, machine.Cpu.Supervisor.InternalInterrupts);
@@ -142,7 +151,7 @@ public sealed class HardwareArithmeticInterruptionTests
         if (!blockStop)
         {
             Assert.ThrowsExactly<SupervisorHaltException>(() => model.AcceptArithmeticInterruption(20, 0));
-            Assert.AreEqual(1U, machine.Cpu.GetK());
+            Assert.AreEqual(1U, machine.Cpu.K);
             Assert.AreEqual(0x300000UL, model.PendingArithmeticInterruption);
             Assert.AreEqual(0x300000UL, supervisor.InternalInterrupts);
             supervisor.Status = new((ControlUnitFlags)0x403);
@@ -161,7 +170,7 @@ public sealed class HardwareArithmeticInterruptionTests
         {
             unit.CompleteOperation();
             Assert.AreEqual(0x300000UL, machine.Cpu.Supervisor!.InternalInterrupts);
-            Assert.AreEqual(1U, machine.Cpu.GetK());
+            Assert.AreEqual(1U, machine.Cpu.K);
             Assert.ThrowsExactly<InvalidOperationException>(() => model.AcceptArithmeticInterruption(21, 0));
             Assert.ThrowsExactly<InvalidOperationException>(() => model.PrepareNextInstruction());
             throw new InvalidOperationException("device observer failed after IZOP");

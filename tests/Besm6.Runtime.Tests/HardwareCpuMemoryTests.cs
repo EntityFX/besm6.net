@@ -1,6 +1,12 @@
+using Besm6.Runtime.Timing.Calendar;
 using System.Text.Json;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
 using Besm6.Runtime.Modeling;
-using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic;
+using Besm6.Runtime.Timing.Memory;
 
 namespace Besm6.Tests;
 
@@ -11,7 +17,7 @@ public sealed class HardwareCpuMemoryTests
     private static MachineCore Machine(string code = "aax 20, stop")
     {
         var machine = new MachineCore(ProcessorProfile.Supervisor); machine.Cpu.Supervisor!.Status = new((ControlUnitFlags)0x403);
-        machine.MappedMemory!.PhysicalMemory.WriteRaw(8, MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm(code)), false, false));
+        machine.MappedMemory!.PhysicalMemory.WriteRaw(8, MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm(code)), false, false));
         machine.MappedMemory.PhysicalMemory.WriteRaw(16, MemoryWord50.Form(new(17), true, true));
         machine.Cpu.StartAt(8); machine.Cpu.SetA(31); return machine;
     }
@@ -56,7 +62,7 @@ public sealed class HardwareCpuMemoryTests
     {
         var machine = Machine(); var model = machine.HardwareModel; model.StartTimedInstructionFetch(Configuration, new(100));
         model.AdvanceTo(new(100));
-        if (reset) machine.ResetCpu(); else machine.Memory.Write(8, new(Besm6.Asm.Assembler.Asm("stop, stop")));
+        if (reset) machine.ResetCpu(); else machine.Memory.Write(8, new(Assembler.Legacy.Assembler.Asm("stop, stop")));
         var outcome = model.AdvanceTo(new(2000));
         Assert.AreEqual(HardwareInstructionStatus.Cancelled, outcome!.Value.Status); Assert.IsNull(model.CurrentInstruction);
         Assert.IsFalse(machine.Cpu.HasPreparedInstruction); Assert.AreEqual(0UL, model.CompletedInstructions);
@@ -69,7 +75,7 @@ public sealed class HardwareCpuMemoryTests
         var model = machine.HardwareModel; model.StartTimedInstructionFetch(Configuration, new(100));
         var outcome = model.AdvanceTo(new(900));
         Assert.AreEqual(HardwareInstructionStatus.GuestFault, outcome!.Value.Status);
-        Assert.AreEqual(0x140U, machine.Cpu.GetK()); Assert.AreEqual(0UL, model.CompletedInstructions);
+        Assert.AreEqual(0x140U, machine.Cpu.K); Assert.AreEqual(0UL, model.CompletedInstructions);
     }
 
     [TestMethod]

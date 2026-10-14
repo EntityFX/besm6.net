@@ -1,5 +1,8 @@
+using Besm6.Runtime.Loading;
 using System.Text.Json;
-using Besm6;
+using Besm6.Architecture.Numerics;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Execution;
 
 namespace Besm6.Tests;
 
@@ -67,7 +70,7 @@ public sealed class ExecutionSpeedTests
         int outside = 0, inside = 0;
         machine.Cpu.InstructionExecuted = _ => outside++;
         loader.InstructionExecuted = _ => inside++;
-        ulong word = Besm6.Asm.Assembler.Asm("vtm 1(1), stop");
+        ulong word = Assembler.Legacy.Assembler.Asm("vtm 1(1), stop");
         for (int run = 0; run < 2; run++)
         {
             loader.Speed = run == 0 ? ExecutionSpeed.Original : ExecutionSpeed.Max;
@@ -90,7 +93,7 @@ public sealed class ExecutionSpeedTests
     {
         var machine = new MachineCore();
         var loader = new DubnaLoader(machine) { InstructionLimit = 4 };
-        machine.LoadProgram(new[] { new Word48(Besm6.Asm.Assembler.Asm("uj 1")) }, 1);
+        machine.LoadProgram(new[] { new Word48(Assembler.Legacy.Assembler.Asm("uj 1")) }, 1);
         Assert.IsTrue(loader.RunLoaded().LimitExceeded);
         Assert.IsNull(loader.Statistics);
         Assert.AreEqual(4L, loader.InstructionsExecuted);
@@ -104,8 +107,8 @@ public sealed class ExecutionSpeedTests
         var loader = new DubnaLoader(machine) { CollectStatistics = true, InstructionLimit = 10 };
         var profiler = new OpcodeProfiler();
         loader.TypedInstructionTrace = profiler.Observe;
-        machine.LoadProgram(new[] { new Word48(Besm6.Asm.Assembler.Asm("a/x 2")),
-            Word48.Zero, new Word48(Besm6.Asm.Assembler.Asm("stop")) }, 1);
+        machine.LoadProgram(new[] { new Word48(Assembler.Legacy.Assembler.Asm("a/x 2")),
+            Word48.Zero, new Word48(Assembler.Legacy.Assembler.Asm("stop")) }, 1);
         machine.Cpu.InterceptCount = 1;
         machine.Cpu.InterceptAddr = 3;
         Assert.IsTrue(loader.RunLoaded().Success);

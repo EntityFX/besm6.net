@@ -1,4 +1,4 @@
-namespace Besm6.Core;
+namespace Besm6.Processor.Supervisor;
 
 /// <summary>A hardware stop control prevented entry to the internal interrupt vector.</summary>
 public sealed class SupervisorHaltException : Exception

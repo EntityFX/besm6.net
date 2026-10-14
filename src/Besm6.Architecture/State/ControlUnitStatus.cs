@@ -1,4 +1,4 @@
-namespace Besm6.Architecture;
+namespace Besm6.Architecture.State;
 
 /// <summary>Seven wired controls of M17 (decimal 17, octal 021): TO-8 §7.7, sheet 135.</summary>
 [Flags]

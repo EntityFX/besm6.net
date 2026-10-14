@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Besm6.Runtime;
+namespace Besm6.Runtime.Configuration;
 
 /// <summary>Host pacing and hosted guest-clock selection; instruction semantics remain common.</summary>
 [JsonConverter(typeof(ExecutionSpeedJsonConverter))]

@@ -1,3 +1,8 @@
+using Besm6.Processor.Cpu;
+using Besm6.Processor.Memory;
+
+using Besm6.Runtime.Encoding;
+using Besm6.Runtime.Storage;
 
 namespace Besm6.Runtime
 {
@@ -18,8 +23,8 @@ namespace Besm6.Runtime
             {
                 // Вывод на плоттер Watanabe или Tektronix.
                 // Адрес начала данных — в младших 15 битах A; тип плоттера — в старших 12 битах.
-                var bp = new BytePointer(_machine.Memory, (uint)(cpu.GetA().Value & 0x7FFF));
-                switch ((cpu.GetA().Value >> 36) & 0xFFF)
+                var bp = new BytePointer(_machine.Memory, (uint)(cpu.A.Value & 0x7FFF));
+                switch ((cpu.A.Value >> 36) & 0xFFF)
                 {
                     case 0:
                         // Watanabe WX4675.
@@ -50,7 +55,7 @@ namespace Besm6.Runtime
 
                     default:
                         throw new ProcessorException(
-                            $"Extracode *61 77777: unknown target {Convert.ToString(((int)cpu.GetA().Value >> 36) & 0xFFF, 8)}");
+                            $"Extracode *61 77777: unknown target {Convert.ToString(((int)cpu.A.Value >> 36) & 0xFFF, 8)}");
                 }
                 cpu.SetA(0);
                 return;
@@ -74,7 +79,7 @@ namespace Besm6.Runtime
         {
             var cpu = _machine.Cpu;
             long execAddr = cpu.GetM(M16) & 0x7FFF;
-            long ctrl = (execAddr == 0) ? (long)cpu.GetA().Value : (long)_machine.Memory.Read((uint)execAddr).Value;
+            long ctrl = (execAddr == 0) ? (long)cpu.A.Value : (long)_machine.Memory.Read((uint)execAddr).Value;
 
             bool isRead = (ctrl & (1L << 39)) != 0;
             int unit = (int)((ctrl >> 12) & 0x3F);

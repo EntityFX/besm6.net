@@ -1,7 +1,12 @@
-using Besm6.Core;
+using Besm6.Processor.Memory;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
 
 namespace Besm6.Tests
 {
+    using Processor = global::Besm6.Processor.Cpu.Processor;
+
     [TestClass]
     public sealed class ProcessorTraceContractTests
     {

@@ -1,11 +1,16 @@
 using Besm6;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Memory;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Loading;
 
 namespace Besm6.Tests;
 
 [TestClass]
 public sealed class MemoryModelTests
 {
-    private static Word48 Code(string text) => new(Besm6.Asm.Assembler.Asm(text));
+    private static Word48 Code(string text) => new(Assembler.Legacy.Assembler.Asm(text));
 
     [TestMethod]
     public void DefaultRemainsDubnaAndSelectionIsPerMachine()
@@ -39,7 +44,7 @@ public sealed class MemoryModelTests
         var loader = new DubnaLoader(machine) { Speed = speed, CollectStatistics = true, InstructionLimit = 100 };
         if (trace) machine.StepTrace = (_, _) => { };
         Assert.IsTrue(loader.RunLoaded().Success);
-        Assert.AreEqual(123UL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(123UL, machine.Cpu.A.Value);
         Assert.AreEqual(123UL, machine.Memory.Read(17).Value);
         Assert.AreEqual(4UL, machine.Clock.Tick);
         Assert.AreEqual(4L, loader.Statistics!.CompletedInstructions);
@@ -57,11 +62,11 @@ public sealed class MemoryModelTests
     {
         var original = Run(model, ExecutionSpeed.Original, trace);
         var max = Run(model, ExecutionSpeed.Max, trace);
-        Assert.AreEqual(original.Machine.Cpu.GetA(), max.Machine.Cpu.GetA());
-        Assert.AreEqual(original.Machine.Cpu.GetY(), max.Machine.Cpu.GetY());
-        Assert.AreEqual(original.Machine.Cpu.GetR(), max.Machine.Cpu.GetR());
-        Assert.AreEqual(original.Machine.Cpu.GetK(), max.Machine.Cpu.GetK());
-        Assert.AreEqual(original.Machine.Cpu._rightInstrFlag, max.Machine.Cpu._rightInstrFlag);
+        Assert.AreEqual(original.Machine.Cpu.A, max.Machine.Cpu.A);
+        Assert.AreEqual(original.Machine.Cpu.Y, max.Machine.Cpu.Y);
+        Assert.AreEqual(original.Machine.Cpu.R, max.Machine.Cpu.R);
+        Assert.AreEqual(original.Machine.Cpu.K, max.Machine.Cpu.K);
+        Assert.AreEqual(original.Machine.Cpu.State.IsRightHalf, max.Machine.Cpu.State.IsRightHalf);
         Assert.AreEqual(original.Machine.Cpu.C, max.Machine.Cpu.C);
         Assert.AreEqual(original.Machine.Cpu.ApplyC, max.Machine.Cpu.ApplyC);
         for (int i = 0; i < 16; i++) Assert.AreEqual(original.Machine.Cpu.GetM(i), max.Machine.Cpu.GetM(i));
@@ -119,7 +124,7 @@ public sealed class MemoryModelTests
         machine.LoadProgram(new[] { Code("vtm 11(2), stop") }, 8);
         Assert.AreEqual(0, machine.BufferedMemory.Buffers.PendingWriteCount);
         Assert.AreEqual(0, machine.BufferedMemory.Buffers.GetInstructionSnapshot().Length);
-        Assert.IsFalse(machine.Cpu._rightInstrFlag);
+        Assert.IsFalse(machine.Cpu.State.IsRightHalf);
         machine.Step();
         Assert.IsTrue(machine.Step());
         Assert.AreEqual(9u, machine.Cpu.GetM(2)); // octal 11
@@ -155,7 +160,7 @@ public sealed class MemoryModelTests
         machine.Step();
         Assert.AreEqual(0, machine.BufferedMemory!.Buffers.GetOperandSnapshot().Length);
         Assert.AreEqual(0UL, machine.Memory.Read(16).Value);
-        Assert.AreEqual(123UL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(123UL, machine.Cpu.A.Value);
     }
 
     [TestMethod]

@@ -1,6 +1,9 @@
+using Besm6.Architecture.Memory;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Runtime.Timing.Memory;
 
-namespace Besm6.Runtime;
+namespace Besm6.Runtime.Devices;
 
 internal readonly record struct SupervisorDmaWord(uint PhysicalAddress, int MediaIndex);
 

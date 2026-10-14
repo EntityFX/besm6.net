@@ -1,7 +1,8 @@
+using Besm6.Architecture.Numerics;
 using System;
 using System.Collections.Generic;
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Devices
 {
     /// <summary>
     /// Менеджер периферийных устройств БЭСМ-6.

@@ -1,5 +1,7 @@
+using Besm6.Runtime.Timing.Calendar;
 using Besm6.Runtime.Modeling;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic;
 
 namespace Besm6.Tests;
 
@@ -10,7 +12,7 @@ public sealed class ArithmeticAutomaticCompletionTests
     private static MachineCore Machine(string operation = "aax 10")
     {
         var machine = new MachineCore();
-        machine.LoadProgram([new(Besm6.Asm.Assembler.Asm(operation + ", stop"))], 1);
+        machine.LoadProgram([new(Assembler.Legacy.Assembler.Asm(operation + ", stop"))], 1);
         machine.Memory.Write(8, new(0xCC)); machine.Cpu.SetA(0xAA); machine.Cpu.SetY(123);
         return machine;
     }
@@ -46,17 +48,17 @@ public sealed class ArithmeticAutomaticCompletionTests
         Assert.ThrowsExactly<InvalidOperationException>(() => model.ScheduleBoundArithmeticCompletionAt(command, new(cycle * (endCycles - 1))));
         machine.HardwareTimeline.ScheduleAt(new(cycle * endCycles), () =>
         {
-            Assert.AreEqual(expected, machine.Cpu.GetA().Value);
+            Assert.AreEqual(expected, machine.Cpu.A.Value);
             Assert.AreEqual(1UL, model.CompletedInstructions);
         });
         model.AdvanceTo(new(cycle * endCycles - 1));
-        Assert.AreEqual(0xAAUL, machine.Cpu.GetA().Value);
-        Assert.AreEqual(123UL, machine.Cpu.GetY().Value);
+        Assert.AreEqual(0xAAUL, machine.Cpu.A.Value);
+        Assert.AreEqual(123UL, machine.Cpu.Y.Value);
         Assert.AreEqual(0UL, model.CompletedInstructions);
         var completed = model.AdvanceNextEvent();
         Assert.AreEqual(HardwareInstructionStatus.Completed, completed!.Value.Status);
         Assert.AreEqual(new HardwareInstant(cycle * endCycles), completed.Value.Time);
-        Assert.AreEqual(0UL, machine.Cpu.GetY().Value);
+        Assert.AreEqual(0UL, machine.Cpu.Y.Value);
         Assert.AreEqual(0UL, machine.Clock.Tick);
         CollectionAssert.AreEqual(new[] { ArithmeticStageTransitionKind.OperandAccepted,
             ArithmeticStageTransitionKind.Started, ArithmeticStageTransitionKind.Completed }, transitions.Select(t => t.Kind).ToArray());
@@ -78,7 +80,7 @@ public sealed class ArithmeticAutomaticCompletionTests
         if (waitForBuffer) Assert.IsTrue(controller.TryReleaseBufferWait(arithmetic));
         model.AdvanceTo(new(expected - 1));
         Assert.AreEqual(new HardwareInstant(expected), controller.NextCompletionTime);
-        Assert.AreEqual(0xAAUL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(0xAAUL, machine.Cpu.A.Value);
         Assert.AreEqual(HardwareInstructionStatus.Completed, model.AdvanceNextEvent()!.Value.Status);
     }
 
@@ -97,7 +99,7 @@ public sealed class ArithmeticAutomaticCompletionTests
             var (_, _, nextController, _) = Bind(machine);
             nextController.GrantCommandPermission();
             Assert.AreEqual(HardwareInstructionStatus.Completed, model.AdvanceTo(new(1000))!.Value.Status);
-            Assert.AreEqual(0x88UL, machine.Cpu.GetA().Value);
+            Assert.AreEqual(0x88UL, machine.Cpu.A.Value);
             Assert.AreEqual(1UL, model.CompletedInstructions);
             Assert.AreEqual(1UL, model.CancelledInstructions);
         }
@@ -119,7 +121,7 @@ public sealed class ArithmeticAutomaticCompletionTests
         Assert.ThrowsExactly<HardwareCallbackException>(() => model.AdvanceTo(new(700)));
         controller.Transitioned = null;
         Assert.AreEqual(HardwareInstructionStatus.Completed, model.AdvanceTo(new(700))!.Value.Status);
-        Assert.AreEqual(0x88UL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(0x88UL, machine.Cpu.A.Value);
         Assert.AreEqual(1UL, model.CompletedInstructions);
         Assert.IsNull(model.AdvanceTo(new(800)));
         Assert.AreEqual(1UL, model.CompletedInstructions);
@@ -138,7 +140,7 @@ public sealed class ArithmeticAutomaticCompletionTests
         Assert.IsNull(unit.CompletedAt);
         Assert.IsNotNull(controller.ActiveCommand);
         Assert.AreEqual(0UL, model.CompletedInstructions);
-        Assert.AreEqual(reset ? 0UL : 0xAAUL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(reset ? 0UL : 0xAAUL, machine.Cpu.A.Value);
         Assert.AreEqual(HardwareInstructionStatus.Cancelled, model.AdvanceNextEvent()!.Value.Status);
         Assert.IsNull(controller.ActiveCommand);
         Assert.IsNull(model.Timeline.NextEventTime);
@@ -148,7 +150,7 @@ public sealed class ArithmeticAutomaticCompletionTests
     public void DependentLogicalCommandsUseOneCpuAndPrecedingPublishedResult()
     {
         var machine = Machine();
-        machine.LoadProgram([new(Besm6.Asm.Assembler.Asm("aax 10, aox 11"))], 1);
+        machine.LoadProgram([new(Assembler.Legacy.Assembler.Asm("aax 10, aox 11"))], 1);
         machine.Memory.Write(9, new(0x11));
         var (model, _, firstController, _) = Bind(machine);
         firstController.GrantCommandPermission();
@@ -157,10 +159,10 @@ public sealed class ArithmeticAutomaticCompletionTests
         Assert.AreSame(firstController, secondController);
         secondController.GrantCommandPermission();
         Assert.AreEqual(new HardwareInstant(1400), model.AdvanceTo(new(1400))!.Value.Time);
-        Assert.AreEqual(0x99UL, machine.Cpu.GetA().Value);
-        Assert.AreEqual(0UL, machine.Cpu.GetY().Value);
+        Assert.AreEqual(0x99UL, machine.Cpu.A.Value);
+        Assert.AreEqual(0UL, machine.Cpu.Y.Value);
         Assert.AreEqual(2UL, model.CompletedInstructions);
-        Assert.AreEqual(2U, machine.Cpu.GetK());
+        Assert.AreEqual(2U, machine.Cpu.K);
         Assert.IsFalse(machine.Cpu.State.IsRightHalf);
     }
 
@@ -181,12 +183,12 @@ public sealed class ArithmeticAutomaticCompletionTests
         controller.GrantCommandPermission(); model.AdvanceTo(new(300));
         machine.Memory.Write(8, new(0)); // PVR has already captured the operand; do not reread at IZOP.
         model.AdvanceTo(new(5599));
-        Assert.AreEqual(accumulator, machine.Cpu.GetA().Value);
-        Assert.AreEqual(123UL, machine.Cpu.GetY().Value);
+        Assert.AreEqual(accumulator, machine.Cpu.A.Value);
+        Assert.AreEqual(123UL, machine.Cpu.Y.Value);
         Assert.AreEqual(0UL, model.CompletedInstructions);
         Assert.AreEqual(HardwareInstructionStatus.Completed, model.AdvanceNextEvent()!.Value.Status);
-        Assert.AreEqual(expected, machine.Cpu.GetA().Value);
-        Assert.AreEqual(0UL, machine.Cpu.GetY().Value);
+        Assert.AreEqual(expected, machine.Cpu.A.Value);
+        Assert.AreEqual(0UL, machine.Cpu.Y.Value);
         Assert.AreEqual(new HardwareInstant(5600), model.Timeline.Now);
         Assert.AreEqual(1UL, model.CompletedInstructions);
     }
@@ -198,9 +200,9 @@ public sealed class ArithmeticAutomaticCompletionTests
         var command = model.PrepareNextInstruction();
         Assert.ThrowsExactly<ArgumentException>(() => model.BindArithmeticInstruction(command, new HardwareDuration(100), true,
             new ArithmeticOperandBuffer(ArithmeticOperandBufferKind.ReadNumbers, 2), automaticCompletion: true));
-        Assert.AreEqual(1U, machine.Cpu.GetK());
+        Assert.AreEqual(1U, machine.Cpu.K);
         Assert.IsFalse(machine.Cpu.State.IsRightHalf);
-        Assert.AreEqual(0xAAUL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(0xAAUL, machine.Cpu.A.Value);
         Assert.IsNull(model.Timeline.NextEventTime);
         Assert.IsNull(model.LastIssuedArithmeticCommand);
     }

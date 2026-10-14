@@ -1,4 +1,10 @@
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Processor.Arithmetic;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic;
 
 namespace Besm6.Tests;
 
@@ -120,7 +126,7 @@ public sealed class ArithmeticUnitErrorTests
         Assert.IsFalse(unit.CommandPermission);
         Assert.IsTrue(unit.TryReadOutput(out var result));
         Assert.AreEqual(Word48.Zero, result.A);
-        Assert.AreEqual(One, machine.Cpu.GetA()); // This pulse is not CPU publication or ResetCpu.
+        Assert.AreEqual(One, machine.Cpu.A); // This pulse is not CPU publication or ResetCpu.
         Assert.AreEqual(new HardwareInstant(1000), machine.HardwareTimeline.Now);
         Assert.AreEqual(0UL, machine.Clock.Tick);
     }
@@ -143,7 +149,7 @@ public sealed class ArithmeticUnitErrorTests
         Assert.IsTrue(unit.Errors.CompletionHeld);
         Assert.IsTrue(unit.Interrupted);
         Assert.AreEqual(0UL, machine.Clock.Tick);
-        Assert.AreEqual(Word48.Zero, machine.Cpu.GetA());
+        Assert.AreEqual(Word48.Zero, machine.Cpu.A);
     }
 
     [TestMethod]

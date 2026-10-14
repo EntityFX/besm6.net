@@ -1,4 +1,4 @@
-namespace Besm6.Runtime.Timing;
+namespace Besm6.Runtime.Timing.Calendar;
 
 public enum HardwareResourceKind
 {

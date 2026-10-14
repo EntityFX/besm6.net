@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Execution
 {
     /// <summary>
     /// Неизменяемый идентификатор запланированного события.

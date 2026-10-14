@@ -1,4 +1,8 @@
-namespace Besm6.Core;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+
+namespace Besm6.Processor.Memory;
 
 /// <summary>A diagnostic copy of one register; snapshots do not count as accesses.</summary>
 public readonly record struct MemoryBufferEntry(uint PhysicalAddress, MemoryWord50 Word, bool PendingWrite);
@@ -125,7 +129,7 @@ public sealed class BufferedMemory
 
     private static void ValidateAddress(uint address)
     {
-        if (address >= PhysicalMemory.WordCount)
+        if (address >= ArchitectureConstants.WordCount)
             throw new ArgumentOutOfRangeException(nameof(address));
     }
 

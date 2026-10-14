@@ -1,4 +1,13 @@
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Architecture.Supervisor;
+using Besm6.Processor.Supervisor;
+
 namespace Besm6.Tests;
+using Processor = global::Besm6.Processor.Cpu.Processor;
+
 
 [TestClass]
 [TestCategory("Supervisor")]
@@ -7,7 +16,7 @@ public sealed class SupervisorProcessorTests
     private static uint Half(uint opcode, uint address = 0, byte register = 0) =>
         ((uint)register << 20) | (opcode << 12) | address;
 
-    private static (Processor Cpu, MappedMemoryBackend Memory, SupervisorControl Supervisor) Create(uint left, uint right = 0)
+    private static (Processor Cpu, MappedMemoryBackend Memory, ISupervisorControl Supervisor) Create(uint left, uint right = 0)
     {
         var memory = new MappedMemoryBackend();
         memory.HostMemory.Write(8, new(((ulong)left << 24) | right));
@@ -34,19 +43,19 @@ public sealed class SupervisorProcessorTests
         cpu.SetR(0x23);
         supervisor.Status = new((ControlUnitFlags)0x81C);
         Assert.IsFalse(cpu.Step());
-        Assert.AreEqual(vector, cpu.GetK());
+        Assert.AreEqual(vector, cpu.K);
         Assert.IsFalse(cpu.RightInstruction);
         Assert.AreEqual(130u, cpu.GetM(14));
         Assert.AreEqual(9u, supervisor.ReadModifier(26));
         Assert.AreEqual(0xC1Fu, supervisor.Status.EncodedControls);
-        Assert.AreEqual(0x123456789ABCUL, cpu.GetA().Value);
-        Assert.AreEqual(0xABCDEF123456UL, cpu.GetY().Value);
-        Assert.AreEqual(0x23u, cpu.GetR());
+        Assert.AreEqual(0x123456789ABCUL, cpu.A.Value);
+        Assert.AreEqual(0xABCDEF123456UL, cpu.Y.Value);
+        Assert.AreEqual(0x23u, cpu.R);
         Assert.AreEqual(SupervisorMode.Extracode, supervisor.Mode);
         Assert.AreEqual(0u, supervisor.SavedFlags & 0x100);
         memory.HostMemory.Write(vector, new((ulong)Half((uint)Opcode.Ij, 555, 2) << 24));
         cpu.Step();
-        Assert.AreEqual(9u, cpu.GetK());
+        Assert.AreEqual(9u, cpu.K);
         Assert.IsFalse(cpu.RightInstruction);
         // TO-8 does not restore PoP, PoK, write-match or AutomaticB from M23.
         Assert.AreEqual(0x81Cu, supervisor.Status.EncodedControls);
@@ -76,12 +85,12 @@ public sealed class SupervisorProcessorTests
         cpu.SetY(77);
         cpu.SetR(0x32);
         cpu.Step();
-        Assert.AreEqual(expected, cpu.GetK());
+        Assert.AreEqual(expected, cpu.K);
         Assert.AreEqual(SupervisorMode.Mathematical, supervisor.Mode);
         Assert.AreEqual(0x81Cu, supervisor.Status.EncodedControls);
-        Assert.AreEqual(99UL, cpu.GetA().Value);
-        Assert.AreEqual(77UL, cpu.GetY().Value);
-        Assert.AreEqual(0x32u, cpu.GetR());
+        Assert.AreEqual(99UL, cpu.A.Value);
+        Assert.AreEqual(77UL, cpu.Y.Value);
+        Assert.AreEqual(0x32u, cpu.R);
     }
 
     [TestMethod]
@@ -124,12 +133,12 @@ public sealed class SupervisorProcessorTests
         cpu.SetY(44);
         Assert.IsFalse(cpu.Step());
         Assert.IsFalse(cpu.LastStepCompleted);
-        Assert.AreEqual(0x140u, cpu.GetK());
+        Assert.AreEqual(0x140u, cpu.K);
         Assert.AreEqual(1025u, supervisor.ReadModifier(27));
         Assert.AreEqual(right ? 0x300u : 0x200u, supervisor.SavedFlags);
         Assert.AreEqual((1UL << 19) | 32UL, supervisor.InternalInterrupts);
-        Assert.AreEqual(33UL, cpu.GetA().Value);
-        Assert.AreEqual(44UL, cpu.GetY().Value);
+        Assert.AreEqual(33UL, cpu.A.Value);
+        Assert.AreEqual(44UL, cpu.Y.Value);
     }
 
     [TestMethod]
@@ -154,11 +163,11 @@ public sealed class SupervisorProcessorTests
             cpu.Step();
             Assert.IsTrue(cpu.LastStepCompleted, $"Instruction {i} must finish before watch activation.");
         }
-        Assert.AreEqual(10u, cpu.GetK());
+        Assert.AreEqual(10u, cpu.K);
         Assert.IsTrue(cpu.RightInstruction);
         cpu.Step();
         Assert.IsFalse(cpu.LastStepCompleted);
-        Assert.AreEqual(0x140u, cpu.GetK());
+        Assert.AreEqual(0x140u, cpu.K);
         Assert.AreEqual(1UL << 11, supervisor.InternalInterrupts);
     }
 
@@ -179,7 +188,7 @@ public sealed class SupervisorProcessorTests
         if (expectedFault)
         {
             Assert.AreEqual(1UL << (write ? 16 : 15), supervisor.InternalInterrupts);
-            Assert.AreEqual(99UL, cpu.GetA().Value);
+            Assert.AreEqual(99UL, cpu.A.Value);
             Assert.AreEqual(0, memory.PendingWriteCount);
             Assert.AreEqual(5UL, memory.PhysicalMemory.ReadRaw(12).Data.Value);
         }
@@ -199,9 +208,9 @@ public sealed class SupervisorProcessorTests
         cpu.Step();
         Assert.AreEqual(expected, cpu.GetM(13));
         Assert.AreEqual(0x100u, cpu.GetM(9));
-        Assert.AreEqual(123UL, cpu.GetA().Value);
-        Assert.AreEqual(456UL, cpu.GetY().Value);
-        Assert.AreEqual(0x31u, cpu.GetR());
+        Assert.AreEqual(123UL, cpu.A.Value);
+        Assert.AreEqual(456UL, cpu.Y.Value);
+        Assert.AreEqual(0x31u, cpu.R);
     }
 
     [TestMethod]
@@ -216,8 +225,8 @@ public sealed class SupervisorProcessorTests
         cpu.SetY(123);
         cpu.Step();
         Assert.AreEqual(read ? 0x800u : 5u, io.LastAddress);
-        Assert.AreEqual(read ? 0x123456UL : 0xABCDEFUL, cpu.GetA().Value);
-        Assert.AreEqual(123UL, cpu.GetY().Value);
+        Assert.AreEqual(read ? 0x123456UL : 0xABCDEFUL, cpu.A.Value);
+        Assert.AreEqual(123UL, cpu.Y.Value);
     }
 
     [TestMethod]
@@ -232,7 +241,7 @@ public sealed class SupervisorProcessorTests
         cpu.Step();
         Assert.IsFalse(cpu.LastStepCompleted);
         Assert.AreEqual(1UL << 12, supervisor.InternalInterrupts);
-        Assert.AreEqual(123UL, cpu.GetA().Value);
+        Assert.AreEqual(123UL, cpu.A.Value);
     }
 
     [TestMethod]
@@ -250,14 +259,14 @@ public sealed class SupervisorProcessorTests
         cpu.SetY(789);
         cpu.SetR(0x23);
         Assert.IsFalse(cpu.Step());
-        Assert.AreEqual(pok ? 8u : 0x173u, cpu.GetK());
+        Assert.AreEqual(pok ? 8u : 0x173u, cpu.K);
         Assert.AreEqual(pok, cpu.RightInstruction);
-        Assert.AreEqual(456UL, cpu.GetA().Value);
-        Assert.AreEqual(789UL, cpu.GetY().Value);
-        Assert.AreEqual(0x23u, cpu.GetR());
+        Assert.AreEqual(456UL, cpu.A.Value);
+        Assert.AreEqual(789UL, cpu.Y.Value);
+        Assert.AreEqual(0x23u, cpu.R);
     }
 
-    private static void MakeMathematical(Processor cpu, MappedMemoryBackend memory, SupervisorControl supervisor)
+    private static void MakeMathematical(Processor cpu, MappedMemoryBackend memory, ISupervisorControl supervisor)
     {
         memory.Assignment.SetPhysicalPage(0, 1);
         memory.HostMemory.Write(1032, memory.HostMemory.Read(8));
@@ -287,13 +296,13 @@ public sealed class SupervisorProcessorTests
             Assert.IsFalse(cpu.LastStepCompleted);
             Assert.AreEqual(1UL << 13, supervisor.InternalInterrupts);
             Assert.AreEqual(0u, supervisor.ReadModifier(27));
-            Assert.AreEqual(0x140u, cpu.GetK());
+            Assert.AreEqual(0x140u, cpu.K);
         }
         else
         {
             Assert.IsTrue(cpu.LastStepCompleted);
             Assert.AreEqual(99u, cpu.GetM(1));
-            Assert.AreEqual(0u, cpu.GetK());
+            Assert.AreEqual(0u, cpu.K);
             Assert.IsTrue(cpu.RightInstruction);
         }
     }
@@ -383,7 +392,7 @@ public sealed class SupervisorProcessorTests
         Assert.AreEqual(9u, cpu.K); // The existing serial fault boundary saves the next word.
         Assert.IsTrue(cpu.RightInstruction);
         cpu.Step();
-        Assert.AreEqual(0x1234UL, cpu.GetA().Value);
+        Assert.AreEqual(0x1234UL, cpu.A.Value);
         Assert.IsFalse(cpu.ApplyC);
     }
 
@@ -437,9 +446,9 @@ public sealed class SupervisorProcessorTests
         cpu.Step(); // REG0 write changes the data, retaining its old physical slot and address.
         cpu.SetA(0);
         cpu.Step();
-        Assert.AreEqual(99UL, cpu.GetA().Value);
+        Assert.AreEqual(99UL, cpu.A.Value);
         cpu.Step();
-        Assert.AreEqual(99UL, cpu.GetA().Value);
+        Assert.AreEqual(99UL, cpu.A.Value);
         memory.FlushOperands();
         Assert.AreEqual(99UL, memory.PhysicalMemory.ReadRaw(100).Data.Value);
         Assert.AreEqual(22UL, memory.PhysicalMemory.ReadRaw(101).Data.Value);

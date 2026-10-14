@@ -1,12 +1,12 @@
+using Besm6.Architecture.Machine;
 using System;
 using System.Numerics;
 
-namespace Besm6.Core
+namespace Besm6.Processor.Arithmetic
 {
     /// <summary>
     /// Битовые операции БЭСМ-6: pack, unpack, подсчёт единиц и старшего бита,
-    /// нормализация адреса и установка бита. Вынесено из Processor.cs
-    /// (Этап 4 рефакторинга). Все методы чистые и не имеют состояния.
+    /// нормализация адреса и установка бита.
     /// </summary>
     internal static class ProcessorBitOperations
     {
@@ -35,10 +35,8 @@ namespace Besm6.Core
         /// Упаковывает значение по маске (порт besm6_arch.cpp): единичные биты маски
         /// выбирают биты значения, собирая их к младшему концу результата.
         /// </summary>
-        internal static ulong Besm6Pack(ulong val, ulong mask)
+        internal static ulong Pack(ulong val, ulong mask)
         {
-            const ulong BIT48 = ArchitectureConstants.BIT48;
-            const ulong BITS48 = ArchitectureConstants.BITS48;
             ulong result = 0;
             while (mask != 0)
             {
@@ -46,35 +44,33 @@ namespace Besm6.Core
                 {
                     result >>= 1;
                     if ((val & 1) != 0)
-                        result |= BIT48;
+                        result |= ArchitectureConstants.BIT48;
                 }
                 mask >>= 1;
                 val >>= 1;
             }
-            return result & BITS48;
+            return result & ArchitectureConstants.BITS48;
         }
 
         /// <summary>
         /// Распаковывает значение по маске (порт besm6_arch.cpp): единичные биты маски
         /// указывают позиции, в которые вставляются биты значения от младшего к старшему.
         /// </summary>
-        internal static ulong Besm6Unpack(ulong val, ulong mask)
+        internal static ulong Unpack(ulong val, ulong mask)
         {
-            const ulong BIT48 = ArchitectureConstants.BIT48;
-            const ulong BITS48 = ArchitectureConstants.BITS48;
             ulong result = 0;
             for (int i = 0; i < 48; i++)
             {
                 result <<= 1;
-                if ((mask & BIT48) != 0)
+                if ((mask & ArchitectureConstants.BIT48) != 0)
                 {
-                    if ((val & BIT48) != 0)
+                    if ((val & ArchitectureConstants.BIT48) != 0)
                         result |= 1;
                     val <<= 1;
                 }
                 mask <<= 1;
             }
-            return result & BITS48;
+            return result & ArchitectureConstants.BITS48;
         }
     }
 }

@@ -1,14 +1,9 @@
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Processor.Memory;
+
 namespace Besm6.Core;
-
-public enum MemoryFaultSource { Protection, OperandBuffer, InstructionBuffer, PhysicalMemory, Panel }
-
-/// <summary>Latched signal for a future hardware interrupt controller; not a Dubna avost.</summary>
-public readonly record struct MemoryFault(MemoryRequestAddress Request, MemoryAccessKind Access,
-    MemoryFaultSource Source, uint? PhysicalAddress);
-
-/// <summary>Snapshot in MRU order. FetchAddress records where a possibly stale BRS word came from.</summary>
-public readonly record struct AddressedMemoryBufferEntry(MemoryRequestAddress Request,
-    MemoryWord50 Word, uint? FetchAddress = null);
 
 /// <summary>
 /// Untimed mathematical-address memory, with host-controlled mode bits and RP/RZ.

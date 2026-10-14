@@ -1,4 +1,6 @@
-namespace Besm6.Runtime;
+using Besm6.Architecture.Supervisor;
+
+namespace Besm6.Runtime.Devices;
 
 /// <summary>
 /// Explicit identity of the device bus behind a supervisor I/O decorator.

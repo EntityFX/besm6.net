@@ -1,22 +1,22 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Isa;
 using System.Runtime.CompilerServices;
 
-namespace Besm6.Core;
+namespace Besm6.Processor.Execution;
 
 /// <summary>
-/// Internal per-run opcode accounting, independent of diagnostic subscribers.
-/// Runtime supplies immutable instruction costs; Processor has no timing-model
-/// or host-clock dependency. Pending faults complete at the canonical boundary.
+/// Счётчики инструкций
 /// </summary>
-internal sealed class ProcessorInstructionAccounting
+internal sealed class ProcessorInstructionAccounting : IProcessorInstructionAccounting
 {
     private readonly int[] _cycles;
     private readonly int _defaultCycles;
     private int _pendingOpcode = -1;
-    internal long TotalInstructions { get; private set; }
-    internal long TotalCycles { get; private set; }
-    internal long CycleLimit { get; set; } = long.MaxValue;
-    internal bool HasPending => _pendingOpcode >= 0;
-    internal bool AtCycleLimit => TotalCycles >= CycleLimit;
+    public long TotalInstructions { get; private set; }
+    public long TotalCycles { get; private set; }
+    public long CycleLimit { get; set; } = long.MaxValue;
+    public bool HasPending => _pendingOpcode >= 0;
+    public bool AtCycleLimit => TotalCycles >= CycleLimit;
 
     internal ProcessorInstructionAccounting(ReadOnlySpan<int> cycles, int defaultCycles)
     {
@@ -29,10 +29,10 @@ internal sealed class ProcessorInstructionAccounting
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Begin(Opcode opcode) => _pendingOpcode = (int)opcode;
+    public void Begin(Opcode opcode) => _pendingOpcode = (int)opcode;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Complete()
+    public void Complete()
     {
         int opcode = _pendingOpcode;
         if (opcode < 0) return;
@@ -41,5 +41,5 @@ internal sealed class ProcessorInstructionAccounting
         TotalCycles += opcode < _cycles.Length ? _cycles[opcode] : _defaultCycles;
     }
 
-    internal void CancelPending() => _pendingOpcode = -1;
+    public void CancelPending() => _pendingOpcode = -1;
 }

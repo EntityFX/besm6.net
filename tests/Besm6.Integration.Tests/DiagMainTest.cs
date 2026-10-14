@@ -1,3 +1,4 @@
+using Besm6.Runtime.Loading;
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -25,7 +26,7 @@ namespace Besm6.Tests
                 if (count == 70754)
                 {
                     var sb = new System.Text.StringBuilder();
-                    sb.AppendLine($"k={machine.Cpu.GetK():X} a={machine.Cpu.GetA().Value:X} y={machine.Cpu.GetY().Value:X} r={machine.Cpu.GetR():X}");
+                    sb.AppendLine($"k={machine.Cpu.K:X} a={machine.Cpu.A.Value:X} y={machine.Cpu.Y.Value:X} r={machine.Cpu.R:X}");
                     for (int a = 0x698; a <= 0x6A0; a++)
                         sb.AppendLine($"mem[{a:X3}] = {machine.Memory.Read((uint)a).Value:X12}");
                     for (int r = 0; r < 16; r++)

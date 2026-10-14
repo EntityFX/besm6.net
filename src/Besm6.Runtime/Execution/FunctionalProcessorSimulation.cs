@@ -1,3 +1,7 @@
+using CpuProcessor = Besm6.Processor.Cpu.Processor;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+
 namespace Besm6.Runtime.Execution;
 
 /// <summary>
@@ -7,7 +11,7 @@ namespace Besm6.Runtime.Execution;
 /// </summary>
 internal sealed class FunctionalProcessorSimulation
 {
-    private readonly Processor Cpu;
+    private readonly CpuProcessor Cpu;
     private readonly IMemory Memory;
     private readonly SimulationClock _clock = new();
     private readonly EventScheduler _scheduler;
@@ -15,7 +19,7 @@ internal sealed class FunctionalProcessorSimulation
     internal SimulationClock Clock => _clock;
     internal EventScheduler Scheduler => _scheduler;
 
-    internal FunctionalProcessorSimulation(Processor cpu, IMemory memory)
+    internal FunctionalProcessorSimulation(CpuProcessor cpu, IMemory memory)
     {
         Cpu = cpu;
         Memory = memory;
@@ -43,9 +47,9 @@ internal sealed class FunctionalProcessorSimulation
     public void BeginRegisterTrace()
     {
         _rtActive = true;
-        _rtA = Cpu.GetA().Value;
-        _rtY = Cpu.GetY().Value;
-        _rtR = Cpu.GetR();
+        _rtA = Cpu.A.Value;
+        _rtY = Cpu.Y.Value;
+        _rtR = Cpu.R;
         _rtC = Cpu.C;
         _rtApplyC = Cpu.ApplyC;
         for (int index = 0; index < 16; index++)
@@ -63,9 +67,9 @@ internal sealed class FunctionalProcessorSimulation
             return;
         }
 
-        ulong a = Cpu.GetA().Value;
-        ulong y = Cpu.GetY().Value;
-        uint r = Cpu.GetR();
+        ulong a = Cpu.A.Value;
+        ulong y = Cpu.Y.Value;
+        uint r = Cpu.R;
         uint c = Cpu.C;
         bool applyC = Cpu.ApplyC;
         if (a != _rtA) sink("A", a);
@@ -113,7 +117,7 @@ internal sealed class FunctionalProcessorSimulation
     {
         if (StepTrace != null)
         {
-            int k = (int)Cpu.GetK();
+            int k = (int)Cpu.K;
             StepTrace(k, Memory.Read((uint)k).Value);
         }
         if (RegisterTrace is not null) EmitRegisterTrace();

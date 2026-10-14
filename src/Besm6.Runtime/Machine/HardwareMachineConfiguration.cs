@@ -1,7 +1,11 @@
+using Besm6.Architecture.Isa;
+using Besm6.Processor.Memory;
 using Besm6.Runtime.Modeling;
-using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Runtime.Timing.Devices;
+using Besm6.Runtime.Timing.Memory;
 
-namespace Besm6.Runtime;
+namespace Besm6.Runtime.Machine;
 
 public enum MachineExecutionModel { Functional, Hardware }
 

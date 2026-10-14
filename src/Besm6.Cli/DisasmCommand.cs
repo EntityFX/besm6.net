@@ -1,5 +1,5 @@
 using System;
-using Besm6.Assembler;
+using Besm6.Assembler.Disassembly;
 
 namespace Besm6.Cli
 {

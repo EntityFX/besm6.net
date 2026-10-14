@@ -1,5 +1,9 @@
+using Besm6.Runtime.Loading;
 using System.Text.Json;
 using Besm6;
+using Besm6.Architecture.Numerics;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Execution;
 
 namespace Besm6.Tests;
 
@@ -44,11 +48,11 @@ public sealed class VirtualSpeedTests
         {
             machine.LoadProgram(new[]
             {
-                new Word48(Besm6.Asm.Assembler.Asm("*50 70210, utc")),
-                new Word48(Besm6.Asm.Assembler.Asm("atx 102, ntr 6")),
-                new Word48(Besm6.Asm.Assembler.Asm("*50 70077, utc")),
-                new Word48(Besm6.Asm.Assembler.Asm("atx 100, *50 70210")),
-                new Word48(Besm6.Asm.Assembler.Asm("atx 101, stop")),
+                new Word48(Assembler.Legacy.Assembler.Asm("*50 70210, utc")),
+                new Word48(Assembler.Legacy.Assembler.Asm("atx 102, ntr 6")),
+                new Word48(Assembler.Legacy.Assembler.Asm("*50 70077, utc")),
+                new Word48(Assembler.Legacy.Assembler.Asm("atx 100, *50 70210")),
+                new Word48(Assembler.Legacy.Assembler.Asm("atx 101, stop")),
             }, 1);
             ulong tick = machine.Clock.Tick;
             machine.Scheduler.Schedule(1, () =>
@@ -80,8 +84,8 @@ public sealed class VirtualSpeedTests
     {
         var machine = new MachineCore();
         var loader = new DubnaLoader(machine) { Speed = ExecutionSpeed.Virtual };
-        machine.LoadProgram(new[] { new Word48(Besm6.Asm.Assembler.Asm("*50 70210, atx 100")),
-            new Word48(Besm6.Asm.Assembler.Asm("stop")) }, 1);
+        machine.LoadProgram(new[] { new Word48(Assembler.Legacy.Assembler.Asm("*50 70210, atx 100")),
+            new Word48(Assembler.Legacy.Assembler.Asm("stop")) }, 1);
         Assert.IsTrue(loader.RunLoaded().Stopped);
         Assert.AreEqual(Word48.Zero, machine.Memory.Read(64));
         Assert.IsNull(loader.Statistics);
@@ -96,12 +100,12 @@ public sealed class VirtualSpeedTests
         var loop = new ExecutionLoop(machine, handler, null, null, null)
         { Speed = ExecutionSpeed.Virtual, GuestClockEnabled = true, GuestHostTimeSource = time };
         loop.InstallHook();
-        machine.LoadProgram(new[] { new Word48(Besm6.Asm.Assembler.Asm("ntr 6, stop")) }, 1);
+        machine.LoadProgram(new[] { new Word48(Assembler.Legacy.Assembler.Asm("ntr 6, stop")) }, 1);
         machine.Scheduler.Schedule(1, () => { time.ElapsedSeconds += 1; throw new IOException("callback"); });
         Assert.ThrowsExactly<SchedulerCallbackException>(() => loop.Run());
         Assert.AreEqual(0d, handler.GuestTimeSeconds!());
-        machine.LoadProgram(new[] { new Word48(Besm6.Asm.Assembler.Asm("*50 70210, utc")),
-            new Word48(Besm6.Asm.Assembler.Asm("stop")) }, 1);
+        machine.LoadProgram(new[] { new Word48(Assembler.Legacy.Assembler.Asm("*50 70210, utc")),
+            new Word48(Assembler.Legacy.Assembler.Asm("stop")) }, 1);
         Assert.IsTrue(loop.Run().Stopped);
         Assert.AreEqual(Word48.Zero, machine.Cpu.State.A);
     }

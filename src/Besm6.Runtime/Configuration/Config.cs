@@ -1,46 +1,61 @@
-using Besm6.Runtime;
+﻿using Besm6.Runtime.Storage;
 using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-namespace Besm6
+
+namespace Besm6.Runtime.Configuration
 {
     /// <summary>
-    /// РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ СЃРёРјСѓР»СЏС‚РѕСЂР° Р‘Р­РЎРњ-6 (Р·Р°РіСЂСѓР¶Р°РµС‚СЃСЏ РёР· besm6.json).
+    /// Конфигурация симулятора БЭСМ‑6 (загружается из besm6.json).
     /// </summary>
     public sealed class Config
     {
-        /// <summary>РџСѓС‚СЊ Рє РєР°С‚Р°Р»РѕРіСѓ Р»РµРЅС‚ (tapes).</summary>
+        /// <summary>
+        /// Путь к каталогу лент (tapes).
+        /// </summary>
         [JsonPropertyName("tapes")]
         public string? Tapes { get; set; }
 
-        /// <summary>РџСѓС‚СЊ Рє РѕР±СЂР°Р·Сѓ РґРёСЃРєР°.</summary>
+        /// <summary>
+        /// Путь к образу диска.
+        /// </summary>
         [JsonPropertyName("disk")]
         public string? Disk { get; set; }
 
-        /// <summary>РџСѓС‚СЊ Рє РѕР±СЂР°Р·Сѓ Р±Р°СЂР°Р±Р°РЅР°.</summary>
+        /// <summary>
+        /// Путь к образу барабана.
+        /// </summary>
         [JsonPropertyName("drum")]
         public string? Drum { get; set; }
 
-        /// <summary>РџСЂРµРґРµР» РёРЅСЃС‚СЂСѓРєС†РёР№ РґР»СЏ `run`.</summary>
+        /// <summary>
+        /// Предел инструкций для команды `run`.
+        /// </summary>
         [JsonPropertyName("defaultLimit")]
         public long DefaultLimit { get; set; } = 20_000_000;
 
-        /// <summary>РџСЂРµРґРµР» РёРЅСЃС‚СЂСѓРєС†РёР№ РґР»СЏ `check`.</summary>
+        /// <summary>
+        /// Предел инструкций для команды `check`.
+        /// </summary>
         [JsonPropertyName("checkLimit")]
         public long CheckLimit { get; set; } = 5_000;
 
-        /// <summary>Р‘Р°Р·РѕРІС‹Р№ Р°РґСЂРµСЃ Р·Р°РіСЂСѓР·РєРё (РІРѕСЃСЊРјРµСЂРёС‡РЅС‹Р№).</summary>
+        /// <summary>
+        /// Базовый адрес загрузки (в восьмеричной системе счисления).
+        /// </summary>
         [JsonPropertyName("loadBase")]
         public string? LoadBaseOctal { get; set; } = "1000";
 
-        /// <summary>РћР±СЉС‘Рј СЏРґСЂР° РїР°РјСЏС‚Рё (СЃР»РѕРІ).</summary>
+        /// <summary>
+        /// Объём ядра памяти (в словах).
+        /// </summary>
         [JsonPropertyName("memorySize")]
         public int MemorySize { get; set; } = 32768;
 
         /// <summary>
-        /// E50 067 (DATE*): РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЂРµР°Р»СЊРЅРѕРµ СЃРёСЃС‚РµРјРЅРѕРµ РІСЂРµРјСЏ (localtime).
-        /// С„Р»Р°Рі -r РѕС‚РєР»СЋС‡Р°РµС‚ РµС‘ Рё РІРѕР·РІСЂР°С‰Р°РµС‚ С„РёРєСЃРёСЂРѕРІР°РЅРЅСѓСЋ РґР°С‚Сѓ.
+        /// E50 067 (DATE*): использовать реальное системное время (localtime).
+        /// Флаг -r отключает эту опцию и возвращает фиксированную дату.
         /// </summary>
         [JsonPropertyName("useWallClock")]
         public bool UseWallClock { get; set; } = true;
@@ -48,11 +63,15 @@ namespace Besm6
         [JsonPropertyName("speed")]
         public ExecutionSpeed Speed { get; set; } = ExecutionSpeed.Max;
 
-        /// <summary>Opt-in hosted CTIME/STIME model clock, with 20 ms resolution.</summary>
+        /// <summary>
+        /// Включить модель часов CTIME/STIME с разрешением 20 мс.
+        /// </summary>
         [JsonPropertyName("guestClock")]
         public bool GuestClock { get; set; }
 
-        /// <summary>Legacy compatibility: rewrite *forex as *fortran instead of invoking FOREX.</summary>
+        /// <summary>
+        /// Режим совместимости: интерпретировать *forex как *fortran вместо вызова FOREX.
+        /// </summary>
         [JsonPropertyName("forexAsFortran")]
         public bool ForexAsFortran { get; set; }
 
@@ -60,16 +79,17 @@ namespace Besm6
         private string? SourceDirectory { get; set; }
 
         /// <summary>
-        /// Р—Р°РіСЂСѓР·РёС‚СЊ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ РёР· С„Р°Р№Р»Р°. РџСЂРё РЅРµСЏРІРЅРѕРј РїРѕРёСЃРєРµ РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‰РёР№ С„Р°Р№Р»
-        /// РѕР·РЅР°С‡Р°РµС‚ Р·РЅР°С‡РµРЅРёСЏ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ; СЏРІРЅРѕ СѓРєР°Р·Р°РЅРЅС‹Р№ РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‰РёР№ С„Р°Р№Р» РІС‹Р·С‹РІР°РµС‚
-        /// РёСЃРєР»СЋС‡РµРЅРёРµ.
+        /// Загружает конфигурацию из файла.
+        /// Если путь не указан явно, ищет besm6.json рядом с исполняемым файлом или в текущей директории.
+        /// При неявном поиске отсутствующий файл означает использование значений по умолчанию;
+        /// при явно указанном пути отсутствие файла вызовет исключение.
         /// </summary>
         public static Config Load(string? path = null)
         {
             bool explicitPath = path != null;
             if (path == null)
             {
-                // РС‰РµРј besm6.json СЂСЏРґРѕРј СЃ exe РёР»Рё РІ С‚РµРєСѓС‰РµР№ РґРёСЂРµРєС‚РѕСЂРёРё.
+                // Ищем besm6.json рядом с exe или в текущей директории
                 path = Path.Combine(AppContext.BaseDirectory, "besm6.json");
                 if (!File.Exists(path))
                     path = "besm6.json";
@@ -91,8 +111,8 @@ namespace Besm6
         }
 
         /// <summary>
-        /// Р Р°Р·СЂРµС€РёС‚СЊ РїСѓС‚СЊ Рє СЂРµСЃСѓСЂСЃСѓ СЃ СѓС‡РµС‚РѕРј СЂР°СЃРїРѕР»РѕР¶РµРЅРёСЏ РєРѕРЅС„РёРіСѓСЂР°С†РёРё,
-        /// С‚РµРєСѓС‰РµРіРѕ РєР°С‚Р°Р»РѕРіР° Рё СЃС‚Р°РЅРґР°СЂС‚РЅС‹С… РєР°С‚Р°Р»РѕРіРѕРІ.
+        /// Разрешает относительный путь к ресурсу с учётом расположения конфигурации,
+        /// текущего каталога и стандартных директорий.
         /// </summary>
         public string ResolvePath(string relative)
         {

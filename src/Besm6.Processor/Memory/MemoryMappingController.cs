@@ -1,4 +1,6 @@
-namespace Besm6.Core;
+using Besm6.Architecture.Numerics;
+
+namespace Besm6.Processor.Memory;
 
 /// <summary>
 /// Host-coordinated assignment change for the functional physical-address buffers.

@@ -1,3 +1,4 @@
+using Besm6.Processor.Memory;
 using System;
 using System.Globalization;
 namespace Besm6.Runtime
@@ -20,7 +21,7 @@ namespace Besm6.Runtime
         private void E50Parse()
         {
             var cpu = _machine.Cpu;
-            long input = (long)cpu.GetA().Value;
+            long input = (long)cpu.A.Value;
 
             int srcAddr = (int)(input & 0x7FFF);
             bool starSlashFlag = ((input >> 16) & 1) != 0;
@@ -264,7 +265,7 @@ namespace Besm6.Runtime
         private void E50Format()
         {
             var cpu = _machine.Cpu;
-            long input = (long)cpu.GetA().Value;
+            long input = (long)cpu.A.Value;
 
             int destAddr = (int)(input & 0x7FFF);
             bool rightAlign = ((input >> 15) & 1) != 0;

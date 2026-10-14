@@ -1,6 +1,13 @@
+using Besm6.Processor.Memory;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
 using System.Text.Json;
 
 namespace Besm6.Tests;
+using Processor = global::Besm6.Processor.Cpu.Processor;
+
 
 [TestClass]
 public sealed class PreparedInstructionTests
@@ -8,7 +15,7 @@ public sealed class PreparedInstructionTests
     private static Processor Create(string command, bool right = false)
     {
         var cpu = new Processor(new CoreMemory());
-        cpu.MemStore(1, Besm6.Asm.Assembler.Asm(command + ", " + command));
+        cpu.MemStore(1, Assembler.Legacy.Assembler.Asm(command + ", " + command));
         cpu.MemStore(8, Word48.FromDouble(0.75).Value);
         cpu.SetA(Word48.FromDouble(1.25).Value);
         cpu.SetY(0x123456789);
@@ -78,8 +85,8 @@ public sealed class PreparedInstructionTests
             });
             Assert.AreEqual(serialFailure, phasedFailure, command);
             Assert.AreEqual(serialStop, phasedStop);
-            serial.CanonPost(serial.GetK(), serial.RightInstruction);
-            phased.CanonPost(phased.GetK(), phased.RightInstruction);
+            serial.CanonPost(serial.K, serial.RightInstruction);
+            phased.CanonPost(phased.K, phased.RightInstruction);
             Assert.AreEqual(JsonSerializer.Serialize(new ProcessorSnapshot(serial.State)),
                 JsonSerializer.Serialize(new ProcessorSnapshot(phased.State)));
             Assert.AreEqual(serial.LastStepCompleted, phased.LastStepCompleted);
@@ -100,16 +107,16 @@ public sealed class PreparedInstructionTests
         var initial = new ProcessorSnapshot(cpu.State);
         var prepared = cpu.PrepareInstruction();
         Assert.AreEqual(Opcode.Xta, prepared.Instruction!.Value.Opcode);
-        Assert.AreEqual(initial.A, cpu.GetA());
-        Assert.AreEqual(initial.Y, cpu.GetY());
-        Assert.AreEqual(1u, cpu.GetK());
+        Assert.AreEqual(initial.A, cpu.A);
+        Assert.AreEqual(initial.Y, cpu.Y);
+        Assert.AreEqual(1u, cpu.K);
         Assert.IsFalse(cpu.RightInstruction);
         Assert.AreEqual(0, executed);
-        cpu.MemStore(1, Besm6.Asm.Assembler.Asm("vtm 7(2), vtm 11(2)"));
+        cpu.MemStore(1, Assembler.Legacy.Assembler.Asm("vtm 7(2), vtm 11(2)"));
         // Operands remain evaluated at completion until the memory driver is integrated.
         cpu.MemStore(8, 123);
         Assert.IsFalse(cpu.CompleteInstruction(in prepared));
-        Assert.AreEqual(123UL, cpu.GetA().Value);
+        Assert.AreEqual(123UL, cpu.A.Value);
         Assert.AreEqual(0u, cpu.GetM(2));
         Assert.AreEqual(1, executed);
         Assert.IsFalse(cpu.Step());
@@ -153,7 +160,7 @@ public sealed class PreparedInstructionTests
         var original = cpu.MemLoad(8);
         var pending = cpu.PrepareInstruction();
         cpu.CancelInstruction(in pending);
-        cpu.CanonPost(cpu.GetK(), cpu.RightInstruction);
+        cpu.CanonPost(cpu.K, cpu.RightInstruction);
         Assert.AreEqual(0, traces);
         Assert.AreEqual(original, cpu.MemLoad(8));
         Assert.IsFalse(cpu.RightInstruction);
@@ -218,8 +225,8 @@ public sealed class PreparedInstructionTests
             var pending = cpu.PrepareInstruction();
             var failure = Assert.ThrowsExactly<ProcessorException>(() => cpu.CompleteInstruction(in pending));
             if (message.Length > 0) Assert.IsTrue(cpu.Intercept(failure.Message));
-            cpu.CanonPost(cpu.GetK(), cpu.RightInstruction);
-            cpu.CanonPost(cpu.GetK(), cpu.RightInstruction);
+            cpu.CanonPost(cpu.K, cpu.RightInstruction);
+            cpu.CanonPost(cpu.K, cpu.RightInstruction);
             Assert.AreEqual(1, count);
             Assert.IsFalse(cpu.HasPreparedInstruction);
         }

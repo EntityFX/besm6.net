@@ -1,7 +1,12 @@
 using System;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Besm6.Tests
 {
+    using Processor = global::Besm6.Processor.Cpu.Processor;
+
     /// <summary>
     /// Тесты арифметического устройства (АЛУ) через единственный движок <see cref="Processor"/>.
     /// Восьмеричные литералы — 17 символов (биты 47..0; старшая цифра всегда 0 для 48-бит).
@@ -28,7 +33,7 @@ namespace Besm6.Tests
         }
 
         private void SetA(string oct) => _cpu.SetA(FromOctal(oct).Value);
-        private Word48 GetA() => _cpu.GetA();
+        private Word48 GetA() => _cpu.A;
         private void SetR(ulong r) => _cpu.SetR(r);
 
         [TestMethod]
@@ -124,7 +129,7 @@ namespace Besm6.Tests
             try
             {
                 SetA("04050000000000000");
-                _cpu.ArithDivide(new Word48(0));
+                _cpu.Divide(new Word48(0));
                 Assert.Fail("Expected ProcessorException was not thrown");
             }
             catch (ProcessorException)
@@ -156,28 +161,28 @@ namespace Besm6.Tests
         private void VerifyAdd(string octA, string octX, string octExpected)
         {
             SetA(octA);
-            _cpu.ArithAdd(FromOctal(octX), false, false);
+            _cpu.Add(FromOctal(octX), false, false);
             Assert.AreEqual(FromOctal(octExpected), GetA(), $"Add failed: {octA} + {octX} = {ToOctal(GetA().Value)} (Expected: {octExpected})");
         }
 
         private void VerifySub(string octA, string octX, string octExpected)
         {
             SetA(octA);
-            _cpu.ArithAdd(FromOctal(octX), false, true);
+            _cpu.Add(FromOctal(octX), false, true);
             Assert.AreEqual(FromOctal(octExpected), GetA(), $"Sub failed: {octA} - {octX} = {ToOctal(GetA().Value)} (Expected: {octExpected})");
         }
 
         private void VerifyMul(string octA, string octX, string octExpected)
         {
             SetA(octA);
-            _cpu.ArithMultiply(FromOctal(octX));
+            _cpu.Multiply(FromOctal(octX));
             Assert.AreEqual(FromOctal(octExpected), GetA(), $"Multiply failed: {octA} * {octX} = {ToOctal(GetA().Value)} (Expected: {octExpected})");
         }
 
         private void VerifyDiv(string octA, string octX, string octExpected)
         {
             SetA(octA);
-            _cpu.ArithDivide(FromOctal(octX));
+            _cpu.Divide(FromOctal(octX));
             Assert.AreEqual(FromOctal(octExpected), GetA(), $"Divide failed: {octA} / {octX} = {ToOctal(GetA().Value)} (Expected: {octExpected})");
         }
 
@@ -185,14 +190,14 @@ namespace Besm6.Tests
         {
             SetA(octA);
             // Смена знака аккумулятора (команда «знак» с отрицательным операндом): negateA=true.
-            _cpu.ArithChangeSign(true);
+            _cpu.ChangeSign(true);
             Assert.AreEqual(FromOctal(octExpected), GetA(), $"ChangeSign failed: {octA} -> {ToOctal(GetA().Value)} (Expected: {octExpected})");
         }
 
         private void VerifyShift(string octA, int shift, string octExpected)
         {
             SetA(octA);
-            _cpu.ArithShift(shift);
+            _cpu.Shift(shift);
             Assert.AreEqual(FromOctal(octExpected), GetA(), $"Shift failed: {octA} by {shift} = {ToOctal(GetA().Value)} (Expected: {octExpected})");
         }
 

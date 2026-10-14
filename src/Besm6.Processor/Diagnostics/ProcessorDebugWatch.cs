@@ -1,6 +1,10 @@
+using Besm6.Architecture.Debug;
+using Besm6.Architecture.Machine;
+using Besm6.Core;
+using Besm6.Processor.Cpu;
 using System;
 
-namespace Besm6.Core
+namespace Besm6.Processor.Diagnostics
 {
     /// <summary>
     /// Отладочные перехваты (watchpoints) процессора: fetch и memory watch.
@@ -9,23 +13,23 @@ namespace Besm6.Core
     /// </summary>
     internal sealed class ProcessorDebugWatch
     {
-        private readonly Processor _proc;
-        private readonly ProcessorState _state;
+        private readonly IProcessor _proc;
+        private readonly IProcessorState _state;
 
-        internal ProcessorDebugWatch(Processor proc, ProcessorState state)
+        internal ProcessorDebugWatch(IProcessor proc, IProcessorState state)
         {
             _proc = proc;
             _state = state;
         }
 
-        internal bool MemoryWatchArmed => _state.DebugMemoryArmed;
+        internal bool MemoryWatchArmed => _state.DebugState.DebugMemoryArmed;
 
         /// <summary>Сбрасывает состояние отладочных перехватов при Reset процессора.</summary>
         internal void Reset()
         {
-            _state.DebugFetchArmed = false;
-            _state.DebugMemoryArmed = false;
-            _state.DebugWatchSuppressed = false;
+            _state.DebugState.DebugFetchArmed = false;
+            _state.DebugState.DebugMemoryArmed = false;
+            _state.DebugState.DebugWatchSuppressed = false;
             _state.PreviousDebugAbort = 0;
         }
 
@@ -41,18 +45,18 @@ namespace Besm6.Core
             switch (mode)
             {
                 case 0:
-                    _state.DebugFetchArmed = true;
-                    _state.DebugFetchAddress = watch;
-                    _state.DebugFetchContinuation = cont;
-                    _state.DebugFetchPrintInfo = printInfo;
+                    _state.DebugState.DebugFetchArmed = true;
+                    _state.DebugState.DebugFetchAddress = watch;
+                    _state.DebugState.DebugFetchContinuation = cont;
+                    _state.DebugState.DebugFetchPrintInfo = printInfo;
                     break;
                 case 1:
                 case 2:
-                    _state.DebugMemoryArmed = true;
-                    _state.DebugMemoryAddress = watch;
-                    _state.DebugMemoryContinuation = cont;
-                    _state.DebugMemoryPrintInfo = printInfo;
-                    _state.DebugMemoryMode = mode;
+                    _state.DebugState.DebugMemoryArmed = true;
+                    _state.DebugState.DebugMemoryAddress = watch;
+                    _state.DebugState.DebugMemoryContinuation = cont;
+                    _state.DebugState.DebugMemoryPrintInfo = printInfo;
+                    _state.DebugState.DebugMemoryMode = mode;
                     break;
                 default:
                     throw new ProcessorException("Bad debug watchpoint mode");
@@ -65,13 +69,13 @@ namespace Besm6.Core
         /// <summary>Проверяет fetch-watchpoint перед исполнением инструкции. true — перехвачено.</summary>
         internal bool DebugCheckFetch(uint addr, uint opcode)
         {
-            if (_state.DebugWatchSuppressed || !_state.DebugFetchArmed ||
-                _state.DebugFetchAddress != (addr & 0x7FFF))
+            if (_state.DebugState.DebugWatchSuppressed || !_state.DebugState.DebugFetchArmed ||
+                _state.DebugState.DebugFetchAddress != (addr & 0x7FFF))
                 return false;
 
-            uint cont = _state.DebugFetchContinuation;
-            bool printInfo = _state.DebugFetchPrintInfo;
-            _state.DebugFetchArmed = false;
+            uint cont = _state.DebugState.DebugFetchContinuation;
+            bool printInfo = _state.DebugState.DebugFetchPrintInfo;
+            _state.DebugState.DebugFetchArmed = false;
             DebugFire(cont, printInfo, opcode);
             return true;
         }
@@ -79,20 +83,20 @@ namespace Besm6.Core
         /// <summary>Проверяет memory-watchpoint при чтении (mode=2) или записи (mode=1). true — перехвачено.</summary>
         internal bool DebugCheckMemory(uint addr, uint mode)
         {
-            if (_state.DebugWatchSuppressed || !_state.DebugMemoryArmed ||
-                _state.DebugMemoryMode != mode || _state.DebugMemoryAddress != (addr & 0x7FFF))
+            if (_state.DebugState.DebugWatchSuppressed || !_state.DebugState.DebugMemoryArmed ||
+                _state.DebugState.DebugMemoryMode != mode || _state.DebugState.DebugMemoryAddress != (addr & 0x7FFF))
                 return false;
 
-            uint cont = _state.DebugMemoryContinuation;
-            bool printInfo = _state.DebugMemoryPrintInfo;
-            _state.DebugMemoryArmed = false;
+            uint cont = _state.DebugState.DebugMemoryContinuation;
+            bool printInfo = _state.DebugState.DebugMemoryPrintInfo;
+            _state.DebugState.DebugMemoryArmed = false;
             DebugFire(cont, printInfo, 0);
             return true;
         }
 
         private void DebugFire(uint cont, bool printInfo, uint opcode)
         {
-            _state.DebugWatchSuppressed = true;
+            _state.DebugState.DebugWatchSuppressed = true;
             try
             {
                 if (printInfo)
@@ -106,7 +110,7 @@ namespace Besm6.Core
             }
             finally
             {
-                _state.DebugWatchSuppressed = false;
+                _state.DebugState.DebugWatchSuppressed = false;
             }
         }
     }

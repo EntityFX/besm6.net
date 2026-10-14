@@ -1,4 +1,6 @@
-namespace Besm6.Core;
+using Besm6.Architecture.Numerics;
+
+namespace Besm6.Architecture.Supervisor;
 
 /// <summary>Guest supervisor register and peripheral exchanges.</summary>
 public interface ISupervisorIo

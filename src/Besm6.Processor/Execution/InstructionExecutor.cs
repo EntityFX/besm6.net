@@ -1,3 +1,11 @@
+using Besm6.Architecture.Debug;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Arithmetic;
+using Besm6.Processor.Cpu;
+using Besm6.Processor.Execution;
+
 namespace Besm6.Core
 {
     /// <summary>
@@ -5,8 +13,8 @@ namespace Besm6.Core
     /// </summary>
     public sealed partial class InstructionExecutor
     {
-        private readonly Processor _processor;
-        private readonly ProcessorState _state;
+        private readonly IProcessor _processor;
+        private readonly IProcessorState _state;
         private readonly ProcessorMemoryAccess _memory;
         private readonly MemoryInstructionExecutor _memoryInstructions;
         private readonly IndexInstructionExecutor _indexInstructions;
@@ -28,10 +36,10 @@ namespace Besm6.Core
         }
 
         internal InstructionExecutor(
-            Processor processor,
-            ProcessorState state,
+            IProcessor processor,
+            IProcessorState state,
             ProcessorMemoryAccess memory,
-            Alu alu)
+            IAlu alu)
         {
             _processor = processor;
             _state = state;
@@ -57,7 +65,7 @@ namespace Besm6.Core
             {
                 return _processor.Supervisor is null ? ExecuteCore() : ExecuteSupervisor();
             }
-            catch (Processor.DebugWatchAbortException)
+            catch (DebugWatchAbortException)
             {
                 return false;
             }
@@ -99,7 +107,7 @@ namespace Besm6.Core
             else
                 instruction = InstructionCodec.DecodeHalf(rawInstruction);
             uint opcode = (uint)instruction.Opcode;
-            if (_state.DebugFetchArmed && !_state.IsRightHalf && _processor.DebugCheckFetch(_state.K, opcode))
+            if (_state.DebugState.DebugFetchArmed && !_state.IsRightHalf && _processor.DebugCheckFetch(_state.K, opcode))
                 return new(_state.K, _state.IsRightHalf, rawWord, rawInstruction, instruction, false);
 
             _processor.TraceInstruction?.Invoke(
@@ -185,9 +193,9 @@ namespace Besm6.Core
         /// </summary>
         internal bool ExecuteUnobservedBlock(int count, ref long completed, ref ulong tick)
         {
-            if (_processor.InstructionAccounting is { } session)
+            if (_processor.InstructionAccounting != null)
             {
-                var accounting = new CountedBlockAccounting(session);
+                var accounting = new CountedBlockAccounting(_processor.InstructionAccounting);
                 return ExecuteUnobservedBlock(count, ref completed, ref tick, ref accounting);
             }
             var uncounted = new UncountedBlockAccounting();

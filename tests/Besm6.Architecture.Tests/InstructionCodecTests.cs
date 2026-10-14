@@ -1,3 +1,5 @@
+using Besm6.Architecture.Isa;
+
 namespace Besm6.Architecture.Tests
 {
     [TestClass]

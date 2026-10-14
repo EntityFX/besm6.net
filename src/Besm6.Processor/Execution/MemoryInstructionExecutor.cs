@@ -1,15 +1,24 @@
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.Supervisor;
+using Besm6.Processor.Arithmetic;
+using Besm6.Processor.Cpu;
+using Besm6.Processor.Execution;
+using Besm6.Processor.Supervisor;
+
 namespace Besm6.Core
 {
     /// <summary>Исполняет короткие команды памяти и АЛУ 000–037.</summary>
     internal sealed partial class MemoryInstructionExecutor
     {
-        private readonly ProcessorState _state;
+        private readonly IProcessorState _state;
         private readonly ProcessorMemoryAccess _memory;
-        private readonly Alu _alu;
-        private readonly SupervisorControl? _supervisor;
+        private readonly IAlu _alu;
+        private readonly ISupervisorControl? _supervisor;
         private MemoryInstructionExecutor? _transferredInstructions;
 
-        internal MemoryInstructionExecutor(ProcessorState state, ProcessorMemoryAccess memory, Alu alu, SupervisorControl? supervisor = null)
+        internal MemoryInstructionExecutor(IProcessorState state, ProcessorMemoryAccess memory, IAlu alu, ISupervisorControl? supervisor = null)
         {
             _state = state;
             _memory = memory;

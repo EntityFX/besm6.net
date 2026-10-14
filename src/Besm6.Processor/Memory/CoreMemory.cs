@@ -1,8 +1,10 @@
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace Besm6.Core
+namespace Besm6.Processor.Memory
 {
     /// <summary>
     /// Реализация основной оперативной памяти БЭСМ-6.

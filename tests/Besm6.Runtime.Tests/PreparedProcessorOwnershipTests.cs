@@ -1,4 +1,9 @@
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Architecture.Memory;
 using System.Text.Json;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
 using Besm6.Runtime.Timing;
 
 namespace Besm6.Tests;
@@ -9,7 +14,7 @@ public sealed class PreparedProcessorOwnershipTests
     private static MachineCore Create(string command = "vtm 7(1)")
     {
         var machine = new MachineCore(ProcessorProfile.Supervisor);
-        machine.Memory.Write(8, new(Besm6.Asm.Assembler.Asm(command + ", " + command)));
+        machine.Memory.Write(8, new(Assembler.Legacy.Assembler.Asm(command + ", " + command)));
         machine.Cpu.StartAt(8);
         machine.Cpu.SetA(Word48.FromDouble(1.25).Value);
         machine.Cpu.SetY(123);
@@ -103,17 +108,17 @@ public sealed class PreparedProcessorOwnershipTests
     {
         var machine = Create();
         machine.SupervisorIo!.WriteRegister(30, new(SupervisorIoController.TimerInterrupt));
-        machine.Memory.Write(0x141, new(Besm6.Asm.Assembler.Asm("vtm 1(2), stop")));
+        machine.Memory.Write(0x141, new(Assembler.Legacy.Assembler.Asm("vtm 1(2), stop")));
         var pending = machine.Cpu.PrepareInstruction();
         machine.HardwareTimeline.ScheduleAt(new(100), () =>
             machine.SupervisorIo!.RaiseInterrupts(SupervisorIoController.TimerInterrupt));
         machine.HardwareTimeline.AdvanceTo(new(100));
         Assert.IsFalse(machine.Cpu.CompleteInstruction(in pending));
         Assert.AreEqual(7u, machine.Cpu.GetM(1));
-        Assert.AreEqual(8u, machine.Cpu.GetK());
+        Assert.AreEqual(8u, machine.Cpu.K);
         Assert.IsTrue(machine.Cpu.RightInstruction);
         var next = machine.Cpu.PrepareInstruction();
-        Assert.AreEqual(0x141u, machine.Cpu.GetK()); // External interrupt vector00501.
+        Assert.AreEqual(0x141u, machine.Cpu.K); // External interrupt vector00501.
         machine.Cpu.CancelInstruction(in next);
     }
 

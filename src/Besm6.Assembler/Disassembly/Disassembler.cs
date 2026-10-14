@@ -1,4 +1,7 @@
-namespace Besm6.Assembler
+using Besm6.Architecture.Isa;
+using Besm6.Assembler.Parsing;
+
+namespace Besm6.Assembler.Disassembly
 {
     /// <summary>
     /// Дизассемблер БЭСМ-6: преобразование 48-битного слова в мнемонический код

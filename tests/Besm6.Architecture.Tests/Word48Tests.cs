@@ -1,4 +1,6 @@
+using Besm6.Architecture.Numerics;
 using Besm6.Core;
+using Besm6.Runtime.Extracodes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests

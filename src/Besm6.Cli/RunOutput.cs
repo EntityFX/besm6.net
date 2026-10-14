@@ -1,6 +1,8 @@
+using Besm6.Architecture.Machine;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Besm6.Core;
+using Besm6.Runtime.Execution;
 
 namespace Besm6.Cli;
 

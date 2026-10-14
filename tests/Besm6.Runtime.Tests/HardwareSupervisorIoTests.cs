@@ -1,5 +1,16 @@
+using Besm6.Runtime.Devices;
 using Besm6.Runtime.Timing;
 using Besm6.Runtime.Modeling;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.State;
+using Besm6.Architecture.Machine;
+using Besm6.Runtime.Timing.Memory;
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Runtime.Timing.Devices;
+using Besm6.Runtime.Execution;
+using Besm6.Processor.Memory;
 
 namespace Besm6.Tests;
 
@@ -46,7 +57,7 @@ public sealed class HardwareSupervisorIoTests
         Assert.AreEqual(0UL, actual.SupervisorIo.ExternalInterrupts & (channel == 0 ? SupervisorIoController.Channel3Free : SupervisorIoController.Channel4Free));
         actual.HardwareTimeline.AdvanceTo(new(2000000));
         Assert.AreEqual(1, actual.SupervisorIo.CompletedTransfers);
-        for (uint address = 0; address < PhysicalMemory.WordCount; address++)
+        for (uint address = 0; address < ArchitectureConstants.WordCount; address++)
             Assert.AreEqual(expected.MappedMemory!.PhysicalMemory.ReadRaw(address), actual.MappedMemory!.PhysicalMemory.ReadRaw(address));
         Assert.AreEqual(expected.SupervisorIo!.ExternalInterrupts, actual.SupervisorIo.ExternalInterrupts);
         Assert.AreEqual(0UL, actual.Clock.Tick);
@@ -132,7 +143,7 @@ public sealed class HardwareSupervisorIoTests
         Request(io, 0x60000 | 1U << 12); machine.HardwareTimeline.AdvanceTo(new(22000)); machine.ResetCpu();
         Assert.ThrowsExactly<InvalidOperationException>(machine.UseFunctionalDeviceTiming);
         machine.HardwareTimeline.AdvanceTo(new(5000000)); Assert.AreEqual(1, io.CompletedTransfers);
-        Assert.AreEqual(image[1031], machine.MappedMemory!.PhysicalMemory.ReadRaw(2047)); Assert.AreEqual(Word48.Zero, machine.Cpu.GetA());
+        Assert.AreEqual(image[1031], machine.MappedMemory!.PhysicalMemory.ReadRaw(2047)); Assert.AreEqual(Word48.Zero, machine.Cpu.A);
         Assert.AreEqual(0UL, machine.Clock.Tick);
     }
 
@@ -244,8 +255,8 @@ public sealed class HardwareSupervisorIoTests
     public void HardwareTimerInterruptIsAcceptedBySharedCpuAtNextFetch()
     {
         var machine = Machine(); var cpu = machine.Cpu; cpu.Supervisor!.Status = new(ControlUnitFlags.AssignmentBlocked | ControlUnitFlags.ProtectionBlocked);
-        machine.Memory.Write(8, new(Besm6.Asm.Assembler.Asm("vtm 7(1), vtm 3(1)")));
-        machine.Memory.Write(0x141, new(Besm6.Asm.Assembler.Asm("vtm 11(2), stop"))); cpu.StartAt(8);
+        machine.Memory.Write(8, new(Assembler.Legacy.Assembler.Asm("vtm 7(1), vtm 3(1)")));
+        machine.Memory.Write(0x141, new(Assembler.Legacy.Assembler.Asm("vtm 11(2), stop"))); cpu.StartAt(8);
         machine.SupervisorIo!.WriteRegister(30, new(SupervisorIoController.TimerInterrupt));
         var controls = new Dictionary<Opcode, HardwareDuration> { [Opcode.Vtm] = new(300), [Opcode.Stop] = new(300) };
         var model = machine.HardwareModel; model.ConfigureAutomaticExecution(new(PortTiming(), new(100), new(100), controls));
@@ -253,7 +264,7 @@ public sealed class HardwareSupervisorIoTests
         Assert.AreEqual(HardwareRunBoundary.InstructionLimit, model.AdvanceAutomaticTo(new(1200), 1).Boundary); Assert.AreEqual(7U, cpu.GetM(1));
         machine.HardwareTimeline.AdvanceTo(new(1600)); machine.SupervisorIo.StopTimer();
         Assert.AreEqual(HardwareRunBoundary.InstructionLimit, model.AdvanceAutomaticTo(new(10000), 1).Boundary);
-        Assert.AreEqual(7U, cpu.GetM(1)); Assert.AreEqual(9U, cpu.GetM(2)); Assert.AreEqual(0x141U, cpu.GetK()); Assert.AreEqual(0UL, machine.Clock.Tick);
+        Assert.AreEqual(7U, cpu.GetM(1)); Assert.AreEqual(9U, cpu.GetM(2)); Assert.AreEqual(0x141U, cpu.K); Assert.AreEqual(0UL, machine.Clock.Tick);
     }
     [TestMethod]
     [DataRow(0U)] [DataRow(31U)]

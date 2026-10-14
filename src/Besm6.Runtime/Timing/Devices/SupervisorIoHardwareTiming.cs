@@ -1,4 +1,6 @@
-namespace Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Calendar;
+
+namespace Besm6.Runtime.Timing.Devices;
 
 /// <summary>
 /// Caller-selected logical device delays, in nanoseconds. They are independent

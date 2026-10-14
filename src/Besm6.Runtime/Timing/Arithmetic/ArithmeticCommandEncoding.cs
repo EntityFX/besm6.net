@@ -1,4 +1,6 @@
-namespace Besm6.Runtime.Timing;
+using Besm6.Architecture.Isa;
+
+namespace Besm6.Runtime.Timing.Arithmetic;
 
 internal enum ArithmeticOperandBufferKind : byte
 {

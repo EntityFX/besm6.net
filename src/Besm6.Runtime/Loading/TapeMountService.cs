@@ -1,9 +1,12 @@
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Encoding;
+using Besm6.Runtime.Storage;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Loading
 {
     /// <summary>
     /// Владеет жизненным циклом лент: mount, release, file search/mount, scratch, required tapes.

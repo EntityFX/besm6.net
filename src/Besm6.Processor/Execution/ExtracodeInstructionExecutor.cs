@@ -1,11 +1,16 @@
-namespace Besm6.Core
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Core;
+using Besm6.Processor.Cpu;
+
+namespace Besm6.Processor.Execution
 {
     /// <summary>Подготавливает typed-вызов экстракода, не реализуя host services.</summary>
     internal sealed class ExtracodeInstructionExecutor
     {
-        private readonly ProcessorState _state;
+        private readonly IProcessorState _state;
 
-        internal ExtracodeInstructionExecutor(ProcessorState state)
+        internal ExtracodeInstructionExecutor(IProcessorState state)
         {
             _state = state;
         }

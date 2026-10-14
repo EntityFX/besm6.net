@@ -1,8 +1,11 @@
-using Besm6.Core;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests
 {
+    using Processor = global::Besm6.Processor.Cpu.Processor;
+
     /// <summary>
     /// Headless-проверка: процессор БЭСМ-6 из сборки Besm6.Processor
     /// работает без MachineCore/Loader (plans/SuperPlan.md, приложение Phase 1, критерий готовности).
@@ -34,15 +37,15 @@ namespace Besm6.Tests
             // Адрес 0 в БЭСМ-6 зарезервирован, поэтому данные кладем в ячейку 2.
             memory.Write(2, new Word48(5UL));
             memory.Write(1, new Word48((8UL << 36) | (2UL << 24)));
-            cpu.SetK(1);
+            cpu.K = 1;
 
             bool stopped = cpu.Step();
 
             Assert.IsFalse(stopped, "одна команда XTA не должна останавливать машину");
-            Assert.AreEqual(5UL, cpu.GetA().Value);
+            Assert.AreEqual(5UL, cpu.A.Value);
             // После левой половины K не сдвигается (смена половины — через флаг);
             // K+=1 произойдет после выполнения правой половины.
-            Assert.AreEqual(1UL, cpu.GetK());
+            Assert.AreEqual(1UL, cpu.K);
         }
     }
 }

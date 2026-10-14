@@ -1,7 +1,10 @@
+using Besm6.Architecture.Numerics;
+using Besm6.Assembler.Detection;
 using Besm6.Assembler;
+using Besm6.Runtime.Storage;
 #pragma warning disable CS0618
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Loading
 {
     /// <summary>
     /// MONSYS bootstrap: подготовка tape, запись drum, установка начального K.

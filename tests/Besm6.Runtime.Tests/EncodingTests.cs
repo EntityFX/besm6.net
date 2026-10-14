@@ -1,4 +1,5 @@
 using System;
+using Besm6.Runtime.Encoding;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Besm6.Tests
 {

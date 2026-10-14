@@ -1,4 +1,8 @@
-namespace Besm6.Core;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+
+namespace Besm6.Processor.Memory;
 
 public enum MemoryAddressKind { PhysicalMemory, ZeroOperand, PanelRegister }
 
@@ -153,7 +157,7 @@ public sealed class PageAssignment
 
     private static void ValidateAddress(uint address)
     {
-        if (address >= PhysicalMemory.WordCount)
+        if (address >= ArchitectureConstants.WordCount)
             throw new ArgumentOutOfRangeException(nameof(address));
     }
 }

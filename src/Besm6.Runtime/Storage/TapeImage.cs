@@ -1,7 +1,9 @@
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.Memory;
 using System;
 using System.IO;
 using System.Linq;
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Storage
 {
     /// <summary>
     /// Образ ленты/диска в SIMH-формате.

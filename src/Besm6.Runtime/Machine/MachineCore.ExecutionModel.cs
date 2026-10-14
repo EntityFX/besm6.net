@@ -1,4 +1,10 @@
+using Besm6.Runtime.Timing.Memory;
 using System.Diagnostics;
+using Besm6.Architecture.Machine;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Execution;
+using Besm6.Runtime.Loading;
+using Besm6.Runtime.Machine;
 using Besm6.Runtime.Modeling;
 using Besm6.Runtime.Timing;
 
@@ -97,11 +103,11 @@ public partial class MachineCore
                     }
                 }
                 if (step.Boundary == HardwareRunBoundary.Stop)
-                { outcome = LoadResult.Halt(Cpu.GetK(), checked((long)completed)); break; }
+                { outcome = LoadResult.Halt(Cpu.K, checked((long)completed)); break; }
                 if (step.Boundary is HardwareRunBoundary.Cancelled or HardwareRunBoundary.WaitingForSignal or HardwareRunBoundary.TimeLimit)
-                { outcome = LoadResult.Failed($"Hardware execution boundary: {step.Boundary}.", Cpu.GetK(), checked((long)completed)); break; }
+                { outcome = LoadResult.Failed($"Hardware execution boundary: {step.Boundary}.", Cpu.K, checked((long)completed)); break; }
             }
-            outcome ??= LoadResult.StoppedByLimit(Cpu.GetK(), checked((long)completed));
+            outcome ??= LoadResult.StoppedByLimit(Cpu.K, checked((long)completed));
             pacer?.SynchronizeSeconds((model.Timeline.Now.Nanoseconds - started) / 1_000_000_000.0);
             var statistics = timed ? new ExecutionStatistics(speed, checked((long)completed), null,
                 time!.ElapsedSeconds, collectStatistics ? GC.GetAllocatedBytesForCurrentThread() - allocated : 0,

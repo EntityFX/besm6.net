@@ -1,4 +1,6 @@
-namespace Besm6.Runtime;
+using Besm6.Runtime.Configuration;
+
+namespace Besm6.Runtime.Execution;
 
 /// <summary>Execution-loop measurements, excluding CLI startup, asset checks and report formatting.</summary>
 public sealed record ExecutionStatistics(

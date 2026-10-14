@@ -1,3 +1,6 @@
+using Besm6.Architecture.State;
+using Besm6.Runtime.Configuration;
+
 namespace Besm6.Tests;
 
 [TestClass]

@@ -1,3 +1,10 @@
+using Besm6.Architecture.Debug;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Processor.Cpu;
+
 namespace Besm6.Core;
 
 public sealed partial class InstructionExecutor
@@ -118,7 +125,7 @@ public sealed partial class InstructionExecutor
                 _preparationFailure = fetchFailure;
                 _terminalPreparation = true;
             }
-            catch (Processor.DebugWatchAbortException)
+            catch (DebugWatchAbortException)
             {
                 _terminalStopped = false;
                 _terminalCompleted = _processor.LastStepCompleted;
@@ -183,7 +190,7 @@ public sealed partial class InstructionExecutor
                 return HandleSupervisorFailure(_processor.Supervisor!, failure,
                     _preparationStart, _preparationRight);
             }
-            catch (Processor.DebugWatchAbortException)
+            catch (DebugWatchAbortException)
             {
                 return false;
             }

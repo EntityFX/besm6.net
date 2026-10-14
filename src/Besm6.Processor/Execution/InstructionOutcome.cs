@@ -1,4 +1,4 @@
-namespace Besm6.Core
+namespace Besm6.Processor.Execution
 {
     internal enum InstructionOutcome
     {

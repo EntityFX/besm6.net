@@ -1,6 +1,7 @@
+using Besm6.Runtime.Profiling;
 using System.Diagnostics;
 
-namespace Besm6.Runtime;
+namespace Besm6.Runtime.Execution;
 
 internal interface IExecutionTimeSource
 {

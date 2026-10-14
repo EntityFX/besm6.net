@@ -1,4 +1,4 @@
-using Besm6.Architecture;
+using Besm6.Architecture.State;
 
 namespace Besm6.Tests;
 

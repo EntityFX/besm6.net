@@ -1,4 +1,4 @@
-namespace Besm6.Runtime.Timing;
+namespace Besm6.Runtime.Timing.Arithmetic.Division;
 
 /// <summary>
 /// АУ: formation of the two quotient components, TO-3 §4.16, sheets 93–102.

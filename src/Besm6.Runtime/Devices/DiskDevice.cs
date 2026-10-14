@@ -1,8 +1,9 @@
+using Besm6.Architecture.Numerics;
 using System;
 using System.IO;
 using System.Text;
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Devices
 {
     /// <summary>
     /// Эмуляция дискового устройства для БЭСМ-6.

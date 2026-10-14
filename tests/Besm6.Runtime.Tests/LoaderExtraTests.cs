@@ -1,5 +1,11 @@
+using Besm6.Architecture.Numerics;
+using Besm6.Runtime.Storage;
 using System;
 using System.IO;
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Encoding;
+using Besm6.Runtime.Extracodes;
+using Besm6.Runtime.Loading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Besm6.Tests
@@ -283,7 +289,7 @@ namespace Besm6.Tests
             //   month_lo b34-37, month_hi b38-41, day_lo b42-45, day_hi b46-47.
             machine.Cpu.SetM(14, 55);
             handler.Handle(40, 0); // *50
-            Assert.AreEqual(0x101C92345560UL, machine.Cpu.GetA().Value);
+            Assert.AreEqual(0x101C92345560UL, machine.Cpu.A.Value);
         }
 
         [TestMethod]
@@ -295,7 +301,7 @@ namespace Besm6.Tests
             machine.Cpu.SetM(14, 54); // 066 oct
             machine.Cpu.SetA(123);
             handler.Handle(40, 0);
-            Assert.AreEqual(0UL, machine.Cpu.GetA().Value);
+            Assert.AreEqual(0UL, machine.Cpu.A.Value);
         }
 
         [TestMethod]
@@ -307,7 +313,7 @@ namespace Besm6.Tests
             machine.Cpu.SetM(14, 7); // 007 oct = floor
             machine.Cpu.SetA(Besm6Math.DoubleToBesm6(3.75));
             handler.Handle(40, 0);
-            Assert.AreEqual(3.0, Besm6Math.Besm6ToDouble(machine.Cpu.GetA().Value), 1e-9);
+            Assert.AreEqual(3.0, Besm6Math.Besm6ToDouble(machine.Cpu.A.Value), 1e-9);
         }
 
         [TestMethod]
@@ -331,7 +337,7 @@ namespace Besm6.Tests
             machine.Cpu.SetA(12345);
             machine.Cpu.SetM(14, 4);
             handler.Handle(58, 0); // 072 oct
-            Assert.AreEqual(12345UL, machine.Cpu.GetA().Value, "E72 — no-op, A не меняется");
+            Assert.AreEqual(12345UL, machine.Cpu.A.Value, "E72 — no-op, A не меняется");
         }
 
         [TestMethod]
@@ -363,7 +369,7 @@ namespace Besm6.Tests
 
             Assert.AreEqual("AB", machine.Plotter.Watanabe);
             Assert.AreEqual("", machine.Plotter.Tektronix);
-            Assert.AreEqual(0UL, machine.Cpu.GetA().Value, "E61 должен сбросить A");
+            Assert.AreEqual(0UL, machine.Cpu.A.Value, "E61 должен сбросить A");
         }
 
         [TestMethod]
@@ -382,7 +388,7 @@ namespace Besm6.Tests
 
             Assert.AreEqual("XY", machine.Plotter.Tektronix);
             Assert.AreEqual("", machine.Plotter.Watanabe);
-            Assert.AreEqual(0UL, machine.Cpu.GetA().Value);
+            Assert.AreEqual(0UL, machine.Cpu.A.Value);
         }
 
         [TestMethod]
@@ -406,7 +412,7 @@ namespace Besm6.Tests
             machine.Cpu.SetM(14, 5); // не 077777
             machine.Cpu.SetA(12345);
             handler.Handle(49, 0);
-            Assert.AreEqual(0UL, machine.Cpu.GetA().Value);
+            Assert.AreEqual(0UL, machine.Cpu.A.Value);
         }
 
         [TestMethod]
@@ -419,7 +425,7 @@ namespace Besm6.Tests
             machine.Cpu.SetM(14, 1);
             machine.Cpu.SetA(Besm6Math.DoubleToBesm6(0.0));
             handler.Handle(41, 0); // 051 oct = 41 dec
-            Assert.AreEqual(1.0, Besm6Math.Besm6ToDouble(machine.Cpu.GetA().Value), 1e-6);
+            Assert.AreEqual(1.0, Besm6Math.Besm6ToDouble(machine.Cpu.A.Value), 1e-6);
         }
 
         [TestMethod]
@@ -443,7 +449,7 @@ namespace Besm6.Tests
             handler.Handle(40, 0); // *50
 
             Assert.AreEqual(1, machine.Plotter.PageNumber);
-            Assert.AreEqual(0UL, machine.Cpu.GetA().Value);
+            Assert.AreEqual(0UL, machine.Cpu.A.Value);
         }
 
         [TestMethod]
@@ -455,7 +461,7 @@ namespace Besm6.Tests
             machine.Cpu.SetM(14, 0); // E57 addr=0 → floor(A)
             machine.Cpu.SetA(Besm6Math.DoubleToBesm6(3.75));
             handler.Handle(47, 0); // 057 oct
-            Assert.AreEqual(3.0, Besm6Math.Besm6ToDouble(machine.Cpu.GetA().Value), 1e-9);
+            Assert.AreEqual(3.0, Besm6Math.Besm6ToDouble(machine.Cpu.A.Value), 1e-9);
         }
 
         [TestMethod]

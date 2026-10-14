@@ -1,6 +1,6 @@
 using System;
 
-namespace Besm6.Core
+namespace Besm6.Processor.Cpu
 {
     /// <summary>
     /// Исключение исполнения процессора БЭСМ-6 (деление на ноль, неопределённые

@@ -12,8 +12,7 @@ public sealed class CliContractTests
     [TestMethod]
     public void Help_PrintsAllCommandsAndReturnsZero()
     {
-        Type program = Assembly.Load("besm6").GetType("Besm6.Program", throwOnError: true)!;
-        MethodInfo main = program.GetMethod("Main", BindingFlags.Static | BindingFlags.NonPublic)!;
+        MethodInfo main = Assembly.Load("besm6").EntryPoint!;
         TextWriter originalOut = Console.Out;
         TextWriter originalError = Console.Error;
         var stdout = new StringWriter();
@@ -42,7 +41,7 @@ public sealed class CliContractTests
         Directory.CreateDirectory(root);
         try
         {
-            ulong jump = Besm6.Asm.Assembler.Asm("uj 1000");
+            ulong jump = Assembler.Legacy.Assembler.Asm("uj 1000");
             ulong word = (jump << 24) | jump;
             string octal = Convert.ToString((long)word, 8).PadLeft(16, '0');
             File.WriteAllLines(Path.Combine(root, "loop.dub"), new[]

@@ -1,8 +1,15 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using Besm6.Core;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.State;
+using Besm6.Architecture.Isa;
+using Besm6.Assembler.Legacy;
+using Besm6.Architecture.Machine;
 
 namespace Besm6.Tests;
+using Processor = global::Besm6.Processor.Cpu.Processor;
+
 
 /// <summary>
 /// Architectural regression tests for the CPU <-> extracode boundary.
@@ -386,16 +393,16 @@ public sealed class ProcessorExtracodeTests
     // Память последнего созданного процессора (тесты класса исполняются последовательно).
     private static IMemory _memory = null!;
 
-    private static Processor CreateProcessor()
+    private static IProcessor CreateProcessor()
     {
         _memory = new LinearMemory();
         return new Processor(_memory);
     }
 
-    private static void Step(Processor cpu) => cpu.Step();
+    private static void Step(IProcessor cpu) => cpu.Step();
 
     private static void WriteInstructionWord(
-        Processor cpu,
+        IProcessor cpu,
         int address,
         uint left,
         uint right)
@@ -430,13 +437,13 @@ public sealed class ProcessorExtracodeTests
     {
         // Реальный ассемблер проекта (порт dubna/assembler.cpp) — второго
         // энкодера в тестах нет. Мнемоника берётся из OpcodeTable (Bemsh):
-        string mnemonic = Besm6.Asm.OpcodeTable.GetOpNameBemsh(opcode);
+        string mnemonic = OpcodeTable.GetOpNameBemsh(opcode);
         string oct = Convert.ToString(address, 8);
-        ulong word = Besm6.Asm.Assembler.Asm($"{mnemonic} {oct}({register})");
+        ulong word = Assembler.Legacy.Assembler.Asm($"{mnemonic} {oct}({register})");
         return (uint)((word >> 24) & 0xFF_FFFFUL); // левое полу-слово = инструкция
     }
 
-    private static void SetMemoryWord(Processor cpu, int address, ulong value)
+    private static void SetMemoryWord(IProcessor cpu, int address, ulong value)
     {
         _memory.Write((uint)address, new Word48(value));
     }
@@ -447,11 +454,11 @@ public sealed class ProcessorExtracodeTests
     }
 
     private static void SetExecutionPoint(
-        Processor cpu,
+        IProcessor cpu,
         int k,
         bool rightHalf)
     {
-        cpu.SetK((uint)k);
+        cpu.K = (uint)k;
         if (!rightHalf)
             return;
 
@@ -462,33 +469,33 @@ public sealed class ProcessorExtracodeTests
         ulong word = ReadMemoryWord(k);
         ulong newWord = (((ulong)EncodeNopLikeInstruction()) << 24) | (word & 0xFF_FFFFUL);
         _memory.Write((uint)k, new Word48(newWord));
-        cpu.SetK((uint)k);
+        cpu.K = (uint)k;
         cpu.Step();
         // Теперь: K = k, right_instr_flag = true — следующая Step() возьмёт RIGHT.
     }
 
-    private static int GetK(Processor cpu) => (int)cpu.GetK();
+    private static int GetK(IProcessor cpu) => (int)cpu.K;
 
-    private static bool IsRightHalfNext(Processor cpu) => cpu.OnRightInstruction;
+    private static bool IsRightHalfNext(IProcessor cpu) => cpu.RightInstruction;
 
-    private static void SetM(Processor cpu, int register, int value) => cpu.SetM(register, (uint)value);
+    private static void SetM(IProcessor cpu, int register, int value) => cpu.SetM(register, (uint)value);
 
-    private static int GetM(Processor cpu, int register) => (int)cpu.GetM(register);
+    private static int GetM(IProcessor cpu, int register) => (int)cpu.GetM(register);
 
-    private static ulong GetA(Processor cpu) => cpu.GetA().Value;
+    private static ulong GetA(IProcessor cpu) => cpu.A.Value;
 
-    private static void SetY(Processor cpu, ulong value) => cpu.SetY(value);
+    private static void SetY(IProcessor cpu, ulong value) => cpu.SetY(value);
 
-    private static ulong GetY(Processor cpu) => cpu.GetY().Value;
+    private static ulong GetY(IProcessor cpu) => cpu.Y.Value;
 
-    private static void SetRAdditive(Processor cpu)
+    private static void SetRAdditive(IProcessor cpu)
     {
         // Аддитивный режим + сохранение non-mode флагов (как в арифметических тестах).
         cpu.SetR((ulong)(RFlags.OvfDisable | RFlags.RoundDisable | RFlags.Add));
     }
 
-    private static bool IsRLogical(Processor cpu)
+    private static bool IsRLogical(IProcessor cpu)
     {
-        return (cpu.GetR() & (uint)RFlags.Mode) == (uint)RFlags.Log;
+        return (cpu.R & (uint)RFlags.Mode) == (uint)RFlags.Log;
     }
 }

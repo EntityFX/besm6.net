@@ -1,6 +1,7 @@
+using Besm6.Architecture.Numerics;
 using System;
 
-namespace Besm6.Core
+namespace Besm6.Architecture.Memory
 {
     /// <summary>
     /// Интерфейс оперативной памяти БЭСМ-6.

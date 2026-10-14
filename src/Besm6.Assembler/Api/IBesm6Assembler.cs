@@ -1,4 +1,4 @@
-namespace Besm6.Assembler;
+namespace Besm6.Assembler.Api;
 
 /// <summary>
 /// Интерфейс хост-ассемблера БЭСМ-6. Разные реализации соответствуют

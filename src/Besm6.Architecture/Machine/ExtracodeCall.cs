@@ -1,4 +1,6 @@
-namespace Besm6.Core
+using Besm6.Architecture.Isa;
+
+namespace Besm6.Architecture.Machine
 {
     /// <summary>
     /// Полный контекст вызова экстракода процессором.

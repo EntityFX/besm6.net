@@ -1,4 +1,4 @@
-namespace Besm6.Assembler;
+namespace Besm6.Assembler.Api;
 
 /// <summary>
 /// Результат ассемблирования программы: базовый адрес, слова и таблица лейблов.

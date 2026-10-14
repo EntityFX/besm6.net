@@ -1,4 +1,9 @@
-﻿namespace Besm6.Runtime
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
+using Besm6.Runtime.Extracodes;
+using Besm6.Runtime.Storage;
+
+namespace Besm6.Runtime
 {
     public sealed partial class ExtracodeHandler
     {
@@ -12,7 +17,7 @@
             // Детальная диагностика E57 (BESM6_TRACE).
             if (_traceExtracodes)
             {
-                long a = (long)cpu.GetA().Value;
+                long a = (long)cpu.A.Value;
                 long m13 = cpu.GetM(13);
                 EnsureTraceWriter().WriteLine(
                     $"[E57] addr=0{Convert.ToString(addr, 8)} A=0{a:X} M[13]=0{m13:X}");
@@ -22,11 +27,11 @@
             {
                 case 0:
                     // floor(A) — уже в E50 case 14.
-                    cpu.SetA(Besm6Math.Floor(cpu.GetA().Value));
+                    cpu.SetA(Besm6Math.Floor(cpu.A.Value));
                     return;
                 case 2:
                     // Output to Calcomp plotter.
-                    _machine.Plotter.CalcompPutCh((char)(cpu.GetA().Value & 0xFF));
+                    _machine.Plotter.CalcompPutCh((char)(cpu.A.Value & 0xFF));
                     cpu.SetA(0);
                     return;
                 case 3:
@@ -58,7 +63,7 @@
                 if ((addr & E57_ASSIGN) != 0)
                 {
                     // Mount tape: tapeId in A, disk unit in M[15 octal] = M[13 decimal].
-                    long tapeIdAssign = (long)cpu.GetA().Value;
+                    long tapeIdAssign = (long)cpu.A.Value;
                     int diskUnit = (int)(cpu.GetM(13) & 0x7F);
                     bool writePermit = (addr & E57_WRITE) != 0;
                     bool ok = _mountTapeWithMode != null
@@ -81,14 +86,14 @@
                 {
                     // Release tapes according to bitmask on accumulator.
                     if ((addr & E57_READY) == 0)
-                        _releaseTapes((long)cpu.GetA().Value);
+                        _releaseTapes((long)cpu.A.Value);
                     cpu.SetA(0);
                     return;
                 }
 
                 // Find mounted tape (by name and number).
                 // Return disk number (unit) in A.
-                long tapeIdFind = (long)cpu.GetA().Value;
+                long tapeIdFind = (long)cpu.A.Value;
                 int unit = _findTape(tapeIdFind);
                 cpu.SetA((ulong)unit);
             }
@@ -111,7 +116,7 @@
             const int notFound = 16;
 
             var cpu = _machine.Cpu;
-            ulong request = cpu.GetA().Value;
+            ulong request = cpu.A.Value;
             if ((request & keyMask) != keyValue)
                 throw new ProcessorException("Wrong access key in *57 77777");
 

@@ -1,3 +1,13 @@
+using Besm6.Runtime.Loading;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.State;
+using Besm6.Architecture.Supervisor;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Execution;
+using Besm6.Runtime.Profiling;
+
 namespace Besm6.Tests;
 
 [TestClass]
@@ -26,7 +36,7 @@ public sealed class SupervisorRunTests
         Assert.AreEqual(0, observed);
         Assert.AreEqual(0L, result.Statistics!.CompletedInstructions);
         Assert.AreEqual(0L, result.Statistics.ModelCycles);
-        Assert.AreEqual(0x140u, machine.Cpu.GetK());
+        Assert.AreEqual(0x140u, machine.Cpu.K);
         Assert.AreEqual((1UL << 13) | (1UL << 14), machine.Cpu.Supervisor.InternalInterrupts);
     }
 

@@ -1,4 +1,6 @@
-namespace Besm6.Core;
+using Besm6.Architecture.Numerics;
+
+namespace Besm6.Architecture.Memory;
 
 /// <summary>
 /// Optional CPU memory capability: fetch a selected command half independently

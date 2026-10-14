@@ -1,4 +1,6 @@
-namespace Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Calendar;
+
+namespace Besm6.Runtime.Timing.Arithmetic.Division;
 
 internal enum DivisionAction { ShiftOnly, AddDivisor, SubtractDivisor }
 

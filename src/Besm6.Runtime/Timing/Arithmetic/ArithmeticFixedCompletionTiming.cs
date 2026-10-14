@@ -1,4 +1,7 @@
-namespace Besm6.Runtime.Timing;
+using Besm6.Architecture.Isa;
+using Besm6.Runtime.Timing.Calendar;
+
+namespace Besm6.Runtime.Timing.Arithmetic;
 
 /// <summary>
 /// АУ — арифметическое устройство. Logical SPOP→IZOP interval: TO-3 §3.2

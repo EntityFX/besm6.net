@@ -1,3 +1,6 @@
+using Besm6.Architecture.Memory;
+using Besm6.Runtime.Devices;
+
 namespace Besm6.Runtime;
 
 public sealed partial class SupervisorIoController

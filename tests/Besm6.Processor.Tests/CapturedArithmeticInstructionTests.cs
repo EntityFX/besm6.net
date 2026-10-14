@@ -1,6 +1,15 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Processor.Arithmetic;
+using Besm6.Processor.Cpu;
+using Besm6.Processor.Memory;
 using System.Text.Json;
 
 namespace Besm6.Tests;
+using Processor = global::Besm6.Processor.Cpu.Processor;
+
 
 [TestClass]
 public sealed class CapturedArithmeticInstructionTests
@@ -8,7 +17,7 @@ public sealed class CapturedArithmeticInstructionTests
     private static Processor Create(string command, bool right = false)
     {
         var cpu = new Processor(new CoreMemory());
-        cpu.MemStore(1, Besm6.Asm.Assembler.Asm(command + ", " + command));
+        cpu.MemStore(1, Assembler.Legacy.Assembler.Asm(command + ", " + command));
         cpu.MemStore(8, Word48.FromDouble(0.75).Value);
         cpu.SetA(Word48.FromDouble(1.25).Value);
         cpu.SetY(0x123456789);
@@ -28,7 +37,7 @@ public sealed class CapturedArithmeticInstructionTests
         {
             NormalizedArithmeticResult? result = null;
             ProcessorException? failure = null;
-            try { result = input.Evaluate(cpu.GetA(), cpu.GetY()); }
+            try { result = input.Evaluate(cpu.A, cpu.Y); }
             catch (ProcessorException cause) { failure = cause; }
             cpu.SupplyArithmeticResult(in command, result, failure);
         }
@@ -69,8 +78,8 @@ public sealed class CapturedArithmeticInstructionTests
             var command = phased.PrepareInstruction();
             var phasedFailure = Failure(() => Finish(phased, in command));
             Assert.AreEqual(serialFailure, phasedFailure, instruction);
-            serial.CanonPost(serial.GetK(), serial.RightInstruction);
-            phased.CanonPost(phased.GetK(), phased.RightInstruction);
+            serial.CanonPost(serial.K, serial.RightInstruction);
+            phased.CanonPost(phased.K, phased.RightInstruction);
             Assert.AreEqual(JsonSerializer.Serialize(new ProcessorSnapshot(serial.State)),
                 JsonSerializer.Serialize(new ProcessorSnapshot(phased.State)), instruction);
             Assert.AreEqual(serial.State.StackCorrection, phased.State.StackCorrection);
@@ -84,15 +93,15 @@ public sealed class CapturedArithmeticInstructionTests
     {
         var cpu = Create("a+x 10");
         var command = cpu.PrepareInstruction();
-        var a = cpu.GetA(); var y = cpu.GetY(); var r = cpu.GetR();
+        var a = cpu.A; var y = cpu.Y; var r = cpu.R;
         var operation = cpu.CaptureArithmeticOperand(in command)!.Value;
-        Assert.AreEqual(a, cpu.GetA()); Assert.AreEqual(y, cpu.GetY()); Assert.AreEqual(r, cpu.GetR());
+        Assert.AreEqual(a, cpu.A); Assert.AreEqual(y, cpu.Y); Assert.AreEqual(r, cpu.R);
         cpu.MemStore(8, Word48.FromDouble(100).Value);
         Assert.ThrowsExactly<InvalidOperationException>(() => cpu.CompleteInstruction(in command));
         Assert.IsTrue(cpu.HasPreparedInstruction);
         cpu.SupplyArithmeticResult(in command, operation.Evaluate(a, y), null);
         cpu.CompleteInstruction(in command);
-        Assert.AreEqual(Word48.FromDouble(2), cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(2), cpu.A);
     }
 
     [TestMethod]
@@ -113,14 +122,14 @@ public sealed class CapturedArithmeticInstructionTests
     public void OverflowPublishesBeforeFailureWithoutChangingFinalMode()
     {
         var cpu = Create("a*x 10");
-        uint mode = cpu.GetR();
+        uint mode = cpu.R;
         var command = cpu.PrepareInstruction();
         cpu.CaptureArithmeticOperand(in command);
         var output = new NormalizedArithmeticResult(new(1UL << 39), new(123), true, true);
         cpu.SupplyArithmeticResult(in command, output, null);
         Assert.AreEqual("Arithmetic overflow", Assert.ThrowsExactly<ProcessorException>(() => cpu.CompleteInstruction(in command)).Message);
-        Assert.AreEqual(output.A, cpu.GetA()); Assert.AreEqual(output.Y, cpu.GetY());
-        Assert.AreEqual(mode, cpu.GetR());
+        Assert.AreEqual(output.A, cpu.A); Assert.AreEqual(output.Y, cpu.Y);
+        Assert.AreEqual(mode, cpu.R);
         Assert.IsFalse(cpu.HasPreparedInstruction);
     }
 
@@ -129,13 +138,13 @@ public sealed class CapturedArithmeticInstructionTests
     {
         var cpu = Create("a/x 10");
         cpu.InterceptCount = 1; cpu.InterceptAddr = 4;
-        var a = cpu.GetA(); var y = cpu.GetY();
+        var a = cpu.A; var y = cpu.Y;
         var command = cpu.PrepareInstruction();
         cpu.CaptureArithmeticOperand(in command);
         var cause = new ProcessorException("Division by zero");
         cpu.SupplyArithmeticResult(in command, null, cause);
         Assert.AreSame(cause, Assert.ThrowsExactly<ProcessorException>(() => cpu.CompleteInstruction(in command)));
-        Assert.AreEqual(a, cpu.GetA()); Assert.AreEqual(y, cpu.GetY());
+        Assert.AreEqual(a, cpu.A); Assert.AreEqual(y, cpu.Y);
         Assert.IsTrue(cpu.Intercept(cause.Message));
     }
 
@@ -167,7 +176,7 @@ public sealed class CapturedArithmeticInstructionTests
         var load = Create("xta 10"); var loadCommand = load.PrepareInstruction();
         Assert.ThrowsExactly<InvalidOperationException>(() => load.CaptureArithmeticOperand(in loadCommand));
         load.CompleteInstruction(in loadCommand);
-        Assert.AreEqual(Word48.FromDouble(0.75), load.GetA());
+        Assert.AreEqual(Word48.FromDouble(0.75), load.A);
     }
 
     private sealed class ObservedMemory : IMemory
@@ -205,9 +214,9 @@ public sealed class CapturedArithmeticInstructionTests
             cpu.SetA(Word48.FromDouble(1).Value);
             var command = cpu.PrepareInstruction();
             var operation = cpu.CaptureTransferredArithmeticOperand(in command, 8, Word48.FromDouble(operand), null)!.Value;
-            cpu.SupplyArithmeticResult(in command, operation.Evaluate(cpu.GetA(), cpu.GetY()), null);
+            cpu.SupplyArithmeticResult(in command, operation.Evaluate(cpu.A, cpu.Y), null);
             cpu.CompleteInstruction(in command);
-            Assert.AreEqual(Word48.FromDouble(instruction.StartsWith("a+x") ? 1 + operand : operand), cpu.GetA());
+            Assert.AreEqual(Word48.FromDouble(instruction.StartsWith("a+x") ? 1 + operand : operand), cpu.A);
             Assert.AreEqual(Word48.FromDouble(99).Value, cpu.MemLoad(8));
             Assert.IsFalse(cpu.HasPreparedInstruction);
         }
@@ -225,16 +234,16 @@ public sealed class CapturedArithmeticInstructionTests
         cpu.StartAt(1); cpu.SetA(Word48.FromDouble(1).Value);
         var next = cpu.PrepareInstruction();
         var operation = cpu.CaptureTransferredArithmeticOperand(in next, 8, Word48.FromDouble(2), null)!.Value;
-        cpu.SupplyArithmeticResult(in next, operation.Evaluate(cpu.GetA(), cpu.GetY()), null);
+        cpu.SupplyArithmeticResult(in next, operation.Evaluate(cpu.A, cpu.Y), null);
         cpu.CompleteInstruction(in next);
-        Assert.AreEqual(Word48.FromDouble(3), cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(3), cpu.A);
     }
 
     [TestMethod]
     public void CompletionDoesNotReadMemoryAgainAndCaptureIsNotReentrant()
     {
         var memory = new ObservedMemory(); var cpu = new Processor(memory);
-        cpu.MemStore(1, Besm6.Asm.Assembler.Asm("a+x 10, stop"));
+        cpu.MemStore(1, Assembler.Legacy.Assembler.Asm("a+x 10, stop"));
         cpu.MemStore(8, Word48.FromDouble(1).Value); cpu.SetA(Word48.FromDouble(1).Value);
         var command = cpu.PrepareInstruction();
         memory.Reading = () =>
@@ -244,18 +253,18 @@ public sealed class CapturedArithmeticInstructionTests
         };
         var operation = cpu.CaptureArithmeticOperand(in command)!.Value;
         memory.Failure = new Exception("A second read must not happen");
-        cpu.SupplyArithmeticResult(in command, operation.Evaluate(cpu.GetA(), cpu.GetY()), null);
+        cpu.SupplyArithmeticResult(in command, operation.Evaluate(cpu.A, cpu.Y), null);
         Assert.ThrowsExactly<InvalidOperationException>(() => cpu.SupplyArithmeticResult(in command, new(), null));
         cpu.CompleteInstruction(in command);
         Assert.AreEqual(1, memory.OperandReads);
-        Assert.AreEqual(Word48.FromDouble(2), cpu.GetA());
+        Assert.AreEqual(Word48.FromDouble(2), cpu.A);
     }
 
     [TestMethod]
     public void FailedOperandReadRetainsItsCauseAndDoesNotAcceptAnArithmeticResult()
     {
         var memory = new ObservedMemory(); var cpu = new Processor(memory);
-        cpu.MemStore(1, Besm6.Asm.Assembler.Asm("a+x 10, stop"));
+        cpu.MemStore(1, Assembler.Legacy.Assembler.Asm("a+x 10, stop"));
         var cause = new InvalidOperationException("Synthetic memory failure");
         memory.Failure = cause;
         var command = cpu.PrepareInstruction();
@@ -287,18 +296,18 @@ public sealed class CapturedArithmeticInstructionTests
         cpu.SetA(one.Value); cpu.MemStore(8, (24UL << 41) | (1UL << 39)); cpu.SetR(0);
         var command = cpu.PrepareInstruction();
         var operation = cpu.CaptureArithmeticOperand(in command)!.Value;
-        var result = operation.Evaluate(cpu.GetA(), cpu.GetY());
+        var result = operation.Evaluate(cpu.A, cpu.Y);
         Assert.AreEqual(one, result.UnroundedA); Assert.IsTrue(result.RoundOnOutput);
         cpu.SupplyArithmeticResult(in command, result, null);
         cpu.CompleteInstruction(in command);
-        Assert.AreEqual(one.Value | 1UL, cpu.GetA().Value);
+        Assert.AreEqual(one.Value | 1UL, cpu.A.Value);
     }
 
     [TestMethod]
     public void DeferredMemoryControlFaultRetainsItsOriginalBufferDetail()
     {
         var memory = new MappedMemoryBackend();
-        memory.HostMemory.Write(8, new(Besm6.Asm.Assembler.Asm("a+x 20, stop")));
+        memory.HostMemory.Write(8, new(Assembler.Legacy.Assembler.Asm("a+x 20, stop")));
         var cpu = new Processor(memory, ProcessorProfile.Supervisor);
         cpu.Supervisor!.Status = new(ControlUnitFlags.AssignmentBlocked | ControlUnitFlags.ProtectionBlocked);
         memory.InvertLeftStoreControl = true;

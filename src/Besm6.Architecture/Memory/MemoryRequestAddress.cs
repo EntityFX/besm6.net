@@ -1,4 +1,6 @@
-namespace Besm6.Core;
+using Besm6.Architecture.Machine;
+
+namespace Besm6.Architecture.Memory;
 
 /// <summary>
 /// Address at the memory-request boundary: 15 address bits and the physical-address
@@ -13,7 +15,7 @@ public readonly record struct MemoryRequestAddress
 
     public MemoryRequestAddress(uint address, bool isPhysical)
     {
-        if (address >= PhysicalMemory.WordCount)
+        if (address >= ArchitectureConstants.WordCount)
             throw new ArgumentOutOfRangeException(nameof(address));
         Address = address;
         IsPhysical = isPhysical;

@@ -1,4 +1,8 @@
-namespace Besm6.Runtime;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Runtime.Execution;
+
+namespace Besm6.Runtime.Diagnostics;
 
 /// <summary>Owns only the observers installed by one execution run. Callback-installed hooks survive disposal.</summary>
 internal sealed class ExecutionDiagnosticsSession(MachineCore machine, ExecutionLoop loop) : IDisposable

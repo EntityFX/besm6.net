@@ -1,9 +1,15 @@
+using Besm6.Architecture.Memory;
+using Besm6.Runtime.Loading;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Memory;
+using Besm6.Runtime.Configuration;
+
 namespace Besm6.Tests;
 
 [TestClass]
 public sealed class MappedMachineTests
 {
-    private static Word48 Code(string text) => new(Besm6.Asm.Assembler.Asm(text));
+    private static Word48 Code(string text) => new(Assembler.Legacy.Assembler.Asm(text));
     private static MachineCore Mathematical()
     {
         var machine = new MachineCore(memoryModel: MemoryModel.Mapped);

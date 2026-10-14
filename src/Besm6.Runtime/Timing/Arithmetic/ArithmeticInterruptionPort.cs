@@ -1,4 +1,7 @@
-namespace Besm6.Runtime.Timing;
+using Besm6.Architecture.Supervisor;
+using Besm6.Processor.Supervisor;
+
+namespace Besm6.Runtime.Timing.Arithmetic;
 
 /// <summary>
 /// АУ/УУ — arithmetic/control units. TO-3 §3.28 delivers the stable IZOP cause
@@ -7,7 +10,7 @@ namespace Besm6.Runtime.Timing;
 /// The shared supervisor register uses its existing OR-latch semantics. Detailed
 /// simultaneous-source bus priority belongs to the future overlapped UU model.
 /// </summary>
-internal sealed class ArithmeticInterruptionPort(SupervisorControl? supervisor)
+internal sealed class ArithmeticInterruptionPort(ISupervisorControl? supervisor)
 {
     internal ulong PendingCause { get; private set; }
     internal ulong ReceivedSamples { get; private set; }

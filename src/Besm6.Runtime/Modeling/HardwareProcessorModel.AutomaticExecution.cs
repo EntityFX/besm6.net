@@ -1,10 +1,10 @@
+using Besm6.Architecture.Isa;
+using Besm6.Runtime.Devices;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic;
+using Besm6.Runtime.Timing.Calendar;
 
 namespace Besm6.Runtime.Modeling;
-
-internal enum HardwareRunBoundary { TimeLimit, InstructionLimit, Stop, GuestFault, Cancelled, WaitingForSignal }
-internal readonly record struct HardwareRunOutcome(HardwareRunBoundary Boundary, ulong Completed,
-    HardwareInstant Time, HardwareInstructionOutcome? Instruction);
 
 internal sealed partial class HardwareProcessorModel
 {

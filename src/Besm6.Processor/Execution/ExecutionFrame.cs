@@ -1,4 +1,6 @@
-namespace Besm6.Core
+using Besm6.Architecture.Isa;
+
+namespace Besm6.Processor.Execution
 {
     /// <summary>Локальное изменяемое состояние исполнения одного полуслова.</summary>
     internal struct ExecutionFrame

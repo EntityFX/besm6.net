@@ -1,6 +1,9 @@
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Runtime.Devices;
 using System;
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Machine
 {
     /// <summary>
     /// Системная шина БЭСМ-6.

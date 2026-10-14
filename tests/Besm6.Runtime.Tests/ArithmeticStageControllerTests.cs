@@ -1,5 +1,9 @@
+using Besm6.Runtime.Timing.Calendar;
 using Besm6.Runtime.Timing;
 using Besm6.Runtime.Modeling;
+using Besm6.Architecture.Numerics;
+using Besm6.Runtime.Timing.Arithmetic;
+using Besm6.Processor.Arithmetic;
 
 namespace Besm6.Tests;
 
@@ -297,8 +301,8 @@ public sealed class ArithmeticStageControllerTests
     public void ControllerBelongsToTheModelAndCanSupplyCpuCompletionPermission()
     {
         var machine = new MachineCore();
-        machine.LoadProgram([new(Besm6.Asm.Assembler.Asm("xta 10, a+x 10")),
-            new(Besm6.Asm.Assembler.Asm("stop, stop"))], 1);
+        machine.LoadProgram([new(Assembler.Legacy.Assembler.Asm("xta 10, a+x 10")),
+            new(Assembler.Legacy.Assembler.Asm("stop, stop"))], 1);
         machine.Memory.Write(8, One); // Assembler addresses are octal.
         machine.Cpu.StartAt(1);
         machine.Step();
@@ -315,14 +319,14 @@ public sealed class ArithmeticStageControllerTests
                 Assert.IsTrue(model.TryIndicateCompletionReady(in command));
             }
         };
-        controller.TryEnqueue(0, () => PreparedArithmeticOperation.Add(machine.Memory.Read(8), machine.Cpu.GetR()), true, out _);
+        controller.TryEnqueue(0, () => PreparedArithmeticOperation.Add(machine.Memory.Read(8), machine.Cpu.R), true, out _);
         controller.GrantCommandPermission();
         model.Timeline.ScheduleAt(new(800), controller.CompleteOperation);
         model.AdvanceNextEvent();
-        Assert.AreEqual(One, machine.Cpu.GetA());
+        Assert.AreEqual(One, machine.Cpu.A);
         var outcome = model.AdvanceNextEvent();
         Assert.AreEqual(HardwareInstructionStatus.Completed, outcome!.Value.Status);
-        Assert.AreEqual(Two, machine.Cpu.GetA());
+        Assert.AreEqual(Two, machine.Cpu.A);
         Assert.AreEqual(1UL, model.CompletedInstructions);
         Assert.AreEqual(1UL, machine.Clock.Tick);
     }

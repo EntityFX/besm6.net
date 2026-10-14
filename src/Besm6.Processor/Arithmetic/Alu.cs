@@ -1,27 +1,31 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Cpu;
 using System;
 
-namespace Besm6.Core
+namespace Besm6.Processor.Arithmetic
 {
     /// <summary>
     /// Arithmetic logic unit facade. АУ — арифметическое устройство БЭСМ-6.
     /// Делегирует специализированным подсистемам: аддитивные, мультипликативные,
-    /// сдвиговые операции и нормализация/округление (Этап 4 рефакторинга).
+    /// сдвиговые операции и нормализация/округление.
     /// </summary>
-    public class Alu
+    public class Alu : IAlu
     {
         private readonly NormalizationAndRounding _normalizer;
 
-        internal void PublishPreparedResult(NormalizedArithmeticResult result) => _normalizer.Publish(result);
+        public void PublishPreparedResult(NormalizedArithmeticResult result) => _normalizer.Publish(result);
+
         private readonly AdditiveOperations _additive;
         private readonly MultiplicativeOperations _multiplicative;
         private readonly ShiftOperations _shift;
 
-        public Alu(Processor proc)
+        public Alu(IProcessor proc)
             : this(proc.State)
         {
         }
 
-        internal Alu(ProcessorState state)
+        internal Alu(IProcessorState state)
         {
             _normalizer = new NormalizationAndRounding(state);
             _additive = new AdditiveOperations(state, _normalizer);

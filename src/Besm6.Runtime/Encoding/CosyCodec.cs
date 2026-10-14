@@ -1,8 +1,7 @@
 using System;
-using Besm6.Runtime.Encoding;
 using System.Text;
 
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Encoding
 {
     /// <summary>
     /// Кодировка COSY и таблицы ГОСТ-10859 / KOI-7 / TEXT.

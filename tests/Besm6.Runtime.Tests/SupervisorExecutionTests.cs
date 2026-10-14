@@ -1,9 +1,16 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Processor.Supervisor;
+using Besm6.Runtime.Execution;
+
 namespace Besm6.Tests;
 
 [TestClass]
 public sealed class SupervisorExecutionTests
 {
-    private static Word48 Code(string commands) => new(Besm6.Asm.Assembler.Asm(commands));
+    private static Word48 Code(string commands) => new(Assembler.Legacy.Assembler.Asm(commands));
     private static MachineCore Create(string commands = "сч 1400, сч 1400")
     {
         var machine = new MachineCore(ProcessorProfile.Supervisor);
@@ -45,11 +52,11 @@ public sealed class SupervisorExecutionTests
                 Assert.AreEqual(123UL, machine.MappedMemory!.PhysicalMemory.ReadRaw(768).Data.Value);
         };
         Assert.IsFalse(machine.Step());
-        Assert.AreEqual(123UL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(123UL, machine.Cpu.A.Value);
         Assert.AreEqual(1UL, machine.Clock.Tick);
         Assert.AreEqual(987UL, machine.MappedMemory!.PhysicalMemory.ReadRaw(768).Data.Value);
         Assert.IsFalse(machine.Step());
-        Assert.AreEqual(987UL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(987UL, machine.Cpu.A.Value);
         Assert.AreEqual(2, callbacks);
         Assert.AreEqual(1, machine.SupervisorIo!.CompletedTransfers);
     }
@@ -69,11 +76,11 @@ public sealed class SupervisorExecutionTests
         Assert.AreEqual(3L, completed);
         Assert.AreEqual(stepCount, blockCount);
         Assert.AreEqual(step.Clock.Tick, block.Clock.Tick);
-        Assert.AreEqual(step.Cpu.GetK(), block.Cpu.GetK());
-        Assert.AreEqual(step.Cpu.GetA(), block.Cpu.GetA());
-        Assert.AreEqual(step.Cpu.GetY(), block.Cpu.GetY());
+        Assert.AreEqual(step.Cpu.K, block.Cpu.K);
+        Assert.AreEqual(step.Cpu.A, block.Cpu.A);
+        Assert.AreEqual(step.Cpu.Y, block.Cpu.Y);
         Assert.AreEqual(step.SupervisorIo!.ExternalInterrupts, block.SupervisorIo!.ExternalInterrupts);
-        for (uint address = 0; address < PhysicalMemory.WordCount; address++)
+        for (uint address = 0; address < ArchitectureConstants.WordCount; address++)
             Assert.AreEqual(step.MappedMemory!.PhysicalMemory.ReadRaw(address), block.MappedMemory!.PhysicalMemory.ReadRaw(address));
     }
 
@@ -121,11 +128,11 @@ public sealed class SupervisorExecutionTests
         machine.Scheduler.Schedule(1, () => machine.SupervisorIo.RaiseInterrupts(SupervisorIoController.TimerInterrupt));
         Assert.IsFalse(machine.Step());
         Assert.AreEqual(7U, machine.Cpu.GetM(1));
-        Assert.AreEqual(1024U, machine.Cpu.GetK());
+        Assert.AreEqual(1024U, machine.Cpu.K);
         Assert.IsFalse(machine.Step());
         Assert.AreEqual(7U, machine.Cpu.GetM(1));
         Assert.AreEqual(9U, machine.Cpu.GetM(2));
-        Assert.AreEqual(0x141U, machine.Cpu.GetK());
+        Assert.AreEqual(0x141U, machine.Cpu.K);
         Assert.AreEqual(1024U, machine.Cpu.Supervisor.ReadModifier(27));
         Assert.AreNotEqual(0U, machine.Cpu.Supervisor.SavedFlags & SupervisorControl.SavedRightHalf);
         Assert.AreEqual(2UL, machine.Clock.Tick);

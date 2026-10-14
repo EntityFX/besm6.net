@@ -1,8 +1,10 @@
 using System.Reflection;
-using Besm6.Core;
+using Besm6.Processor.Cpu;
 
 namespace Besm6.Tests
 {
+    using Processor = global::Besm6.Processor.Cpu.Processor;
+
     [TestClass]
     public sealed class ProcessorDependencyTests
     {

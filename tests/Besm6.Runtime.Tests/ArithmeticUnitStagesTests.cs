@@ -1,4 +1,10 @@
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Processor.Arithmetic;
+using Besm6.Processor.Cpu;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Arithmetic;
 
 namespace Besm6.Tests;
 
@@ -266,7 +272,7 @@ public sealed class ArithmeticUnitStagesTests
         machine.HardwareTimeline.AdvanceTo(new(100));
         Assert.IsTrue(unit.TryReadOutput(out var result));
         Assert.AreEqual(Two, result.A);
-        Assert.AreEqual(Word48.Zero, machine.Cpu.GetA());
+        Assert.AreEqual(Word48.Zero, machine.Cpu.A);
         Assert.AreEqual(0UL, machine.Clock.Tick);
         // The internal staged unit is not yet the CPU instruction retirement driver.
     }

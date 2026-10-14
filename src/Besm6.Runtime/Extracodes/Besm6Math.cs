@@ -1,5 +1,6 @@
+using Besm6.Architecture.Numerics;
 using System;
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Extracodes
 {
     /// <summary>
     /// Математические функции БЭСМ-6.

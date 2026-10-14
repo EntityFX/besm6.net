@@ -1,4 +1,4 @@
-using Besm6.Architecture;
+using Besm6.Architecture.Isa;
 using Besm6.BitVisualizer;
 
 namespace Besm6.BitVisualizer.Tests;

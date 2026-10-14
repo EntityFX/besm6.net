@@ -1,6 +1,13 @@
+using Besm6.Runtime.Timing.Calendar;
 using System.Text.Json;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Runtime.Configuration;
 using Besm6.Runtime.Modeling;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Memory;
 
 namespace Besm6.Tests;
 
@@ -14,7 +21,7 @@ public sealed class HardwareDataMemoryTests
         var machine = new MachineCore(ProcessorProfile.Supervisor);
         machine.Cpu.Supervisor!.Status = new((ControlUnitFlags)0x403);
         machine.MappedMemory!.PhysicalMemory.WriteRaw(8,
-            MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm(right ? "stop, " + code : code + ", stop")), false, false));
+            MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm(right ? "stop, " + code : code + ", stop")), false, false));
         for (uint i = 16; i < 40; i++) machine.MappedMemory.PhysicalMemory.WriteRaw(i, MemoryWord50.Form(new(i + 1), true, true));
         machine.Cpu.StartAt(8); machine.Cpu.State.IsRightHalf = right;
         machine.Cpu.SetM(15, 24); machine.Cpu.SetA(0x12345); machine.Cpu.SetY(0x56789);
@@ -69,7 +76,7 @@ public sealed class HardwareDataMemoryTests
         var machine = Machine("xta 20"); var handle = Begin(machine); var model = machine.HardwareModel;
         Assert.IsFalse(model.TryIndicateCompletionReady(handle));
         model.Timeline.ScheduleAt(new(2500), () => machine.MappedMemory!.PhysicalMemory.WriteRaw(16, MemoryWord50.Form(new(999), true, true)));
-        Assert.AreEqual(HardwareInstructionStatus.Completed, Finish(machine).Status); Assert.AreEqual(17UL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(HardwareInstructionStatus.Completed, Finish(machine).Status); Assert.AreEqual(17UL, machine.Cpu.A.Value);
     }
 
     [TestMethod]
@@ -80,7 +87,7 @@ public sealed class HardwareDataMemoryTests
         Assert.IsNull(model.AdvanceTo(new(1000))); Assert.AreEqual(25U, machine.Cpu.GetM(15));
         Assert.AreEqual(1, machine.MappedMemory!.PendingWriteCount);
         Assert.AreEqual(HardwareInstructionStatus.Completed, Finish(machine).Status);
-        Assert.AreEqual(0x12345UL, machine.Cpu.GetA().Value); Assert.AreEqual(1100UL, model.Timeline.Now.Nanoseconds);
+        Assert.AreEqual(0x12345UL, machine.Cpu.A.Value); Assert.AreEqual(1100UL, model.Timeline.Now.Nanoseconds);
     }
 
     [TestMethod]

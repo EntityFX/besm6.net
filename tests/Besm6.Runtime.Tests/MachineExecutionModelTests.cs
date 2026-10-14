@@ -1,5 +1,14 @@
+using Besm6.Runtime.Timing.Calendar;
 using System.Text.Json;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.State;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Execution;
+using Besm6.Runtime.Machine;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Memory;
 
 namespace Besm6.Tests;
 
@@ -15,7 +24,7 @@ public sealed class MachineExecutionModelTests
     {
         var machine = new MachineCore(ProcessorProfile.Supervisor);
         machine.Cpu.Supervisor!.Status = new((ControlUnitFlags)0x403);
-        machine.MappedMemory!.PhysicalMemory.WriteRaw(8, MemoryWord50.Form(new(Besm6.Asm.Assembler.Asm(instruction)), false, false));
+        machine.MappedMemory!.PhysicalMemory.WriteRaw(8, MemoryWord50.Form(new(Assembler.Legacy.Assembler.Asm(instruction)), false, false));
         machine.MappedMemory.PhysicalMemory.WriteRaw(16, MemoryWord50.Form(new(12345), true, true));
         machine.Cpu.StartAt(8); return machine;
     }

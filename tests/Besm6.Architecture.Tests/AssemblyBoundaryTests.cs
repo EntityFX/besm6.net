@@ -1,3 +1,6 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -5,6 +8,7 @@ using System.Reflection;
 
 namespace Besm6.Architecture.Tests
 {
+
     /// <summary>
     /// Границы сборок этапа 1 (plans/SuperPlan.md, приложение Phase 1) и финальная модель (plans/SuperPlan.md):
     /// Architecture изолирована; Processor -> Architecture; Assembler -> Architecture+Processor;
@@ -63,8 +67,20 @@ namespace Besm6.Architecture.Tests
         public void Architecture_Assembly_Contains_No_RuntimeDeviceTypes()
         {
             Assembly asm = typeof(Word48).Assembly;
+            // Shared contracts belong to Architecture independently of their consumers.
+            var coreContracts = new HashSet<Type>
+            {
+                typeof(IAlu),
+                typeof(IProcessor),
+                typeof(IRegisters),
+                typeof(IInstructionMemory),
+                typeof(IMemory),
+            };
+            foreach (Type contract in coreContracts)
+                Assert.AreEqual(asm, contract.Assembly, contract.FullName);
+
             string[] forbidden = asm.GetTypes()
-                .Where(type => type.Namespace?.Equals("Besm6.Core", StringComparison.Ordinal) == true
+                .Where(type => type.Namespace?.StartsWith("Besm6.Architecture.", StringComparison.Ordinal) != true
                     || type.Name.Contains("Device", StringComparison.Ordinal)
                     || type.Name.Contains("Loader", StringComparison.Ordinal)
                     || type.Name.Contains("Tape", StringComparison.Ordinal)

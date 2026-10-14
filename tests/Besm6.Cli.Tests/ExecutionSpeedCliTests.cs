@@ -42,7 +42,7 @@ public sealed class ExecutionSpeedCliTests
         Directory.CreateDirectory(directory);
         try
         {
-            ulong word = Besm6.Asm.Assembler.Asm("vtm 1(1), stop");
+            ulong word = Assembler.Legacy.Assembler.Asm("vtm 1(1), stop");
             string job = Path.Combine(directory, "job.dub");
             File.WriteAllLines(job, new[] { "*trans-main:1000", "`" + Convert.ToString((long)word, 8).PadLeft(16, '0') });
             string config = Path.Combine(directory, "config.json");

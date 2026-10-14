@@ -1,4 +1,11 @@
+using Besm6.Runtime.Timing.Calendar;
 using System.Text.Json;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Architecture.Supervisor;
+using Besm6.Processor.Arithmetic;
+using Besm6.Processor.Cpu;
 using Besm6.Runtime.Modeling;
 using Besm6.Runtime.Timing;
 
@@ -11,7 +18,7 @@ public sealed class HardwareProcessorDriverTests
     private static MachineCore Machine(string code = "xta 10, stop")
     {
         var machine = new MachineCore();
-        machine.LoadProgram([new(Besm6.Asm.Assembler.Asm(code))], 1);
+        machine.LoadProgram([new(Assembler.Legacy.Assembler.Asm(code))], 1);
         machine.Memory.Write(8, new(123));
         return machine;
     }
@@ -25,14 +32,14 @@ public sealed class HardwareProcessorDriverTests
         machine.Cpu.InstructionExecuted = _ =>
         {
             Assert.AreEqual(new HardwareInstant(100), model.Timeline.Now);
-            Assert.AreEqual(321UL, machine.Cpu.GetA().Value);
+            Assert.AreEqual(321UL, machine.Cpu.A.Value);
             Assert.AreEqual(0UL, model.CompletedInstructions);
             events.Add("CPU diagnostic");
         };
         var command = model.PrepareNextInstruction();
         model.Timeline.ScheduleAt(new(100), () =>
         {
-            Assert.AreEqual(Word48.Zero, machine.Cpu.GetA());
+            Assert.AreEqual(Word48.Zero, machine.Cpu.A);
             machine.Memory.Write(8, new(321));
             events.Add("operand arrived");
         });
@@ -45,15 +52,15 @@ public sealed class HardwareProcessorDriverTests
         };
         model.Timeline.ScheduleAt(new(100), () =>
         {
-            Assert.AreEqual(321UL, machine.Cpu.GetA().Value);
+            Assert.AreEqual(321UL, machine.Cpu.A.Value);
             machine.Memory.Write(8, new(987));
             events.Add("later device event");
         });
         Assert.IsNull(model.AdvanceTo(new(99)));
-        Assert.AreEqual(Word48.Zero, machine.Cpu.GetA());
+        Assert.AreEqual(Word48.Zero, machine.Cpu.A);
         var outcome = model.AdvanceTo(new(100));
         Assert.AreEqual(new HardwareInstant(100), outcome!.Value.Time);
-        Assert.AreEqual(321UL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(321UL, machine.Cpu.A.Value);
         Assert.AreEqual(987UL, machine.Memory.Read(8).Value);
         CollectionAssert.AreEqual(new[] { "operand arrived", "CPU diagnostic", "model completion", "later device event" }, events);
         Assert.AreEqual(0UL, machine.Clock.Tick);
@@ -132,7 +139,7 @@ public sealed class HardwareProcessorDriverTests
         Assert.IsTrue(model.HasPendingInstruction);
         Assert.IsFalse(machine.Cpu.ExecutionProhibited);
         Assert.IsFalse(model.AdvanceNextEvent()!.Value.Stopped);
-        Assert.AreEqual(123UL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(123UL, machine.Cpu.A.Value);
     }
 
     [TestMethod]
@@ -231,7 +238,7 @@ public sealed class HardwareProcessorDriverTests
         };
         model.ScheduleCompletionAt(command, new(100));
         Assert.AreEqual(HardwareInstructionStatus.Completed, model.AdvanceNextEvent()!.Value.Status);
-        Assert.AreEqual(777UL, machine.Cpu.GetA().Value);
+        Assert.AreEqual(777UL, machine.Cpu.A.Value);
         Assert.AreEqual(0UL, model.CancelledInstructions);
         Assert.AreEqual(1UL, model.CompletedInstructions);
     }
@@ -290,7 +297,7 @@ public sealed class HardwareProcessorDriverTests
         var model = machine.HardwareModel;
         var command = model.PrepareNextInstruction();
         model.Timeline.ScheduleAt(new(50), () => machine.Memory.Write(1,
-            new(Besm6.Asm.Assembler.Asm("vtm 7(1), vtm 11(2)"))));
+            new(Assembler.Legacy.Assembler.Asm("vtm 7(1), vtm 11(2)"))));
         model.ScheduleCompletionAt(command, new(100));
         model.AdvanceTo(new(100));
         Assert.AreEqual(3u, machine.Cpu.GetM(1));
@@ -320,18 +327,18 @@ public sealed class HardwareProcessorDriverTests
         // not an operand-dependent historical addition duration.
         model.Timeline.ScheduleAt(new(500), () =>
         {
-            Assert.AreEqual(one, machine.Cpu.GetA());
+            Assert.AreEqual(one, machine.Cpu.A);
             unit.CompleteOperation();
             Assert.IsTrue(unit.TryReadOutput(out var result));
             Assert.AreEqual(one.Value | 1UL, result.A.Value);
             Assert.IsTrue(model.TryIndicateCompletionReady(in command));
         });
         model.AdvanceTo(new(499));
-        Assert.AreEqual(one, machine.Cpu.GetA());
+        Assert.AreEqual(one, machine.Cpu.A);
         model.AdvanceNextEvent();
         Assert.IsTrue(unit.TryReadOutput(out var output));
-        Assert.AreEqual(output.A, machine.Cpu.GetA());
-        Assert.AreEqual(output.Y, machine.Cpu.GetY());
+        Assert.AreEqual(output.A, machine.Cpu.A);
+        Assert.AreEqual(output.Y, machine.Cpu.Y);
     }
 
     [TestMethod]
@@ -345,14 +352,14 @@ public sealed class HardwareProcessorDriverTests
         var command = model.PrepareNextInstruction();
         Assert.IsNull(command.Instruction);
         Assert.AreEqual(0UL, machine.Cpu.Supervisor.InternalInterrupts);
-        Assert.AreEqual(8u, machine.Cpu.GetK());
+        Assert.AreEqual(8u, machine.Cpu.K);
         model.ScheduleCompletionAt(command, new(100));
         Assert.IsNull(model.AdvanceTo(new(99)));
         Assert.AreEqual(0UL, machine.Cpu.Supervisor.InternalInterrupts);
         var outcome = model.AdvanceNextEvent();
         Assert.AreEqual(HardwareInstructionStatus.GuestFault, outcome!.Value.Status);
         Assert.AreEqual(1UL << 13, machine.Cpu.Supervisor.InternalInterrupts);
-        Assert.AreEqual(0x140u, machine.Cpu.GetK());
+        Assert.AreEqual(0x140u, machine.Cpu.K);
         Assert.AreEqual(0UL, model.CompletedInstructions);
         Assert.AreEqual(0UL, machine.Clock.Tick);
     }
@@ -377,7 +384,7 @@ public sealed class HardwareProcessorDriverTests
         Assert.AreEqual(HardwareInstructionStatus.GuestFault, model.LastOutcome!.Value.Status);
         Assert.IsTrue(machine.Cpu.Intercept(failure.Message));
         machine.Cpu.StackCorrection();
-        machine.Cpu.CanonPost(machine.Cpu.GetK(), machine.Cpu.RightInstruction);
+        machine.Cpu.CanonPost(machine.Cpu.K, machine.Cpu.RightInstruction);
         Assert.AreEqual(9u, machine.Cpu.GetM(15));
         Assert.AreEqual(1, observed);
         Assert.AreEqual(0UL, model.CompletedInstructions);
@@ -446,7 +453,7 @@ public sealed class HardwareProcessorDriverTests
         var model = machine.HardwareModel;
         var command = model.PrepareNextInstruction();
         Assert.AreEqual(1u, command.Address);
-        Assert.AreEqual(1u, machine.Cpu.GetK());
+        Assert.AreEqual(1u, machine.Cpu.K);
         Assert.IsTrue(model.TryRequestCancellation(in command));
         model.AdvanceNextEvent();
     }
@@ -458,9 +465,9 @@ public sealed class HardwareProcessorDriverTests
         var hardware = new MachineCore();
         var program = new[]
         {
-            new Word48(Besm6.Asm.Assembler.Asm("vtm 1(1), utm 2(1)")),
-            new Word48(Besm6.Asm.Assembler.Asm("ita 1, atx 10")),
-            new Word48(Besm6.Asm.Assembler.Asm("stop, stop")),
+            new Word48(Assembler.Legacy.Assembler.Asm("vtm 1(1), utm 2(1)")),
+            new Word48(Assembler.Legacy.Assembler.Asm("ita 1, atx 10")),
+            new Word48(Assembler.Legacy.Assembler.Asm("stop, stop")),
         };
         functional.LoadProgram(program, 1); hardware.LoadProgram(program, 1);
         var model = hardware.HardwareModel;

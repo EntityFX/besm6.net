@@ -1,4 +1,9 @@
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Memory;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Runtime.Timing.Memory;
 
 namespace Besm6.Runtime.Modeling;
 

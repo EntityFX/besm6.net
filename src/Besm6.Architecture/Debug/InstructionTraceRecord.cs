@@ -1,4 +1,7 @@
-namespace Besm6.Core
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Numerics;
+
+namespace Besm6.Architecture.Machine
 {
     /// <summary>
     /// Типизированная запись об одной реально исполненной инструкции.

@@ -1,5 +1,11 @@
+using Besm6.Runtime.Timing.Calendar;
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.State;
+using Besm6.Processor.Memory;
 using Besm6.Runtime.Modeling;
 using Besm6.Runtime.Timing;
+using Besm6.Runtime.Timing.Memory;
 
 namespace Besm6.Tests;
 

@@ -1,3 +1,9 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Numerics;
+using Besm6.Processor.Arithmetic;
+using Besm6.Processor.Cpu;
+using Besm6.Processor.Execution;
 using System.Runtime.ExceptionServices;
 
 namespace Besm6.Core;

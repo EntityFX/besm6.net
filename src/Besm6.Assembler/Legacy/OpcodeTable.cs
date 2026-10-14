@@ -1,24 +1,26 @@
-namespace Besm6.Asm
+using Besm6.Assembler.Api;
+
+namespace Besm6.Assembler.Legacy
 {
     /// <summary>
     /// Устаревшая публичная таблица мнемоник. Делегирует
-    /// <see cref="global::Besm6.Assembler.OpcodeTable"/>.
+    /// <see cref="Assembler.OpcodeTable"/>.
     /// </summary>
     [Obsolete("Используйте Besm6.Assembler (внутренняя OpcodeTable)")]
     public static class OpcodeTable
     {
-        public static readonly string[] ShortMadlen = global::Besm6.Assembler.OpcodeTable.ShortMadlen;
-        public static readonly string[] LongMadlen = global::Besm6.Assembler.OpcodeTable.LongMadlen;
-        public static readonly string[] ShortBemsh = global::Besm6.Assembler.OpcodeTable.ShortBemsh;
-        public static readonly string[] LongBemsh = global::Besm6.Assembler.OpcodeTable.LongBemsh;
+        public static readonly string[] ShortMadlen = Parsing.OpcodeTable.ShortMadlen;
+        public static readonly string[] LongMadlen = Parsing.OpcodeTable.LongMadlen;
+        public static readonly string[] ShortBemsh = Parsing.OpcodeTable.ShortBemsh;
+        public static readonly string[] LongBemsh = Parsing.OpcodeTable.LongBemsh;
 
         public static string GetOpName(int opcode)
-            => global::Besm6.Assembler.OpcodeTable.GetOpName(opcode);
+            => Parsing.OpcodeTable.GetOpName(opcode);
 
         public static string GetOpNameBemsh(int opcode)
-            => global::Besm6.Assembler.OpcodeTable.GetOpNameBemsh(opcode);
+            => Parsing.OpcodeTable.GetOpNameBemsh(opcode);
 
         public static bool TryGetOpcode(string opname, out int opcode)
-            => global::Besm6.Assembler.OpcodeTable.TryGetOpcode(opname, global::Besm6.Assembler.AssemblyDialect.Auto, out opcode);
+            => Parsing.OpcodeTable.TryGetOpcode(opname, AssemblyDialect.Auto, out opcode);
     }
 }

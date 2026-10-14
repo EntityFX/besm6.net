@@ -1,4 +1,4 @@
-namespace Besm6.Runtime
+namespace Besm6.Runtime.Devices
 {
     /// <summary>
     /// Типы периферийных устройств БЭСМ-6.

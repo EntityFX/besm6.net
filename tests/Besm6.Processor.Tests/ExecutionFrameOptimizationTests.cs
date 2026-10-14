@@ -1,4 +1,12 @@
+using Besm6.Architecture.Machine;
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
+using Besm6.Architecture.State;
+using Besm6.Processor.Memory;
+
 namespace Besm6.Tests;
+using Processor = global::Besm6.Processor.Cpu.Processor;
+
 
 [TestClass]
 public sealed class ExecutionFrameOptimizationTests
@@ -10,17 +18,17 @@ public sealed class ExecutionFrameOptimizationTests
         {
             var memory = new CoreMemory();
             var cpu = new Processor(memory);
-            memory.Write(1, new Word48(Besm6.Asm.Assembler.Asm("vjm 10(2), vjm 10(2)")));
+            memory.Write(1, new Word48(Assembler.Legacy.Assembler.Asm("vjm 10(2), vjm 10(2)")));
             cpu.State.K = 1; cpu.State.IsRightHalf = right;
             cpu.SetA(123); cpu.SetY(456);
             cpu.Step();
             Assert.AreEqual(2u, cpu.GetM(2));
-            Assert.AreEqual(8u, cpu.GetK());
+            Assert.AreEqual(8u, cpu.K);
             Assert.IsFalse(cpu.RightInstruction);
-            Assert.AreEqual(123UL, cpu.GetA().Value);
-            Assert.AreEqual(456UL, cpu.GetY().Value);
+            Assert.AreEqual(123UL, cpu.A.Value);
+            Assert.AreEqual(456UL, cpu.Y.Value);
 
-            memory.Write(1, new Word48(Besm6.Asm.Assembler.Asm("*50 3, *50 3")));
+            memory.Write(1, new Word48(Assembler.Legacy.Assembler.Asm("*50 3, *50 3")));
             cpu.State.K = 1; cpu.State.IsRightHalf = right;
             ExtracodeCall? received = null;
             cpu.ExtracodeDispatch = call =>
@@ -31,10 +39,10 @@ public sealed class ExecutionFrameOptimizationTests
             };
             cpu.Step();
             Assert.AreEqual(right, received!.Value.IsRightHalf);
-            Assert.AreEqual(2u, cpu.GetK());
+            Assert.AreEqual(2u, cpu.K);
             Assert.IsFalse(cpu.RightInstruction);
-            Assert.AreEqual(321UL, cpu.GetA().Value);
-            Assert.AreEqual(654UL, cpu.GetY().Value);
+            Assert.AreEqual(321UL, cpu.A.Value);
+            Assert.AreEqual(654UL, cpu.Y.Value);
         }
     }
 
@@ -61,13 +69,13 @@ public sealed class ExecutionFrameOptimizationTests
     {
         var memory = new ObservedMemory();
         var cpu = new Processor(memory);
-        memory.Write(1, new Word48(Besm6.Asm.Assembler.Asm("wtc 2, stop")));
+        memory.Write(1, new Word48(Assembler.Legacy.Assembler.Asm("wtc 2, stop")));
         memory.Write(2, new Word48(7));
         cpu.SetA(123); cpu.SetY(456);
         memory.OnReadOperand = () => { cpu.SetA(999); cpu.SetY(888); };
         cpu.Step();
-        Assert.AreEqual(123UL, cpu.GetA().Value);
-        Assert.AreEqual(456UL, cpu.GetY().Value);
+        Assert.AreEqual(123UL, cpu.A.Value);
+        Assert.AreEqual(456UL, cpu.Y.Value);
         Assert.AreEqual(7u, cpu.State.C);
         Assert.IsTrue(cpu.State.ApplyC);
     }
@@ -81,13 +89,13 @@ public sealed class ExecutionFrameOptimizationTests
     {
         var memory = new ObservedMemory();
         var cpu = new Processor(memory);
-        memory.Write(1, new Word48(Besm6.Asm.Assembler.Asm(instruction + ", stop")));
+        memory.Write(1, new Word48(Assembler.Legacy.Assembler.Asm(instruction + ", stop")));
         memory.Write(2, new Word48(77));
         cpu.SetA(123); cpu.SetY(456);
         memory.OnReadOperand = memory.OnWriteOperand = () => { cpu.SetA(999); cpu.SetY(888); };
         cpu.Step();
-        Assert.AreEqual(expectedA, cpu.GetA().Value);
-        Assert.AreEqual(expectedY, cpu.GetY().Value);
+        Assert.AreEqual(expectedA, cpu.A.Value);
+        Assert.AreEqual(expectedY, cpu.Y.Value);
     }
 
     [TestMethod]
@@ -103,17 +111,17 @@ public sealed class ExecutionFrameOptimizationTests
         // Use processor stores so the exact same setup reaches both implementations.
         foreach (var cpu in new[] { plain, observed })
         {
-            cpu.MemStore(1, Besm6.Asm.Assembler.Asm(instruction + ", stop"));
+            cpu.MemStore(1, Assembler.Legacy.Assembler.Asm(instruction + ", stop"));
             cpu.MemStore(2, Word48.FromDouble(0.5).Value);
             cpu.SetA(Word48.FromDouble(1.25).Value);
             cpu.SetY(0x123456789);
             cpu.SetR((uint)RFlags.Mult);
             cpu.Step();
         }
-        Assert.AreEqual(observed.GetA(), plain.GetA());
-        Assert.AreEqual(observed.GetY(), plain.GetY());
-        Assert.AreEqual(observed.GetR(), plain.GetR());
-        Assert.AreEqual(observed.GetK(), plain.GetK());
+        Assert.AreEqual(observed.A, plain.A);
+        Assert.AreEqual(observed.Y, plain.Y);
+        Assert.AreEqual(observed.R, plain.R);
+        Assert.AreEqual(observed.K, plain.K);
         Assert.AreEqual(observed.RightInstruction, plain.RightInstruction);
     }
 }

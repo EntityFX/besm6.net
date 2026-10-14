@@ -1,6 +1,8 @@
+using Besm6.Architecture.Memory;
+using Besm6.Architecture.Numerics;
 using System;
 
-namespace Besm6.Core
+namespace Besm6.Processor.Memory
 {
     /// <summary>
     /// Байтовый указатель (порт dubna/memory.h BytePointer).

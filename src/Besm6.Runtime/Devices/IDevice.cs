@@ -1,4 +1,6 @@
-namespace Besm6.Runtime
+using Besm6.Architecture.Numerics;
+
+namespace Besm6.Runtime.Devices
 {
     /// <summary>
     /// Базовый интерфейс периферийного устройства БЭСМ-6.

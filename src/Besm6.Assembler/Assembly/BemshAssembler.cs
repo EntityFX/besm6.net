@@ -1,4 +1,6 @@
-namespace Besm6.Assembler;
+using Besm6.Assembler.Api;
+
+namespace Besm6.Assembler.Assembly;
 
 /// <summary>
 /// Ассемблер строгого диалекта БЭМШ: принимает русские мнемоники и директивы,
