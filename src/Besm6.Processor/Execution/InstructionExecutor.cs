@@ -220,6 +220,7 @@ namespace Besm6.Core
         // inlines to no operations and never accesses cycle tables or a timer.
         // Keep tiered compilation/PGO enabled: state and accounting are role-based
         // interfaces, whose hot implementations can then be devirtualized.
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         private bool ExecuteUnobservedBlock<TAccounting>(int count, ref long completed,
             ref ulong tick, ref TAccounting accounting) where TAccounting : struct, IBlockAccounting
         {
