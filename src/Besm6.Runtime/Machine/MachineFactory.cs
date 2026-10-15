@@ -15,7 +15,9 @@ namespace Besm6.Runtime.Machine
         {
             cfg ??= Config.Load();
             int memSize = cfg.MemorySize;
-            return new MachineCore((uint)memSize);
+            var machine = new MachineCore((uint)memSize);
+            machine.Cpu.MemoryWatchpointBatchingEnabled = cfg.MemoryWatchpointBatching;
+            return machine;
         }
 
         /// <summary>
@@ -28,6 +30,9 @@ namespace Besm6.Runtime.Machine
             machine ??= CreateMachine(cfg);
 
             runtimeAssets ??= ValidateRuntimeAssets(cfg);
+
+            // Apply the policy to caller-supplied machines as well as factory instances.
+            machine.Cpu.MemoryWatchpointBatchingEnabled = cfg.MemoryWatchpointBatching;
 
             return new DubnaLoader(machine, runtimeAssets.TapesDir)
             {

@@ -90,6 +90,14 @@ Hosted-запуск `--speed original` использует статистиче
 Калибровку original можно переопределить в JSON полями `originalTimeFactor`
 и `originalMathFactor`; [пример настроек](examples/original-timing.json).
 
+Для функционального исполнения с активными memory watchpoints доступна
+опциональная настройка JSON `{"memoryWatchpointBatching": true}` (`--config`).
+Пример конфигурации: [memory-watchpoint-batching.json](examples/memory-watchpoint-batching.json).
+Она разрешает быстрые блоки с сохранением проверок чтения/записи и перехода
+по watchpoint. По умолчанию выключена; fetch watchpoints, наблюдатели и
+аппаратная модель сохраняют существующие ограничения исполнения.
+Замеры и проверки: [быстрые блоки с memory watchpoints](reports/misc/dhrystone-memory-watchpoint-batching.md).
+
 ### Формат `.dub`
 
 `.dub` — задание для системы «Дубна»: заголовок `*name`, тело программы

@@ -280,12 +280,16 @@ namespace Besm6.Processor.Cpu
             return _executor.Execute();
         }
 
+        // Host policy only: memory checks and guest watchpoint semantics remain active.
+        internal bool MemoryWatchpointBatchingEnabled { get; set; }
+
         internal bool CanExecuteUnobservedBlock =>
             !_executor.HasPreparedInstruction &&
             _memoryAccess.IsPlainCoreMemory && TraceInstruction is null &&
             !_traceController.IsEnabled && !_traceController.HasPending &&
             InstructionAccounting?.HasPending != true &&
-            !_state.DebugState.DebugFetchArmed && !_state.DebugState.DebugMemoryArmed;
+            !_state.DebugState.DebugFetchArmed &&
+            (!_state.DebugState.DebugMemoryArmed || MemoryWatchpointBatchingEnabled);
 
         internal bool ExecuteUnobservedBlock(int count, ref long completed, ref ulong tick) =>
             _executor.ExecuteUnobservedBlock(count, ref completed, ref tick);

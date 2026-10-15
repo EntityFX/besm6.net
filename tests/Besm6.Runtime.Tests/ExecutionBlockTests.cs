@@ -140,7 +140,9 @@ public sealed class ExecutionBlockTests
     }
 
     [TestMethod]
-    public void SelfModificationIsSeenInsideFastBlock()
+    [DataRow(false)]
+    [DataRow(true)]
+    public void SelfModificationIsSeenInsideFastBlock(bool memoryWatch)
     {
         var machine = new MachineCore();
         machine.LoadProgram(new[]
@@ -150,6 +152,11 @@ public sealed class ExecutionBlockTests
         }, 1);
         machine.Cpu.SetA(Assembler.Legacy.Assembler.Asm("atx 1, vtm 7(2)"));
         machine.Cpu.InstructionCacheEnabled = true;
+        if (memoryWatch)
+        {
+            machine.Cpu.MemoryWatchpointBatchingEnabled = true;
+            machine.Cpu.ArmDebugWatch(1, false, 1, 31, 3);
+        }
         long completed = 0;
         Assert.IsTrue(machine.ExecuteBlock(256, ref completed));
         Assert.AreEqual(3L, completed);

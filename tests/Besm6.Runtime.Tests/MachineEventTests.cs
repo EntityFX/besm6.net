@@ -144,9 +144,12 @@ public sealed class MachineEventTests
     }
 
     [TestMethod]
-    public void EventCanArmWatchpointBeforeFollowingStore()
+    [DataRow(false)]
+    [DataRow(true)]
+    public void EventCanArmWatchpointBeforeFollowingStore(bool batching)
     {
         var machine = new MachineCore();
+        machine.Cpu.MemoryWatchpointBatchingEnabled = batching;
         machine.LoadProgram(new[] { Word("vtm 1(2), utc"), Word("atx 4, stop"), Word("vtm 7(2), stop") }, 1);
         machine.Memory.Write(4, new Word48(123));
         machine.Cpu.SetA(456);

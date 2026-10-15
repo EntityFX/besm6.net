@@ -69,6 +69,11 @@ namespace Besm6.Runtime.Configuration
         [JsonPropertyName("guestClock")]
         public bool GuestClock { get; set; }
 
+        /// <summary>Opt in to batched execution with active memory watchpoints.
+        /// Watch checks remain enabled; fetch watches and observers still use Step.</summary>
+        [JsonPropertyName("memoryWatchpointBatching")]
+        public bool MemoryWatchpointBatching { get; set; }
+
         private double _originalTimeFactor = Besm6.Runtime.Timing.HostedTimingParameters.Default.ModelTimeFactor;
         private double _originalMathFactor = Besm6.Runtime.Timing.HostedTimingParameters.Default.MathFactor;
 

@@ -193,18 +193,33 @@ namespace Besm6.Core
         /// </summary>
         internal bool ExecuteUnobservedBlock(int count, ref long completed, ref ulong tick)
         {
-            if (_processor.InstructionAccounting != null)
+            _processor.LastStepCompleted = true;
+            try
             {
-                var accounting = new CountedBlockAccounting(_processor.InstructionAccounting);
-                return ExecuteUnobservedBlock(count, ref completed, ref tick, ref accounting);
+                if (_processor.InstructionAccounting != null)
+                {
+                    var accounting = new CountedBlockAccounting(_processor.InstructionAccounting);
+                    return ExecuteUnobservedBlock(count, ref completed, ref tick, ref accounting);
+                }
+                var uncounted = new UncountedBlockAccounting();
+                return ExecuteUnobservedBlock(count, ref completed, ref tick, ref uncounted);
             }
-            var uncounted = new UncountedBlockAccounting();
-            return ExecuteUnobservedBlock(count, ref completed, ref tick, ref uncounted);
+            catch (DebugWatchAbortException)
+            {
+                // Match Execute + FunctionalProcessorSimulation.Step: a watch abort
+                // advances the functional tick/attempt count but does not finalize
+                // registers or complete opcode accounting. DebugFire already set
+                // the continuation. Return so due events run before that command.
+                tick++;
+                completed++;
+                return false;
+            }
         }
 
         // Both specializations share dispatch/finalization. The uncounted struct
         // inlines to no operations and never accesses cycle tables or a timer.
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveOptimization)]
+        // Keep tiered compilation/PGO enabled: state and accounting are role-based
+        // interfaces, whose hot implementations can then be devirtualized.
         private bool ExecuteUnobservedBlock<TAccounting>(int count, ref long completed,
             ref ulong tick, ref TAccounting accounting) where TAccounting : struct, IBlockAccounting
         {
