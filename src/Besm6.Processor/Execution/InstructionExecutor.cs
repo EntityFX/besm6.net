@@ -196,9 +196,14 @@ namespace Besm6.Core
             _processor.LastStepCompleted = true;
             try
             {
-                if (_processor.InstructionAccounting != null)
+                if (_processor.InstructionAccounting is { } session)
                 {
-                    var accounting = new CountedBlockAccounting(_processor.InstructionAccounting);
+                    if (session is ProcessorInstructionAccounting processorSession)
+                    {
+                        var processorAccounting = new ProcessorBlockAccounting(processorSession);
+                        return ExecuteUnobservedBlock(count, ref completed, ref tick, ref processorAccounting);
+                    }
+                    var accounting = new CountedBlockAccounting(session);
                     return ExecuteUnobservedBlock(count, ref completed, ref tick, ref accounting);
                 }
                 var uncounted = new UncountedBlockAccounting();

@@ -36,9 +36,20 @@ internal sealed class ProcessorInstructionAccounting : IProcessorInstructionAcco
     {
         int opcode = _pendingOpcode;
         if (opcode < 0) return;
+        Retire(opcode < _cycles.Length ? _cycles[opcode] : _defaultCycles);
+    }
+
+    // The unobserved loop calls this only after Begin and successful dispatch.
+    // Decoded opcodes fit the table; exceptions/watch aborts never reach here.
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void CompleteDecodedInstruction() => Retire(_cycles[_pendingOpcode]);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Retire(int cycles)
+    {
         _pendingOpcode = -1;
         TotalInstructions++;
-        TotalCycles += opcode < _cycles.Length ? _cycles[opcode] : _defaultCycles;
+        TotalCycles += cycles;
     }
 
     public void CancelPending() => _pendingOpcode = -1;
