@@ -23,8 +23,6 @@ namespace Besm6.Runtime.Devices
         private StreamWriter? _cosy;
         private readonly StringBuilder _cosyString = new();
 
-        private static readonly byte[] BrailleMap = { 0x01, 0x08, 0x02, 0x10, 0x04, 0x20, 0x40, 0x80 };
-
         /// <summary>
         /// Создаёт puncher. <paramref name="outputDir"/> — каталог для punch.out /
         /// </summary>
@@ -76,24 +74,7 @@ namespace Besm6.Runtime.Devices
                 _braille = OpenWriter("punch.out");
                 if (_braille == null) return;
             }
-            byte[,] bytes = new byte[3, 40];
-            for (int line = 0; line < 12; line++)
-            {
-                for (int col = 0; col < 80; col++)
-                {
-                    int idx = 1 + 12 * line + (col >= 40 ? 1 : 0) + col / 8;
-                    int bit = (buf[idx] >> (7 - col % 8)) & 1;
-                    if (bit != 0)
-                        bytes[line / 4, col / 2] |= BrailleMap[line % 4 * 2 + col % 2];
-                }
-            }
-            for (int line = 0; line < 3; line++)
-            {
-                for (int col = 0; col < 40; col++)
-                    _braille!.Write((char)(0x2800 + bytes[line, col]));
-                _braille!.Write('\n');
-            }
-            _braille!.Write('\n'); // карточки разделяются пустой строкой
+            _braille.Write(PunchCardRenderer.RenderBraille(PunchCardImage.FromMemoryImage(buf)));
         }
 
         /// <summary>Транспонирует образ карточки в колонки (12 бит на колонку).</summary>
