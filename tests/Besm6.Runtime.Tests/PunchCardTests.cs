@@ -88,18 +88,21 @@ public class PunchCardTests
     {
         var card = PunchCardCodec.Encode("A", PunchCardEncoding.Ibm);
         var lines = PunchCardRenderer.RenderGrid(card, PunchCardEncoding.Ibm).Split('\n');
-        Assert.AreEqual("00000000011111111112222222222333333333344444444445555555555666666666677777777778", lines[0][9..].Replace(" ", ""));
-        Assert.AreEqual(string.Concat(Enumerable.Repeat("1234567890", 8)), lines[1][9..].Replace(" ", ""));
+        Assert.AreEqual("00000000011111111112222222222333333333344444444445555555555666666666677777777778", lines[0].AsSpan(4, 80).ToString());
+        Assert.AreEqual(string.Concat(Enumerable.Repeat("1234567890", 8)), lines[1].AsSpan(4, 80).ToString());
         int[] labels = { 12, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
         for (int row = 0; row < 12; row++)
         {
-            StringAssert.StartsWith(lines[row + 2], $"Row {labels[row]:00}   ");
-            Assert.AreEqual(80, lines[row + 2][9..].Replace(" ", "").Length);
+            StringAssert.StartsWith(lines[row + 4], $"{labels[row]:00}{(row == 0 ? "/" : "│")} ");
+            var glyphs = lines[row + 4].AsSpan(4, 80);
+            Assert.AreEqual(80, glyphs.Length);
+            Assert.IsTrue(glyphs.ToArray().All(ch => ch is '□' or '.'));
         }
         var ascii = PunchCardRenderer.RenderGrid(card, PunchCardEncoding.Upp, ascii: true);
         Assert.IsTrue(ascii.All(ch => ch < 128));
-        StringAssert.Contains(ascii, "Row 01   O");
-        StringAssert.Contains(ascii, "Row 12   ");
+        StringAssert.Contains(ascii, "01/ O");
+        StringAssert.Contains(ascii, "04| O");
+        StringAssert.Contains(ascii, "12| ");
     }
 
     [TestMethod]

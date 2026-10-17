@@ -13,7 +13,7 @@ public class PunchCommandTests
         using var error = new StringWriter();
         Assert.AreEqual(0, CliApplication.Run(new[] { "punch", "--text", "      A=B+3", "--encoding", "ibm", "--format", "ascii" }, output, error));
         StringAssert.Contains(output.ToString(), "Card 1 (Ibm)");
-        StringAssert.Contains(output.ToString(), "Row 12   ......O. OO......");
+        StringAssert.Contains(output.ToString(), "12/ ......O.OO");
         Assert.AreEqual("", error.ToString());
     }
 
@@ -30,7 +30,7 @@ public class PunchCommandTests
             string rendered = File.ReadAllText(output);
             StringAssert.Contains(rendered, "Card 3 (Upp)");
             Assert.IsFalse(rendered.Contains("Card 4"));
-            StringAssert.Contains(rendered, "Row 01   ··●····· ●·●····● ●·····●●");
+            StringAssert.Contains(rendered, "01/ □...□□□□□...□□□□□...");
         }
         finally { Directory.Delete(dir, true); }
     }
