@@ -1,0 +1,2323 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>&Bcy;&Ecy;&Scy;&Mcy;-6&colon; &chcy;&tcy;&ocy; &scy;&tcy;&ocy;&icy;&tcy; &zcy;&acy; &mcy;&icy;&lcy;&lcy;&icy;&ocy;&ncy;&ocy;&mcy; &ocy;&pcy;&iecy;&rcy;&acy;&tscy;&icy;&jcy; &vcy; &scy;&iecy;&kcy;&ucy;&ncy;&dcy;&ucy;</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<link href="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.css" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <span id="markdown-mermaid" aria-hidden="true" data-config="{&quot;darkModeTheme&quot;:&quot;vscode&quot;,&quot;lightModeTheme&quot;:&quot;vscode&quot;,&quot;maxTextSize&quot;:50000,&quot;clickDrag&quot;:&quot;alt&quot;,&quot;showControls&quot;:&quot;onHoverOrFocus&quot;,&quot;resizable&quot;:true,&quot;maxHeight&quot;:&quot;&quot;}"></span>
+				<h1 id="бэсм-6-что-стоит-за-миллионом-операций-в-секунду">БЭСМ-6: что стоит за миллионом операций в секунду</h1>
+<p><strong>Аннотация.</strong> БЭСМ-6 часто называют «миллионником»: её быстродействие оценивают в миллион операций в секунду. Но какие операции имеются в виду и что эта цифра говорит о скорости реальных программ? Разберём устройство машины, её архитектуру и систему команд, запустим программы на Фортране в симуляторе <a href="http://Besm6.Net">Besm6.Net</a> и сравним четыре семейства тестов: Dhrystone, Whetstone, Memspeed и MP-MFLOPS. Отдельно рассмотрим скорость эмуляции на современном компьютере и расчётное время выполнения на БЭСМ-6.</p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\besm6.jpg" alt="БЭСМ-6: центральный вычислитель и периферийные устройства в машинном зале"></p>
+<p><em>БЭСМ-6 в машинном зале. <a href="https://besm-6.ru/besm6.html">Источник фотографии</a>.</em></p>
+<p><strong>Теги:</strong> БЭСМ-6, эмуляция, ретрокомпьютинг, бенчмарки, ЭВМ, суперкомпьютеры.</p>
+<p><strong>Содержание</strong></p>
+<ul>
+<li><a href="#why">Зачем измерять БЭСМ-6 сегодня</a></li>
+<li><a href="#history">История и устройство машины</a></li>
+<li><a href="#architecture">Архитектура и периферия</a></li>
+<li><a href="#software">Программное обеспечение</a></li>
+<li><a href="#simulators">Симуляторы и первый запуск</a></li>
+<li><a href="#benchmarks">Бенчмарки и методика измерений</a></li>
+<li><a href="#results">Результаты и их интерпретация</a></li>
+<li><a href="#conclusions">Выводы</a></li>
+<li><a href="#sources">Источники</a></li>
+<li><a href="#listing">Приложение: полный листинг запуска</a></li>
+</ul>
+<p><a id="why"></a></p>
+<h2 id="зачем-измерять-бэсм-6-сегодня">Зачем измерять БЭСМ-6 сегодня</h2>
+<p>Сегодня программу для БЭСМ-6 можно написать в обычном текстовом файле и запустить в эмуляторе под Linux или Windows. Она напечатает знакомый <code>Hello, World!</code> или выполнит научный расчёт — с помощью исторического транслятора и библиотек.</p>
+<p>Действующая физическая машина для этого исследования недоступна, поэтому все практические результаты получены в <strong><a href="http://Besm6.Net">Besm6.Net</a></strong> — симуляторе на C#, который я написал из любопытства и желания попробовать агентную разработку с помощью ИИ. По ходу работы возникли два вопроса: насколько быстро современный компьютер исполняет программы БЭСМ-6 и сколько времени эти программы могли бы занять на исходной машине. Для эксперимента я выбрал Dhrystone, Whetstone, Memspeed и MP-MFLOPS: они нагружают разные части вычислительной системы и дают материал для сравнения.</p>
+<p>В бенчмарках особенно заметна разница между правильным выполнением программы и точным воспроизведением её времени. Эмулятор может верно реализовать арифметику и получить правильный ответ, но ошибиться в оценке длительности в несколько раз, если его временная модель недостаточно подробно учитывает конвейер и память. Даже совпадение одного сводного рейтинга с опубликованным результатом не гарантирует совпадения времён отдельных секций.</p>
+<p><a id="history"></a></p>
+<h2 id="от-мэсм-к-бэсм-6">От МЭСМ к БЭСМ-6</h2>
+<p>История начинается с МЭСМ, введённой в эксплуатацию в 1951 году. За ней последовала первая БЭСМ: её изготовление завершили в 1952 году, государственная приёмка состоялась в 1953-м. БЭСМ-2 стала серийным развитием первой машины; её выпуск начался примерно в 1958 году. Это была ещё ламповая техника. БЭСМ-4 представляла другую ветвь: её система команд продолжала линию М-20, а элементная база уже была полупроводниковой.</p>
+<blockquote>
+<p>Общее название серии не означает совместимости её машин: за номерами БЭСМ стояли разные архитектурные решения.</p>
+</blockquote>
+<p>Подробнее об этой линии развития — в <a href="https://www.besm-6.ru/besm-series.html">истории серии</a> и музейных описаниях <a href="https://computer-museum.ru/histussr/29-1.htm">БЭСМ-2</a> и <a href="https://www.computer-museum.ru/histussr/29-2.htm">БЭСМ-4</a>.</p>
+<p>В начале 1960-х разрабатывалась архитектура новой машины для крупных научных расчётов — БЭСМ-6. Она прошла государственную приёмку в 1967 году. Главным конструктором был Сергей Алексеевич Лебедев; ключевую роль в разработке играли Владимир Алексеевич Мельников и Леонид Николаевич Королёв. Серийное производство продолжалось с 1968 по 1987 год, всего изготовили 355 машин. <a href="https://besm-6.ru/besm6.html">Описание БЭСМ-6</a>.</p>
+<p>Переход к транзисторам позволял увеличить производительность, уменьшить габариты и энергопотребление. В музейном описании БЭСМ-6 указаны около 60 тысяч транзисторов и 180 тысяч диодов. Логика строилась на дискретных элементах, поэтому скорость зависела и от конструкции: длины соединений, размещения блоков и монтажа. Процессор занимал стойки с ячейками и платами — типовыми элементами замены, или ТЭЗами. Их устройство подробно показано в <a href="https://1500py470.livejournal.com/314207.html">блоге 1500py470</a>.</p>
+<p>Пульты позволяли наблюдать состояние машины и управлять её работой. Подробнее — в <a href="https://www.computer-museum.ru/histussr/28-1.htm">музейном описании</a> и <a href="https://www.besm6.org/doc/%D0%91%D0%AD%D0%A1%D0%9C6-%D0%A2%D0%9E-IX-%D0%BF%D1%80%D0%B8%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD%D0%B8%D1%8F.pdf">технической документации на пульты</a>.</p>
+<h3 id="машина-с-водопроводом">Машина с «водопроводом»</h3>
+<p>БЭСМ-6 совмещала работу устройства управления, арифметического устройства и памяти. Лебедев называл этот принцип «водопроводом». Сейчас мы сказали бы «конвейер»: пока одна операция вычисляет результат, для следующей уже можно готовить адрес или выбирать команду. Буферы между узлами сглаживали различия в скорости их работы. <a href="https://besm-6.ru/besm6.html">Описание архитектуры</a>.</p>
+<p>Но конвейер не отменяет зависимости. Если следующей команде нужен ещё не готовый результат, ей придётся ждать. Именно поэтому сумма задержек всех команд обычно не равна времени программы. Устройство управления может часть времени работать одновременно с арифметическим устройством, а конфликт обращений к памяти, наоборот, добавит ожидание.</p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\pipeline.svg" alt="Перекрытие этапов выполнения команд в конвейере БЭСМ-6"></p>
+<p><em>Схема конвейерного выполнения. УУ — устройство управления, УВ — устройство выборки, АУ — арифметическое устройство, УЗ — устройство записи.</em></p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\Besm6_units.png" alt="Расположение основных стоек БЭСМ-6, вид сверху"></p>
+<p><em>Основные стойки машины, вид сверху.</em></p>
+<p>Оперативная память БЭСМ-6 была ферритовой: её кубы размещались в отдельных шкафах. Базовый объём — 32 768 слов по 48 бит, или 192 КиБ полезных данных. Физическое слово содержало ещё два контрольных разряда: всего 50 бит, из которых программисту доступны 48. В расширенных конфигурациях объём достигал 128 тысяч слов. Адресное пространство программы и установленная физическая память — разные величины: механизм «приписки», близкий к современной страничной виртуальной памяти, преобразовывал адреса страниц и обеспечивал защиту. <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">Учебник 1976 года, §§ 1–3</a>.</p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\ferrite-memory-frame.jpg" alt="Рамка ферритовой памяти БЭСМ-6 с сердечниками и прошитыми проводами"></p>
+<p><em>Рамка с ферритовыми сердечниками из БЭСМ-6 предприятия VEB Kraftwerksanlagenbau Berlin. Фото: Hans Bln, <a href="https://commons.wikimedia.org/wiki/File:BESM6_Ferritkernspeicher_1.JPG">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>. Изображение без изменений.</em></p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\ferrite-memory-cube.jpg" alt="Куб ферритовой памяти БЭСМ-6 в Музее истории науки и техники ОИЯИ"></p>
+<p><em>Куб памяти БЭСМ-6 — сборка из ферритовых матриц. Экспонат Музея истории науки и техники ОИЯИ; рядом для масштаба лежит USB-накопитель. <a href="https://dlnp.jinr.ru/chronograph/life/1222">Источник: Лаборатория ядерных проблем ОИЯИ</a>.</em></p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\besm6-central-unit-vector.svg" alt="Структура центрального вычислителя БЭСМ-6 и связи его основных устройств"></p>
+<p><em>Структура центрального вычислителя.</em></p>
+<p>Расслоение памяти позволяло обращаться к разным модулям с перекрытием во времени. Быстрые буферные регистры удерживали команды и данные, сокращая число обращений к ферритовой памяти. Для этого использовались четыре буферных регистра чтения чисел (БРЧ), четыре регистра командных слов (БРС) и восемь буферных регистров записи (БРЗ). Они работали автоматически, с ассоциативным поиском по адресу; программист не адресовал их как обычные регистры. По назначению эта сверхбыстрая буферная память близка к аппаратному кэшу. Подробнее — в <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">§ 3 учебника</a> и <a href="../../besm6-memory-buffers.html">описании буферов памяти</a>.</p>
+<p>В описаниях машины встречается рабочая частота около 10 МГц. В таблице длительностей из учебника используется такт 110 нс, что соответствует примерно 9 МГц. Далее времена команд приведены именно в тактах этого источника. Частота синхронизации, длительность отдельной арифметической операции и среднее число завершённых команд в секунду — три разные характеристики. <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">§ 4 учебника</a>.</p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\tes_doc_m.jpg" alt="Стойка БЭСМ-6 с установленными типовыми элементами замены"></p>
+<p><em>Стойка с ТЭЗами.</em></p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\hw_debug.jpg" alt="Проверка и отладка типового элемента замены БЭСМ-6"></p>
+<p><em>Отладка типового элемента замены.</em></p>
+<p>Система прерываний связывала вычисления с внешними событиями. Защита памяти и привилегированный режим давали диспетчеру возможность управлять несколькими задачами. Пользовательская программа не должна была самостоятельно распоряжаться всеми устройствами: она обращалась за обслуживанием к системному ПО.</p>
+<h3 id="сравнение-с-аналогами">Сравнение с аналогами</h3>
+<p>БЭСМ-6 часто сравнивают с машинами компании Control Data Corporation (CDC). С CDC 1604 её сближают, в частности, 48-разрядное машинное слово и 15-разрядная адресация. У CDC 6600 архитектура уже другая: 60-разрядное слово, десять функциональных блоков центрального процессора и десять периферийных процессоров. <a href="https://archive.computerhistory.org/resources/text/CDC/CDC.6400_6600.1966.102646143.pdf">Документация CDC 6400/6600, 1966</a>.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Параметр</strong></th>
+<th><strong>БЭСМ-6</strong></th>
+<th><strong>CDC 1604</strong></th>
+<th><strong>CDC 6600</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Год начала серийного выпуска</strong></td>
+<td>1968</td>
+<td>1960</td>
+<td>1964</td>
+</tr>
+<tr>
+<td><strong>Элементная база</strong></td>
+<td>Транзисторы</td>
+<td>Транзисторы</td>
+<td>Транзисторы</td>
+</tr>
+<tr>
+<td><strong>Разрядность слова</strong></td>
+<td>48 бит</td>
+<td>48 бит</td>
+<td>60 бит</td>
+</tr>
+<tr>
+<td><strong>Разрядность адреса</strong></td>
+<td>15 бит</td>
+<td>15 бит</td>
+<td>18 бит</td>
+</tr>
+<tr>
+<td><strong>Объём ОЗУ</strong></td>
+<td>32 768 слов</td>
+<td>32 768 слов</td>
+<td>До 131 072 слов</td>
+</tr>
+<tr>
+<td><strong>Потребляемая мощность</strong></td>
+<td>~20–50 кВт</td>
+<td>~200–300 кВт</td>
+<td>До 300 кВт</td>
+</tr>
+<tr>
+<td><strong>Занимаемая площадь</strong></td>
+<td>~150–225 м²</td>
+<td>~150–200 м²</td>
+<td>~400 м²</td>
+</tr>
+<tr>
+<td><strong>Ориентир быстродействия</strong></td>
+<td>1 млн операций/с</td>
+<td>200 тыс. операций/с</td>
+<td>3 млн операций/с</td>
+</tr>
+</tbody>
+</table>
+<p><em>Объём памяти, мощность и площадь зависят от комплектации. Ориентиры быстродействия в этой таблице не получены на одной общей нагрузке.</em></p>
+<p>Роль программного обеспечения хорошо видна на примере NCAR: сначала CDC 6600 оценивали как в 1,5 раза более быструю по сравнению с CDC 3600, а к 1968 году, после изменения программной системы, — уже в три раза. Перенести это отношение на БЭСМ-6 нельзя: для неё в том же сравнении нет результатов на общей нагрузке. <a href="https://science.osti.gov/-/media/ascr/pdf/program-documents/archive/Lax_report.pdf">Отчёт Lax, таблица NCAR</a>.</p>
+<p><a id="architecture"></a></p>
+<h2 id="архитектура-бэсм-6">Архитектура БЭСМ-6</h2>
+<h3 id="основная-периферия-машины">Основная периферия машины</h3>
+<p>За два десятилетия комплектация машины менялась. В таблице собраны назначения устройств и параметры из конкретных описаний; состав оборудования отдельной БЭСМ-6 мог отличаться.</p>
+<table>
+<thead>
+<tr>
+<th>Устройство</th>
+<th>Назначение</th>
+<th>Что важно для программы</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://www.computer-museum.ru/histussr/niism.htm">Устройства чтения перфокарт семейства ВУ-700</a></td>
+<td>Ввод исходного текста и данных</td>
+<td>Обычно 80 колонок на карте; перестановка карт меняла задание</td>
+</tr>
+<tr>
+<td><a href="https://www.computer-museum.ru/histussr/niism.htm">АЦПУ-128</a></td>
+<td>Печать листинга и результатов</td>
+<td>128 печатных позиций; скорость зависит от исполнения устройства</td>
+</tr>
+<tr>
+<td>Телетайп</td>
+<td>Команды и сообщения оператору, работа с текстом</td>
+<td>Медленный последовательный обмен; не измеритель скорости процессора</td>
+</tr>
+<tr>
+<td>НМЛ, магнитная лента</td>
+<td>Библиотеки, программы, массивы данных</td>
+<td>Учебник описывает до 32 магнитофонов; обмен зонами по 1К слов</td>
+</tr>
+<tr>
+<td>НМБ, магнитный барабан</td>
+<td>Внешняя память с адресуемыми блоками</td>
+<td>Учебник указывает до 512К слов суммарной барабанной памяти; блок 1К или 256 слов</td>
+</tr>
+<tr>
+<td>НМД, магнитный диск</td>
+<td>Внешняя память более поздних конфигураций</td>
+<td>В описанной комплектации блок 1К слов соответствует двум дорожкам; скорость зависит от накопителя</td>
+</tr>
+</tbody>
+</table>
+<p>Устройства и объёмы внешней памяти перечислены в <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">§ 1 учебника</a>. Для АЦПУ-128-2 НИИсчётмаш указывает 128 печатных позиций в строке и скорость 380–440 строк/мин. В той же <a href="https://www.computer-museum.ru/histussr/niism.htm">исторической справке института</a> описано устройство ввода ВУ-700-2.</p>
+<h4 id="печать-внешняя-память-и-ввод">Печать, внешняя память и ввод</h4>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\acpu-128-3.jpg" alt="Алфавитно-цифровое печатающее устройство АЦПУ-128-3"></p>
+<p><em>АЦПУ-128-3 — один из вариантов печатающего устройства семейства АЦПУ-128. Фото: Radiolok, <a href="https://commons.wikimedia.org/wiki/File:BESM-6_ACPY.jpg">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Изображение без изменений.</em></p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\besm6-drum.jpg" alt="Накопители БЭСМ-6 на магнитных барабанах"></p>
+<p><em>Магнитные барабаны внешней памяти БЭСМ-6. <a href="https://habr.com/ru/companies/dataart/articles/454968/">Источник: интервью Владимира Воробьёва, опубликованное DataArt</a>.</em></p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\disk-drive-es5052.jpg" alt="Накопитель на сменных магнитных дисках ЕС-5052 с видимым пакетом дисков"></p>
+<p><em>ЕС-5052 — пример накопителя на сменных магнитных дисках того периода. Конкретная модель дискового устройства зависела от комплектации вычислительного центра. Фото из Саровского музея ядерного оружия: <a href="http://borhomet.ru">borhomet.ru</a>; <a href="https://oldpc.su/pc/es/5052/index.html">источник — OldPC</a>.</em></p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\card-reader-vu700-2.png" alt="Устройство чтения перфокарт ВУ-700-2"></p>
+<p><em>ВУ-700-2 — устройство ввода с 80-колонных перфокарт. Иллюстрация из <a href="https://oldpc.su/lib/catalogs/techsred75.pdf#page=167">каталога технических средств, 1975, с. 166</a>; извлечён фрагмент страницы с фотографией.</em></p>
+<h4 id="как-программа-попадала-в-машину">Как программа попадала в машину</h4>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\punchcard-structure.png" alt="Структура 80-колоночной перфокарты"></p>
+<p><em>Разметка перфокарты: строка программы превращается в набор отверстий.</em></p>
+<p>На одной перфокарте обычно размещалась одна строка программы на языке высокого уровня, запись на автокоде или порция данных. Поля карты имели разное назначение:</p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\punchcard-zones.png" alt="Поля перфокарты для записи исходного текста программы"></p>
+<p><em>Расположение полей исходного текста на перфокарте.</em></p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\power.jpg" alt="Фрагмент блока питания БЭСМ-6"></p>
+<p><em>Блок питания — ещё одна часть инфраструктуры машины, занимавшей целый зал.</em></p>
+<h3 id="основные-регистры">Основные регистры</h3>
+<p>В выполнении программы участвуют сумматор, регистр младших разрядов, счётчик команд, регистры режима и изменения команд, а также индексные регистры. Их назначение описано в <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">§ 4 учебника</a>.</p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\regs.svg" alt="Основные регистры БЭСМ-6, их разрядность и назначение"></p>
+<table>
+<thead>
+<tr>
+<th>Регистр</th>
+<th>Размер</th>
+<th>Назначение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A</strong>, сумматор</td>
+<td>48 бит</td>
+<td>Основной регистр для арифметических и логических операций</td>
+</tr>
+<tr>
+<td><strong>Y</strong>, регистр младших разрядов (РМР)</td>
+<td>48 бит</td>
+<td>Младшие разряды результата и данные для операций сдвига</td>
+</tr>
+<tr>
+<td><strong>K</strong>, счётчик команд (СчАК)</td>
+<td>15 бит</td>
+<td>Адрес слова с выполняемой командой; половина слова учитывается отдельно</td>
+</tr>
+<tr>
+<td><strong>R</strong>, регистр режима и блокировок</td>
+<td>6 бит</td>
+<td>Режим арифметики и признаки группы операций</td>
+</tr>
+<tr>
+<td><strong>C</strong>, регистр изменения команд</td>
+<td>15 бит</td>
+<td>Модификация исполнительного адреса после <code>UTC</code> или <code>WTC</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Регистр R</strong> содержит шесть признаков. Здесь разряды пронумерованы справа налево, начиная с единицы, как в учебнике:</p>
+<table>
+<thead>
+<tr>
+<th>Разряд</th>
+<th>Назначение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Блокировка нормализации</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Блокировка округления</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Признак логической группы</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Признак группы умножения</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Признак группы сложения</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Блокировка прерывания по переполнению</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Индексные регистры.</strong> В командах БЭСМ-6 предусмотрены 16 номеров индексных регистров — M₀–M₁₅. Каждый имеет разрядность 15 бит; нулевой номер соответствует нулевому значению. Содержимое индексного регистра можно передать в 15 младших разрядов сумматора и обратно. Индексные регистры используются для:</p>
+<ul>
+<li>модификации адреса — содержимое регистра добавляется к адресной части команды;</li>
+<li>организации циклов — регистр хранит счётчик;</li>
+<li>временного хранения адресов и служебной информации.</li>
+</ul>
+<p>Роли конкретных индексных регистров:</p>
+<ul>
+<li>M₀ всегда даёт нулевое значение;</li>
+<li>M₁–M₁₄ используются для обычной индексации;</li>
+<li>M₁₅ (М017 в восьмеричной записи) служит указателем стека, или «магазина». Для соответствующих команд его использование включает магазинную адресацию с автоматическим увеличением или уменьшением указателя.</li>
+</ul>
+<p>В документации индексные регистры часто нумеруются в восьмеричном виде от М000 до М017.</p>
+<h3 id="48-разрядное-машинное-слово">48-разрядное машинное слово</h3>
+<p>48-разрядное машинное слово — естественная единица хранения и адресации в БЭСМ-6. В нём помещаются две команды по 24 бита или одно число.</p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\word.svg" alt="Разряды 48-битного машинного слова БЭСМ-6"></p>
+<p>В книжной документации разряды нумеруются справа налево, начиная с единицы. В коде симулятора часто используется нумерация с нуля — эти обозначения нужно различать. Для записи машинных кодов и адресов обычно применяют восьмеричную систему: одной цифре соответствуют три двоичных разряда. Суффикс <code>В</code> или <code>B</code> в исторических примерах обозначает восьмеричное число.</p>
+<p>При размещении двух команд слово делится на левую и правую половины:</p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\instructions.svg" alt="Две 24-разрядные команды в одном машинном слове"></p>
+<table>
+<thead>
+<tr>
+<th>Часть машинного слова</th>
+<th>Разряды</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Левая команда</td>
+<td>48–25</td>
+</tr>
+<tr>
+<td>Правая команда</td>
+<td>24–1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Числа с плавающей запятой.</strong> Если слово содержит число, его разряды распределяются следующим образом:</p>
+<table>
+<thead>
+<tr>
+<th>Поле числа</th>
+<th>Разряды</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Знак порядка</td>
+<td>48</td>
+</tr>
+<tr>
+<td>Порядок</td>
+<td>47–42</td>
+</tr>
+<tr>
+<td>Знак мантиссы</td>
+<td>41</td>
+</tr>
+<tr>
+<td>Мантисса</td>
+<td>40–1</td>
+</tr>
+</tbody>
+</table>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\48-bit.svg" alt="Поля числа с плавающей запятой: порядок, знак и мантисса"></p>
+<p>Положительная мантисса записывается в прямом коде, отрицательная — в дополнительном. Порядок хранится со смещением 64: семи старшим разрядам соответствует значение <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>64</mn><mo>+</mo><mi>P</mi></mrow><annotation encoding="application/x-tex">64+P</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">64</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span></span></span></span>, где <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi></mrow><annotation encoding="application/x-tex">P</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span></span></span></span> лежит в диапазоне от <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mn>64</mn></mrow><annotation encoding="application/x-tex">-64</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord">64</span></span></span></span> до <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>+</mo><mn>63</mn></mrow><annotation encoding="application/x-tex">+63</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">+</span><span class="mord">63</span></span></span></span>. В восьмеричной записи смещение 64 обозначается как <code>100B</code>.</p>
+<p>Значение числа равно <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>⋅</mo><msup><mn>2</mn><mi>P</mi></msup></mrow><annotation encoding="application/x-tex">M\cdot 2^P</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8413em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8413em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.13889em;">P</span></span></span></span></span></span></span></span></span></span></span>. Положительная нормализованная мантисса лежит в диапазоне от <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0,5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">5</span></span></span></span> до <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><msup><mn>2</mn><mrow><mo>−</mo><mn>40</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1-2^{-40}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">40</span></span></span></span></span></span></span></span></span></span></span></span>; модуль отрицательной нормализованной мантиссы больше <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0,5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">5</span></span></span></span>. Для нормализованных чисел диапазон составляет примерно от <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>10</mn><mrow><mo>−</mo><mn>19</mn></mrow></msup></mrow><annotation encoding="application/x-tex">10^{-19}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">19</span></span></span></span></span></span></span></span></span></span></span></span> до <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>10</mn><mn>19</mn></msup></mrow><annotation encoding="application/x-tex">10^{19}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">19</span></span></span></span></span></span></span></span></span></span></span></span> по модулю. Нижняя граница — <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mrow><mo>−</mo><mn>65</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{-65}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">65</span></span></span></span></span></span></span></span></span></span></span></span>, верхняя для положительных чисел — <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>63</mn></msup><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msup><mn>2</mn><mrow><mo>−</mo><mn>40</mn></mrow></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">2^{63}(1-2^{-40})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">63</span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">40</span></span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span>. Для ненормализованных значений нижняя граница снижается до <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mrow><mo>−</mo><mn>104</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{-104}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">104</span></span></span></span></span></span></span></span></span></span></span></span>; меньшие по модулю значения обращаются в машинный нуль. <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">Представление чисел в учебнике</a>.</p>
+<blockquote>
+<p>Мантисса содержит знак и 40 дробных разрядов — примерно 12 десятичных значащих цифр. <code>REAL</code> БЭСМ-6 отличается от современных форматов IEEE 754 <code>float</code> и <code>double</code>. При переносе бенчмарка нужно учитывать эту разницу и правила округления.</p>
+</blockquote>
+<p><strong>Целые числа и текст.</strong> Логическое слово может хранить маску, текстовые символы или целочисленное значение. Представление <code>INTEGER</code> зависит от языка и транслятора. В описанном варианте Фортрана целые числа хранятся в ненормализованном виде с порядком 40: запятая оказывается после младшего разряда мантиссы. Полного отдельного набора целочисленных арифметических операций у машины нет.</p>
+<p>Для текста в одно слово обычно упаковывают до шести символов; конкретная упаковка зависит от кодировки.</p>
+<h3 id="система-команд">Система команд</h3>
+<p>24-разрядная команда БЭСМ-6 имеет один из двух форматов. Числа в описании полей обозначают их длину в битах:</p>
+<table>
+<thead>
+<tr>
+<th>Формат</th>
+<th>Поля от старших разрядов к младшим</th>
+<th>Зачем нужен</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Короткий адрес</td>
+<td>индекс 4; признак 0; расширение адреса 1; операция 6; адрес 12</td>
+<td>Больше кодов операций, ограниченный непосредственный адрес</td>
+</tr>
+<tr>
+<td>Длинный адрес</td>
+<td>индекс 4; признак 1; операция 4; адрес 15</td>
+<td>Полный адрес, в частности для переходов и индексных команд</td>
+</tr>
+</tbody>
+</table>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\short-format.svg" alt="Поля команды БЭСМ-6 с коротким адресом"></p>
+<p><em>Команда с коротким адресом.</em></p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\full-format.svg" alt="Поля команды БЭСМ-6 с длинным адресом"></p>
+<p><em>Команда с длинным адресом.</em></p>
+<p>Ниже приведены основные команды и их характеристики из <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">приложения 1 к учебнику</a>. Рядом с латинскими мнемокодами МАДЛЕНа указаны русские обозначения команд БЭСМ-6 и мнемокоды БЕМШа — по <a href="https://www.besm6.org/wiki/CmdSheet.html">сводной таблице команд</a>. Эти обозначения относятся к разным системам записи, поэтому смешивать их в исходном тексте программы нельзя. Экстракоды рассмотрим отдельно.</p>
+<blockquote>
+<p>КОП — восьмеричный код операции; A — сумматор; Y — регистр младших разрядов. «Не изм.» — не изменяется, «изм.» — изменяется, «не опр.» — не определено. Время дано отдельно для устройства управления (УУ) и арифметического устройства (АУ), в тактах по 110 нс. Эти интервалы нельзя просто складывать для оценки всей программы: работа устройств перекрывается во времени. Обозначение <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ω</mi></mrow><annotation encoding="application/x-tex">\omega</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">ω</span></span></span></span> в строках условных переходов — условие, определяемое группой операций и содержимым сумматора; это не отдельный разряд регистра R.</p>
+</blockquote>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\images\opcodes-orig.jpg" alt="Табличка со списком кодов операций на БЭСМ-6"></p>
+<p><em>Список кодов операций на самой машине.</em></p>
+<details>
+<summary>Таблицы команд: регистры, группы операций и время выполнения</summary>
+<h4 id="команды-с-коротким-адресом">Команды с коротким адресом</h4>
+<table>
+<thead>
+<tr>
+<th>КОП</th>
+<th>МАДЛЕН (лат.)</th>
+<th>БЭСМ-6 (рус.)</th>
+<th>БЕМШ (рус.)</th>
+<th>A</th>
+<th>Y</th>
+<th>Группа</th>
+<th>В УУ</th>
+<th>В АУ: min</th>
+<th>В АУ: средн.</th>
+<th>В АУ: max</th>
+<th>Содержание операции</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>000</td>
+<td><code>ATX</code></td>
+<td><code>ЗЧ (ЗП)</code></td>
+<td><code>ЗП</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>3</td>
+<td>3</td>
+<td>3</td>
+<td>3</td>
+<td>Запись слова в память</td>
+</tr>
+<tr>
+<td>001</td>
+<td><code>STX</code></td>
+<td><code>ЗМ</code></td>
+<td><code>ЗПМ</code></td>
+<td>изм.</td>
+<td>не изм.</td>
+<td>логич.</td>
+<td>6</td>
+<td>5</td>
+<td>6</td>
+<td>6</td>
+<td>Запись и магазинное считывание</td>
+</tr>
+<tr>
+<td>003</td>
+<td><code>XTS</code></td>
+<td><code>СМ</code></td>
+<td><code>СЧМ</code></td>
+<td>изм.</td>
+<td>не изм.</td>
+<td>логич.</td>
+<td>6</td>
+<td>5</td>
+<td>6</td>
+<td>6</td>
+<td>Магазинная запись и считывание</td>
+</tr>
+<tr>
+<td>004</td>
+<td><code>A+X</code></td>
+<td><code>АС</code></td>
+<td><code>СЛ</code></td>
+<td>изм.</td>
+<td>изм.</td>
+<td>слож.</td>
+<td>3</td>
+<td>5</td>
+<td>11</td>
+<td>280</td>
+<td>Сложение</td>
+</tr>
+<tr>
+<td>005</td>
+<td><code>A-X</code></td>
+<td><code>АВ</code></td>
+<td><code>ВЧ</code></td>
+<td>изм.</td>
+<td>изм.</td>
+<td>слож.</td>
+<td>3</td>
+<td>5</td>
+<td>11</td>
+<td>280</td>
+<td>Вычитание</td>
+</tr>
+<tr>
+<td>006</td>
+<td><code>X-A</code></td>
+<td><code>ОВ</code></td>
+<td><code>ВЧОБ</code></td>
+<td>изм.</td>
+<td>изм.</td>
+<td>слож.</td>
+<td>3</td>
+<td>5</td>
+<td>11</td>
+<td>280</td>
+<td>Обратное вычитание</td>
+</tr>
+<tr>
+<td>007</td>
+<td><code>AMX</code></td>
+<td><code>МВ</code></td>
+<td><code>ВЧАБ</code></td>
+<td>изм.</td>
+<td>изм.</td>
+<td>слож.</td>
+<td>3</td>
+<td>5</td>
+<td>11</td>
+<td>280</td>
+<td>Вычитание модулей</td>
+</tr>
+<tr>
+<td>010</td>
+<td><code>XTA</code></td>
+<td><code>СЧ</code></td>
+<td><code>СЧ</code></td>
+<td>изм.</td>
+<td>не изм.</td>
+<td>логич.</td>
+<td>3</td>
+<td>2</td>
+<td>2,5</td>
+<td>3</td>
+<td>Считывание слова из памяти</td>
+</tr>
+<tr>
+<td>011</td>
+<td><code>AAX</code></td>
+<td><code>ЛУ</code></td>
+<td><code>И</code></td>
+<td>изм.</td>
+<td>нуль</td>
+<td>логич.</td>
+<td>3</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+<td>Логическое умножение</td>
+</tr>
+<tr>
+<td>012</td>
+<td><code>AEX</code></td>
+<td><code>СР (ЛВ)</code></td>
+<td><code>НТЖ</code></td>
+<td>изм.</td>
+<td>изм.</td>
+<td>логич.</td>
+<td>3</td>
+<td>2</td>
+<td>2,5</td>
+<td>3</td>
+<td>Поразрядное сравнение</td>
+</tr>
+<tr>
+<td>013</td>
+<td><code>ARX</code></td>
+<td><code>ЦС</code></td>
+<td><code>СЛЦ</code></td>
+<td>изм.</td>
+<td>нуль</td>
+<td>умнож.</td>
+<td>3</td>
+<td>3</td>
+<td>6</td>
+<td>27</td>
+<td>Циклическое сложение</td>
+</tr>
+<tr>
+<td>014</td>
+<td><code>AVX</code></td>
+<td><code>ИЗ</code></td>
+<td><code>ЗНАК</code></td>
+<td>изм.</td>
+<td>нуль</td>
+<td>слож.</td>
+<td>3</td>
+<td>4</td>
+<td>5</td>
+<td>25</td>
+<td>Изменение знака числа</td>
+</tr>
+<tr>
+<td>015</td>
+<td><code>AOX</code></td>
+<td><code>ЛС</code></td>
+<td><code>ИЛИ</code></td>
+<td>изм.</td>
+<td>нуль</td>
+<td>логич.</td>
+<td>3</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+<td>Логическое сложение</td>
+</tr>
+<tr>
+<td>016</td>
+<td><code>A/X</code></td>
+<td><code>АД</code></td>
+<td><code>ДЕЛ</code></td>
+<td>изм.</td>
+<td>не опр.</td>
+<td>умнож.</td>
+<td>3</td>
+<td>47</td>
+<td>50</td>
+<td>174</td>
+<td>Деление</td>
+</tr>
+<tr>
+<td>017</td>
+<td><code>A*X</code></td>
+<td><code>АУ</code></td>
+<td><code>УМН</code></td>
+<td>изм.</td>
+<td>изм.</td>
+<td>умнож.</td>
+<td>3</td>
+<td>15</td>
+<td>18</td>
+<td>162</td>
+<td>Умножение</td>
+</tr>
+<tr>
+<td>020</td>
+<td><code>APX</code></td>
+<td><code>СБ</code></td>
+<td><code>СБР</code></td>
+<td>изм.</td>
+<td>нуль</td>
+<td>логич.</td>
+<td>3</td>
+<td>53</td>
+<td>53</td>
+<td>53</td>
+<td>Сборка</td>
+</tr>
+<tr>
+<td>021</td>
+<td><code>AUX</code></td>
+<td><code>РБ</code></td>
+<td><code>РЗБ</code></td>
+<td>изм.</td>
+<td>нуль</td>
+<td>логич.</td>
+<td>3</td>
+<td>53</td>
+<td>53</td>
+<td>53</td>
+<td>Разборка</td>
+</tr>
+<tr>
+<td>022</td>
+<td><code>ACX</code></td>
+<td><code>ВЧ</code></td>
+<td><code>ЧЕД</code></td>
+<td>изм.</td>
+<td>нуль</td>
+<td>логич.</td>
+<td>3</td>
+<td>54</td>
+<td>56</td>
+<td>78</td>
+<td>Подсчёт числа единиц</td>
+</tr>
+<tr>
+<td>023</td>
+<td><code>ANX</code></td>
+<td><code>ВН</code></td>
+<td><code>НЕД</code></td>
+<td>изм.</td>
+<td>изм.</td>
+<td>логич.</td>
+<td>3</td>
+<td>7</td>
+<td>32</td>
+<td>78</td>
+<td>Определение номера старшей единицы</td>
+</tr>
+<tr>
+<td>024</td>
+<td><code>E+X</code></td>
+<td><code>СП</code></td>
+<td><code>СЛП</code></td>
+<td>изм.</td>
+<td>нуль</td>
+<td>умнож.</td>
+<td>3</td>
+<td>3</td>
+<td>5</td>
+<td>133</td>
+<td>Сложение порядков</td>
+</tr>
+<tr>
+<td>025</td>
+<td><code>E-X</code></td>
+<td><code>ВП</code></td>
+<td><code>ВЧП</code></td>
+<td>изм.</td>
+<td>нуль</td>
+<td>умнож.</td>
+<td>3</td>
+<td>3</td>
+<td>5</td>
+<td>133</td>
+<td>Вычитание порядков</td>
+</tr>
+<tr>
+<td>026</td>
+<td><code>ASX</code></td>
+<td><code>СК</code></td>
+<td><code>СД</code></td>
+<td>изм.</td>
+<td>изм.</td>
+<td>логич.</td>
+<td>3</td>
+<td>4</td>
+<td>нет</td>
+<td>68</td>
+<td>Сдвиг по коду порядка</td>
+</tr>
+<tr>
+<td>027</td>
+<td><code>XTR</code></td>
+<td><code>РК</code></td>
+<td><code>РЖ</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>регистр.</td>
+<td>3</td>
+<td>2</td>
+<td>2,5</td>
+<td>3</td>
+<td>Установка режима</td>
+</tr>
+<tr>
+<td>030</td>
+<td><code>RTE</code></td>
+<td><code>ВР</code></td>
+<td><code>СЧРЖ</code></td>
+<td>изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>3</td>
+<td>2</td>
+<td>3</td>
+<td>3</td>
+<td>Выдача содержимого регистра признаков</td>
+</tr>
+<tr>
+<td>031</td>
+<td><code>YTA</code></td>
+<td><code>МР</code></td>
+<td><code>СЧМР</code></td>
+<td>изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>3</td>
+<td>3</td>
+<td>5</td>
+<td>133</td>
+<td>Выдача младших разрядов</td>
+</tr>
+<tr>
+<td>034</td>
+<td><code>E+N</code></td>
+<td><code>КС</code></td>
+<td><code>СЛПА</code></td>
+<td>изм.</td>
+<td>нуль</td>
+<td>умнож.</td>
+<td>3</td>
+<td>3</td>
+<td>5</td>
+<td>133</td>
+<td>Сложение порядка с адресом</td>
+</tr>
+<tr>
+<td>035</td>
+<td><code>E-N</code></td>
+<td><code>КВ</code></td>
+<td><code>ВЧПА</code></td>
+<td>изм.</td>
+<td>нуль</td>
+<td>умнож.</td>
+<td>3</td>
+<td>3</td>
+<td>5</td>
+<td>133</td>
+<td>Вычитание из порядка адреса</td>
+</tr>
+<tr>
+<td>036</td>
+<td><code>ASN</code></td>
+<td><code>СД</code></td>
+<td><code>СДА</code></td>
+<td>изм.</td>
+<td>изм.</td>
+<td>логич.</td>
+<td>3</td>
+<td>4</td>
+<td>нет</td>
+<td>68</td>
+<td>Сдвиг по адресу</td>
+</tr>
+<tr>
+<td>037</td>
+<td><code>NTR</code></td>
+<td><code>РА</code></td>
+<td><code>РЖА</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>регистр.</td>
+<td>3</td>
+<td>2</td>
+<td>2,5</td>
+<td>3</td>
+<td>Установка режима по адресу</td>
+</tr>
+<tr>
+<td>040</td>
+<td><code>ATI</code></td>
+<td><code>УИ</code></td>
+<td><code>УИ</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>14</td>
+<td>3</td>
+<td>3</td>
+<td>3</td>
+<td>Запись из сумматора в индекс-регистр</td>
+</tr>
+<tr>
+<td>041</td>
+<td><code>STI</code></td>
+<td><code>УМ</code></td>
+<td><code>УИМ</code></td>
+<td>изм.</td>
+<td>не изм.</td>
+<td>логич.</td>
+<td>14</td>
+<td>3</td>
+<td>3</td>
+<td>3</td>
+<td>Запись из сумматора в индекс-регистр и магазинное считывание</td>
+</tr>
+<tr>
+<td>042</td>
+<td><code>ITA</code></td>
+<td><code>ВИ</code></td>
+<td><code>СЧИ</code></td>
+<td>изм.</td>
+<td>не изм.</td>
+<td>логич.</td>
+<td>6</td>
+<td>3</td>
+<td>3</td>
+<td>3</td>
+<td>Считывание индекс-регистра на сумматор</td>
+</tr>
+<tr>
+<td>043</td>
+<td><code>ITS</code></td>
+<td><code>ВМ</code></td>
+<td><code>СЧИМ</code></td>
+<td>изм.</td>
+<td>не изм.</td>
+<td>логич.</td>
+<td>9</td>
+<td>5</td>
+<td>6</td>
+<td>6</td>
+<td>Магазинная запись и считывание индекс-регистра на сумматор</td>
+</tr>
+<tr>
+<td>044</td>
+<td><code>MTJ</code></td>
+<td><code>ПИ</code></td>
+<td><code>УИИ</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>6</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>Передача кода из индекс-регистра в индекс-регистр</td>
+</tr>
+<tr>
+<td>045</td>
+<td><code>J+M</code></td>
+<td><code>СИ</code></td>
+<td><code>СЛИ</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>6</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>Сложение кода в индекс-регистрах</td>
+</tr>
+</tbody>
+</table>
+<h4 id="команды-с-длинным-адресом">Команды с длинным адресом</h4>
+<table>
+<thead>
+<tr>
+<th>КОП</th>
+<th>МАДЛЕН (лат.)</th>
+<th>БЭСМ-6 (рус.)</th>
+<th>БЕМШ (рус.)</th>
+<th>A</th>
+<th>Y</th>
+<th>Группа</th>
+<th>В УУ</th>
+<th>В АУ: min</th>
+<th>В АУ: средн.</th>
+<th>В АУ: max</th>
+<th>Содержание операции</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>22</td>
+<td><code>UTC</code></td>
+<td><code>ИА</code></td>
+<td><code>МОДА</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>4</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>Запись адреса в регистр изменения команд</td>
+</tr>
+<tr>
+<td>23</td>
+<td><code>WTC</code></td>
+<td><code>ИК</code></td>
+<td><code>МОД</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>13</td>
+<td>3</td>
+<td>3</td>
+<td>3</td>
+<td>Запись 15 младших разрядов слова в регистр изменения команд</td>
+</tr>
+<tr>
+<td>24</td>
+<td><code>VTM</code></td>
+<td><code>ПА</code></td>
+<td><code>УИА</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>4</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>Передача адреса в индекс-регистр</td>
+</tr>
+<tr>
+<td>25</td>
+<td><code>UTM</code></td>
+<td><code>СА</code></td>
+<td><code>СЛИА</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>4</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>Сложение индекс-регистра с адресом</td>
+</tr>
+<tr>
+<td>26</td>
+<td><code>UZA</code></td>
+<td><code>У0</code></td>
+<td><code>ПО</code></td>
+<td>не изм.</td>
+<td>нуль</td>
+<td>не изм.</td>
+<td>15; 12</td>
+<td>3</td>
+<td>3</td>
+<td>3</td>
+<td>Условный переход при <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ω</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\omega=0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">ω</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span></td>
+</tr>
+<tr>
+<td>27</td>
+<td><code>U1A</code></td>
+<td><code>У1</code></td>
+<td><code>ПЕ</code></td>
+<td>не изм.</td>
+<td>нуль</td>
+<td>не изм.</td>
+<td>15; 12</td>
+<td>3</td>
+<td>3</td>
+<td>3</td>
+<td>Условный переход при <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ω</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\omega=1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">ω</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span></td>
+</tr>
+<tr>
+<td>30</td>
+<td><code>UJ</code></td>
+<td><code>ПБ</code></td>
+<td><code>ПБ</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>7</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>Безусловный переход</td>
+</tr>
+<tr>
+<td>31</td>
+<td><code>VJM</code></td>
+<td><code>ПВ</code></td>
+<td><code>ПВ</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>7</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>Безусловный переход с запоминанием адреса возврата в индекс-регистре</td>
+</tr>
+<tr>
+<td>34</td>
+<td><code>VZM</code></td>
+<td><code>И0</code></td>
+<td><code>ПИО</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>7; 4</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>Условный переход по нулевому коду в индекс-регистре</td>
+</tr>
+<tr>
+<td>35</td>
+<td><code>V1M</code></td>
+<td><code>И1</code></td>
+<td><code>ПИНО</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>7; 4</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>Условный переход по ненулевому коду в индекс-регистре</td>
+</tr>
+<tr>
+<td>37</td>
+<td><code>VLM</code></td>
+<td><code>КЦ</code></td>
+<td><code>ЦИКЛ</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>7; 4</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>Конец цикла</td>
+</tr>
+<tr>
+<td>32</td>
+<td><code>IJ</code></td>
+<td><code>Э32</code></td>
+<td><code>ВЫПР</code></td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>не изм.</td>
+<td>7</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>Выход из прерывания (только в режиме диспетчера)</td>
+</tr>
+</tbody>
+</table>
+</details>
+<h3 id="арифметика-и-адресация">Арифметика и адресация</h3>
+<p>Арифметика строится вокруг сумматора <code>A</code>. Одноадресная команда получает второй операнд из памяти, а первый уже должен находиться в сумматоре. Регистр младших разрядов <code>Y</code> дополняет арифметический тракт при операциях с расширенным результатом и сдвигах. Индексные регистры участвуют в вычислении адресов и организации циклов. Счётчик команд <code>K</code> вместе с признаком левой или правой половины слова определяет место исполнения. <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">Регистры и команды</a>.</p>
+<p>При выполнении арифметических операций машинное слово рассматривается как число с плавающей запятой. Целочисленные значения также обрабатываются с учётом принятого способа представления.</p>
+<p>Арифметические операции могут выполняться в одном из четырёх режимов:</p>
+<ul>
+<li>с нормализацией и с блокировкой округления;</li>
+<li>с нормализацией и с округлением;</li>
+<li>с блокировкой нормализации и с округлением;</li>
+<li>с блокировкой нормализации и с блокировкой округления.</li>
+</ul>
+<p>После выполнения операций <code>A+X</code>, <code>A-X</code>, <code>X-A</code>, <code>AMX</code>, <code>A*X</code> мантисса результата состоит из 80 разрядов, причём младшие 40 разрядов располагаются в регистре <code>Y</code>. Их можно передать в сумматор командой <code>YTA</code>. <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">Особенности арифметических операций</a>.</p>
+<h3 id="экстракоды">Экстракоды</h3>
+<p>Через <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">экстракоды</a> пользовательская задача обращается к диспетчеру: запрашивает обмен с внешними устройствами, вычисление элементарной функции или другую системную услугу. Ближайшая современная аналогия — системный вызов, например <code>syscall</code>, или программное прерывание вроде <code>int 21h</code> в DOS.</p>
+<p>Экстракод передаёт управление системной программе. Прикладной программист задаёт запрос и параметры, а подробности обслуживания остаются у системы. Набор услуг и соглашения об аргументах зависят от программного окружения.</p>
+<p>В системе «Дубна», например, <code>*50</code> вычисляет <code>sqrt</code>, <code>*51</code> — <code>sin</code>, <code>*52</code> — <code>cos</code>, <code>*53</code> — <code>arctan</code>, а <code>*64</code> используется для печати. Для оценки производительности это существенная деталь: один экстракод может скрывать работу целой подпрограммы.</p>
+<p><a id="software"></a></p>
+<h2 id="программное-обеспечение-бэсм-6">Программное обеспечение БЭСМ-6</h2>
+<h3 id="операционные-системы-бэсм-6">Операционные системы БЭСМ-6</h3>
+<p>Программу исполняла целая система: диспетчер распределял ресурсы и обслуживал устройства, транслятор переводил исходный текст в машинные команды, библиотеки предоставляли готовые подпрограммы. Выбор этого окружения влиял и на удобство работы, и на быстродействие.</p>
+<p><strong>«Диспетчер-68» (Д-68).</strong> Первую ОС для БЭСМ-6 разработали в ИТМиВТ под руководством Л. Н. Королёва. <a href="https://besm-6.ru/besm6.html">История программного обеспечения машины</a>.</p>
+<p>Возможности системы:</p>
+<ul>
+<li>мультипрограммная работа — обслуживание нескольких задач;</li>
+<li>управление внешней памятью и устройствами ввода-вывода;</li>
+<li>совмещение вычислений с работой периферии;</li>
+<li>динамическое распределение оперативной и внешней памяти;</li>
+<li>многотерминальная работа в диалоговом режиме.</li>
+</ul>
+<p>Средства работы в реальном времени и построения многомашинных комплексов развивались уже в последующих системах.</p>
+<p><strong>ДИСПАК.</strong> Одна из наиболее известных систем БЭСМ-6, созданная под руководством В. Ф. Тюрина. История её развития описана в материалах <a href="https://www.iis.nsk.su/files/page/balakirev_n.e._bartenev_yu.g._zeldinova_s.a.pdf">об операционной системе ДИСПАК</a>.</p>
+<p>Возможности системы:</p>
+<ul>
+<li>пакетная и диалогово-пакетная обработка заданий;</li>
+<li>автоматизация запуска пользовательских задач и многозадачность;</li>
+<li>буферизация ввода-вывода;</li>
+<li>работа в составе многомашинных вычислительных комплексов (МВК): с 1972 года — общая внешняя память на магнитных дисках и автоматическое перераспределение задач между машинами.</li>
+</ul>
+<p>Развитием этого направления стала диалогово-пакетная система ДИАПАК. Работа подобных комплексов требовала настройки под конкретную аппаратную конфигурацию и набор задач.</p>
+<p><strong>Мониторная система «Дубна».</strong> Для наших экспериментов особенно важна система, использовавшаяся в ОИЯИ. Она обеспечивала обработку пакетов заданий, вызов трансляторов, подключение библиотек и запуск программ. Её устройство описано в <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">§ 7 учебника</a>. Именно с её заданиями в формате <code>.dub</code> мы будем работать ниже.</p>
+<h3 id="процесс-разработки-по">Процесс разработки ПО</h3>
+<ol>
+<li><strong>Алгоритм.</strong> Программист разбивал задачу на шаги, строил блок-схему, определял входные данные и промежуточные результаты.</li>
+<li><strong>Исходный текст.</strong> Программу записывали в тетради или на бланках. В зависимости от задачи и доступного ПО выбирали машинные коды, автокод или язык высокого уровня.</li>
+<li><strong>Ввод и трансляция.</strong> Текст переносили на перфокарты либо перфоленту с помощью специального оборудования. Транслятор проверял синтаксис и выдавал листинг с диагностикой.</li>
+<li><strong>Отладка.</strong> Программу запускали на тестовых данных. Для поиска ошибок печатали промежуточные значения на АЦПУ, использовали трассировку и контрольные точки — в пределах возможностей выбранной системы.</li>
+<li><strong>Работа с ОС и аппаратурой.</strong> Нехватка памяти, ошибки обмена и аппаратные сбои могли потребовать совместной работы программиста и инженера.</li>
+<li><strong>Проверка результата.</strong> Выходные данные сопоставляли с теоретическими расчётами и проверяли на граничных случаях. При расхождениях исправляли алгоритм или код и повторяли запуск.</li>
+</ol>
+<h3 id="языки-программирования">Языки программирования</h3>
+<p>На низком уровне использовались автокоды — языки ассемблера с мнемоническими обозначениями команд. Пример такого языка описан в <a href="https://www.computer-museum.ru/books/besm6_instruction.pdf">инструкции «Автокод БЭСМ-6» 1969 года</a>. Среди известных автокодов машины — <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">МАДЛЕН</a> и <a href="../../dubna-languages.html">БЕМШ</a>. В системе «Дубна» МАДЛЕН служил и самостоятельным языком, и промежуточным представлением при трансляции подпрограмм с Фортрана.</p>
+<p>Пример программы на МАДЛЕНе:</p>
+<pre><code class="language-asm">*name мадлен
+*madlen
+ program: ,name,
+          ,*64 , inf64
+          ,*74 ,
+ inf64:   ,    , text
+          ,    , text
+          ,001 ,
+         8,    ,
+ text:    ,gost, 18h Hello, World!'214'
+          ,gost, 6h'231'
+          ,end ,
+*execute
+*end file
+</code></pre>
+<p>Пример программы на БЕМШе:</p>
+<pre><code class="language-asm">*name бемш
+*bemsh
+ввд$$$
+prog    старт   512
+        э64     инф64
+        пб      (13)
+инф64   мода    текст
+        мода    текст
+        конк    к'000010000'
+        конк    к'100000000'
+текст   текст   п'Приветик! Это автокод БЕМШ.'
+        конд    м40b'231'
+        финиш
+квч$$$
+трн$$$
+0-0
+блмак
+бтмалф
+кнц$$$
+*main prog
+*execute
+*end file
+</code></pre>
+<p>Для научных задач часто выбирали Фортран; широко применялся и Алгол-60. На БЭСМ-6 также использовались Паскаль, ЛИСП и РЕФАЛ. Для Фортрана существовало несколько трансляторов и вариантов языка, в том числе Фортран-Дубна, Фортран-ГДР и ФОРЕКС.</p>
+<p>Простая программа на Фортране:</p>
+<pre><code class="language-fortran">*<span class="hljs-keyword">name</span> фортран
+*fortran
+        <span class="hljs-function"><span class="hljs-keyword">program</span></span> hello
+        <span class="hljs-built_in">print</span> <span class="hljs-number">1000</span>
+        <span class="hljs-keyword">stop</span>
+ <span class="hljs-number">1000</span>   <span class="hljs-keyword">format</span>(<span class="hljs-string">&#x27;Hello, World!&#x27;</span>)
+        <span class="hljs-keyword">end</span>
+*execute
+*<span class="hljs-keyword">end</span> <span class="hljs-keyword">file</span>
+</code></pre>
+<p><a id="simulators"></a></p>
+<h2 id="симуляторы-бэсм-6">Симуляторы БЭСМ-6</h2>
+<p>Запускать программы БЭСМ-6 на современных компьютерах позволяют несколько проектов.</p>
+<p><strong>SIMH.</strong> В проекте Simulator of Historical Computers реализована поддержка БЭСМ-6. Симулятор позволяет запускать ДИСПАК и прикладные программы. Исполняемый файл называется <code>b6</code>; при запуске без параметров он переходит в диалоговый режим. <a href="https://www.besm6.org/wiki/SIMH-manual.html">Руководство по SIMH для БЭСМ-6</a>.</p>
+<p><strong>Dubna BESM-6 Emulator.</strong> Проект воссоздаёт окружение мониторной системы «Дубна», использовавшейся в ОИЯИ. Он обрабатывает исторические файлы заданий и воспроизводит характерный вывод: кириллические заголовки, листинги Фортрана, графику плоттера. <a href="https://github.com/besm6/dubna">Репозиторий besm6/dubna</a>.</p>
+<p><strong><a href="http://Besm6.Net">Besm6.Net</a>.</strong> Для исследования архитектуры и запуска прикладного кода я разработал симулятор на C# с помощью ИИ. При работе опирался на SIMH, Dubna BESM-6 Emulator и документацию машины. <a href="https://github.com/EntityFX/besm6.net">Репозиторий EntityFX/besm6.net</a>.</p>
+<p>Архитектурно проект разбит на несколько слоёв:</p>
+<ul>
+<li><code>Besm6.Architecture</code> описывает 48-разрядное слово, арифметику и контракты процессора.</li>
+<li><code>Besm6.Processor</code> реализует логику процессора.</li>
+<li><code>Besm6.Runtime</code> связывает процессор, память, загрузчик, экстракоды и устройства.</li>
+<li><code>Besm6.Cli</code> предоставляет интерфейс командной строки: загружает задание <code>.dub</code>, запускает трансляцию и выполнение, выводит результат.</li>
+</ul>
+<p>Симулятор работает с образами лент и выводит текст в терминал хоста. В описанных опытах механическое движение ленты и печать на АЦПУ не моделируются.</p>
+<h3 id="сборка-besm6net-и-первый-запуск">Сборка <a href="http://Besm6.Net">Besm6.Net</a> и первый запуск</h3>
+<p>Проект ориентирован на <code>net8.0</code>; для сборки нужен SDK .NET 8. Клонируем репозиторий, собираем CLI и запускаем пример. Команды ниже записаны для Bash:</p>
+<pre><code class="language-bash">git <span class="hljs-built_in">clone</span> https://github.com/EntityFX/besm6.net
+<span class="hljs-built_in">cd</span> besm6.net
+
+<span class="hljs-comment"># Сборка</span>
+dotnet build src/Besm6.Cli -c Release
+DLL=src/Besm6.Cli/bin/Release/net8.0/besm6.dll
+
+<span class="hljs-comment"># Запуск</span>
+dotnet <span class="hljs-string">&quot;<span class="hljs-variable">$DLL</span>&quot;</span> run examples/fortran.dub --no-wall-clock
+</code></pre>
+<p>Для запуска используются пять поставляемых образов лент: <code>monsys.9</code>, <code>librar.12</code>, <code>librar.37</code>, <code>bemsh.739</code> и <code>b.7</code>. Они находятся в <code>tapes/</code> и копируются при сборке. Путь можно задать явно в JSON вместе с параметрами временной модели:</p>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;tapes&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;/absolute/path/to/besm6.net/tapes&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;useWallClock&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">false</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;originalTimeFactor&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">0.670839</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;originalMathFactor&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1.769005</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+<p>Сохраните конфигурацию, например, в <code>article-config.json</code>, заменив путь к лентам своим. При запуске передайте <code>--config article-config.json</code>.</p>
+<p><a id="benchmarks"></a></p>
+<h2 id="бенчмарки-и-методика-измерений">Бенчмарки и методика измерений</h2>
+<p>Исходные задания находятся в каталоге <a href="../../../examples"><code>examples</code></a>. Всего используются восемь заданий: по одному для Dhrystone и Whetstone, по три для Memspeed и MP-MFLOPS.</p>
+<table>
+<thead>
+<tr>
+<th>Семейство</th>
+<th>Задание</th>
+<th>Нагрузка и показатель</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://www.netlib.org/performance/papers/dhrystone/">Dhrystone 2.1</a></td>
+<td><code>dhrystone-forex.dub</code></td>
+<td>5000 проходов; процедуры, строки, целочисленные массивы; DMIPS</td>
+</tr>
+<tr>
+<td><a href="https://roylongbottom.github.io/royRepository/#anchorClassic">Whetstone, вариант Роя Лонгботтома</a></td>
+<td><code>whetstone-longbottom-forex.dub</code></td>
+<td>8 × 100 условных проходов; восемь секций; MWIPS и отдельный MFLOPS</td>
+</tr>
+<tr>
+<td><a href="https://roylongbottom.github.io/royRepository/#anchorMemory">Memspeed</a></td>
+<td><code>memspeed-forex.dub</code>, части 1–3</td>
+<td>4096 элементов, 1000 проходов; copy, add, multiply-add; логические MB/s</td>
+</tr>
+<tr>
+<td><a href="https://roylongbottom.github.io/royRepository/#anchorThread">MP-MFLOPS</a></td>
+<td><code>mpmflops-forex.dub</code>, части 1–3</td>
+<td>9000 элементов, 30 проходов; 2, 8 и 32 арифметические операции на элемент; MFLOPS</td>
+</tr>
+</tbody>
+</table>
+<p>При переносе потребовались адаптации:</p>
+<ul>
+<li>В Dhrystone записи заменены параллельными массивами полей, а указатели — индексами двух узлов. Строки и вызовы процедур сохранены.</li>
+<li>Из Memspeed перенесены три ядра: копирование, сложение и умножение со сложением.</li>
+<li>В MP-MFLOPS используется 48-разрядный тип <code>REAL</code>. Название семейства сохранено, но здесь выполняется последовательный вариант вычислительных ядер.</li>
+<li>Whetstone взят в варианте Роя Лонгботтома 1996 года. Порт сохраняет восемь секций и их число операций, а длинные циклы разбивает на блоки для совместимости с ограничениями старого Фортрана.</li>
+</ul>
+<h3 id="какое-время-измеряет-программа">Какое время измеряет программа</h3>
+<p>Во всех заданиях системная функция <code>CTIME</code> вызывается перед вычислительным ядром бенчмарка и сразу после него. Подготовка массивов, компиляция, проверка результата и печать находятся за пределами измеряемого интервала. В этих заданиях счётное время берётся из второго аргумента <code>CTIME</code>.</p>
+<p>Источник времени зависит от режима симулятора:</p>
+<table>
+<thead>
+<tr>
+<th>Режим <a href="http://Besm6.Net">Besm6.Net</a></th>
+<th>Источник гостевого времени</th>
+<th>Темп выполнения</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>original</code></td>
+<td>Статистическая модель времени БЭСМ-6</td>
+<td>Симулятор при необходимости ожидает, чтобы выдержать модельный темп</td>
+</tr>
+<tr>
+<td><code>virtual</code></td>
+<td>Реальное прошедшее время на хосте</td>
+<td>Выполнение с доступной скоростью хоста</td>
+</tr>
+<tr>
+<td><code>max</code></td>
+<td>Счётчик модельных тактов</td>
+<td>Выполнение с доступной скоростью хоста, без ожидания модельного темпа</td>
+</tr>
+</tbody>
+</table>
+<p>Параметр <code>--guest-clock</code> включает гостевой таймер. Часы хоста используются именно в режиме <code>virtual</code>; в других режимах таймер получает модельное время. Подробности реализации приведены в <a href="../../original-timing.html">описании временной модели</a> и <a href="../../execution-speed.html">режимов выполнения</a>.</p>
+<p>На результат <code>virtual</code> влияют процессор хоста, среда выполнения .NET, JIT-компиляция, ОС и другие процессы. В <code>original</code> гостевое время определяется моделью, даже если хост способен выполнить команды быстрее.</p>
+<h3 id="временная-модель-и-её-калибровка">Временная модель и её калибровка</h3>
+<p>В режиме <code>original</code> симулятор учитывает задержки устройства управления и арифметического устройства, зависимости между командами, обращения к банкам памяти, попадания в буферы и запись результатов. Исходные интервалы взяты из <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">учебника 1976 года</a> и <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">таблиц команд</a>. Часть задержек при этом остаётся допущением модели.</p>
+<p>Используются два эмпирических коэффициента: общий масштаб времени <code>0.670839</code> и дополнительный масштаб математических функций <code>1.769005</code>. Их подобрали по <a href="https://retrocomputing.stackexchange.com/questions/3267/how-to-compute-performance-of-a-cpu-in-flops">опубликованному эксперименту Leo B. с Whetstone в 2017 году</a>: по сумме времён секций и отдельно по сумме секций с математическими функциями. Этот эксперимент также выполнен на модели БЭСМ-6; это прямо указано в его выводе.</p>
+<p>Калибровка согласует общий MWIPS с выбранной публикацией. Сам Whetstone после этого не может служить независимой проверкой точности. Остальные тесты показывают поведение модели за пределами калибровочной нагрузки, но для проверки исторического времени всё равно нужны результаты физической машины. Даже совпадение общего MWIPS не означает совпадения всех восьми секционных времён.</p>
+<p>Задержки математических экстракодов задаются отдельно. Например, исходные оценки для квадратного корня и синуса составляют 40 и 50 мкс до применения коэффициентов. В <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">§ 6 учебника</a> для элементарных функций указан диапазон 55–90 мкс; отдельно оговорено округление вниз.</p>
+<h3 id="условия-и-проверка-прогонов">Условия и проверка прогонов</h3>
+<p>Сборка выполнена в конфигурации Release. Хост — Linux x86-64 с Intel Xeon E5-2680 v3, паспортная частота 2,50 ГГц; версия среды выполнения .NET — 8.0.21. В <a href="benchmark-results.html">сопроводительной таблице</a> зафиксирован коммит <code>190e2f6977190e42f34b33d2e56424454be89027</code>. Для каждого из восьми заданий выполнено по три отдельных запуска в <code>original</code> и <code>virtual</code> — всего 48, последовательно, без конкурирующих бенчмарков. Каждый процесс заново загружает и транслирует программу.</p>
+<p>Шаг гостевого таймера — 20 мс. Для коротких интервалов это существенно: при длительности 0,3 с один шаг составляет около 7%. Три повтора позволяют увидеть разброс, но не обеспечивают точности до шестого знака. В основной таблице приведены медианы, а минимум и максимум — в подробной. Полный прогрев и управление частотой процессора в методику не входили, поэтому эти результаты характеризуют запуск на доступном хосте.</p>
+<p>Результат включался в таблицу только после завершения программы инструкцией <code>STOP</code> и прохождения численных проверок. Дополнительно внешний Python-скрипт пересчитывал рейтинги и контрольные значения: для Memspeed — первый и последний элементы и сумму, для MP-MFLOPS — последовательность арифметических выражений, для Whetstone — восемь эталонных значений с допуском. Анализировался вывод после компоновщика: строка <code>ALL VALUES MATCH</code>, напечатанная в листинге исходного текста, ещё не подтверждает успешного выполнения.</p>
+<p>Каждый тест можно выполнить отдельно:</p>
+<pre><code class="language-bash">DLL=src/Besm6.Cli/bin/Release/net8.0/besm6.dll
+dotnet <span class="hljs-string">&quot;<span class="hljs-variable">$DLL</span>&quot;</span> run examples/dhrystone-forex.dub \
+  --guest-clock --speed virtual --stats --no-wall-clock \
+  --no-hang-detect --<span class="hljs-built_in">limit</span> 2000000000
+</code></pre>
+<h3 id="как-считаются-результаты">Как считаются результаты</h3>
+<p><strong>Dhrystone.</strong> Число проходов делится на время в секундах, затем на <strong>1757</strong> — принятую нормировку относительно VAX-11/780. DMIPS не равно числу миллионов гостевых машинных команд в секунду. Счётчик инструкций CLI включает работу транслятора и обслуживающих модулей, поэтому напрямую сопоставлять его с DMIPS нельзя. <a href="https://www.netlib.org/performance/papers/dhrystone/">Описание нормировки в архиве Netlib</a>.</p>
+<p><strong>Whetstone.</strong> Для выбранной нагрузки общий рейтинг вычисляется как <code>80 / сумма нормализованных секунд</code> и выражается в MWIPS. Отдельный показатель MFLOPS — геометрическое среднее рейтингов арифметических секций N1, N2 и N6. Остальные секции включают условные переходы, целочисленные операции, присваивания и математические функции; их MOPS нельзя складывать с MFLOPS.</p>
+<p><strong>Memspeed.</strong> Здесь измеряется логическая скорость обработки данных в памяти. Слово содержит шесть полезных байт: копирование читает и записывает слово, то есть учитывает 12 байт на элемент. Сложение и multiply-add учитывают два чтения и одну запись — 18 байт. При 4096 элементах и 1000 проходах получаются 49 152 000 и 73 728 000 байт. MB/s — десятичные мегабайты в секунду, по миллиону байт.</p>
+<p><strong>MP-MFLOPS.</strong> Число <code>9000 × 30 × операций_на_элемент</code> делится на время в секундах и миллион. Три подтеста выполняют 540 тысяч, 2,16 миллиона и 8,64 миллиона арифметических операций. Умножение и сложение считаются отдельно. С ростом числа операций на элемент уменьшается доля индексной арифметики и управления циклом, но длинная цепочка зависимых вычислений может ограничивать работу конвейера.</p>
+<p><a id="results"></a></p>
+<h2 id="результаты">Результаты</h2>
+<p>Таблица показывает медианы трёх запусков для каждой пары задания и режима. Время Whetstone — сумма нормализованных секционных времён; для остальных тестов указан интервал выполнения ядра. Во всех строках <code>original</code> используется одна и та же настроенная временная модель.</p>
+<table>
+<thead>
+<tr>
+<th>Бенчмарк</th>
+<th style="text-align:right">Время original, с</th>
+<th style="text-align:right">Рейтинг original</th>
+<th style="text-align:right">Время virtual, с</th>
+<th style="text-align:right">Рейтинг virtual</th>
+<th>Единица</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dhrystone 2.1</td>
+<td style="text-align:right">4,360</td>
+<td style="text-align:right">0,653</td>
+<td style="text-align:right">0,340</td>
+<td style="text-align:right">8,370</td>
+<td>DMIPS</td>
+</tr>
+<tr>
+<td>Whetstone</td>
+<td style="text-align:right">98,850</td>
+<td style="text-align:right">0,809</td>
+<td style="text-align:right">4,974</td>
+<td style="text-align:right">16,084</td>
+<td>MWIPS</td>
+</tr>
+<tr>
+<td>Memspeed: copy</td>
+<td style="text-align:right">8,680</td>
+<td style="text-align:right">5,663</td>
+<td style="text-align:right">0,960</td>
+<td style="text-align:right">51,200</td>
+<td>MB/s</td>
+</tr>
+<tr>
+<td>Memspeed: add</td>
+<td style="text-align:right">16,740</td>
+<td style="text-align:right">4,404</td>
+<td style="text-align:right">1,220</td>
+<td style="text-align:right">60,433</td>
+<td>MB/s</td>
+</tr>
+<tr>
+<td>Memspeed: multiply-add</td>
+<td style="text-align:right">17,640</td>
+<td style="text-align:right">4,180</td>
+<td style="text-align:right">1,480</td>
+<td style="text-align:right">49,816</td>
+<td>MB/s</td>
+</tr>
+<tr>
+<td>MP-MFLOPS: 2 операции</td>
+<td style="text-align:right">1,100</td>
+<td style="text-align:right">0,491</td>
+<td style="text-align:right">0,080</td>
+<td style="text-align:right">6,750</td>
+<td>MFLOPS</td>
+</tr>
+<tr>
+<td>MP-MFLOPS: 8 операций</td>
+<td style="text-align:right">3,340</td>
+<td style="text-align:right">0,647</td>
+<td style="text-align:right">0,240</td>
+<td style="text-align:right">9,000</td>
+<td>MFLOPS</td>
+</tr>
+<tr>
+<td>MP-MFLOPS: 32 операции</td>
+<td style="text-align:right">13,540</td>
+<td style="text-align:right">0,638</td>
+<td style="text-align:right">0,820</td>
+<td style="text-align:right">10,537</td>
+<td>MFLOPS</td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary>Подробные рейтинги: медиана, минимум и максимум трёх прогонов</summary>
+<table>
+<thead>
+<tr>
+<th>Бенчмарк</th>
+<th>Режим</th>
+<th style="text-align:right">Число прогонов</th>
+<th style="text-align:right">Медиана</th>
+<th style="text-align:right">Минимум</th>
+<th style="text-align:right">Максимум</th>
+<th>Единица</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dhrystone 2.1</td>
+<td>original</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">0,652697</td>
+<td style="text-align:right">0,652697</td>
+<td style="text-align:right">0,652697</td>
+<td>DMIPS</td>
+</tr>
+<tr>
+<td>Dhrystone 2.1</td>
+<td>virtual</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">8,369882</td>
+<td style="text-align:right">8,369882</td>
+<td style="text-align:right">8,369882</td>
+<td>DMIPS</td>
+</tr>
+<tr>
+<td>Whetstone</td>
+<td>original</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">0,809307</td>
+<td style="text-align:right">0,809307</td>
+<td style="text-align:right">0,809307</td>
+<td>MWIPS</td>
+</tr>
+<tr>
+<td>Whetstone</td>
+<td>virtual</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">16,083635</td>
+<td style="text-align:right">16,083635</td>
+<td style="text-align:right">16,474465</td>
+<td>MWIPS</td>
+</tr>
+<tr>
+<td>Memspeed: copy</td>
+<td>original</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">5,662673</td>
+<td style="text-align:right">5,662673</td>
+<td style="text-align:right">5,662673</td>
+<td>MB/s</td>
+</tr>
+<tr>
+<td>Memspeed: copy</td>
+<td>virtual</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">51,200000</td>
+<td style="text-align:right">39,638710</td>
+<td style="text-align:right">54,613333</td>
+<td>MB/s</td>
+</tr>
+<tr>
+<td>Memspeed: add</td>
+<td>original</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">4,404301</td>
+<td style="text-align:right">4,404301</td>
+<td style="text-align:right">4,404301</td>
+<td>MB/s</td>
+</tr>
+<tr>
+<td>Memspeed: add</td>
+<td>virtual</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">60,432787</td>
+<td style="text-align:right">49,816216</td>
+<td style="text-align:right">62,481356</td>
+<td>MB/s</td>
+</tr>
+<tr>
+<td>Memspeed: multiply-add</td>
+<td>original</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">4,179592</td>
+<td style="text-align:right">4,179592</td>
+<td style="text-align:right">4,179592</td>
+<td>MB/s</td>
+</tr>
+<tr>
+<td>Memspeed: multiply-add</td>
+<td>virtual</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">49,816216</td>
+<td style="text-align:right">39,638710</td>
+<td style="text-align:right">51,200000</td>
+<td>MB/s</td>
+</tr>
+<tr>
+<td>MP-MFLOPS: 2 операции</td>
+<td>original</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">0,490909</td>
+<td style="text-align:right">0,490909</td>
+<td style="text-align:right">0,490909</td>
+<td>MFLOPS</td>
+</tr>
+<tr>
+<td>MP-MFLOPS: 2 операции</td>
+<td>virtual</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">6,750000</td>
+<td style="text-align:right">5,400000</td>
+<td style="text-align:right">6,750000</td>
+<td>MFLOPS</td>
+</tr>
+<tr>
+<td>MP-MFLOPS: 8 операций</td>
+<td>original</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">0,646707</td>
+<td style="text-align:right">0,646707</td>
+<td style="text-align:right">0,646707</td>
+<td>MFLOPS</td>
+</tr>
+<tr>
+<td>MP-MFLOPS: 8 операций</td>
+<td>virtual</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">9,000000</td>
+<td style="text-align:right">9,000000</td>
+<td style="text-align:right">9,818182</td>
+<td>MFLOPS</td>
+</tr>
+<tr>
+<td>MP-MFLOPS: 32 операции</td>
+<td>original</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">0,638109</td>
+<td style="text-align:right">0,638109</td>
+<td style="text-align:right">0,638109</td>
+<td>MFLOPS</td>
+</tr>
+<tr>
+<td>MP-MFLOPS: 32 операции</td>
+<td>virtual</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">10,536585</td>
+<td style="text-align:right">10,536585</td>
+<td style="text-align:right">11,076923</td>
+<td>MFLOPS</td>
+</tr>
+</tbody>
+</table>
+</details>
+<p>Для Whetstone геометрическое среднее рейтингов арифметических секций составило <strong>0,389 MFLOPS</strong> в модели и <strong>5,187 MFLOPS</strong> по часам хоста. Это отдельный показатель, а не пересчёт MWIPS в другие единицы.</p>
+<p>На диаграмме результаты разделены по семействам тестов:</p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\assets\benchmark-ratings.png" alt="Рейтинги модели и симулятора на хосте"></p>
+<p><em>У каждой панели собственная шкала: длины столбцов между панелями несопоставимы. Медианы и диапазоны рейтингов также приведены в <a href="benchmark-results.html">отдельной таблице</a>.</em></p>
+<p>В Dhrystone рейтинг по часам хоста выше модельного: симулятор исполняет ядро быстрее, чем время, назначенное моделью. Это различие относится к данному порту и хосту. Оно не является универсальным коэффициентом, на который можно делить любую современную программу ради оценки БЭСМ-6.</p>
+<h3 id="dhrystone">Dhrystone</h3>
+<p>Ниже — пример вывода отдельного запуска порта для Фортрана-ГДР. Он показывает контрольные значения и формат отчёта. Его результат, 0,571438 DMIPS за 4,98 с, не относится к серии <code>dhrystone-forex.dub</code> из сводной таблицы, где медиана равна 0,653 DMIPS. Полный листинг этого примера сохранён в <a href="#listing">приложении</a>.</p>
+<pre><code class="language-txt">DHRYSTONE BENCHMARK 2.1 (FORTRAN-GDR FOR BESM-6)
+RUNNING   5000 PASSES...
+EXECUTION ENDS
+IGLOB:            5 (SHOULD BE 5)
+BLOB:           T (SHOULD BE TRUE)
+C1GLB:           65 (SHOULD BE 65 = A)
+C2GLB:           66 (SHOULD BE 66 = B)
+A1GLOB 8:         7 (SHOULD BE 7)
+A2GLOB 8/7:    5010 (SHOULD BE   5010)
+PGLB.DISCR:      0 (SHOULD BE 0)
+PGLB.ENUM:       2 (SHOULD BE 2)
+PGLB.INT:       17 (SHOULD BE 17)
+NEXTP.DISCR:        0 (SHOULD BE 0)
+NEXTP.ENUM:         1 (SHOULD BE 1)
+NEXTP.INT:         18 (SHOULD BE 18)
+I1LOC:            5 (SHOULD BE 5)
+I2LOC:           13 (SHOULD BE 13)
+I3LOC:            7 (SHOULD BE 7)
+ELOC:            1 (SHOULD BE 1)
+ALL 18 CONTROL VALUES MATCH THE DHRYSTONE 2.1 SPEC
+GUEST CPU SECONDS:       4.9800
+GUEST DMIPS:     0.571438
+</code></pre>
+<h3 id="whetstone">Whetstone</h3>
+<p>Вывод нашего запуска:</p>
+<pre><code class="language-txt">ROY LONGBOTTOM WHETSTONE - BESM-6 FOREX
+8 PASSES USED (X 100); REAL IS 48 BITS
+LOOP CONTENT              RESULT                 MFLOPS       MOPS    SECONDS
+N1 FLOATING POINT        -1.13333352534209    0.808421                  0.1900
+N2 FLOATING POINT        -1.13333356774819    0.625116                  1.7200
+N3 IF THEN ELSE           1.00000000000000                0.258750      3.2000
+N4 FIXED POINT           11.99999999998908                0.652850      3.8600
+N5 SIN,COS ETC.           0.50000004814501                0.036733     18.1200
+N6 FLOATING POINT         0.99999778767669    0.116753                 36.9600
+N7 ASSIGNMENTS            3.00000000000000                0.080087     18.4600
+N8 EXP,SQRT ETC.          0.75792038854851                0.018213     16.3400
+BAD CONTROL VALUES=     0
+ALL 8 CONTROL VALUES MATCH: YES
+GUEST CPU SECONDS:      98.8500
+GUEST MWIPS:     0.809307
+GUEST MFLOPS GEOMEAN N1 N2 N6:     0.389304
+Halted by STOP at 0118 after 105244035 instructions
+</code></pre>
+<p>Для исторического сопоставления ниже сохранён результат Whetstone на Pentium 100 МГц. Сравнивать следует рейтинги, учитывая язык, транслятор и точность вычислений: абсолютные времена секций зависят ещё и от числа проходов. <a href="https://roylongbottom.github.io/royRepository/#anchorClassic">Материалы Роя Лонгботтома о Whetstone</a>.</p>
+<details>
+<summary>Whetstone на Pentium 100 МГц</summary>
+<pre><code class="language-txt">Loop content                 Result            MFLOPS     MOPS   Seconds
+
+N1 floating point    -1.12475025653839100      19.971              0.274
+N2 floating point    -1.12274754047393800      11.822              3.240
+N3 if then else       1.00000000000000000               11.659     2.530
+N4 fixed point       12.00000000000000000               13.962     6.430
+N5 sin,cos etc.       0.49904659390449520                2.097    11.310
+N6 floating point     0.99999988079071040       3.360             45.750
+N7 assignments        3.00000000000000000                2.415    21.810
+N8 exp,sqrt etc.      0.75110864639282230                1.206     8.790
+
+MWIPS                                          28.462            100.134
+</code></pre>
+</details>
+<p>Для калибровки использован <a href="https://retrocomputing.stackexchange.com/questions/3267/how-to-compute-performance-of-a-cpu-in-flops">результат модели БЭСМ-6, опубликованный Leo B. в 2017 году</a>. В строке <code>Chipset/options</code> прямо указана эмуляция конвейеров УУ и АУ.</p>
+<details>
+<summary>Whetstone на модели БЭСМ-6, июль 2017 года</summary>
+<pre><code class="language-txt">WHETSTONE BENCHMARK FOR  100.00 SECONDS DURATION
+
+      8 PASSES USED (X 100)
+
+ FORTRAN WHETSTONE BENCHMARK - SINGLE PRECISION
+Month run         7/2017
+Supplier/model    IPMCE, USSR                                
+CPU chip type     BESM-6                               
+Clock MHz         9                                   
+Cache size        16 words                                 
+Chipset/options   CU/ALU pipes emulated using interlocks and ave. timings from the manual                        
+OS/DOS            DISPAK (user mode emulated)
+Compiler          F O R E X ИПM AH CCCP 4.12 OT 25.06.85           
+Options           default
+
+ LOOP CONTENT                   RESULT                MFLOPS      MOPS   SECONDS
+
+ N1 FLOATING POINT       -1.12398256285086973          0.524               0.293
+ N2 FLOATING POINT       -1.12187081181764370          0.402               2.674
+ N3 IF THEN ELSE          1.00000000000000000                    0.185     4.477
+ N4 FIXED POINT          12.00000000000000000                    0.346     7.280
+ N5 SIN,COS ETC.          0.49902906717352380                    0.036    18.361
+ N6 FLOATING POINT        0.99999958804255584          0.121              35.720
+ N7 ASSIGNMENTS           3.00000000000000000                    0.106    13.963
+ N8 EXP,SQRT ETC.         0.75100162294984329                    0.018    16.087
+
+ MWIPS                                                 0.809              98.856
+</code></pre>
+</details>
+<p>Сводные MWIPS двух моделей близки, но секционные времена различаются:</p>
+<p><img src="file:///c:\projects\besm6.net\docs\articles\besm6-performance\assets\whetstone-sections.png" alt="Время восьми секций Whetstone в публикации 2017 года и в Besm6.Net"></p>
+<p><em>Обе серии относятся к моделям. Диаграмма показывает результат калибровки, а не измеренную ошибку относительно физической БЭСМ-6. Отличаются также программное окружение и контрольные численные значения.</em></p>
+<h3 id="memspeed">Memspeed</h3>
+<p>Все три результата Memspeed включают управление циклами и арифметику адресов. Поэтому строка copy характеризует скорость всего гостевого ядра копирования, а не пропускную способность отдельного аппаратного узла.</p>
+<p>Вывод первого подтеста — копирования:</p>
+<pre><code class="language-txt">MEMSPEED PART  1
+WORDS=  4096
+REPEAT PASSES=  1000
+BYTES/ELEMENT= 12
+DATA TRAFFIC BYTES=   49151999.999958206899
+FIRST RESULT=          0.000244140625
+LAST RESULT=          1.000000000000
+CHECKSUM=       2048.499999997147
+BAD ELEMENTS=     0
+ALL VALUES MATCH: YES
+GUEST CPU SECONDS:       8.6800
+GUEST MB/S:     5.662673
+Halted by STOP at 0118 after 24959421 instructions
+</code></pre>
+<h3 id="mp-mflops">MP-MFLOPS</h3>
+<p>Первый подтест выполняет две арифметические операции на элемент. Для 9000 элементов и 30 проходов это 540 000 операций. При гостевом времени 1,1 с получается <strong>0,490909 MFLOPS</strong>, что соответствует строке сводной таблицы.</p>
+<pre><code class="language-text">MP-MFLOPS PART  1
+WORDS=  9000
+OPS/WORD=  2
+REPEAT PASSES=    30
+FLOPS=     539999.999998690327
+FIRST RESULT=          0.999099623640
+BAD CONTROL VALUES=     0
+CALCULATIONS PERFORMED
+ALL SAME: YES
+GUEST CPU SECONDS:       1.1000
+GUEST MFLOPS:     0.490909
+Halted by STOP at 0118 after 6893148 instructions
+</code></pre>
+<p>Контрольные значения сошлись, программа завершилась инструкцией <code>STOP</code>. Небольшое отклонение напечатанного <code>FLOPS</code> от целого числа 540 000 связано с численным представлением в гостевой программе; для подсчёта операций используется выражение <code>9000 × 30 × 2</code>.</p>
+<p>При переходе от двух операций на элемент к восьми или 32 меняется доля служебной работы. Итоговый MFLOPS зависит и от команд, сгенерированных транслятором, и от зависимостей между ними.</p>
+<h3 id="точность-измерений">Точность измерений</h3>
+<p>У самого короткого ядра MP-MFLOPS интервал в режиме <code>virtual</code> составил 0,08–0,10 с. Шаг таймера 20 мс сопоставим с четвертью этого времени: несколько десятичных знаков в выводе не означают соответствующей точности. У Memspeed разброс тоже заметен. Повторение модельного времени в <code>original</code> показывает детерминированность модели, но не её точность относительно исторической машины.</p>
+<p><a id="conclusions"></a></p>
+<h2 id="выводы">Выводы</h2>
+<p>В выбранной модели Dhrystone даёт около <strong>0,653 DMIPS</strong>, Whetstone — <strong>0,809 MWIPS</strong>, а арифметические ядра MP-MFLOPS — <strong>0,491–0,647 MFLOPS</strong>. Эти числа отвечают на разные вопросы: универсального перевода между ними и паспортным «миллионом операций в секунду» нет.</p>
+<p>Результат нужно читать вместе с указанием источника времени. Режим <code>virtual</code> показывает практическую скорость <a href="http://Besm6.Net">Besm6.Net</a> на конкретном современном компьютере. Режим <code>original</code> позволяет сравнивать нагрузки внутри зафиксированной временной модели. Паспортное быстродействие описывает историческую машину в терминах своего источника. Для прямого сравнения нужна общая методика.</p>
+<p>Правильный результат программы и независимый численный контроль помогают проверить арифметику. Для проверки времени нужны журналы запусков на физической машине с указанием ОС, транслятора, исходного текста и нагрузки либо подробные аппаратные измерения. Калибровочный Whetstone помогает настроить модель, но не заменяет этих данных.</p>
+<p>Симулятор возвращает возможность экспериментировать с программами БЭСМ-6: читать листинг исторического Фортрана, менять представление данных и наблюдать влияние алгоритма. Его исходный код позволяет проследить, какие зависимости учитывает модель, что считается обращением к памяти и сколько времени назначено системной функции.</p>
+<p>Следующий шаг — испытать модель на независимом историческом наборе программ, не участвовавшем в настройке коэффициентов. Особенно полезны задачи с разным соотношением арифметики, обращений к памяти и системных услуг. Пока такого сравнения нет, приведённые измерения характеризуют симулятор и его временную модель.</p>
+<p><a id="sources"></a></p>
+<h2 id="источники-и-материалы">Источники и материалы</h2>
+<h3 id="книги-и-техническая-документация">Книги и техническая документация</h3>
+<ol>
+<li><strong>Салтыков А. И., Макаренко Г. И. <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/_BP.html#0039">Программирование на языке Фортран</a></strong> / под ред. Н. Н. Говоруна. М.: Наука, 1976. 256 с. Серия «Библиотечка программиста». Основной источник по архитектуре, арифметике, системе «Дубна» и МАДЛЕНу. <a href="https://publ.lib.ru/ARCHIVES/B/%27%27Bibliotechka_programmista%27%27_%28seriya%29/Saltykov_A.I...__Programmirovanie_na_yazyke_Fortran.%281976%29.%5Bpdf%5D.zip">Скан книги, PDF в ZIP-архиве</a>.</li>
+<li><strong><a href="https://www.computer-museum.ru/books/besm6_instruction.pdf">Автокод БЭСМ-6. Инструкция</a>.</strong> ИТМиВТ АН СССР, 1969. Форматы команд и чисел, ввод и отладка программ.</li>
+<li><strong><a href="https://www.besm6.org/wiki/CmdSheet.html">Краткий перечень команд БЭСМ-6</a>.</strong> Сопоставление машинных кодов, русских обозначений, мнемокодов БЕМШа и МАДЛЕНа.</li>
+<li><strong><a href="https://oldpc.su/lib/izdradioprom/68-ecvm.pdf">Электронные цифровые вычислительные машины общего назначения</a>.</strong> Каталог, 1968.</li>
+<li><strong><a href="https://www.besm6.org/doc/">Техническая документация БЭСМ-6</a>.</strong> Сканированные описания устройств, системы команд и пультов.</li>
+</ol>
+<h3 id="история-машины-и-программного-обеспечения">История машины и программного обеспечения</h3>
+<ol start="6">
+<li><strong><a href="https://www.computer-museum.ru/histussr/28-1.htm">БЭСМ-6 в Виртуальном компьютерном музее</a></strong>, <a href="https://www.besm-6.ru/besm-series.html">история серии БЭСМ</a> и <a href="https://besm-6.ru/besm6.html">описание архитектуры и ПО БЭСМ-6</a>.</li>
+<li><strong><a href="https://www.computer-museum.ru/histussr/niism.htm">НИИсчётмаш: историческая справка</a>.</strong> Разработка устройств семейства АЦПУ-128 и ВУ-700.</li>
+<li><strong><a href="https://www.iis.nsk.su/files/page/balakirev_n.e._bartenev_yu.g._zeldinova_s.a.pdf">Материалы об операционной системе ДИСПАК</a></strong> и <a href="https://www.sorucom.org/articles/materialy-mezhdunarodnoy-konferentsii-sorucom-2020/5216/">«Четыре поколения операционных систем», SORUCOM 2020</a>.</li>
+<li><strong><a href="https://archive.computerhistory.org/resources/text/CDC/CDC.6400_6600.1966.102646143.pdf">Control Data 6400/6600 Computing Systems’ Configurator</a>.</strong> CDC, 1966. <a href="https://science.osti.gov/-/media/ascr/pdf/program-documents/archive/Lax_report.pdf">Отчёт Lax</a> содержит историческую таблицу производительности систем NCAR.</li>
+</ol>
+<h3 id="симуляторы-бенчмарки-и-результаты">Симуляторы, бенчмарки и результаты</h3>
+<ol start="10">
+<li><strong><a href="https://github.com/EntityFX/besm6.net">Besm6.Net</a></strong> — исходный код исследуемого симулятора; <a href="../../../examples">задания бенчмарков</a> и <a href="benchmark-results.html">таблица измерений</a>.</li>
+<li><strong><a href="https://github.com/besm6/dubna">Dubna BESM-6 Emulator</a></strong> и <strong><a href="https://github.com/simh/simh">SIMH</a></strong>; <a href="https://www.besm6.org/wiki/SIMH-manual.html">руководство по SIMH для БЭСМ-6</a>.</li>
+<li><strong><a href="https://www.netlib.org/performance/papers/dhrystone/">Dhrystone 2.1: материалы Netlib</a>.</strong> Происхождение теста и нормировка относительно VAX-11/780.</li>
+<li><strong><a href="https://roylongbottom.github.io/royRepository/">Коллекция бенчмарков Роя Лонгботтома</a>.</strong> История и результаты Whetstone, Memspeed и MP-MFLOPS; ссылки на архивные материалы и исходные тексты.</li>
+<li><strong><a href="https://retrocomputing.stackexchange.com/questions/3267/how-to-compute-performance-of-a-cpu-in-flops">Leo B. How to compute performance of a CPU in FLOPS?</a></strong> Эксперимент с временной моделью БЭСМ-6, 2017. Источник калибровочного Whetstone.</li>
+</ol>
+<p>Источники добавленных фотографий и условия лицензий, если они указаны владельцем, приведены непосредственно в подписях к изображениям.</p>
+<p><a id="listing"></a></p>
+<h2 id="приложение-полный-листинг-запуска">Приложение: полный листинг запуска</h2>
+<p>Листинг компиляции и выполнения примера Dhrystone для Фортрана-ГДР. Машинный вывод сохранён без редакторских изменений; этот запуск отличается от серии измерений в основной таблице.</p>
+<details>
+<summary>Открыть полный листинг Dhrystone</summary>
+<pre><code class="language-txt">                                             04 ИЮЛ 24 23.45
+ ЙOKCEЛ      БЭCM-6/5     ШИФP-12
+ MOHИTOPHAЯ CИCTEMA  ′Д Y Б H A′  -  20/10/88
+
+
+
+
+
+
+
+            ЖЖЖ   Ж   Ж ЖЖЖЖ  Ж   Ж  ЖЖЖ  ЖЖЖЖЖ  ЖЖЖ  Ж   Ж ЖЖЖЖ        ЖЖЖ   Ж   Ж  ЖЖЖ  ЖЖЖЖ   ЖЖЖ
+            Ж  Ж  Ж   Ж Ж   Ж Ж   Ж Ж       Ж   Ж   Ж ЖЖ  Ж Ж           Ж  Ж  ЖЖ ЖЖ   Ж   Ж   Ж Ж
+            Ж   Ж ЖЖЖЖЖ Ж   Ж Ж   Ж  ЖЖЖ    Ж   Ж   Ж Ж Ж Ж ЖЖЖ         Ж   Ж Ж Ж Ж   Ж   Ж   Ж  ЖЖЖ
+            Ж   Ж Ж   Ж ЖЖЖЖ   Ж Ж      Ж   Ж   Ж   Ж Ж  ЖЖ Ж      ЖЖЖ  Ж   Ж Ж Ж Ж   Ж   Ж   Ж     Ж
+            Ж   Ж Ж   Ж Ж Ж     Ж       Ж   Ж   Ж   Ж Ж   Ж Ж           Ж   Ж Ж   Ж   Ж   ЖЖЖЖ      Ж
+            Ж   Ж Ж   Ж Ж  Ж    Ж   Ж   Ж   Ж   Ж   Ж Ж   Ж Ж           Ж   Ж Ж   Ж   Ж   Ж     Ж   Ж
+            ЖЖЖЖ  Ж   Ж Ж   Ж   Ж    ЖЖЖ    Ж    ЖЖЖ  Ж   Ж ЖЖЖЖЖ       ЖЖЖЖ  Ж   Ж  ЖЖЖ  Ж      ЖЖЖ
+
+
+
+
+
+
+
+*NAME DHRYSTONE-DMIPS
+*FTN
+                                                 04 ИЮЛ 24 23.45
+ Ф O P T P A H - Г Д P                                                                                 THE WAY OUT WAS
+      (09.07.81)                                                               C     RUNTIME TRACING (BESM6 RUN --TRACE): THE H
+  001               PROGRAM DHRY                                                                       OT ADDRESSES POINTED
+              C     ==========================================                 C     AT THE COMPARE LOOP, AND A PRINT OF THE LO
+                                      ========================                                         OP COUNTER SHOWED IT
+              C     DHRYSTONE 2.1 -- PORT TO BESM-6, FORTRAN-G                 C     PINNED AT ZERO.
+                                      DR DIALECT (*FTN)                        C
+              C                                                                C     METHODOLOGICAL NOTE: A WRONG-ANSWER-OR-HAN
+              C     GUEST DMIPS: THIS DECK USES THE CTIME CPU                                          G SYMPTOM IS NOT
+                                      TIMER, ENABLED BY                        C     EVIDENCE OF A COMPILER FAULT. INSTRUMENT F
+              C     --GUEST-CLOCK (JSON GUESTCLOCK=TRUE). RESO                                         IRST.
+                                      LUTION IS 0.02 SECONDS.                  C
+              C     DMIPS = PASSES / CPU SECONDS / 1757. THE S                 C     LANGUAGE NOTES (ESTABLISHED BY PROBES, SEE
+                                      IMULATED CLOCK HAS THE                                            REPORT):
+              C     SAME VALUE IN MAX AND ORIGINAL; VIRTUAL US                 C       * IDENTIFIERS ARE LIMITED TO 6 CHARACTER
+                                      ES HOST ELAPSED TIME.                                            S (ERROR 035)
+              C     SOURCE: BOOK/FORTRAN-1976/02-FORTRAN-DUBNA                 C       * BLOCK IF/THEN/ENDIF IS NOT SUPPORTED (
+                                      .MD, TIME ACCOUNTING.                                            ERROR 021);
+              C     THE ORIGINAL UNTIMED BENCHMARK REMAINS UNC                 C         ONLY SINGLE-STATEMENT IF ... GO TO WOR
+                                      HANGED FOR COMPARISONS.                                          KS
+              C                                                                C       * ARRAY ELEMENTS CANNOT BE USED AS PRINT
+              C     STATUS: WORKS. ALL 18 DHRYSTONE 2.1 CONTRO                                          ITEMS: AN ELEMENT
+                                      L VALUES MATCH THE                       C         PRINTS AS COMMAS. EVERY PRINTED ARRAY
+              C     SPECIFICATION AT NUMBER = 5000. SETTING NU                                         VALUE IS THEREFORE
+                                      MBER = 0 PRODUCES A                      C         COPIED TO A SCALAR TEMPORARY FIRST
+              C     ZERO-WORK BASELINE WITHOUT A DMIPS RATING.                 C       * ARRAYS CANNOT BE PASSED TO SUBPROGRAMS
+              C                                                                                        , AND COMMON INSIDE
+              C     THIS IS THE FORTRAN-GDR COUNTERPART OF THE                 C         A CALLED SUBPROGRAM FAILS TO ASSEMBLE,
+                                       PASCAL PORT                                                      SO ALL STATE LIVES
+              C       EXAMPLES/DHRYSTONE-BASELINE.DUB                          C         IN THIS SINGLE PROGRAM UNIT
+              C     ORIGINAL: R. WEICKER, CACM 27(10), 1984.                   C       * RECORDS, POINTERS AND ENUMERATIONS DO
+              C                                                                                        NOT EXIST IN FORTRAN,
+              C     HISTORY OF THIS FILE (KEPT BECAUSE IT IS I                 C         SO THEY ARE EMULATED: A RECORD IS A SE
+                                      NSTRUCTIVE)                                                      T OF PARALLEL INTEGER
+              C     ------------------------------------------                 C         ARRAYS INDEXED BY A NODE NUMBER, A POI
+                                      -----------                                                      NTER IS AN INTEGER
+              C     AN EARLIER REVISION OF THIS PORT LOOPED FO                 C         NODE INDEX, AN ENUMERATION IS AN INTEG
+                                      REVER FOR NUMBER &gt;= 1                                            ER CONSTANT
+              C     AND THE FAULT WAS FIRST ATTRIBUTED TO THE                  C       * HOLLERITH CONSTANTS ARE REJECTED (ERRO
+                                      FORTRAN-GDR CODE                                                 R 123), SO STRINGS ARE
+              C     GENERATOR. THAT DIAGNOSIS WAS WRONG. THE R                 C         INTEGER ARRAYS FILLED WITH CHARACTER C
+                                      EAL CAUSE WAS THREE                                              ODES
+              C     SEPARATE DEFECTS IN THE PORT ITSELF, EACH                  C       * ONLY THE FIRST 3 NAMES OF A DECLARATIO
+                                      OF WHICH THE COMPILER                                            N ARE HONOURED, SO
+              C     ACCEPTED SILENTLY:                                         C         EVERY DECLARATION LISTS AT MOST 3 IDEN
+              C                                                                                        TIFIERS
+              C       1. IN THE STRING-COMPARE LOOP THE STATEM                 C       * FORMAT LABELS BELONG TO THE PROGRAM UN
+                                      ENT &quot;C2 = 0&quot; SAT ON                                              IT, SO ALL FORMATS
+              C          THE LOOP LABEL ITSELF, SO EVERY PASS                  C         ARE PLACED AFTER THE LAST STATEMENT AN
+                                      THROUGH &quot;GO TO 55&quot;                                               D BEFORE END
+              C          RE-INITIALISED THE COUNTER AND THE LO                 C     ------------------------------------------
+                                      OP NEVER TERMINATED.                                             ------------------------
+              C       2. PROC1 AND PROC3 HAD LOST THE CALLS TO                 C
+                                       PROC7, AND PROC2                        C     ---- ENUMERATIONS (IDENT1..IDENT5 = 0..4)
+              C          WROTE ITS RESULT TO A LOCAL INSTEAD O                                         ----
+                                      F BACK INTO ITS              002               INTEGER IDENT1, IDENT2, IDENT3
+              C          VAR PARAMETER INT1LOC.                    003               INTEGER IDENT4, IDENT5
+              C       3. THE PROC6 CALL IN PROC1 WAS BOUND TO      004               DATA IDENT1/0/, IDENT2/1/, IDENT3/2/
+                                      THE WRONG ENUM VALUE.        005               DATA IDENT4/3/, IDENT5/4/
+              C                                                    006               DATA T2( 1)/68/
+              C     BECAUSE EVERY ONE OF THESE IS A PLAIN LOGI     007               DATA T2( 2)/72/
+                                      C ERROR THAT HAPPENS         008               DATA T2( 3)/82/
+              C     TO EXPRESS ITSELF AS A NON-TERMINATING LOO     009               DATA T2( 4)/89/
+                                      P, THE SYMPTOM WAS           010               DATA T2( 5)/83/
+              C     INDISTINGUISHABLE FROM A COMPILER DEFECT.      011               DATA T2( 6)/84/
+  012               DATA T2( 7)/79/                                            C
+  013               DATA T2( 8)/78/                                            C     ---- GLOBAL SCALARS ----
+  014               DATA T2( 9)/69/                                071               INTEGER IGLOB
+  015               DATA T2(10)/80/                                072               LOGICAL BLOB
+  016               DATA T2(11)/32/                                073               INTEGER C1GLB, C2GLB
+  017               DATA T2(12)/80/                                074               DATA C1GLB/65/, C2GLB/66/
+  018               DATA T2(13)/82/                                075               DIMENSION A1GLOB(50)
+  019               DATA T2(14)/79/                                076               DIMENSION A2GLOB(2500)
+  020               DATA T2(15)/71/                                            C
+  021               DATA T2(16)/82/                                077               INTEGER RINDX, I1LOC, I2LOC
+  022               DATA T2(17)/65/                                078               INTEGER I3LOC, CHIDX, ELOC
+  023               DATA T2(18)/77/                                079               LOGICAL F2RES, BLOC
+  024               DATA T2(19)/32/                                080               INTEGER NBAD, F1RES
+  025               DATA T2(20)/50/                                081               REAL CT0, RT0, CT1
+  026               DATA T2(21)/78/                                082               REAL RT1, SECS, DMIPS
+  027               DATA T2(22)/68/                                083               DIMENSION SA1(30), SA2(30)
+  028               DATA T2(23)/32/                                084               DIMENSION T2(30), T3(30)
+  029               DATA T2(24)/83/                                            C
+  030               DATA T2(25)/84/                                            C     ---- WORKING STATE FOR THE INLINED PROCEDU
+  031               DATA T2(26)/82/                                                                    RES ----
+  032               DATA T2(27)/73/                                085               INTEGER INTLOC, ELOC2, IINDX
+  033               DATA T2(28)/78/                                086               INTEGER CHLOC, CH1LOC, CH2LOC
+  034               DATA T2(29)/71/                                087               INTEGER CH2PAR
+  035               DATA T3( 1)/68/                                088               INTEGER CIDX, CMPV, IPREF
+  036               DATA T3( 2)/72/                                089               INTEGER LIM, I, C1, C2
+  037               DATA T3( 3)/82/                                090               INTEGER IPV1, IPV2, PPREF
+  038               DATA T3( 4)/89/                                091               INTEGER NREC, EVPAR, EREFP
+  039               DATA T3( 5)/83/                                            C
+  040               DATA T3( 6)/84/                                            C     ---- STRING CONSTANTS AS CHARACTER CODES -
+  041               DATA T3( 7)/79/                                                                    ---
+  042               DATA T3( 8)/78/                                            C     PTRGLOB.STRCOMP := ′DHRYSTONE PROGRAM, SOM
+  043               DATA T3( 9)/69/                                                                    E STRING′
+  044               DATA T3(10)/80/                                092               DATA RSTRC(1, 1)/68/, RSTRC(1, 2)/72/, RST
+  045               DATA T3(11)/32/                                                                    RC(1, 3)/82/
+  046               DATA T3(12)/80/                                093               DATA RSTRC(1, 4)/89/, RSTRC(1, 5)/83/, RST
+  047               DATA T3(13)/82/                                                                    RC(1, 6)/84/
+  048               DATA T3(14)/79/                                094               DATA RSTRC(1, 7)/79/, RSTRC(1, 8)/78/, RST
+  049               DATA T3(15)/71/                                                                    RC(1, 9)/69/
+  050               DATA T3(16)/82/                                095               DATA RSTRC(1,10)/80/, RSTRC(1,11)/32/, RST
+  051               DATA T3(17)/65/                                                                    RC(1,12)/80/
+  052               DATA T3(18)/77/                                096               DATA RSTRC(1,13)/82/, RSTRC(1,14)/79/, RST
+  053               DATA T3(19)/32/                                                                    RC(1,15)/71/
+  054               DATA T3(20)/51/                                097               DATA RSTRC(1,16)/82/, RSTRC(1,17)/65/, RST
+  055               DATA T3(21)/82/                                                                    RC(1,18)/77/
+  056               DATA T3(22)/68/                                            C     STR1LOC := ′DHRYSTONE PROGRAM, 1ST STRING′
+  057               DATA T3(23)/32/                                098               DATA SA1( 1)/68/, SA1( 2)/72/, SA1( 3)/82/
+  058               DATA T3(24)/83/                                099               DATA SA1( 4)/89/, SA1( 5)/83/, SA1( 6)/84/
+  059               DATA T3(25)/84/                                100               DATA SA1( 7)/79/, SA1( 8)/78/, SA1( 9)/69/
+  060               DATA T3(26)/82/                                101               DATA SA1(10)/80/, SA1(11)/32/, SA1(12)/80/
+  061               DATA T3(27)/73/                                102               DATA SA1(13)/82/, SA1(14)/79/, SA1(15)/71/
+  062               DATA T3(28)/78/                                103               DATA SA1(16)/82/, SA1(17)/65/, SA1(18)/77/
+  063               DATA T3(29)/71/                                104               DATA SA1(19)/32/, SA1(20)/49/, SA1(21)/83/
+              C                                                    105               DATA SA1(22)/84/, SA1(23)/32/, SA1(24)/83/
+              C     ---- NUMBER OF RUNS ----                       106               DATA SA1(25)/84/, SA1(26)/82/, SA1(27)/73/
+  064               INTEGER NUMBER                                 107               DATA SA1(28)/78/, SA1(29)/71/
+  065               DATA NUMBER/5000/                                          C
+              C                                                    108               PRINT 900
+              C     ---- RECORD EMULATION ----                     109               PRINT 910, NUMBER
+              C     PTRGLOB AND NEXTPTRGLOB ARE NODE INDICES 1                 C
+                                       AND 2; THE FIELD                        C     ---- INITIALISE PTRGLOB ----
+              C     ARRAYS ARE PARALLEL TO THE NODE INDEX.         110               RPTRC(1) = NPTG
+  066               INTEGER PGLB, NPTG                             111               RDISC(1) = IDENT1
+  067               DATA PGLB/1/, NPTG/2/                          112               RENUM(1) = IDENT3
+  068               DIMENSION RPTRC(3), RDISC(3), RENUM(3)         113               RINTC(1) = 40
+  069               DIMENSION RINTC(3)                             114               I = 1
+  070               DIMENSION RSTRC(3,30)                          115           200 IF (I .GT. 30) GO TO 201
+  116                 RSTRC(1,I) = 32                              151               CH1LOC = CIDX
+  117                 I = I + 1                                    152               CH2LOC = CH1LOC
+  118                 GO TO 200                                    153               CH2PAR = SA2(INTLOC+1)
+  119           201 CONTINUE                                       154               F1RES = IDENT1
+  120               I = 1                                          155               IF (CH2LOC .NE. CH2PAR) GO TO 41
+  121           190 IF (I .GT. 2500) GO TO 191                     156               C1GLB = CH1LOC
+  122                 A2GLOB(I) = 0                                157               F1RES = IDENT2
+  123                 I = I + 1                                    158            41 IF (F1RES .EQ. IDENT1) GO TO 42
+  124                 GO TO 190                                    159               GO TO 40
+  125           191 CONTINUE                                       160            42 CHLOC = 65
+  126               A2GLOB(308) = 10                               161               INTLOC = INTLOC + 1
+              C                                                    162               GO TO 40
+              C     ---- MAIN LOOP ----                            163            43 IF (CHLOC .LT. 87) GO TO 45
+              C                                                    164               IF (CHLOC .GE. 90) GO TO 45
+              C     ==========================================     165               INTLOC = 7
+                                      ========================     166            45 IF (CHLOC .EQ. 82) GO TO 50
+              C     THE BENCHMARK BODY IS FULLY INLINED. FORTR     167               CMPV = 0
+                                      AN-GDR IS UNRELIABLE         168               C2 = 0
+              C     WHEN A SUBROUTINE DECLARES MANY NAMES, SO      169               GO TO 55
+                                      EVERY PROCEDURE BELOW        170            50 F2RES = .TRUE.
+              C     IS WRITTEN AS STRAIGHT-LINE CODE INSIDE TH     171               GO TO 58
+                                      E MAIN LOOP.                             C
+              C     ==========================================                 C     ---- COMPARE STR1LOC / STR2LOC LEXICOGRAPH
+                                      ========================                                         ICALLY ----
+              C     CTIME CPU SECONDS BRACKET ONLY THE BENCHMA                 C     NB: THE C2 = 0 INITIALISATION MUST SIT BEF
+                                      RK BODY. RUN THIS DECK                                           ORE THE LOOP HEAD.
+              C     WITH --GUEST-CLOCK; DATE* AND HOST PACING                  C     PLACING IT AT LABEL 55 (INSIDE THE LOOP) M
+                                      DO NOT AFFECT ITS SCORE.                                         ADE GO TO 55 RESET THE
+  127               CALL CTIME(CT0,RT0)                                        C     COUNTER ON EVERY PASS, SO THE LOOP NEVER T
+  128               DO 100 RINDX = 1, NUMBER                                                           ERMINATED.
+              C                                                    172            55 IF (C2 .GE. 30) GO TO 58
+              C     ---- PROC5 ----                                173               C1 = SA1(C2+1)
+  129               C1GLB = 65                                     174               IF (C1 .LT. SA2(C2+1)) CMPV = -1
+  130               BLOB = .FALSE.                                 175               IF (C1 .GT. SA2(C2+1)) CMPV = 1
+              C                                                    176               IF (CMPV .NE. 0) GO TO 58
+              C     ---- PROC4: BOOLGLOB := BOOLGLOB OR (CH1GL     177               C2 = C2 + 1
+                                      OB = ′A′) ----               178               GO TO 55
+  131               BLOC = .FALSE.                                             C
+  132               IF (C1GLB .EQ. 65) GO TO 30                                C     PASCAL: IF STR1LOC &gt; STR2LOC THEN (INTLOC
+  133               GO TO 32                                                                           += 7; TRUE) ELSE FALSE
+  134            30 BLOC = .TRUE.                                  179               IF (CMPV .GT. 0) GO TO 56
+  135            32 IF (BLOC) GO TO 33                             180               GO TO 58
+  136               GO TO 34                                       181            56 INTLOC = INTLOC + 7
+  137            33 BLOB = .TRUE.                                  182               F2RES = .TRUE.
+  138            34 C2GLB = 66                                     183               GO TO 58
+              C                                                    184            58 F2RES = .FALSE.
+  139               I1LOC = 2                                                  C
+  140               I2LOC = 3                                      185               IF (F2RES) GO TO 141
+  141               ELOC = IDENT2                                  186               GO TO 142
+              C                                                    187           141 BLOB = .FALSE.
+              C     ---- STR2LOC := ′DHRYSTONE PROGRAM, 2ND ST     188               GO TO 142
+                                      RING′ ----                   189           142 BLOB = .TRUE.
+  142               I = 1                                                      C
+  143           660 IF (I .GT. 29) GO TO 661                                   C     ---- WHILE INT1LOC &lt; INT2LOC DO ... ----
+  144                 SA2(I) = T2(I)                               190            60 IF (I1LOC .LT. I2LOC) GO TO 61
+  145                 I = I + 1                                    191               GO TO 70
+  146                 GO TO 660                                    192            61 I3LOC = 5 * I1LOC - I2LOC
+  147           661 CONTINUE                                       193               INTLOC = I1LOC + 2
+              C                                                    194               IPV1 = I1LOC
+              C     ---- FUNC2: BOOLGLOB := NOT FUNC2(STR1LOC,     195               IPV2 = I2LOC
+                                       STR2LOC) ----               196               IPREF = IPV2 + INTLOC
+  148               INTLOC = 2                                     197               I3LOC = IPREF
+  149            40 IF (INTLOC .GT. 2) GO TO 43                    198               I1LOC = I1LOC + 1
+              C     FUNC1(STR1LOC[INTLOC], STR2LOC[INTLOC+1]):     199               GO TO 60
+                                       COMPARE WITH ′C′            200            70 CONTINUE
+  150               CIDX = SA1(INTLOC)                                         C
+              C     ---- PROC8 ----                                248               GO TO 88
+  201               IPV1 = I1LOC                                   249            82 EREFP = IDENT1
+  202               IPV2 = I3LOC                                   250               ELOC = EREFP
+  203               INTLOC = IPV1 + 5                                          C     ---- STR2LOC := ′DHRYSTONE PROGRAM, 3RD ST
+  204               A1GLOB(INTLOC) = IPV2                                                              RING′ ----
+  205               A1GLOB(INTLOC+1) = A1GLOB(INTLOC)              251               I = 1
+  206               A1GLOB(INTLOC+30) = INTLOC                     252           770 IF (I .GT. 29) GO TO 771
+  207               IINDX = INTLOC                                 253                 SA2(I) = T3(I)
+  208               IINDX = INTLOC + 1                             254                 I = I + 1
+  209               IINDX = INTLOC                                 255                 GO TO 770
+  210           180 IF (IINDX .GT. INTLOC+1) GO TO 181             256           771 CONTINUE
+  211                 A2GLOB(INTLOC + 50*(IINDX-1)) = INTLOC       257               I2LOC = RINDX
+  212                 IINDX = IINDX + 1                            258               IGLOB = RINDX
+  213                 GO TO 180                                    259            88 CHIDX = CHIDX + 1
+  214           181 CONTINUE                                       260               GO TO 80
+  215               A2GLOB(INTLOC + 50*(INTLOC-2)) =               261            90 CONTINUE
+                   + A2GLOB(INTLOC + 50*(INTLOC-2)) + 1                        C
+  216               A2GLOB(INTLOC+20 + 50*(INTLOC-1)) = A1GLOB                 C     ---- TAIL ARITHMETIC ----
+                                      (INTLOC)                     262               I2LOC = I2LOC * I1LOC
+  217               IGLOB = 5                                      263               I1LOC = I2LOC / I3LOC
+              C                                                    264               I2LOC = 7 * (I2LOC - I3LOC) - I1LOC
+              C     ---- PROC1(PTRGLOB) ----                                   C
+  218               NREC = RPTRC(PGLB)                                         C     ---- PROC2(VAR INT1LOC) ----
+  219               RPTRC(PGLB) = RPTRC(NPTG)                                  C     INTPARREF IS A VAR PARAMETER IN THE ORIGIN
+  220               RINTC(PGLB) = 5                                                                    AL, SO THE ASSIGNMENT
+  221               RINTC(NREC) = RINTC(PGLB)                                  C     BELOW WRITES BACK INTO INT1LOC ITSELF.
+  222               RPTRC(NREC) = RPTRC(PGLB)                      265               INTLOC = I1LOC + 10
+              C     ---- PROC3: PROC7(10, INTGLOB, PTRGLOB.INT     266               ELOC2 = IDENT5
+                                      COMP) ----                   267           150 IF (C1GLB .EQ. 65) GO TO 151
+  223               PPREF = RPTRC(PGLB)                            268               GO TO 152
+  224               INTLOC = 10 + 2                                269           151 INTLOC = INTLOC - 1
+  225               IPV1 = 10                                      270               I1LOC = INTLOC - IGLOB
+  226               IPV2 = IGLOB                                   271               ELOC2 = IDENT1
+  227               RINTC(PGLB) = IPV2 + INTLOC                    272           152 IF (ELOC2 .EQ. IDENT1) GO TO 155
+              C                                                    273               GO TO 150
+  228               IF (RDISC(NREC) .EQ. IDENT1) GO TO 72          274           155 CONTINUE
+  229               GO TO 75                                       275           100 CONTINUE
+  230            72 RINTC(NREC) = 6                                276               CALL CTIME(CT1,RT1)
+              C     ---- PROC6(PTRGLOB.ENUMCOMP, NEXTPTR.ENUMC     277               SECS = RT1-RT0
+                                      OMP) ----                    278               DMIPS = 0.
+              C     PTRGLOB.ENUMCOMP IS IDENT3, SO THE CASE BR     279               IF (SECS .LE. 0.) GO TO 1400
+                                      ANCH &quot;IDENT3&quot; FIRES          280               DMIPS = FLOAT(NUMBER)/(1757.*SECS)
+              C     AND ENUMCOMP BECOMES IDENT2.                   281          1400 CONTINUE
+  231               EREFP = IDENT2                                             C
+  232               RENUM(NREC) = EREFP                                        C     ==========================================
+              C     ---- PROC7(NEXTPTR.INTCOMP, 10, NEXTPTR.IN                                         ========================
+                                      TCOMP) ----                              C     ---- REPORT ----
+  233               INTLOC = RINTC(NREC) + 2                       282               PRINT 920
+  234               RINTC(NREC) = 10 + INTLOC                      283               PRINT 930
+              C     ---- NEXTPTR.PTRCOMP := PTRGLOB.PTRCOMP --     284               NBAD = 0
+                                      --                           285               LIM = NUMBER + 10
+  235               RPTRC(NREC) = RPTRC(PGLB)                                  C
+  236               GO TO 75                                                   C     ARRAY ELEMENTS CANNOT BE PRINT ITEMS, SO E
+  237            75 CONTINUE                                                                           VERY VALUE IS FIRST
+              C                                                                C     COPIED INTO A SCALAR TEMPORARY (IPREF).
+              C     ---- FOR CHINDEX := ′A′ TO CH2GLOB ----        286               IPREF = IGLOB
+  238               CHIDX = 65                                     287               IF (IPREF .NE. 5) NBAD = NBAD + 1
+  239            80 IF (CHIDX .GT. C2GLB) GO TO 90                 288               PRINT 940, IPREF
+  240               CH1LOC = CHIDX                                 289               IF (.NOT. BLOB) NBAD = NBAD + 1
+  241               CH2LOC = CH1LOC                                290               PRINT 950, BLOB
+  242               CH2PAR = 67                                    291               IPREF = C1GLB
+  243               F1RES = IDENT1                                 292               IF (IPREF .NE. 65) NBAD = NBAD + 1
+  244               IF (CH2LOC .NE. CH2PAR) GO TO 81               293               PRINT 960, IPREF
+  245               C1GLB = CH1LOC                                 294               IPREF = C2GLB
+  246               F1RES = IDENT2                                 295               IF (IPREF .NE. 66) NBAD = NBAD + 1
+  247            81 IF (ELOC .EQ. F1RES) GO TO 82                  296               PRINT 970, IPREF
+  297               IPREF = A1GLOB(8)                                                                  HIS PROGRAM UNIT) ----
+  298               IF (IPREF .NE. 7) NBAD = NBAD + 1              355           900 FORMAT (′DHRYSTONE BENCHMARK 2.1 (FORTRAN-
+  299               PRINT 980, IPREF                                                                   GDR FOR BESM-6)′)
+  300               IPREF = A2GLOB(308)                            356           910 FORMAT (′RUNNING ′, I6, ′ PASSES...′)
+  301               IF (IPREF .NE. LIM) NBAD = NBAD + 1            357           920 FORMAT (′ ′)
+  302               PRINT 990, IPREF, LIM                          358           930 FORMAT (′EXECUTION ENDS′)
+  303               IPREF = RDISC(PGLB)                            359           940 FORMAT (′IGLOB:       ′, I6, ′ (SHOULD BE
+  304               IF (IPREF .NE. 0) NBAD = NBAD + 1                                                  5)′)
+  305               PRINT 1000, IPREF                              360           950 FORMAT (′BLOB:      ′, L6, ′ (SHOULD BE TR
+  306               IPREF = RENUM(PGLB)                                                                UE)′)
+  307               IF (IPREF .NE. 2) NBAD = NBAD + 1              361           960 FORMAT (′C1GLB:       ′, I6, ′ (SHOULD BE
+  308               PRINT 1010, IPREF                                                                  65 = A)′)
+  309               IPREF = RINTC(PGLB)                            362           970 FORMAT (′C2GLB:       ′, I6, ′ (SHOULD BE
+  310               IF (IPREF .NE. 17) NBAD = NBAD + 1                                                 66 = B)′)
+  311               PRINT 1020, IPREF                              363           980 FORMAT (′A1GLOB 8:    ′, I6, ′ (SHOULD BE
+  312               IPREF = RDISC(NPTG)                                                                7)′)
+  313               IF (IPREF .NE. 0) NBAD = NBAD + 1              364           990 FORMAT (′A2GLOB 8/7:  ′, I6, ′ (SHOULD BE
+  314               PRINT 1030, IPREF                                                                  ′, I6, ′)′)
+  315               IPREF = RENUM(NPTG)                            365          1000 FORMAT (′PGLB.DISCR: ′, I6, ′ (SHOULD BE 0
+  316               IF (IPREF .NE. 1) NBAD = NBAD + 1                                                  )′)
+  317               PRINT 1040, IPREF                              366          1010 FORMAT (′PGLB.ENUM:  ′, I6, ′ (SHOULD BE 2
+  318               IPREF = RINTC(NPTG)                                                                )′)
+  319               IF (IPREF .NE. 18) NBAD = NBAD + 1             367          1020 FORMAT (′PGLB.INT:   ′, I6, ′ (SHOULD BE 1
+  320               PRINT 1050, IPREF                                                                  7)′)
+  321               IPREF = I1LOC                                  368          1030 FORMAT (′NEXTP.DISCR:   ′, I6, ′ (SHOULD B
+  322               IF (IPREF .NE. 5) NBAD = NBAD + 1                                                  E 0)′)
+  323               PRINT 1060, IPREF                              369          1040 FORMAT (′NEXTP.ENUM:    ′, I6, ′ (SHOULD B
+  324               IPREF = I2LOC                                                                      E 1)′)
+  325               IF (IPREF .NE. 13) NBAD = NBAD + 1             370          1050 FORMAT (′NEXTP.INT:     ′, I6, ′ (SHOULD B
+  326               PRINT 1070, IPREF                                                                  E 18)′)
+  327               IPREF = I3LOC                                  371          1060 FORMAT (′I1LOC:       ′, I6, ′ (SHOULD BE
+  328               IF (IPREF .NE. 7) NBAD = NBAD + 1                                                  5)′)
+  329               PRINT 1080, IPREF                              372          1070 FORMAT (′I2LOC:       ′, I6, ′ (SHOULD BE
+  330               IPREF = ELOC                                                                       13)′)
+  331               IF (IPREF .NE. 1) NBAD = NBAD + 1              373          1080 FORMAT (′I3LOC:       ′, I6, ′ (SHOULD BE
+  332               PRINT 1090, IPREF                                                                  7)′)
+              C                                                    374          1090 FORMAT (′ELOC:       ′, I6, ′ (SHOULD BE 1
+              C     ---- PTRGLOB.STRCOMP, ONE CHARACTER PER LI                                         )′)
+                                      NE ----                      375          1110 FORMAT (′PGLB.STR:  ′, A1)
+  333               I = 1                                          376          1200 FORMAT (′ALL 18 CONTROL VALUES MATCH THE D
+  334          1300 IF (I .GT. 30) GO TO 1301                                                          HRYSTONE 2.1 SPEC′)
+  335                 CHLOC = RSTRC(PGLB,I)                        377          1210 FORMAT (′MISMATCHES: ′, I6, ′ - PORT FAILE
+  336                 IF (CHLOC .NE. 32) PRINT 1110, CHLOC                                             D VERIFICATION′)
+  337                 I = I + 1                                    378          1220 FORMAT (′GUEST CPU SECONDS: ′, F12.4)
+  338                 GO TO 1300                                   379          1230 FORMAT (′GUEST DMIPS: ′, F12.6)
+  339          1301 CONTINUE                                       380          1240 FORMAT (′DMIPS UNAVAILABLE: ENABLE --GUEST
+              C                                                                                        -CLOCK OR RUN LONGER′)
+  340               IF (NBAD .EQ. 0) PRINT 1200                    381          1250 FORMAT (′DMIPS UNAVAILABLE: CONTROL VALUES
+  341               IF (NBAD .NE. 0) PRINT 1210, NBAD                                                   DO NOT MATCH′)
+  342               IF (NUMBER .LE. 0) GO TO 1403                  382          1260 FORMAT (′DMIPS UNAVAILABLE: ZERO PASSES′)
+  343               IF (NBAD .NE. 0) GO TO 1402                    383               END
+  344               IF (SECS .LT. 0.04) GO TO 1401
+  345               PRINT 1220, SECS
+  346               PRINT 1230, DMIPS                                      BESM FORTRAN DIAGNOSTIC RESULTS
+  347               GO TO 1404
+  348          1401 PRINT 1240                                             ERRORS: 0     WARNINGS: 1
+  349               GO TO 1404
+  350          1402 PRINT 1250                                    WARN 001 IN 00179 THERE IS NO PATH TO THIS STATEMENT
+  351               GO TO 1404
+  352          1403 PRINT 1260
+  353          1404 CONTINUE                                       STATEMENT    RELATIVE ADDRESSES OF STATEMENTS (OCTAL)
+  354               STOP
+              C                                                     00001        :00000   00000   00000   00000   00000
+              C     ==========================================      00006         00000   00000   00000   00000   00000
+                                      ========================      00011         00000   00000   00000   00000   00000
+              C     ---- FORMAT STATEMENTS (MUST LIVE INSIDE T      00016         00000   00000   00000   00000   00000
+   00021         00000   00000   00000   00000   00000              00351         01011  :01012  :01016  :01016  :01017
+   00026         00000   00000   00000   00000   00000              00356        :01017  :01017  :01017  :01017  :01017
+   00031         00000   00000   00000   00000   00000              00361        :01017  :01017  :01017  :01017  :01017
+   00036         00000   00000   00000   00000   00000              00366        :01017  :01017  :01017  :01017  :01017
+   00041         00000   00000   00000   00000   00000              00371        :01017  :01017  :01017  :01017  :01017
+   00046         00000   00000   00000   00000   00000              00376        :01017  :01017  :01017  :01017  :01017
+   00051         00000   00000   00000   00000   00000              00381        :01017  :01017  :01017
+   00056         00000   00000   00000   00000   00000
+   00061         00000   00000   00000   00000   00000                *** EXTERNALS ***
+   00066         00000   00000   00000   00000   00000
+   00071         00000   00000   00000   00000   00000               CTIME
+   00076         00000   00000   00000   00000   00000
+   00081         00000   00000   00000   00000   00000                *** ENTRIES ***   &gt;LOCATION&lt;
+   00086         00000   00000   00000   00000   00000
+   00091         00000   00000   00000   00000   00000               DHRY    &gt;00000&lt;   PROGRA  &gt;00000&lt;
+   00096         00000   00000   00000   00000   00000
+   00101         00000   00000   00000   00000   00000                *** UNREFERENCED IDENTIFIERS OR UNDEFINED ARRAYS ***
+   00106         00000   00000   00000  :00004  :00011
+   00111         00012  :00014   00015   00016  :00020               EVPAR
+   00116         00021  :00026   00030  :00031  :00031
+   00121        :00032   00033  :00036   00040  :00041            &gt;&gt; DHRY   &lt;&lt;    LENGTH: 03565 06755B   INPUT CARDS: 00531
+   00126        :00041  :00042  :00045   00050   00051
+   00131         00052  :00053   00054  :00055  :00056
+   00136        :00057  :00060  :00061  :00062  :00063
+   00141        :00064  :00065  :00066   00067   00072
+   00146        :00075  :00076  :00076  :00077   00100
+   00151         00103   00104   00105   00110   00111
+   00156        :00113  :00114  :00115   00116  :00117
+   00161        :00120   00122  :00123   00124  :00126
+   00166        :00127   00130   00131  :00132  :00133
+   00171        :00134  :00135   00136   00141  :00146
+   00176        :00152   00153  :00156   00156  :00160
+   00181        :00161   00163   00164  :00165  :00166
+   00186         00166  :00167  :00170  :00170  :00171
+   00191         00172  :00173   00176  :00201  :00202
+   00196        :00203  :00205   00205  :00210  :00211
+   00201        :00211  :00212  :00213   00215   00220
+   00206         00221   00223   00224  :00227  :00230
+   00211        :00233   00240  :00243  :00244  :00244
+   00216        :00252  :00255  :00256   00261   00265
+   00221        :00267  :00272  :00274   00275   00276
+   00226         00277   00300   00303  :00307  :00310
+   00231         00312   00313   00316   00321   00324
+   00236         00327  :00330  :00330  :00331   00332
+   00241         00333  :00334  :00335  :00336   00337
+   00246         00340  :00342   00343  :00344  :00345
+   00251         00345  :00347   00350   00353  :00356
+   00256        :00357  :00357  :00360  :00361   00363
+   00261        :00364  :00364  :00367   00373   00400
+   00266        :00403  :00404   00405  :00406   00410
+   00271         00412  :00414   00415  :00416  :00416
+   00276        :00417  :00422   00423   00424  :00426
+   00281        :00432  :00432  :00436  :00442  :00443
+   00286         00445   00446  :00452  :00457  :00463
+   00291        :00470  :00471  :00475  :00502  :00503
+   00296        :00507  :00514   00515  :00521  :00526
+   00301         00527  :00533  :00541   00544  :00551
+   00306        :00556   00561  :00566  :00573   00576
+   00311        :00603  :00610   00613  :00620  :00625
+   00316         00630  :00635  :00642   00645  :00652
+   00321        :00657  :00660  :00664  :00671  :00672
+   00326        :00676  :00703  :00704  :00710  :00715
+   00331        :00716  :00722  :00727  :00730   00731
+   00336         00737  :00746   00750  :00751  :00751
+   00341        :00756  :00764   00765  :00767   00770
+   00346        :00775   01001  :01002   01005  :01006
+*EXECUTE
+      *LIBRA:21 = CTIME
+≠
+         DHRY       01000                FT*722   E 10624                ITIME    E 11636                ISOTCOSY   12752
+         PROGRAM  E 01000                FT*642   E 10624                LOCF     E 11641                ISOTCOS1 E 13023
+         BCDWRIT*   07755                FT*002   E 10624                XLOC     E 11641                FMRTAPE    13043
+         FT*621   E 07755                FD*642   E 10625                R*TO*INT   11645                OCTTDEC    13772
+         BCDENC*  E 07761                FD*722   E 10625                R*TO*I   E 11646                LUNMUN   C 14025
+         FT*611   E 07761                FC*722   E 10625                STOP*      11660                JERRIO*  C 14026
+         FT*571   E 07763                FC*642   E 10625                EXIT     E 11661                CARD2    C 14027
+         FT*561   E 07766                FC*002   E 10625                BCDBEG*    11707                ISOICTTR   14054
+         NEXTLET* E 07773                IOEND*   E 10632                FT2*     E 12214                REVCARD    14111
+         RK*      E 10035                FT*643   E 10632                KONV1*   E 12227                *ICHECK* C 14136
+         WSY*     E 10273                FT*723   E 10632                PRINT8     12323                *ПEPФOPA   14144
+         I/O*ERR  E 10533                FT*003   E 10632                TTPRINT    12504                KOД*CDC  E 14145
+         IOCONT*    10560                CTIME      11620                BCDPUN     12543                CBOБOДHO   14205
+         IOAC*    E 10611                PTIME    E 11635                EBCDPUN  E 12567
+≠
+DHRYSTONE BENCHMARK 2.1 (FORTRAN-GDR FOR BESM-6)
+RUNNING   5000 PASSES...
+EXECUTION ENDS
+IGLOB:            5 (SHOULD BE 5)
+BLOB:           T (SHOULD BE TRUE)
+C1GLB:           65 (SHOULD BE 65 = A)
+C2GLB:           66 (SHOULD BE 66 = B)
+A1GLOB 8:         7 (SHOULD BE 7)
+A2GLOB 8/7:    5010 (SHOULD BE   5010)
+PGLB.DISCR:      0 (SHOULD BE 0)
+PGLB.ENUM:       2 (SHOULD BE 2)
+PGLB.INT:       17 (SHOULD BE 17)
+NEXTP.DISCR:        0 (SHOULD BE 0)
+NEXTP.ENUM:         1 (SHOULD BE 1)
+NEXTP.INT:         18 (SHOULD BE 18)
+I1LOC:            5 (SHOULD BE 5)
+I2LOC:           13 (SHOULD BE 13)
+I3LOC:            7 (SHOULD BE 7)
+ELOC:            1 (SHOULD BE 1)
+ALL 18 CONTROL VALUES MATCH THE DHRYSTONE 2.1 SPEC
+GUEST CPU SECONDS:       4.9800
+GUEST DMIPS:     0.571438
+Halted by STOP at 0118 after 17292960 instructions
+</code></pre>
+</details>
+
+            <script async src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
+            
+        </body>
+        </html>

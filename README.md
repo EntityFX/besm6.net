@@ -146,6 +146,7 @@ plans/        планы разработки
 ## Документация
 
 - [docs/besm6-machine.md](docs/besm6-machine.md) — устройство, симулятор, скорость.
+- [docs/performance-methodology.md](docs/performance-methodology.md) — устройство машины, бенчмарки, сбор статистики, проверка результатов и расчёт производительности.
 - [docs/besm6-commands.md](docs/besm6-commands.md) — команды, признаки, супервизор.
 - [docs/besm6-memory.md](docs/besm6-memory.md) — память, приписка, буферы.
 - [docs/besm6-hardware-time.md](docs/besm6-hardware-time.md) — аппаратное время и стадии АУ.
