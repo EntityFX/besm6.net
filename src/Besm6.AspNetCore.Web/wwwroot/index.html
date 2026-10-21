@@ -64,10 +64,14 @@
             <li class="nav-item" role="presentation"><button id="storageTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#storagePane" type="button" role="tab" aria-controls="storagePane" aria-selected="false">Storage</button></li>
             <li class="nav-item" role="presentation"><button id="cardTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#cardPane" type="button" role="tab" aria-controls="cardPane" aria-selected="false">Card generator</button></li>
             <li class="nav-item" role="presentation"><button id="examplesTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#examplesPane" type="button" role="tab" aria-controls="examplesPane" aria-selected="false">Examples</button></li>
+            <li class="nav-item" role="presentation"><button id="editorTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#editorPane" type="button" role="tab" aria-controls="editorPane" aria-selected="false">Editor</button></li>
           </ul>
         </div><div class="card-body p-0 tab-content">
           <div id="printPane" class="tab-pane fade show active" role="tabpanel" aria-labelledby="printTab"><pre id="printOutput" class="console mb-0" role="region" aria-label="Print output" tabindex="0"></pre></div>
-          <div id="punchPane" class="tab-pane fade" role="tabpanel" aria-labelledby="punchTab"><pre id="punchOutput" class="console mb-0" role="region" aria-label="Punch card output" tabindex="0"></pre></div>
+          <div id="punchPane" class="tab-pane fade" role="tabpanel" aria-labelledby="punchTab"><div class="device-view punch-device-view">
+            <div class="d-flex align-items-center flex-wrap gap-2 p-2"><label for="punchFormat">Format</label><select id="punchFormat" class="form-select form-select-sm card-select"><option value="braille">Braille</option><option value="ascii">ASCII</option><option value="grid">Grid</option><option value="card">Card</option></select><span id="punchCount" class="small text-muted">0 cards</span></div>
+            <pre id="punchOutput" class="console punch-braille mb-0" role="region" aria-label="Punch card output" tabindex="0"></pre><div id="punchVisual" class="card-preview p-2" hidden></div>
+          </div></div>
           <div id="plotterPane" class="tab-pane fade" role="tabpanel" aria-labelledby="plotterTab"><div class="device-view p-2">
             <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><label for="plotterType">Plotter</label><select id="plotterType" class="form-select form-select-sm plotter-select"><option value="watanabe">Watanabe WX4675</option><option value="calcomp">Calcomp</option><option value="tektronix">Tektronix</option></select><span id="plotterInfo" class="small text-muted">0 bytes</span></div>
             <canvas id="plotterCanvas" width="960" height="600" role="img" aria-label="Plotter drawing">Plotter drawing preview</canvas>
@@ -86,12 +90,38 @@
           </div></div>
           <div id="examplesPane" class="tab-pane fade" role="tabpanel" aria-labelledby="examplesTab"><div class="device-view p-2 examples-view">
             <h3 class="h6">Программы из примеров</h3><div class="example-controls mb-2"><label for="exampleFilter">Поиск</label><input id="exampleFilter" type="search" class="form-control form-control-sm" placeholder="Название или каталог"><label for="exampleSelect">Пример</label><select id="exampleSelect" class="form-select form-select-sm" disabled><option value="">Загрузка…</option></select></div>
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><button id="exampleLoad" class="btn btn-sm btn-outline-primary" disabled>Load into machine</button><button id="exampleRun" class="btn btn-sm btn-primary" disabled>Run example</button><span id="exampleMessage" class="small text-muted" role="status" aria-live="polite"></span></div>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><button id="exampleLoad" class="btn btn-sm btn-outline-primary" disabled>Load into machine</button><button id="exampleRun" class="btn btn-sm btn-primary" disabled>Run example</button><button id="exampleEdit" class="btn btn-sm btn-outline-secondary" disabled>Edit copy</button><span id="exampleMessage" class="small text-muted" role="status" aria-live="polite"></span></div>
             <p class="small text-muted mb-2">Используются режим, скорость и лимиты из Job. В Debug программа будет загружена на паузе. Для своих файлов доступна загрузка .dub.</p>
             <pre id="exampleSource" class="example-source font-monospace small p-2 mb-0" tabindex="0" role="region" aria-label="Исходный текст примера">Выберите пример для просмотра.</pre>
           </div></div>
-          <div id="terminalPane" class="tab-pane fade" role="tabpanel" aria-labelledby="terminalTab"><pre id="terminalOutput" class="console mb-0" role="region" aria-label="Terminal output" tabindex="0"></pre></div>
-          <div id="storagePane" class="tab-pane fade" role="tabpanel" aria-labelledby="storageTab"><div class="device-view p-2"><h3 class="h6">Mounted devices</h3><div class="table-responsive"><table class="table table-sm small"><thead><tr><th>Device</th><th>Unit (oct)</th><th>Words</th><th>Access</th></tr></thead><tbody id="storageMounts"></tbody></table></div><h3 class="h6">Session files</h3><div class="table-responsive"><table class="table table-sm small"><thead><tr><th>File</th><th>Bytes</th></tr></thead><tbody id="storageFiles"></tbody></table></div></div></div>
+          <div id="editorPane" class="tab-pane fade" role="tabpanel" aria-labelledby="editorTab"><div class="device-view p-2 editor-view">
+            <h3 class="h6">Своё задание .dub</h3><label for="sourceText" class="form-label small">Текст программы</label><textarea id="sourceText" class="form-control form-control-sm font-monospace mb-2" rows="10" spellcheck="false" maxlength="1000000">*assem
+atx 1234
+stop
+*end file
+</textarea>
+            <div class="d-flex flex-wrap gap-2 mb-2"><button id="sourceLoad" class="btn btn-sm btn-outline-primary" disabled>Load into machine</button><button id="sourceRun" class="btn btn-sm btn-primary" disabled>Run text</button></div><p class="small text-muted">Полное задание .dub, до 1 MB. Используются режим и лимиты Job. Изменения текста не меняют уже запущенную программу.</p>
+            <h4 class="h6">Подсветка кода</h4><pre id="sourcePreview" class="example-source font-monospace small p-2" tabindex="0" role="region" aria-label="Подсвеченный исходный код"></pre>
+          </div></div>
+          <div id="terminalPane" class="tab-pane fade" role="tabpanel" aria-labelledby="terminalTab"><div class="device-view terminal-view">
+            <pre id="terminalOutput" class="console mb-0" role="region" aria-label="Terminal output" tabindex="0"></pre>
+            <form id="terminalForm" class="p-2"><div class="d-flex flex-wrap gap-2 align-items-center mb-1"><label for="terminalTarget">Input</label><select id="terminalTarget" class="form-select form-select-sm card-select"><option value="terminal">Guest terminal (*71)</option><option value="teletype">Teletype</option></select><span id="terminalMessage" class="small" role="status" aria-live="polite"></span></div><label for="terminalInput" class="visually-hidden">Строка ввода терминала</label><div class="input-group input-group-sm"><input id="terminalInput" class="form-control font-monospace" maxlength="4096" autocomplete="off"><button id="terminalSend" type="submit" class="btn btn-primary" disabled>Send line</button></div></form>
+          </div></div>
+          <div id="storagePane" class="tab-pane fade" role="tabpanel" aria-labelledby="storageTab"><div class="device-view p-2">
+            <h3 class="h6">Носители</h3><div class="media-fields mb-2">
+              <label for="mediaSource">Образ</label><select id="mediaSource" class="form-select form-select-sm"><option value="">Загрузка…</option></select>
+              <label for="mediaFile">Свой образ</label><input id="mediaFile" type="file" class="form-control form-control-sm" disabled>
+              <label for="mediaKind">Устройство</label><select id="mediaKind" class="form-select form-select-sm"><option value="Tape">Tape</option><option value="Disk">Disk</option><option value="Drum">Drum</option></select>
+              <label for="mediaUnit">Unit (<span id="mediaUnitBase">OCT</span>)</label><input id="mediaUnit" class="form-control form-control-sm font-monospace" value="30">
+              <label for="mediaVolume">Volume ID (HEX)</label><input id="mediaVolume" class="form-control form-control-sm font-monospace" value="0" maxlength="12">
+            </div><div class="d-flex flex-wrap gap-3 mb-2"><label class="form-check"><input id="mediaReadOnly" type="checkbox" class="form-check-input" checked> Read only</label><label class="form-check"><input id="mediaReplace" type="checkbox" class="form-check-input"> Replace</label></div>
+            <div class="d-flex flex-wrap gap-2 mb-2"><button id="mediaMount" class="btn btn-sm btn-outline-primary" disabled>Mount</button><button id="mediaUnmount" class="btn btn-sm btn-outline-secondary" disabled>Unmount</button></div>
+            <p id="mediaHelp" class="small text-muted"></p>
+            <div class="media-fields mb-2"><label for="mediaOffset">Word offset (<span id="mediaOffsetBase">OCT</span>)</label><input id="mediaOffset" class="form-control form-control-sm font-monospace" value="0"><label for="mediaCount">Words</label><input id="mediaCount" type="number" class="form-control form-control-sm" min="1" max="128" value="32"><label for="mediaAddress">Memory address (<span id="mediaAddressBase">OCT</span>)</label><input id="mediaAddress" class="form-control form-control-sm font-monospace" value="1000"></div>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><button id="mediaRead" class="btn btn-sm btn-primary" disabled>Read / Disassemble</button><button id="mediaLoad" class="btn btn-sm btn-outline-primary" disabled>Copy to memory</button><span id="mediaMessage" class="small" role="status" aria-live="polite"></span></div>
+            <pre id="mediaDisassembly" class="example-source media-disassembly small font-monospace p-2" tabindex="0" role="region" aria-label="Дизассемблированный код носителя"></pre>
+            <h3 class="h6">Mounted devices</h3><div class="table-responsive"><table class="table table-sm small"><thead><tr><th>Device</th><th>Unit (oct)</th><th>Words</th><th>Access</th></tr></thead><tbody id="storageMounts"></tbody></table></div><h3 class="h6">Session files</h3><div class="table-responsive"><table class="table table-sm small"><thead><tr><th>File</th><th>Bytes</th></tr></thead><tbody id="storageFiles"></tbody></table></div>
+          </div></div>
         </div></div>
       </section>
     </div>
@@ -101,8 +131,11 @@
   <script src="/lib/bootstrap/bootstrap.bundle.min.js"></script>
   <script src="/lib/signalr/signalr.min.js"></script>
   <script src="/plotter.js"></script>
+  <script src="/card-view.js"></script>
   <script src="/card-generator.js"></script>
+  <script src="/source-code.js"></script>
   <script src="/examples.js"></script>
+  <script src="/media.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

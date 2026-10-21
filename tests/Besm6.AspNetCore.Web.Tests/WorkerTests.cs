@@ -70,6 +70,79 @@ public sealed class WorkerTests
 
     private const string TwoInstructions = "*assem\natx 1234\nstop\n*end file\n";
 
+    [TestMethod]
+    [DataRow("terminal")]
+    [DataRow("teletype")]
+    public async Task GuestInputWaitsForHostAndCanBeCancelled(string target)
+    {
+        await using var f = new Fixture();
+        string job = Raw([Asm("*71 1002"), Asm("stop"), (6UL << 39) | (515UL << 24) | 515UL, 0UL]);
+        await f.StartAsync(job); await f.SendAsync("start", "full");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "WaitingInput");
+        await f.SendAsync("pause");
+        await f.UntilAsync("commandError");
+        await f.Host.SendAsync(new WorkerCommand("input", Text: "AB", InputTarget: target));
+        Assert.IsTrue(Fixture.Data(await f.UntilAsync("completed")).GetProperty("success").GetBoolean());
+        await f.Host.SendAsync(new WorkerCommand("snapshot", MemoryAddress: 515, MemoryCount: 1));
+        Assert.AreEqual("414200000000", Fixture.Data(await f.UntilAsync("memory")).GetProperty("words")[0].GetProperty("hex").GetString());
+        await f.SendAsync("start", "full");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "WaitingInput");
+        await f.SendAsync("reset");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Idle");
+        await f.SendAsync("start", "full");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "WaitingInput");
+        await f.SendAsync("stop");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Halted");
+    }
+
+    [TestMethod]
+    [DataRow("Tape")]
+    [DataRow("Disk")]
+    public async Task UploadedImageIsUsedByGuestE70AndCanBeInspected(string kind)
+    {
+        await using var f = new Fixture();
+        string job = Raw([Asm("*70 1002"), Asm("stop"), (1UL << 39) | (2UL << 30) | (25UL << 12)]);
+        await f.StartAsync(job);
+        string id = Guid.NewGuid().ToString("N");
+        var bytes = new byte[6144]; new byte[] {0x12,0x34,0x56,0x78,0x9A,0xBC}.CopyTo(bytes, 0);
+        await File.WriteAllBytesAsync(Path.Combine(f.DirectoryPath, "media-" + id + ".bin"), bytes);
+        await f.Host.SendAsync(new WorkerCommand("mount", MediaId: "upload:" + id, Kind: kind, Unit: 25));
+        await f.UntilAsync("storage");
+        await f.SendAsync("start", "full");
+        Assert.IsTrue(Fixture.Data(await f.UntilAsync("completed")).GetProperty("success").GetBoolean());
+        await f.Host.SendAsync(new WorkerCommand("snapshot", MemoryAddress: 2048, MemoryCount: 1));
+        Assert.AreEqual("123456789ABC", Fixture.Data(await f.UntilAsync("memory")).GetProperty("words")[0].GetProperty("hex").GetString());
+        await f.Host.SendAsync(new WorkerCommand("readMedia", MediaId: "mounted:" + kind + ":25", MediaCount: 1));
+        var view = Fixture.Data(await f.UntilAsync("mediaView"));
+        Assert.AreEqual("123456789ABC", view.GetProperty("words")[0].GetProperty("hex").GetString());
+        Assert.IsTrue(view.GetProperty("words")[0].GetProperty("disassembly").GetString()!.Length > 0);
+        await f.Host.SendAsync(new WorkerCommand("mediaToMemory", MediaId: "mounted:" + kind + ":25", MediaCount: 1, MemoryAddress: 3000));
+        Assert.AreEqual("123456789ABC", Fixture.Data(await f.UntilAsync("memory")).GetProperty("words")[0].GetProperty("hex").GetString());
+        await f.UntilAsync("mediaView");
+        await f.Host.SendAsync(new WorkerCommand("unmount", Kind: kind, Unit: 25));
+        var storage = Fixture.Data(await f.UntilAsync("storage"));
+        Assert.IsFalse(storage.GetProperty("mounts").EnumerateArray().Any(m => m.GetProperty("unit").GetString() == "31"));
+    }
+
+    [TestMethod]
+    public async Task MediaRequestsCannotMutateRunningMachineOrEscapeSession()
+    {
+        await using var f = new Fixture();
+        await f.StartAsync("*assem\nuj 1000\n*end file\n");
+        await f.SendAsync("start", "full", limit: 1_000_000_000);
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Running");
+        await f.Host.SendAsync(new WorkerCommand("readMedia", MediaId: "builtin:monsys.9"));
+        Assert.IsTrue(Fixture.Data(await f.UntilAsync("commandError")).GetProperty("message").GetString()!.Contains("Pause"));
+        await f.SendAsync("pause");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Paused");
+        await f.Host.SendAsync(new WorkerCommand("mount", MediaId: "upload:../job.dub"));
+        await f.UntilAsync("commandError");
+        await f.SendAsync("resume");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Running");
+        await f.SendAsync("stop");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Halted");
+    }
+
     private static ulong Asm(string text) => new Besm6.Assembler.Assembly.MadlenAssembler()
         .AssembleWord(text.Contains(',') ? text : text + ", atx");
     private static string Raw(IEnumerable<ulong> words, int address = 512) => "*trans-main:" + Convert.ToString(address, 8) + "\n"

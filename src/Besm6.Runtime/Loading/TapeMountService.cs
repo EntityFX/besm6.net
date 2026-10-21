@@ -18,12 +18,13 @@ namespace Besm6.Runtime.Loading
         private readonly HashSet<TapeImage> _fileBackedTapes = new();
         private readonly Dictionary<int, TapeImage> _drumsByUnit = new();
         private readonly List<string> _filePaths = new();
+        private readonly Dictionary<int, string> _imageKinds = new();
         private readonly string? _tapesDir;
         private readonly Action<string>? _verboseLog;
         internal string? HostFileDirectory { get; set; }
 
         internal IReadOnlyList<StorageMountInfo> GetMounts() => _disksByUnit.OrderBy(x => x.Key)
-            .Select(x => new StorageMountInfo("Disk", x.Key, x.Value.VolumeId, x.Value.ReadOnly, x.Value.NumWords))
+            .Select(x => new StorageMountInfo(_imageKinds.GetValueOrDefault(x.Key, "Disk"), x.Key, x.Value.VolumeId, x.Value.ReadOnly, x.Value.NumWords))
             .Concat(_drumsByUnit.OrderBy(x => x.Key)
                 .Select(x => new StorageMountInfo("Drum", x.Key, x.Value.VolumeId, x.Value.ReadOnly, x.Value.NumWords)))
             .ToArray();
@@ -69,6 +70,7 @@ namespace Besm6.Runtime.Loading
         private bool MountFileBackedTape(int unit, long tapeId, string path, bool writePermit)
         {
             var image = TapeImage.LoadFromFile(tapeId, path, readOnly: !writePermit);
+            _imageKinds.Remove(unit);
             _disksByUnit[unit] = image;
             _disksByTapeId[tapeId] = image;
             _fileBackedTapes.Add(image);
@@ -85,6 +87,7 @@ namespace Besm6.Runtime.Loading
                     continue;
 
                 int unit = 24 + diskIndex;
+                _imageKinds.Remove(unit);
                 TapeImage? released = null;
                 if (_disksByUnit.Remove(unit, out released) &&
                     _disksByTapeId.TryGetValue(released.VolumeId, out TapeImage? indexed) &&
@@ -272,6 +275,49 @@ namespace Besm6.Runtime.Loading
 
         public TapeImage? GetDiskByTapeId(long tapeId) =>
             _disksByTapeId.TryGetValue(tapeId, out var d) ? d : null;
+
+        // Explicit host operations. Guest mounting and its provenance checks remain unchanged.
+        internal void MountImage(string kind, int unit, TapeImage image, bool replace)
+        {
+            ArgumentNullException.ThrowIfNull(image);
+            if (image.Data.Length == 0 || image.Data.Length % 6 != 0)
+                throw new ArgumentException("An image must contain complete 48-bit words.", nameof(image));
+            if (kind == "Drum")
+            {
+                if (unit is < 0 or > 31) throw new ArgumentOutOfRangeException(nameof(unit));
+                if (!replace && _drumsByUnit.ContainsKey(unit)) throw new InvalidOperationException("Drum is already mounted.");
+                _drumsByUnit[unit] = image;
+                return;
+            }
+            if (kind is not ("Disk" or "Tape")) throw new ArgumentException("Select Disk, Tape or Drum.", nameof(kind));
+            if (unit is < 24 or > 55) throw new ArgumentOutOfRangeException(nameof(unit));
+            if (!replace && _disksByUnit.ContainsKey(unit)) throw new InvalidOperationException("Unit is already mounted.");
+            UnmountImage(kind, unit);
+            _disksByUnit[unit] = image;
+            _imageKinds[unit] = kind;
+            if (image.VolumeId != 0) _disksByTapeId[image.VolumeId] = image;
+        }
+
+        internal TapeImage? GetImage(string kind, int unit) => kind switch
+        {
+            "Disk" or "Tape" => GetDiskByUnit(unit),
+            "Drum" => _drumsByUnit.GetValueOrDefault(unit),
+            _ => throw new ArgumentException("Select Disk, Tape or Drum.", nameof(kind))
+        };
+
+        internal void UnmountImage(string kind, int unit)
+        {
+            if (kind == "Drum")
+            {
+                if (unit is < 0 or > 31) throw new ArgumentOutOfRangeException(nameof(unit));
+                _drumsByUnit.Remove(unit);
+                return;
+            }
+            if (kind is not ("Disk" or "Tape")) throw new ArgumentException("Select Disk, Tape or Drum.", nameof(kind));
+            if (unit is < 24 or > 55) throw new ArgumentOutOfRangeException(nameof(unit));
+            ReleaseTapes(1L << (47 - (unit - 24)));
+            _imageKinds.Remove(unit);
+        }
 
         /// <summary>Count of file-backed tapes (for testing provenance).</summary>
         internal int FileBackedTapeCount => _fileBackedTapes.Count;

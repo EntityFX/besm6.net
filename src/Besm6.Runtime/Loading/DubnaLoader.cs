@@ -131,6 +131,15 @@ namespace Besm6.Runtime.Loading
 
         public void MountScriptTapes(DubJob job) => _tapes.MountScriptTapes(job);
 
+        /// <summary>Explicit host attachment; call only while execution is stopped or paused.</summary>
+        public void MountImage(string kind, int unit, Storage.TapeImage image, bool replace = false)
+            => _tapes.MountImage(kind, unit, image, replace);
+
+        /// <summary>Current live image. The caller must synchronize inspection with execution.</summary>
+        public Storage.TapeImage? GetMountedImage(string kind, int unit) => _tapes.GetImage(kind, unit);
+
+        public void UnmountImage(string kind, int unit) => _tapes.UnmountImage(kind, unit);
+
         // ─── Script to drum ───────────────────────────────────────────────────
 
         public void WriteScriptToDrum(DubJob job, IEnumerable<string> rawLines)

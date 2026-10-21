@@ -15,6 +15,9 @@ namespace Besm6.Runtime.Devices
         public string DeviceName { get; }
         private readonly Queue<char> _inputBuffer = new Queue<char>();
         private readonly StringBuilder _outputBuffer = new StringBuilder();
+        private readonly object _gate = new();
+        /// <summary>Optional host sink. When absent the existing console output is used.</summary>
+        public Action<string>? Output { get; set; }
 
         public TeletypeDevice(int id)
         {
@@ -52,10 +55,8 @@ namespace Besm6.Runtime.Devices
         /// </summary>
         public void SendInput(string text)
         {
-            foreach (var c in text)
-            {
-                _inputBuffer.Enqueue(c);
-            }
+            lock (_gate)
+                foreach (var c in text) _inputBuffer.Enqueue(c);
         }
 
         /// <summary>
@@ -63,14 +64,16 @@ namespace Besm6.Runtime.Devices
         /// </summary>
         public Word48 ReadCharacter()
         {
-            if (_inputBuffer.Count == 0)
-                return new Word48(0);
+            lock (_gate)
+            {
+                if (_inputBuffer.Count == 0)
+                    return new Word48(0);
 
-            char c = _inputBuffer.Dequeue();
+                char c = _inputBuffer.Dequeue();
 
-            // В БЭСМ-6 символы упаковывались в слова. 
-            // Упрощенно возвращаем код символа в Word48.
-            return Word48.FromInt48((uint)c);
+                // Compatibility character interface; hosted *71 performs KOI-7 encoding.
+                return Word48.FromInt48((uint)c);
+            }
         }
 
         /// <summary>
@@ -79,13 +82,14 @@ namespace Besm6.Runtime.Devices
         public void WriteCharacter(Word48 word)
         {
             char c = (char)(uint)word.ToInt48();
-            _outputBuffer.Append(c);
+            lock (_gate) _outputBuffer.Append(c);
             
             // В реальном времени здесь была бы печать на бумаге
-            Console.WriteLine($"[{DeviceName} PRINT]: {c}");
+            if (Output is { } output) output(c.ToString());
+            else Console.WriteLine($"[{DeviceName} PRINT]: {c}");
         }
 
-        public string GetFullOutput() => _outputBuffer.ToString();
-        public void ClearOutput() => _outputBuffer.Clear();
+        public string GetFullOutput() { lock (_gate) return _outputBuffer.ToString(); }
+        public void ClearOutput() { lock (_gate) _outputBuffer.Clear(); }
     }
 }

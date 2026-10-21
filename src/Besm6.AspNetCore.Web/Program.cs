@@ -18,6 +18,7 @@ app.UseStaticFiles();
 app.MapHub<EmulatorHub>("/emulator");
 app.MapGet("/api/punchcards/codebook", () => Besm6.AspNetCore.Web.Hosting.PunchCardCodebook.Data);
 app.MapGet("/api/examples", (Besm6.AspNetCore.Web.Hosting.ExampleCatalog examples) => examples.Entries);
+app.MapGet("/api/media", () => Besm6.AspNetCore.Web.Hosting.MediaCatalog.Entries);
 app.MapGet("/api/examples/source", (string id, Besm6.AspNetCore.Web.Hosting.ExampleCatalog examples) =>
     examples.TryGetPath(id, out string path) ? Results.Text(File.ReadAllText(path), "text/plain", System.Text.Encoding.UTF8) : Results.NotFound());
 app.Run();

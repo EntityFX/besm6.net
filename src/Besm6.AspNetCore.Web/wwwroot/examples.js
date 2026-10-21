@@ -30,7 +30,7 @@
       const response = await fetch('/api/examples/source?id=' + encodeURIComponent(id), { signal: pending.signal });
       if (!response.ok) throw new Error('Не удалось прочитать пример.');
       const text = await response.text();
-      if ($('exampleSelect').value === id) { $('exampleSource').textContent = text; $('exampleMessage').textContent = id; }
+      if ($('exampleSelect').value === id) { Besm6Source.render($('exampleSource'), text); $('exampleSource').dataset.loaded = id; $('exampleMessage').textContent = id; changed(); }
     } catch (error) { if (error.name !== 'AbortError') $('exampleSource').textContent = error.message; }
   });
   fetch('/api/examples').then(response => { if (!response.ok) throw new Error('Не удалось загрузить список примеров.'); return response.json(); }).then(data => {

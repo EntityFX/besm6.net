@@ -44,4 +44,23 @@ public sealed class EmulatorHub(SessionRegistry sessions, ExampleCatalog example
         await File.WriteAllBytesAsync(Path.Combine(session.Directory, "job.dub"), await File.ReadAllBytesAsync(path));
         await Clients.Caller.SendAsync("uploaded", id);
     }
+
+    public async Task UploadText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text) || System.Text.Encoding.UTF8.GetByteCount(text) > 1_000_000)
+            throw new HubException("Enter a .dub program up to 1 MB.");
+        var session = sessions.Get(Context.ConnectionId);
+        await File.WriteAllTextAsync(Path.Combine(session.Directory, "job.dub"), text, new System.Text.UTF8Encoding(false));
+        await Clients.Caller.SendAsync("uploaded", "editor.dub");
+    }
+
+    public async Task UploadMedia(byte[] content, string fileName)
+    {
+        if (content.Length is 0 or > 8_000_000 || content.Length % 6 != 0)
+            throw new HubException("Use a dense image of 48-bit words (6 bytes each), up to 8 MB.");
+        string id = Guid.NewGuid().ToString("N");
+        var session = sessions.Get(Context.ConnectionId);
+        await File.WriteAllBytesAsync(Path.Combine(session.Directory, "media-" + id + ".bin"), content);
+        await Clients.Caller.SendAsync("mediaUploaded", new MediaEntry("upload:" + id, Path.GetFileName(fileName), "000000000000", content.Length / 6));
+    }
 }

@@ -33,7 +33,7 @@ body { background: #f3f5f7; font-size: .875rem; }
 .output-card .tab-content { display: flex; flex-direction: column; }
 .output-card .tab-pane { flex: 1; min-height: 0; }
 .console { height: clamp(260px, 45dvh, 480px); overflow: auto; background: #111b26; color: #dbedf0; padding: 1rem; white-space: pre; font: .84rem/1.35 Consolas, monospace; }
-#punchOutput { font-family: 'BESM6 Braille', monospace; font-size: 20px; line-height: 1; letter-spacing: 0; font-kerning: none; font-variant-ligatures: none; }
+#punchOutput.punch-braille { font-family: 'BESM6 Braille', monospace; font-size: 20px; line-height: 1; letter-spacing: 0; font-kerning: none; font-variant-ligatures: none; }
 .device-view { height: clamp(260px, 45dvh, 480px); overflow: auto; }
 .device-data { max-height: 160px; overflow: auto; white-space: pre; }
 .plotter-select { width: auto; max-width: 100%; }
@@ -47,6 +47,19 @@ body { background: #f3f5f7; font-size: .875rem; }
 .examples-view { display: flex; flex-direction: column; }
 .example-controls { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .4rem .5rem; align-items: center; }
 .example-source { flex: 1; min-height: 180px; overflow: auto; white-space: pre; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: .25rem; }
+.editor-view textarea { min-height: 180px; tab-size: 4; white-space: pre; }
+.editor-view .example-source { min-height: 180px; }
+.media-fields { display: grid; grid-template-columns: minmax(110px, auto) minmax(0, 1fr); gap: .35rem .5rem; align-items: center; }
+.media-fields > * { min-width: 0; }
+.media-disassembly { min-height: 120px; max-height: 320px; }
+.terminal-view, .punch-device-view { display: flex; flex-direction: column; }
+.terminal-view .console, .punch-device-view .console { flex: 1; height: auto; min-height: 160px; }
+.card-preview > svg { margin-bottom: .75rem; }
+.syntax-control { color: #7c2d87; font-weight: bold; }
+.syntax-keyword { color: #0753a5; font-weight: bold; }
+.syntax-string { color: #9c3027; }
+.syntax-number { color: #714310; }
+.syntax-comment { color: #406149; font-style: italic; }
 #plotterCanvas { display: block; width: 100%; height: auto; background: white; border: 1px solid #cbd5e1; }
 .nav-tabs .nav-link { padding: .35rem .6rem; font-size: .8125rem; }
 #storageFiles td:first-child { overflow-wrap: anywhere; }

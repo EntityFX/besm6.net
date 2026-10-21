@@ -593,6 +593,109 @@ await Check("examples-browser", async (page, _) =>
     var invalid=await page.APIRequest.GetAsync(root+"/api/examples/source?id="+Uri.EscapeDataString("../besm6.json"));
     if (invalid.Status!=404) throw new Exception("Example endpoint accepts a path outside the catalog");
 });
+await Check("source-editor", async (page, _) =>
+{
+    await page.ClickAsync("#examplesTab");
+    await page.WaitForFunctionAsync("document.getElementById('exampleSelect').options.length>100");
+    await page.SelectOptionAsync("#exampleSelect", "fortran.dub");
+    await page.WaitForFunctionAsync("document.querySelector('#exampleSource .syntax-keyword') && !document.getElementById('exampleEdit').disabled");
+    string original = await page.Locator("#exampleSource").TextContentAsync() ?? "";
+    if (original != await File.ReadAllTextAsync("examples/fortran.dub")) throw new Exception("Highlighting changed source text");
+    await page.ClickAsync("#exampleEdit"); await page.Locator("#editorPane.show").WaitForAsync();
+    string normalized = original.Replace("\r\n", "\n");
+    if (await page.Locator("#sourceText").InputValueAsync() != normalized) throw new Exception("Edit copy changed source");
+    string edited = normalized.Replace("Hello, World!", "EDITOR OK");
+    await page.FillAsync("#sourceText", edited); await page.CheckAsync("input[value=full]"); await page.ClickAsync("#sourceRun"); await Status(page, "Completed");
+    await page.WaitForFunctionAsync("document.getElementById('printOutput').textContent.includes('EDITOR OK')");
+    string session = await page.EvaluateAsync<string>("window.__sessionId");
+    if (await File.ReadAllTextAsync(Path.Combine(Path.GetTempPath(),"besm6-web",session,"job.dub")) != edited) throw new Exception("Editor text did not reach the machine");
+    await page.ScreenshotAsync(new() { Path=Path.Combine(output,"source-editor.png"),FullPage=true });
+    string hostile = "*fortran\n      print *, '<img src=x onerror=window.__sourceXss=1>'\n*end file\n";
+    await page.FillAsync("#sourceText", hostile);
+    if (await page.Locator("#sourcePreview").TextContentAsync() != hostile || await page.Locator("#sourcePreview img").CountAsync() != 0
+        || await page.EvaluateAsync<bool>("!!window.__sourceXss")) throw new Exception("Source text became HTML");
+    await page.FillAsync("#sourceText", loop); await page.FillAsync("#instructionLimit","1000000000"); await page.ClickAsync("#sourceRun"); await Status(page,"Running");
+    await page.FillAsync("#sourceText", tiny);
+    if (await page.Locator("#sourceRun").IsEnabledAsync() || await page.Locator("#status").TextContentAsync() != "Running") throw new Exception("Editing replaced an active job");
+    await page.ClickAsync("#stop"); await Status(page,"Halted");
+});
+await Check("terminal-input", async (page, _) =>
+{
+    string job = Raw([Asm("*71 1003"),Asm("*71 1004"),Asm("stop"),(6UL<<39)|(517UL<<24)|517UL,(4UL<<39)|(517UL<<24)|517UL,0UL]);
+    await Upload(page, job); await page.CheckAsync("input[value=full]");
+    foreach (string target in new[] { "terminal", "teletype" })
+    {
+        await page.ClickAsync("#run"); await Status(page,"WaitingInput");
+        await page.Locator("#terminalPane.show").WaitForAsync();
+        if (await page.Locator("#run").IsEnabledAsync() || await page.Locator("#stop").IsDisabledAsync()) throw new Exception("Invalid controls while waiting for input");
+        await page.SelectOptionAsync("#terminalTarget", target); await page.FillAsync("#terminalInput","AB"); await page.ClickAsync("#terminalSend");
+        await Status(page,"Completed"); await page.WaitForFunctionAsync("document.getElementById('terminalOutput').textContent.includes('AB')");
+        await page.ClickAsync("#reset"); await Status(page,"Idle");
+    }
+    await page.ClickAsync("#run"); await Status(page,"WaitingInput"); await page.ClickAsync("#reset"); await Status(page,"Idle");
+    await page.SelectOptionAsync("#terminalTarget","terminal"); await page.FillAsync("#terminalInput","PREQUEUED"); await page.ClickAsync("#terminalSend");
+    await page.WaitForFunctionAsync("window.__events.some(e=>e.type==='inputAccepted')");
+    await page.ClickAsync("#run"); await Status(page,"Completed");
+    if (!(await page.Locator("#terminalOutput").TextContentAsync())!.Contains("PREQUE")) throw new Exception("Prequeued input was lost");
+    await page.ScreenshotAsync(new() { Path=Path.Combine(output,"terminal-input.png"),FullPage=true });
+});
+await Check("punch-formats", async (page, _) =>
+{
+    await Upload(page, await File.ReadAllTextAsync("examples/libpunch.dub")); await page.CheckAsync("input[value=full]");
+    await page.ClickAsync("#run"); await Status(page,"Completed"); await page.ClickAsync("#punchTab");
+    await page.WaitForFunctionAsync("document.getElementById('punchCount').textContent==='9 cards'");
+    string braille = await page.Locator("#punchOutput").TextContentAsync() ?? "";
+    foreach (string format in new[] { "ascii", "grid", "card", "braille" })
+    {
+        await page.SelectOptionAsync("#punchFormat",format);
+        if (format == "card")
+        {
+            if (await page.Locator("#punchVisual svg").CountAsync() != 9 || await page.Locator("#punchVisual [data-holes] rect").CountAsync() == 0) throw new Exception("Physical cards are missing");
+            await page.ScreenshotAsync(new() {Path=Path.Combine(output,"punch-formats.png"),FullPage=true});
+        }
+        else if (format == "braille") { if (await page.Locator("#punchOutput").TextContentAsync() != braille) throw new Exception("Switching formats changed Braille output"); }
+        else
+        {
+            string text = await page.Locator("#punchOutput").TextContentAsync() ?? "";
+            if (!text.Contains(format == "ascii" ? 'O' : '□') || (format == "ascii" && text.Any(c=>c>127))) throw new Exception("Wrong punch text format");
+        }
+    }
+});
+await Check("media-mount-and-disassembly", async (page, context) =>
+{
+    await page.ClickAsync("#storageTab"); await page.Locator("#storagePane.show").WaitForAsync();
+    await page.WaitForFunctionAsync("document.querySelector('#mediaSource option[value=\"builtin:monsys.9\"]')");
+    byte[] image = new byte[6144]; ulong word=Asm("xta 1002, stop");
+    for (int i=0;i<6;i++) image[i]=(byte)(word>>(40-i*8));
+    await page.Locator("#mediaFile").SetInputFilesAsync(new FilePayload {Name="test-disk.bin",MimeType="application/octet-stream",Buffer=image});
+    await page.WaitForFunctionAsync("document.getElementById('mediaSource').value.startsWith('upload:')");
+    string imageId=await page.Locator("#mediaSource").InputValueAsync();
+    await page.SelectOptionAsync("#mediaKind","Tape"); await page.FillAsync("#mediaUnit","31"); await page.ClickAsync("#mediaMount");
+    await page.WaitForFunctionAsync("document.getElementById('storageMounts').textContent.includes('Tape')");
+    string job=Raw([Asm("*70 1002"),Asm("stop"),(1UL<<39)|(2UL<<30)|(25UL<<12)]);
+    await Upload(page,job); await page.CheckAsync("input[value=full]"); await page.ClickAsync("#run"); await Status(page,"Completed");
+    await page.FillAsync("#address","4000"); await page.ClickAsync("#inspect");
+    string expected=Convert.ToString((long)word,8).PadLeft(16,'0');
+    await page.WaitForFunctionAsync("expected=>document.getElementById('memory').textContent.split('\\n')[0].endsWith(expected)",expected);
+    await page.SelectOptionAsync("#mediaSource","mounted:Tape:25"); await page.ClickAsync("#mediaRead");
+    await page.WaitForFunctionAsync("document.getElementById('mediaDisassembly').textContent.includes('xta 1002,stop')");
+    await page.FillAsync("#mediaAddress","3000"); await page.ClickAsync("#mediaLoad");
+    await page.WaitForFunctionAsync("document.getElementById('mediaMessage').textContent.includes('loaded at 3000')");
+    if (!(await page.Locator("#memory").TextContentAsync())!.Split('\n')[0].EndsWith(expected)) throw new Exception("Copy to memory lost media data");
+    await page.SelectOptionAsync("#mediaSource",imageId); await page.ClickAsync("#mediaMount");
+    await page.WaitForFunctionAsync("document.getElementById('error').textContent.includes('already mounted')");
+    if (await page.Locator("#status").TextContentAsync()!="Completed") throw new Exception("Mount error changed machine state");
+    await page.ScreenshotAsync(new() {Path=Path.Combine(output,"media-disassembly.png"),FullPage=true});
+    var other=await Open(context); await other.ClickAsync("#storageTab");
+    if (await other.Locator($"#mediaSource option[value='{imageId}']").CountAsync()!=0) throw new Exception("Uploaded image leaked across machines");
+    await other.CloseAsync();
+    await page.SelectOptionAsync("#mediaSource","builtin:monsys.9"); await page.ClickAsync("#mediaRead");
+    await page.WaitForFunctionAsync("window.__events.some(e=>e.type==='mediaView'&&e.data.id==='builtin:monsys.9')");
+    await page.ClickAsync("#mediaUnmount");
+    await page.WaitForFunctionAsync("!document.getElementById('storageMounts').textContent.includes('Tape')");
+    await Upload(page,await File.ReadAllTextAsync("examples/fortran.dub")); await page.ClickAsync("#run"); await Status(page,"Completed");
+    if (!(await GuestOutput(page)).Contains("HELLO, WORLD!",StringComparison.OrdinalIgnoreCase)) throw new Exception("Media operations broke source execution");
+});
 await Check("layout", async (page, _) =>
 {
     await Upload(page); await page.ClickAsync("#run"); await Status(page, "Paused");
@@ -622,6 +725,17 @@ await Check("layout", async (page, _) =>
         if (await page.Locator(".job-options").EvaluateAsync<int>("e=>new Set([...e.children].map(c=>c.getBoundingClientRect().left)).size") != 1)
             throw new Exception("Job fields must use a single column");
     }
+    foreach (int width in new[] { 1440, 768, 320 })
+    {
+        await page.SetViewportSizeAsync(width, 900);
+        foreach (string tab in new[] { "editorTab", "storageTab", "terminalTab", "punchTab", "cardTab" })
+        {
+            await page.ClickAsync("#" + tab);
+            await page.WaitForFunctionAsync("tab=>document.querySelector(document.getElementById(tab).dataset.bsTarget).classList.contains('show')", tab);
+            if (await page.EvaluateAsync<int>("document.documentElement.scrollWidth") > width) throw new Exception("Horizontal overflow on " + tab + " at " + width);
+        }
+    }
+    await page.ClickAsync("#printTab");
     await page.EvaluateAsync("document.getElementById('error').textContent='x'.repeat(2000); document.getElementById('fileName').textContent='long'.repeat(80)+'.dub'; document.getElementById('printOutput').textContent='0123456789'.repeat(20)+'\\n'+'Second line';");
     if (await page.EvaluateAsync<int>("document.documentElement.scrollWidth") > 320) throw new Exception("Long content breaks mobile layout");
     if (await page.Locator("#printOutput").EvaluateAsync<string>("e=>getComputedStyle(e).whiteSpace") != "pre") throw new Exception("Fixed width output wraps");
@@ -638,7 +752,7 @@ await Check("accessibility", async (page, _) =>
     }
     await page.AddScriptTagAsync(new() { Path = axePath });
     var audits = new List<object>();
-    foreach (string tab in new[] { "printTab", "cardTab", "examplesTab" })
+    foreach (string tab in new[] { "printTab", "cardTab", "examplesTab", "editorTab", "storageTab", "terminalTab", "punchTab" })
     {
         await page.ClickAsync("#" + tab);
         var violations = await page.EvaluateAsync<JsonElement>("async()=>{const result=await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return result.violations.map(v=>({id:v.id,impact:v.impact,description:v.description,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}));}");

@@ -6,11 +6,12 @@ using System.IO;
 using System.Text;
 namespace Besm6.Runtime.Devices
 {
+    public enum PuncherTextFormat { Braille, Grid, Ascii }
     /// <summary>
     /// Вывод перфокарт (порт dubna/puncher.cpp).
     /// Каждая перфокарта занимает 24 слова (144 байта). Диапазон слов
     /// разбивается на целое число карточек; каждая карточка выдаётся в
-    /// braille-формат (punch.out), а если это "стандартный массив" (колонка
+    /// текстовом формате (punch.out, по умолчанию Braille), а если это "стандартный массив" (колонка
     /// 0 == 01200) или COSY-массив (колонка 0 == 05000) — дополнительно в
     /// stdarray.out / cosy.out.
     /// </summary>
@@ -22,6 +23,10 @@ namespace Besm6.Runtime.Devices
         private StreamWriter? _stdarray;
         private StreamWriter? _cosy;
         private readonly StringBuilder _cosyString = new();
+        /// <summary>Text representation written to punch.out; the default preserves the historical output.</summary>
+        public PuncherTextFormat TextFormat { get; set; } = PuncherTextFormat.Braille;
+        /// <summary>Immutable physical card, independent of the selected text representation.</summary>
+        public event Action<PunchCardImage>? CardPunched;
 
         /// <summary>
         /// Создаёт puncher. <paramref name="outputDir"/> — каталог для punch.out /
@@ -61,7 +66,9 @@ namespace Besm6.Runtime.Devices
                 byte[] buf = new byte[144];
                 for (int i = 0; i < 144; i++) buf[i] = bp.Get();
 
-                PunchBraille(buf);
+                var card = PunchCardImage.FromMemoryImage(buf);
+                PunchText(card);
+                CardPunched?.Invoke(card);
 
                 var columns = new ushort[80];
                 Transpose(buf, columns);
@@ -74,15 +81,21 @@ namespace Besm6.Runtime.Devices
             }
         }
 
-        /// <summary>Вывод одной карточки в braille (3 строки по 40 символов U+2800..).</summary>
-        private void PunchBraille(byte[] buf)
+        /// <summary>Write one card in the selected text format.</summary>
+        private void PunchText(PunchCardImage card)
         {
             if (_braille == null)
             {
                 _braille = OpenWriter("punch.out");
                 if (_braille == null) return;
             }
-            _braille.Write(PunchCardRenderer.RenderBraille(PunchCardImage.FromMemoryImage(buf)));
+            _braille.Write(TextFormat switch
+            {
+                PuncherTextFormat.Braille => PunchCardRenderer.RenderBraille(card),
+                PuncherTextFormat.Grid => PunchCardRenderer.RenderGrid(card, PunchCardEncoding.Ibm),
+                PuncherTextFormat.Ascii => PunchCardRenderer.RenderGrid(card, PunchCardEncoding.Ibm, ascii: true),
+                _ => throw new InvalidOperationException("Unknown puncher text format.")
+            });
         }
 
         /// <summary>Транспонирует образ карточки в колонки (12 бит на колонку).</summary>

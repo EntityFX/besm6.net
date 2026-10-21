@@ -2,29 +2,36 @@
   const $ = id => document.getElementById(id);
   const connection = new signalR.HubConnectionBuilder().withUrl('/emulator').withAutomaticReconnect().build();
   const plotter = new Besm6Plotter($('plotterCanvas'), $('plotterRaw'), $('plotterEmpty'));
+  const punch = new Besm6PunchOutput();
+  let media;
   let ready = false, uploaded = false, uploading = false, hasSnapshot = false;
+  let terminalPending = false;
   let activeMode = 'debug', state = 'Idle';
   let memoryAddress = -1, snapshotPending = false, snapshotStarted = 0, plotterFrame = 0;
   let plotterPage = 0;
   let numberBase = 8, lastRegisters = null, lastMemory = [], lastMounts = [];
   const pendingOutput = new Map();
   let outputFrame = 0;
-  const activeStates = new Set(['Loading', 'Running', 'Paused', 'Pausing', 'Stepping', 'Stopping', 'Resetting']);
+  const activeStates = new Set(['Loading', 'Running', 'WaitingInput', 'Paused', 'Pausing', 'Stepping', 'Stopping', 'Resetting']);
   const setState = value => { state = value; $('status').textContent = value; refreshButtons(); };
   const refreshButtons = () => {
     const active = activeStates.has(state);
     $('run').disabled = !ready || !uploaded || uploading || active;
     $('reset').disabled = !ready || uploading || ['Loading', 'Resetting', 'Stopping'].includes(state);
     for (const id of ['exampleLoad', 'exampleRun']) $(id).disabled = !ready || uploading || active || !$('exampleSelect').value;
+    for (const id of ['sourceLoad', 'sourceRun']) $(id).disabled = !ready || uploading || active || !$('sourceText').value.trim();
+    $('exampleEdit').disabled = !$('exampleSelect').value || $('exampleSource').dataset.loaded !== $('exampleSelect').value;
+    $('terminalSend').disabled = !ready || terminalPending || ['Loading', 'Resetting', 'Stopping'].includes(state);
+    media?.updateState(ready, state);
     $('pause').disabled = !ready || state !== 'Running';
     $('resume').disabled = !ready || state !== 'Paused';
     $('step').disabled = !ready || activeMode !== 'debug' || state !== 'Paused';
-    $('stop').disabled = !ready || !['Running', 'Paused', 'Loading'].includes(state);
+    $('stop').disabled = !ready || !['Running', 'WaitingInput', 'Paused', 'Loading'].includes(state);
     $('file').disabled = !ready || uploading || active;
     $('dropzone').setAttribute('aria-disabled', String($('file').disabled));
     document.querySelectorAll('input[name=mode], #speed, #instructionLimit, #wallClockLimit, #guestClock, #statistics')
       .forEach(input => { input.disabled = active; });
-    $('inspect').disabled = !ready || state === 'Loading' || (!hasSnapshot && !['Running', 'Paused'].includes(state));
+    $('inspect').disabled = !ready || ['Loading', 'WaitingInput'].includes(state) || (!hasSnapshot && !['Running', 'Paused'].includes(state));
   };
   const showError = e => { $('error').textContent = e?.message || String(e); };
   const command = async (type, more = {}) => {
@@ -32,6 +39,7 @@
     catch (e) { showError(e); return false; }
   };
   const appendOutput = (channel, text) => {
+    if (channel === 'punch') { punch.appendText(text); return; }
     if (Object.hasOwn(plotter.buffers, channel)) {
       if (!Object.values(plotter.buffers).some(value => value.length)) $('plotterType').value = channel;
       plotter.append(channel, text);
@@ -90,7 +98,7 @@
     }));
     const count = d?.instructions ?? 0;
     $('instructionCount').textContent = `${count} ${count === 1 ? 'instruction' : 'instructions'}`;
-    const disassembly = d?.disassembly.replace(/(?<![\w*])[0-7]+\b/g, value => parseInt(value, 8).toString(numberBase).toUpperCase());
+    const disassembly = d ? Besm6Source.disassembly(d.disassembly, numberBase) : '';
     $('disassembly').textContent = d ? `K ${formatNumber(d.k, 8)}: ${disassembly}` : '—';
   };
   const renderStatistics = d => {
@@ -112,6 +120,8 @@
     hasSnapshot = false;
     lastRegisters = null; lastMemory = []; lastMounts = [];
     pendingOutput.clear(); renderStatistics(null);
+    punch.clear(); media?.clear(); $('terminalMessage').textContent = '';
+    terminalPending = false;
     renderRegisters(null);
     $('memory').textContent = '';
     $('printOutput').textContent = ''; $('punchOutput').textContent = '';
@@ -122,11 +132,22 @@
   };
   connection.on('sessionReady', () => { ready = true; $('connection').textContent = 'Connected'; refreshButtons(); });
   connection.on('uploaded', name => { uploaded = true; $('fileName').textContent = name; refreshButtons(); });
+  connection.on('mediaUploaded', data => media.uploaded(data));
   connection.on('workerEvent', event => {
     const d = event.data;
     switch (event.type) {
       case 'state': setState(d.status); break;
       case 'output': appendOutput(d.channel, d.text); break;
+      case 'punchcard': punch.append(d); break;
+      case 'mediaView':
+        media.display(d);
+        if (d.loadedAddress != null) { memoryAddress = d.loadedAddress; $('address').value = memoryAddress.toString(numberBase).toUpperCase(); }
+        break;
+      case 'inputRequest':
+        $('terminalTarget').value = 'terminal'; $('terminalMessage').textContent = 'Программа ждёт строку ввода.';
+        bootstrap.Tab.getOrCreateInstance($('terminalTab')).show(); $('terminalInput').focus();
+        break;
+      case 'inputAccepted': terminalPending = false; $('terminalInput').value = ''; $('terminalMessage').textContent = 'Строка передана устройству.'; refreshButtons(); break;
       case 'registers': {
         hasSnapshot = true;
         lastRegisters = d;
@@ -141,10 +162,13 @@
         if (plotterPage !== d.page) { plotterPage = d.page; schedulePlotter(); }
         break;
       case 'storage':
+        media.storage(d);
         lastMounts = d.mounts; renderMounts();
         renderRows('storageFiles', d.files.map(f => [f.name, f.bytes.toLocaleString()]));
         snapshotPending = false;
         break;
+      case 'commandError':
+        terminalPending = false; refreshButtons(); showError(d); break;
       case 'error': showError(d); break;
       case 'reset': clearMachine(); $('error').textContent = ''; break;
       case 'statistics': renderStatistics(d); break;
@@ -155,6 +179,7 @@
   });
   connection.onreconnecting(() => {
     ready = false; uploaded = false;
+    media.sessionLost();
     $('file').value = '';
     $('fileName').textContent = 'Connection lost. Upload the job again after reconnecting.';
     clearMachine(); setState('Idle');
@@ -185,6 +210,25 @@
   }
   $('file').addEventListener('change', e => upload(e.target.files[0]));
   window.addEventListener('exampleSelectionChanged', refreshButtons);
+  window.addEventListener('sourceChanged', refreshButtons);
+  for (const id of ['sourceLoad', 'sourceRun']) $(id).addEventListener('click', async () => {
+    if ($(id).disabled) return;
+    uploading = true; refreshButtons(); let loaded = false;
+    try { await connection.invoke('UploadText', $('sourceText').value); $('file').value = ''; $('error').textContent = ''; loaded = true; }
+    catch (error) { showError(error); }
+    finally { uploading = false; refreshButtons(); }
+    if (loaded && id === 'sourceRun') $('run').click();
+  });
+  $('terminalForm').addEventListener('submit', async event => {
+    event.preventDefault(); if ($('terminalSend').disabled) return;
+    terminalPending = true; refreshButtons();
+    if (!await command('input', { text: $('terminalInput').value, inputTarget: $('terminalTarget').value })) { terminalPending = false; refreshButtons(); }
+  });
+  media = new Besm6Media(command, async file => {
+    const bytes = new Uint8Array(await file.arrayBuffer()); let binary = '';
+    for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+    await connection.invoke('UploadMedia', btoa(binary), file.name);
+  }, showError);
   for (const id of ['exampleLoad', 'exampleRun']) $(id).addEventListener('click', async () => {
     const example = $('exampleSelect').value;
     if (!example || $(id).disabled) return;
@@ -248,6 +292,7 @@
     $('address').inputMode = numberBase === 16 ? 'text' : 'numeric';
     document.querySelector('#storageMounts').closest('table').querySelectorAll('th')[1].textContent = 'Unit';
     renderRegisters(lastRegisters); renderMemory(); renderMounts();
+    media.setBase(numberBase);
   });
   $('autoRefresh').addEventListener('change', () => {
     if ($('autoRefresh').checked && state === 'Running') requestSnapshot();

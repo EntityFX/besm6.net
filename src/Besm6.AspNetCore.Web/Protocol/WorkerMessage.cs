@@ -10,7 +10,17 @@ public sealed record WorkerCommand(
     int MemoryAddress = -1,
     int MemoryCount = 32,
     bool GuestClock = false,
-    bool Statistics = false);
+    bool Statistics = false,
+    string? Text = null,
+    string? InputTarget = null,
+    string? MediaId = null,
+    string Kind = "Disk",
+    int Unit = 24,
+    string Volume = "0",
+    bool ReadOnly = true,
+    bool Replace = false,
+    int MediaOffset = 0,
+    int MediaCount = 32);
 
 public sealed record WorkerEvent(string Type, object? Data);
 
@@ -25,3 +35,6 @@ public sealed record PlotterData(int Page, int WatanabeBytes, int CalcompBytes, 
 public sealed record StorageDeviceData(string Kind, string Unit, string Volume, bool ReadOnly, int Words);
 public sealed record SessionFileData(string Name, long Bytes);
 public sealed record StorageData(StorageDeviceData[] Mounts, SessionFileData[] Files);
+public sealed record MediaWord(int Offset, string Hex, string Disassembly, string Text);
+public sealed record MediaViewData(string Id, int TotalWords, MediaWord[] Words, int? LoadedAddress = null);
+public sealed record PunchCardData(string[] Rows);

@@ -9,7 +9,7 @@ using System.Threading.Channels;
 
 namespace Besm6.AspNetCore.Web.Worker;
 
-public sealed class WorkerSession : IDisposable
+public sealed partial class WorkerSession : IDisposable
 {
     private readonly string _directory;
     private readonly Func<WorkerEvent, Task> _send;
@@ -68,10 +68,20 @@ public sealed class WorkerSession : IDisposable
     {
         switch (command.Type)
         {
+            case "input": await DeviceCommandAsync(() => AcceptInputAsync(command)); break;
+            case "mount":
+            case "unmount":
+            case "readMedia":
+            case "mediaToMemory": await DeviceCommandAsync(() => HandleMediaAsync(command)); break;
             case "start": await StartAsync(command); break;
             case "reset": await ResetAsync(); break;
             case "pause":
                 if (_terminal || _machine is null) return;
+                if (_waitingForInput)
+                {
+                    await SendAsync("commandError", new ErrorData("The guest is waiting for terminal input. Send a line, Stop or Reset.", null));
+                    return;
+                }
                 _pauseReached = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 _resume.Reset();
                 if (_runTask is { IsCompleted: false })
@@ -79,10 +89,13 @@ public sealed class WorkerSession : IDisposable
                 if (!_terminal)
                 {
                     await SendSnapshotAsync();
-                    await SendStateAsync("Paused");
+                    bool waiting = _waitingForInput;
+                    await SendStateAsync(waiting ? "WaitingInput" : "Paused");
+                    if (waiting) _resume.Set();
                 }
                 break;
             case "resume":
+                if (_waitingForInput) { await SendAsync("commandError", new ErrorData("Send terminal input to continue.", null)); return; }
                 EnsureLoaded();
                 _stepBudget = -1;
                 if (_stepObserver is not null) _machine!.Cpu.InstructionExecuted -= _stepObserver;
@@ -91,6 +104,7 @@ public sealed class WorkerSession : IDisposable
                 StartExecution();
                 break;
             case "step":
+                if (_waitingForInput) { await SendAsync("commandError", new ErrorData("Send terminal input to continue.", null)); return; }
                 EnsureLoaded();
                 if (!_debug) throw new InvalidOperationException("Load a debug job first.");
                 if (_resume.IsSet && _runTask is { IsCompleted: false })
@@ -146,12 +160,14 @@ public sealed class WorkerSession : IDisposable
         _pauseReached = null;
         _runCancellation?.Dispose();
         _runCancellation = null;
+        ClearInput();
         _instructions = 0;
         _stepBudget = -1;
         _snapshotRequested = 0;
         _memoryAddress = -1;
         _punchPosition = 0;
         _plotterPositions.Clear();
+        EnsureMediaLoader();
         await SendAsync("reset", null);
         await SendSnapshotAsync();
         await SendStateAsync("Idle");
@@ -206,8 +222,10 @@ public sealed class WorkerSession : IDisposable
             _loader.WallClockLimitMs = command.WallClockLimitMs;
             _loader.CollectStatistics = command.Statistics;
             _loader.Output = text => _output.Append("print", text);
-            _loader.TerminalOutput = text => _output.Append("terminal", text);
-            _loader.Input = _ => "";
+            _loader.TerminalOutput = WriteTerminalOutput;
+            _loader.Input = ReadTerminalInput;
+            AttachDeviceSinks();
+            foreach (var attachment in _attachments.Values) ApplyAttachment(attachment);
             var token = _runCancellation.Token;
             _stepObserver = opcode => InstructionBoundary(opcode, token);
             _loader.ExecutionCheckpoint = count =>
@@ -380,6 +398,8 @@ public sealed class WorkerSession : IDisposable
         try { _runTask?.Wait(TimeSpan.FromSeconds(2)); } catch { }
         _machine?.Puncher.Finish();
         _output.Dispose();
+        _terminalInput.Writer.TryComplete();
+        _inputAvailable.Dispose();
         _runCancellation?.Dispose();
         _resume.Dispose();
         _events.Writer.TryComplete();
