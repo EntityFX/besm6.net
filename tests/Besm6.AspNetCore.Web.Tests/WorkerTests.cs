@@ -260,4 +260,47 @@ public sealed class WorkerTests
             Assert.IsTrue(Fixture.Data(await f.UntilAsync("completed")).GetProperty("success").GetBoolean());
         }
     }
+
+    [TestMethod]
+    [DataRow("full")]
+    [DataRow("debug")]
+    public async Task StatisticsAreOptionalAndCountTheSameInstructions(string mode)
+    {
+        await using var f = new Fixture();
+        await f.StartAsync(TwoInstructions);
+        await f.Host.SendAsync(new WorkerCommand("start", Path.Combine(f.DirectoryPath, "job.dub"), mode,
+            Statistics: true));
+        if (mode == "debug")
+        {
+            await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Paused");
+            await f.SendAsync("resume");
+        }
+        var statistics = Fixture.Data(await f.UntilAsync("statistics"));
+        var completed = Fixture.Data(await f.UntilAsync("completed"));
+        Assert.AreEqual(completed.GetProperty("instructions").GetInt64(), statistics.GetProperty("completedInstructions").GetInt64());
+        Assert.IsTrue(statistics.GetProperty("elapsedSeconds").GetDouble() > 0);
+        Assert.IsTrue(statistics.GetProperty("modelCycles").GetInt64() > 0);
+    }
+
+    [TestMethod]
+    [DataRow("full")]
+    [DataRow("debug")]
+    public async Task ResetClearsTheMachineAndPreservesTheUploadedJob(string mode)
+    {
+        await using var f = new Fixture();
+        await f.StartAsync("*assem\nuj 1000\n*end file\n");
+        await f.SendAsync("start", mode, limit: 1_000_000_000);
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == (mode == "full" ? "Running" : "Paused"));
+        await f.SendAsync("reset");
+        await f.UntilAsync("reset");
+        var registers = Fixture.Data(await f.UntilAsync("registers"));
+        Assert.AreEqual(0L, registers.GetProperty("instructions").GetInt64());
+        Assert.AreEqual("000000000000", registers.GetProperty("a").GetString());
+        var memory = Fixture.Data(await f.UntilAsync("memory"));
+        Assert.IsTrue(memory.GetProperty("words").EnumerateArray().All(w => w.GetProperty("hex").GetString() == "000000000000"));
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Idle");
+        Assert.IsTrue(File.Exists(Path.Combine(f.DirectoryPath, "job.dub")));
+        await f.SendAsync("start", "debug");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Paused");
+    }
 }

@@ -31,8 +31,9 @@
           </div>
           <p id="timeHelp" class="visually-hidden">Time limit in seconds: 0 = unlimited.</p>
           <div class="job-toggles mb-1">
-            <div class="form-check"><input id="guestClock" class="form-check-input" type="checkbox"><label class="form-check-label" for="guestClock">Guest Clock <span class="text-muted">(GUEST-CLOCK)</span></label></div>
-            <div class="form-check"><input id="autoRefresh" class="form-check-input" type="checkbox" aria-describedby="refreshHelp"><label class="form-check-label" for="autoRefresh">Auto-refresh registers / memory</label></div>
+            <div class="form-check"><input id="guestClock" class="form-check-input" type="checkbox"><label class="form-check-label" for="guestClock">Guest Clock</label></div>
+            <div class="form-check"><input id="autoRefresh" class="form-check-input" type="checkbox" aria-describedby="refreshHelp"><label class="form-check-label" for="autoRefresh">Auto-refresh</label></div>
+            <div class="form-check"><input id="statistics" class="form-check-input" type="checkbox"><label class="form-check-label" for="statistics">Statistics</label></div>
           </div>
           <p id="refreshHelp" class="visually-hidden">Refresh every 300 ms while running. Leave unchecked for faster execution. Device output continues updating.</p>
           <div class="d-flex flex-wrap gap-1" role="group" aria-label="Execution controls">
@@ -41,10 +42,11 @@
             <button id="resume" class="btn btn-sm btn-outline-secondary" disabled>Resume</button>
             <button id="step" class="btn btn-sm btn-outline-secondary" disabled>Step</button>
             <button id="stop" class="btn btn-sm btn-outline-danger" disabled>Stop</button>
+            <button id="reset" class="btn btn-sm btn-outline-secondary" disabled>Reset</button>
           </div>
         </div></div>
         <section class="inspector-panel" aria-label="Machine state">
-          <div class="card mb-2"><div class="card-header panel-heading"><h2 class="h6 mb-0">Registers</h2><span id="instructionCount" class="small">0 instructions</span></div><div class="card-body p-0">
+          <div class="card mb-2"><div class="card-header panel-heading"><h2 class="h6 mb-0">Registers</h2><div class="number-format"><label for="numberBase" class="visually-hidden">Number base</label><select id="numberBase" class="form-select form-select-sm"><option value="8" selected>OCT</option><option value="10">DEC</option><option value="16">HEX</option></select></div><span id="instructionCount" class="small">0 instructions</span></div><div class="card-body p-0">
             <dl id="registers" class="register-grid mb-0 font-monospace" aria-label="Processor registers"></dl>
           </div></div>
           <div class="card"><div class="card-header panel-heading"><h2 class="h6 mb-0">Memory</h2><div class="input-group input-group-sm memory-jump"><input id="address" class="form-control" placeholder="Octal address" aria-label="Memory address in octal" inputmode="numeric"><button id="inspect" class="btn btn-outline-secondary" disabled>Go</button></div></div>
@@ -60,6 +62,8 @@
             <li class="nav-item" role="presentation"><button id="plotterTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#plotterPane" type="button" role="tab" aria-controls="plotterPane" aria-selected="false">Plotter</button></li>
             <li class="nav-item" role="presentation"><button id="terminalTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#terminalPane" type="button" role="tab" aria-controls="terminalPane" aria-selected="false">Terminal</button></li>
             <li class="nav-item" role="presentation"><button id="storageTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#storagePane" type="button" role="tab" aria-controls="storagePane" aria-selected="false">Storage</button></li>
+            <li class="nav-item" role="presentation"><button id="cardTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#cardPane" type="button" role="tab" aria-controls="cardPane" aria-selected="false">Card generator</button></li>
+            <li class="nav-item" role="presentation"><button id="examplesTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#examplesPane" type="button" role="tab" aria-controls="examplesPane" aria-selected="false">Examples</button></li>
           </ul>
         </div><div class="card-body p-0 tab-content">
           <div id="printPane" class="tab-pane fade show active" role="tabpanel" aria-labelledby="printTab"><pre id="printOutput" class="console mb-0" role="region" aria-label="Print output" tabindex="0"></pre></div>
@@ -70,16 +74,35 @@
             <p id="plotterEmpty" class="small text-muted mt-2">No plotter output yet.</p>
             <details class="mt-2"><summary>Device data</summary><pre id="plotterRaw" class="device-data small mt-2" tabindex="0" role="region" aria-label="Raw plotter data"></pre></details>
           </div></div>
+          <div id="cardPane" class="tab-pane fade" role="tabpanel" aria-labelledby="cardTab"><div class="device-view p-2 card-generator">
+            <h3 class="h6">Генератор перфокарт БЭСМ-6</h3>
+            <div class="d-flex align-items-center flex-wrap gap-2 mb-2"><label for="cardEncoding">Кодировка</label><select id="cardEncoding" class="form-select form-select-sm card-select"><option value="ibm">IBM — по колонкам</option><option value="upp">УПП-IBM — по строкам</option></select><span id="cardCapacity" class="small text-muted">80 символов</span></div>
+            <label for="cardText" class="form-label small mb-1">Текст карты</label><textarea id="cardText" class="form-control form-control-sm font-monospace mb-2" rows="2" spellcheck="false" aria-describedby="cardHelp cardMessage" disabled></textarea>
+            <div id="cardSymbols" class="card-symbols mb-2" role="group" aria-label="Панель символов"></div>
+            <div class="d-flex align-items-center flex-wrap gap-2 mb-2"><label for="cardRow">Ряд</label><select id="cardRow" class="form-select form-select-sm card-select"></select><label for="cardColumn">Колонка</label><input id="cardColumn" class="form-control form-control-sm card-column" type="number" min="1" max="80" value="1"><button id="cardToggle" class="btn btn-sm btn-outline-secondary" disabled>Пробить / закрыть</button><button id="cardClear" class="btn btn-sm btn-outline-secondary" disabled>Очистить</button><button id="cardSvg" class="btn btn-sm btn-outline-primary" disabled>SVG</button><button id="cardPng" class="btn btn-sm btn-outline-primary" disabled>PNG · 600 dpi</button></div>
+            <p id="cardHelp" class="small text-muted mb-1">Клик — изменить отверстие. Стрелки — выбрать ячейку, пробел — пробить. УПП: 10 символов в ряду, нечётность. Совпадающие латинские и кириллические буквы имеют общий код.</p>
+            <p id="cardMessage" class="small mb-2" role="status" aria-live="polite">Загрузка таблиц кодирования…</p>
+            <div id="cardPreview" class="card-preview"></div><p class="small text-muted mt-2 mb-0">187.325 × 82.55 мм · 80 × 12 · отверстие 1.397 × 3.175 мм. SVG: печать 100%, без подгонки к странице.</p>
+          </div></div>
+          <div id="examplesPane" class="tab-pane fade" role="tabpanel" aria-labelledby="examplesTab"><div class="device-view p-2 examples-view">
+            <h3 class="h6">Программы из примеров</h3><div class="example-controls mb-2"><label for="exampleFilter">Поиск</label><input id="exampleFilter" type="search" class="form-control form-control-sm" placeholder="Название или каталог"><label for="exampleSelect">Пример</label><select id="exampleSelect" class="form-select form-select-sm" disabled><option value="">Загрузка…</option></select></div>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><button id="exampleLoad" class="btn btn-sm btn-outline-primary" disabled>Load into machine</button><button id="exampleRun" class="btn btn-sm btn-primary" disabled>Run example</button><span id="exampleMessage" class="small text-muted" role="status" aria-live="polite"></span></div>
+            <p class="small text-muted mb-2">Используются режим, скорость и лимиты из Job. В Debug программа будет загружена на паузе. Для своих файлов доступна загрузка .dub.</p>
+            <pre id="exampleSource" class="example-source font-monospace small p-2 mb-0" tabindex="0" role="region" aria-label="Исходный текст примера">Выберите пример для просмотра.</pre>
+          </div></div>
           <div id="terminalPane" class="tab-pane fade" role="tabpanel" aria-labelledby="terminalTab"><pre id="terminalOutput" class="console mb-0" role="region" aria-label="Terminal output" tabindex="0"></pre></div>
           <div id="storagePane" class="tab-pane fade" role="tabpanel" aria-labelledby="storageTab"><div class="device-view p-2"><h3 class="h6">Mounted devices</h3><div class="table-responsive"><table class="table table-sm small"><thead><tr><th>Device</th><th>Unit (oct)</th><th>Words</th><th>Access</th></tr></thead><tbody id="storageMounts"></tbody></table></div><h3 class="h6">Session files</h3><div class="table-responsive"><table class="table table-sm small"><thead><tr><th>File</th><th>Bytes</th></tr></thead><tbody id="storageFiles"></tbody></table></div></div></div>
         </div></div>
       </section>
     </div>
     <div class="statusbar mt-2 p-2 rounded"><span id="status" role="status" aria-live="polite">Idle</span><span id="error" class="text-danger ms-3" role="alert"></span></div>
+    <section id="statisticsPanel" class="card mt-2" aria-labelledby="statisticsHeading" hidden><div class="card-header"><h2 id="statisticsHeading" class="h6 mb-0">Statistics</h2></div><dl id="statisticsOutput" class="statistics-grid card-body p-2 mb-0"></dl></section>
   </main>
   <script src="/lib/bootstrap/bootstrap.bundle.min.js"></script>
   <script src="/lib/signalr/signalr.min.js"></script>
   <script src="/plotter.js"></script>
+  <script src="/card-generator.js"></script>
+  <script src="/examples.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

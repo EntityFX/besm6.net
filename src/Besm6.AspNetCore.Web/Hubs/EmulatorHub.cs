@@ -1,10 +1,11 @@
 using Besm6.AspNetCore.Web.Protocol;
 using Besm6.AspNetCore.Web.Sessions;
 using Microsoft.AspNetCore.SignalR;
+using Besm6.AspNetCore.Web.Hosting;
 
 namespace Besm6.AspNetCore.Web.Hubs;
 
-public sealed class EmulatorHub(SessionRegistry sessions) : Hub
+public sealed class EmulatorHub(SessionRegistry sessions, ExampleCatalog examples) : Hub
 {
     public override async Task OnConnectedAsync()
     {
@@ -34,5 +35,13 @@ public sealed class EmulatorHub(SessionRegistry sessions) : Hub
         if (command.Type == "start")
             command = command with { JobPath = Path.Combine(sessions.Get(Context.ConnectionId).Directory, "job.dub") };
         return sessions.Get(Context.ConnectionId).Worker.SendAsync(command);
+    }
+
+    public async Task LoadExample(string id)
+    {
+        if (!examples.TryGetPath(id, out string path)) throw new HubException("Example not found.");
+        var session = sessions.Get(Context.ConnectionId);
+        await File.WriteAllBytesAsync(Path.Combine(session.Directory, "job.dub"), await File.ReadAllBytesAsync(path));
+        await Clients.Caller.SendAsync("uploaded", id);
     }
 }

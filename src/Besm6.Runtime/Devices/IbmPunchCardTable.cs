@@ -88,6 +88,8 @@ internal static class IbmPunchCardTable
         ['\u00D7'] = 0x001, // U+00D7
         ['\u002D'] = 0x002, // U+002D
         ['_'] = 0x484, // 0, 5, 8
+        ['⑩'] = 0x604, // 0, 7, 8: decimal exponent marker (book p. 74).
+        ['⏨'] = 0x604,
         ['\u0027'] = 0x480, // straight apostrophe aliases right apostrophe
     };
 }

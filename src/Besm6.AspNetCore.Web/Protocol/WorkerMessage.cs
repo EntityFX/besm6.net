@@ -9,7 +9,8 @@ public sealed record WorkerCommand(
     long WallClockLimitMs = 0,
     int MemoryAddress = -1,
     int MemoryCount = 32,
-    bool GuestClock = false);
+    bool GuestClock = false,
+    bool Statistics = false);
 
 public sealed record WorkerEvent(string Type, object? Data);
 

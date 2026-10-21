@@ -155,9 +155,9 @@ await Check("multiple-sessions", async (first, _) =>
     await Task.WhenAll(Status(first, "Paused"), Status(second, "Paused"), Status(third, "Completed"));
     await Task.WhenAll(first.ClickAsync("#step"), second.ClickAsync("#step"));
     string valueScript = "value => [...document.querySelectorAll('#registers .register')].find(e=>e.querySelector('dt').textContent==='A').querySelector('dd').textContent === value";
-    await Task.WhenAll(first.WaitForFunctionAsync(valueScript, "000000000001"), second.WaitForFunctionAsync(valueScript, "000000000002"));
+    await Task.WhenAll(first.WaitForFunctionAsync(valueScript, "0000000000000001"), second.WaitForFunctionAsync(valueScript, "0000000000000002"));
     await second.FillAsync("#address", "1002"); await second.PressAsync("#address", "Enter");
-    await second.WaitForFunctionAsync("document.getElementById('memory').textContent.startsWith('01002  000000000002')");
+    await second.WaitForFunctionAsync("document.getElementById('memory').textContent.startsWith('01002  0000000000000002')");
     if ((await third.Locator("#printOutput").InnerTextAsync()).Trim() != "HI") throw new Exception("Output mixed between sessions");
     await first.CloseAsync();
     using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(8));
@@ -333,7 +333,7 @@ await Check("guest-clock-checkbox", async (page, _) =>
     await page.CheckAsync("#guestClock"); await page.CheckAsync("input[value=full]");
     await page.ClickAsync("#run"); await Status(page, "Completed");
     await page.FillAsync("#address", "100"); await page.ClickAsync("#inspect");
-    string expected = Besm6.Architecture.Numerics.Word48.FromDouble(.04).Value.ToString("X12");
+    string expected = Convert.ToString((long)Besm6.Architecture.Numerics.Word48.FromDouble(.04).Value, 8).PadLeft(16, '0');
     await page.WaitForFunctionAsync("expected=>document.getElementById('memory').textContent.startsWith('00100  '+expected)", expected);
 });
 await Check("live-punch-without-state-refresh", async (page, _) =>
@@ -437,6 +437,162 @@ await Check("upload-validation", async (page, _) =>
     }
     await Upload(page); await page.ClickAsync("#run"); await Status(page, "Paused");
 });
+await Check("statistics-checkbox", async (page, _) =>
+{
+    await Upload(page); await page.CheckAsync("input[value=full]"); await page.CheckAsync("#statistics");
+    await page.ClickAsync("#run"); await Status(page, "Completed");
+    await page.Locator("#statisticsPanel").WaitForAsync();
+    if (!(await page.Locator("#statisticsOutput").InnerTextAsync()).Contains("MIPS")) throw new Exception("Missing statistics report");
+    if (await page.EvaluateAsync<int>("window.__events.filter(e=>e.type==='statistics').length") != 1) throw new Exception("Statistics event missing");
+    await page.UncheckAsync("#statistics"); await page.ClickAsync("#run"); await Status(page, "Completed");
+    if (await page.Locator("#statisticsPanel").IsVisibleAsync()) throw new Exception("Statistics remain visible with collection off");
+    if (await page.EvaluateAsync<int>("window.__events.filter(e=>e.type==='statistics').length") != 1) throw new Exception("Statistics collected with checkbox off");
+});
+await Check("reset-button", async (page, _) =>
+{
+    await Upload(page, loop); await page.CheckAsync("input[value=full]"); await page.FillAsync("#instructionLimit", "1000000000");
+    await page.ClickAsync("#run"); await Status(page, "Running"); await page.ClickAsync("#reset"); await Status(page, "Idle");
+    if (await page.Locator("#instructionCount").TextContentAsync() != "0 instructions") throw new Exception("Reset kept instruction count");
+    if (await page.Locator("#run").IsDisabledAsync()) throw new Exception("Reset lost uploaded job");
+    if (await page.Locator("#fileName").TextContentAsync() != "smoke.dub") throw new Exception("Reset lost filename");
+    if (!(await page.Locator("#memory").TextContentAsync())!.Split('\n').All(line=>line.EndsWith("0000000000000000"))) throw new Exception("Reset kept memory");
+    await page.CheckAsync("input[value=debug]"); await page.ClickAsync("#run"); await Status(page, "Paused");
+    await page.ClickAsync("#reset"); await Status(page, "Idle");
+});
+await Check("number-bases", async (page, _) =>
+{
+    const ulong value = 0xFEDCBA987654;
+    await Upload(page, Raw([Asm("xta 1002"), Asm("stop"), value])); await page.ClickAsync("#run"); await Status(page, "Paused");
+    await page.ClickAsync("#step"); await Status(page, "Paused");
+    await page.FillAsync("#address", "1002"); await page.ClickAsync("#inspect");
+    await page.WaitForFunctionAsync("document.getElementById('memory').textContent.startsWith('01002')");
+    foreach (int radix in new[] { 8, 10, 16, 8 })
+    {
+        await page.SelectOptionAsync("#numberBase", radix.ToString());
+        string formatted = Convert.ToString((long)value, radix).ToUpperInvariant();
+        if (radix != 10) formatted = formatted.PadLeft(radix == 8 ? 16 : 12, '0');
+        string register = await page.EvaluateAsync<string>("[...document.querySelectorAll('#registers .register')].find(e=>e.querySelector('dt').textContent==='A').querySelector('dd').textContent");
+        if (register != formatted) throw new Exception("48-bit value lost precision in radix " + radix);
+        if (await page.Locator("#address").InputValueAsync() != Convert.ToString(514, radix).ToUpperInvariant()) throw new Exception("Address changed while switching radix");
+        if (!(await page.Locator("#memory").TextContentAsync())!.Split('\n')[0].EndsWith(formatted)) throw new Exception("Memory radix mismatch");
+        await page.ClickAsync("#inspect");
+    }
+    await page.SelectOptionAsync("#numberBase", "16"); await page.FillAsync("#address", "8000"); await page.ClickAsync("#inspect");
+    await page.WaitForFunctionAsync("document.getElementById('error').textContent.includes('7FFF')");
+});
+await Check("braille-font", async (page, _) =>
+{
+    await page.ClickAsync("#punchTab"); await page.Locator("#punchPane.show").WaitForAsync();
+    var metrics = await page.EvaluateAsync<JsonElement>("""
+    async()=>{await document.fonts.load('20px "BESM6 Braille"','\u2800\u28ff');const c=document.createElement('canvas').getContext('2d');c.font='20px "BESM6 Braille"';const widths=Array.from({length:256},(_,i)=>c.measureText(String.fromCharCode(0x2800+i)).width);return {loaded:document.fonts.check('20px "BESM6 Braille"','\u2800\u28ff'),min:Math.min(...widths),max:Math.max(...widths)}}
+    """);
+    if (!metrics.GetProperty("loaded").GetBoolean() || Math.Abs(metrics.GetProperty("max").GetDouble()-metrics.GetProperty("min").GetDouble()) > .01) throw new Exception("Braille cells have different widths: " + metrics);
+    await page.EvaluateAsync("document.getElementById('punchOutput').textContent=Array.from({length:256},(_,i)=>String.fromCharCode(0x2800+i)+(i%40===39?'\\n':'')).join('')");
+    await page.ScreenshotAsync(new() { Path=Path.Combine(output,"braille-font.png"), FullPage=true });
+});
+await Check("card-generator", async (page, _) =>
+{
+    await page.ClickAsync("#cardTab"); await page.Locator("#cardPane.show").WaitForAsync();
+    await page.WaitForFunctionAsync("!document.getElementById('cardText').disabled");
+    foreach (var encoding in new[] { "ibm", "upp" })
+    {
+        await page.SelectOptionAsync("#cardEncoding", encoding);
+        const string text = "ABCДЖ⑩◊¬␣";
+        await page.FillAsync("#cardText", text);
+        var expected = Besm6.Runtime.Devices.PunchCardCodec.Encode(text, encoding == "ibm" ? Besm6.Runtime.Devices.PunchCardEncoding.Ibm : Besm6.Runtime.Devices.PunchCardEncoding.Upp);
+        var actual = await page.EvaluateAsync<int[]>("[...document.querySelectorAll('.card-cell[aria-pressed=true]')].map(e=>Number(e.dataset.index))");
+        var wanted = Enumerable.Range(0,960).Where(i=>expected.IsPunched(i/80,i%80)).ToArray();
+        if (!actual.SequenceEqual(wanted)) throw new Exception("Generator differs from runtime codec: " + encoding);
+    }
+    await page.SelectOptionAsync("#cardEncoding", "ibm"); await page.ClickAsync("#cardClear");
+    await page.Locator(".card-cell[data-index='0']").ClickAsync();
+    if (await page.Locator("#cardText").InputValueAsync() != "×") throw new Exception("Click did not decode IBM column");
+    await page.ClickAsync("#cardClear");
+    foreach (int index in new[] {160,720,800}) await page.Locator($".card-cell[data-index='{index}']").ClickAsync();
+    if (await page.Locator("#cardText").InputValueAsync() != "⑩") throw new Exception("Decimal exponent column is wrong");
+    await page.SelectOptionAsync("#cardEncoding", "upp"); await page.ClickAsync("#cardClear");
+    await page.Locator(".card-cell[data-index='2']").ClickAsync();
+    if (await page.Locator("#cardText").InputValueAsync() != "A") throw new Exception("Click did not decode UPP byte");
+    await page.Locator(".card-cell[data-index='7']").ClickAsync();
+    if (!(await page.Locator("#cardMessage").TextContentAsync())!.Contains("нечётность")) throw new Exception("Parity errors are not detected");
+    await page.ClickAsync("#cardClear"); await page.SelectOptionAsync("#cardEncoding", "ibm"); await page.FillAsync("#cardText", "A");
+    var dimensions = await page.EvaluateAsync<JsonElement>("""
+    (()=>{const s=document.querySelector('#cardPreview svg'), h=s.querySelector('[data-holes] rect'), n=[...s.querySelectorAll('text')].filter(e=>e.textContent==='80');return {width:s.getAttribute('width'),height:s.getAttribute('height'),viewBox:s.getAttribute('viewBox'),cut:s.querySelector('polygon').getAttribute('points'),x:h.getAttribute('x'),y:h.getAttribute('y'),hw:h.getAttribute('width'),hh:h.getAttribute('height'),cells:s.querySelectorAll('.card-cell').length,columnY:n[0].getAttribute('y')}})()
+    """);
+    if (dimensions.GetProperty("width").GetString() != "187.325mm" || dimensions.GetProperty("height").GetString() != "82.55mm" || dimensions.GetProperty("cells").GetInt32()!=960
+        || dimensions.GetProperty("x").GetString()!="4.5466" || dimensions.GetProperty("y").GetString()!="4.7625" || dimensions.GetProperty("hw").GetString()!="1.397" || dimensions.GetProperty("hh").GetString()!="3.175") throw new Exception("Incorrect physical geometry: " + dimensions);
+    await page.FillAsync("#cardText", "      A=B+3");
+    var svgTask = page.WaitForDownloadAsync(); await page.ClickAsync("#cardSvg"); var svgFile=await svgTask;
+    string svgPath=Path.Combine(output,"generated-card.svg"); await svgFile.SaveAsAsync(svgPath);
+    string svg=await File.ReadAllTextAsync(svgPath);
+    if (svg.Contains("data-editor") || !svg.Contains("187.325mm")) throw new Exception("Editor controls leaked into exported SVG");
+    var pngTask=page.WaitForDownloadAsync(); await page.ClickAsync("#cardPng"); var pngFile=await pngTask;
+    string pngPath=Path.Combine(output,"generated-card.png"); await pngFile.SaveAsAsync(pngPath);
+    byte[] png=await File.ReadAllBytesAsync(pngPath);
+    uint BigEndian(int at)=>System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(png.AsSpan(at,4));
+    if (BigEndian(16)!=4425 || BigEndian(20)!=1950) throw new Exception("PNG is not 600 dpi size");
+    int densityCount=0;
+    for (int offset=8; offset<png.Length; offset+=checked((int)BigEndian(offset)+12))
+        if (Encoding.ASCII.GetString(png,offset+4,4)=="pHYs") { densityCount++; if (BigEndian(offset+8)!=23622 || BigEndian(offset+12)!=23622) throw new Exception("Wrong PNG density"); }
+    if (densityCount!=1) throw new Exception("Missing or duplicate PNG density metadata");
+    await page.ScreenshotAsync(new() { Path=Path.Combine(output,"card-generator.png"), FullPage=true, Animations=ScreenshotAnimations.Disabled });
+});
+await Check("cli-performance-parity", async (page, _) =>
+{
+    string configuration=Environment.GetEnvironmentVariable("BESM6_WEB_BUILD_CONFIGURATION") ?? "Debug";
+    string cli=Path.GetFullPath($"src/Besm6.Cli/bin/{configuration}/net8.0/besm6.dll");
+    if (!File.Exists(cli)) throw new Exception("Build the CLI in the same configuration: " + configuration);
+    var comparisons=new List<object>();
+    foreach (var (name, text) in new[] { ("loop",loop), ("fortran",File.ReadAllText("examples/fortran.dub")) })
+    {
+        string directory=Path.Combine(output,"cli-parity-"+name+"-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
+        string job=Path.Combine(directory,"job.dub"); await File.WriteAllTextAsync(job,text);
+        var start=new System.Diagnostics.ProcessStartInfo("dotnet") { WorkingDirectory=directory, RedirectStandardOutput=true, RedirectStandardError=true, UseShellExecute=false, CreateNoWindow=true };
+        foreach(string arg in new[] {cli,"run",job,"--limit","10000000","--stats","--speed","max"}) start.ArgumentList.Add(arg);
+        using var process=System.Diagnostics.Process.Start(start)!;
+        var stdout=process.StandardOutput.ReadToEndAsync(); var stderr=process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync(); string outputText=await stdout; await stderr;
+        string json=outputText.Split('\n').Single(line=>line.StartsWith("Execution stats: "))[17..];
+        var consoleStatistics=JsonDocument.Parse(json).RootElement.GetProperty("statistics").Clone();
+        await Upload(page,text,name+".dub"); await page.CheckAsync("input[value=full]"); await page.CheckAsync("#statistics"); await page.UncheckAsync("#autoRefresh");
+        await page.FillAsync("#instructionLimit","10000000"); await page.ClickAsync("#run");
+        await page.WaitForFunctionAsync("['Completed','Failed'].includes(document.getElementById('status').textContent)");
+        var web=await page.EvaluateAsync<JsonElement>("window.__events.findLast(e=>e.type==='statistics').data");
+        if (web.GetProperty("completedInstructions").GetInt64()!=consoleStatistics.GetProperty("completedInstructions").GetInt64()
+            || web.GetProperty("modelCycles").GetInt64()!=consoleStatistics.GetProperty("modelCycles").GetInt64()) throw new Exception("CLI and web executed different workloads");
+        double cliSeconds=consoleStatistics.GetProperty("elapsedSeconds").GetDouble(), webSeconds=web.GetProperty("elapsedSeconds").GetDouble();
+        var sample=new {name,configuration,cliSeconds,webSeconds,ratio=webSeconds/cliSeconds,instructions=web.GetProperty("completedInstructions").GetInt64()};
+        comparisons.Add(sample); Console.WriteLine("CLI PARITY "+JsonSerializer.Serialize(sample));
+        await page.ClickAsync("#reset"); await Status(page,"Idle");
+    }
+    await File.WriteAllTextAsync(Path.Combine(output,"cli-performance-parity.json"),JsonSerializer.Serialize(comparisons,new JsonSerializerOptions {WriteIndented=true}));
+});
+await Check("examples-browser", async (page, _) =>
+{
+    await page.ClickAsync("#examplesTab"); await page.Locator("#examplesPane.show").WaitForAsync();
+    await page.WaitForFunctionAsync("document.getElementById('exampleSelect').options.length>100");
+    await page.FillAsync("#exampleFilter","fortran");
+    await page.SelectOptionAsync("#exampleSelect","fortran.dub");
+    await page.WaitForFunctionAsync("document.getElementById('exampleSource').textContent.includes('Hello, World!')");
+    await page.ClickAsync("#exampleLoad");
+    await page.WaitForFunctionAsync("document.getElementById('fileName').textContent==='fortran.dub'");
+    if (await page.Locator("#status").TextContentAsync()!="Idle") throw new Exception("Loading an example executed it");
+    await page.CheckAsync("input[value=full]"); await page.ClickAsync("#exampleRun"); await Status(page,"Completed");
+    if (!(await GuestOutput(page)).Contains("HELLO, WORLD!",StringComparison.OrdinalIgnoreCase)) throw new Exception("Selected example did not run");
+    string id=await page.EvaluateAsync<string>("window.__sessionId");
+    byte[] saved=await File.ReadAllBytesAsync(Path.Combine(Path.GetTempPath(),"besm6-web",id,"job.dub"));
+    if (!saved.SequenceEqual(await File.ReadAllBytesAsync("examples/fortran.dub"))) throw new Exception("Example contents changed during load");
+    await page.ScreenshotAsync(new() {Path=Path.Combine(output,"examples-browser.png"),FullPage=true,Animations=ScreenshotAnimations.Disabled});
+    await page.ClickAsync("#reset"); await Status(page,"Idle");
+    await page.FillAsync("#exampleFilter","grafor/watanabe"); await page.SelectOptionAsync("#exampleSelect","grafor/watanabe.dub");
+    await page.WaitForFunctionAsync("document.getElementById('exampleSource').textContent.includes('call symbol')");
+    await page.CheckAsync("input[value=debug]"); await page.ClickAsync("#exampleRun"); await Status(page,"Paused");
+    if (await page.Locator("#exampleLoad").IsEnabledAsync() || await page.Locator("#exampleRun").IsEnabledAsync()) throw new Exception("Examples can replace an active job");
+    await page.FillAsync("#exampleFilter","hello");
+    if (await page.Locator("#status").TextContentAsync()!="Paused") throw new Exception("Browsing examples changed machine state");
+    var invalid=await page.APIRequest.GetAsync(root+"/api/examples/source?id="+Uri.EscapeDataString("../besm6.json"));
+    if (invalid.Status!=404) throw new Exception("Example endpoint accepts a path outside the catalog");
+});
 await Check("layout", async (page, _) =>
 {
     await Upload(page); await page.ClickAsync("#run"); await Status(page, "Paused");
@@ -481,9 +637,15 @@ await Check("accessibility", async (page, _) =>
         await File.WriteAllTextAsync(axePath, await http.GetStringAsync("https://cdn.jsdelivr.net/npm/axe-core@4.10.3/axe.min.js"));
     }
     await page.AddScriptTagAsync(new() { Path = axePath });
-    var violations = await page.EvaluateAsync<JsonElement>("async()=>{const result=await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return result.violations.map(v=>({id:v.id,impact:v.impact,description:v.description,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}));}");
-    await File.WriteAllTextAsync(Path.Combine(output, "accessibility.json"), violations.ToString());
-    if (violations.GetArrayLength() > 0) throw new Exception("Accessibility violations: " + violations);
+    var audits = new List<object>();
+    foreach (string tab in new[] { "printTab", "cardTab", "examplesTab" })
+    {
+        await page.ClickAsync("#" + tab);
+        var violations = await page.EvaluateAsync<JsonElement>("async()=>{const result=await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return result.violations.map(v=>({id:v.id,impact:v.impact,description:v.description,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}));}");
+        audits.Add(new { tab, violations });
+        await File.WriteAllTextAsync(Path.Combine(output, "accessibility.json"), JsonSerializer.Serialize(audits, new JsonSerializerOptions { WriteIndented = true }));
+        if (violations.GetArrayLength() > 0) throw new Exception("Accessibility violations on " + tab + ": " + violations);
+    }
 });
 await File.WriteAllTextAsync(Path.Combine(output, "results.json"), JsonSerializer.Serialize(new { results, errors, layouts }, new JsonSerializerOptions { WriteIndented = true }));
 Console.WriteLine("Browser errors: " + JsonSerializer.Serialize(errors));

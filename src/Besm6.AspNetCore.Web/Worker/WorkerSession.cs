@@ -5,6 +5,7 @@ using Besm6.Runtime;
 using Besm6.Runtime.Configuration;
 using Besm6.Runtime.Loading;
 using Besm6.Runtime.Machine;
+using System.Threading.Channels;
 
 namespace Besm6.AspNetCore.Web.Worker;
 
@@ -12,7 +13,10 @@ public sealed class WorkerSession : IDisposable
 {
     private readonly string _directory;
     private readonly Func<WorkerEvent, Task> _send;
-    private readonly SemaphoreSlim _sendLock = new(1, 1);
+    private readonly WorkerOutputBuffer _output;
+    private readonly Channel<WorkerEvent> _events = Channel.CreateBounded<WorkerEvent>(new BoundedChannelOptions(1024)
+    { SingleReader = true, AllowSynchronousContinuations = false });
+    private readonly Task _dispatch;
     private readonly SemaphoreSlim _snapshotLock = new(1, 1);
     private readonly ManualResetEventSlim _resume = new(true);
     private readonly Dictionary<string, int> _plotterPositions = new();
@@ -36,19 +40,26 @@ public sealed class WorkerSession : IDisposable
     {
         _directory = Path.GetFullPath(directory);
         _send = send;
+        _dispatch = DispatchAsync();
+        _output = new WorkerOutputBuffer(SendOutputChunksAsync);
     }
 
-    private async Task SendAsync(string type, object? data)
+    private Task SendAsync(string type, object? data) => _events.Writer.WriteAsync(new WorkerEvent(type, data)).AsTask();
+
+    private async Task DispatchAsync()
     {
-        await _sendLock.WaitAsync();
-        try { await _send(new WorkerEvent(type, data)); }
-        finally { _sendLock.Release(); }
+        try
+        {
+            await foreach (var value in _events.Reader.ReadAllAsync()) await _send(value);
+        }
+        catch (Exception ex) { _events.Writer.TryComplete(ex); }
     }
 
     public Task SendStateAsync(string status) => SendAsync("state", new StateData(status));
 
     public async Task SendErrorAsync(Exception ex)
     {
+        await _output.FlushAsync();
         await SendAsync("error", new ErrorData(ex.Message, ex.ToString()));
         await SendStateAsync("Failed");
     }
@@ -58,6 +69,7 @@ public sealed class WorkerSession : IDisposable
         switch (command.Type)
         {
             case "start": await StartAsync(command); break;
+            case "reset": await ResetAsync(); break;
             case "pause":
                 if (_terminal || _machine is null) return;
                 _pauseReached = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -96,6 +108,7 @@ public sealed class WorkerSession : IDisposable
                 _resume.Set();
                 if (_runTask is not null) await _runTask.WaitAsync(TimeSpan.FromSeconds(5));
                 await SendSnapshotAsync();
+                if (_loader?.CollectStatistics == true) await SendAsync("statistics", _loader.Statistics);
                 await SendStateAsync("Halted");
                 break;
             case "snapshot":
@@ -114,6 +127,34 @@ public sealed class WorkerSession : IDisposable
     private void EnsureLoaded()
     {
         if (_terminal || _loader is null) throw new InvalidOperationException("Load a new job first.");
+    }
+
+    private async Task ResetAsync()
+    {
+        _terminal = true;
+        if (_runCancellation is not null) await _runCancellation.CancelAsync();
+        _resume.Set();
+        if (_runTask is not null) await _runTask.WaitAsync(TimeSpan.FromSeconds(5));
+        await _output.FlushAsync();
+        _machine?.Puncher.Finish();
+        foreach (string name in new[] { "punch.out", "stdarray.out", "cosy.out" }) File.Delete(Path.Combine(_directory, name));
+        _machine = new MachineCore(puncherOutputDir: _directory);
+        _loader = null;
+        _jobPath = null;
+        _runTask = null;
+        _stepObserver = null;
+        _pauseReached = null;
+        _runCancellation?.Dispose();
+        _runCancellation = null;
+        _instructions = 0;
+        _stepBudget = -1;
+        _snapshotRequested = 0;
+        _memoryAddress = -1;
+        _punchPosition = 0;
+        _plotterPositions.Clear();
+        await SendAsync("reset", null);
+        await SendSnapshotAsync();
+        await SendStateAsync("Idle");
     }
 
     private async Task StartAsync(WorkerCommand command)
@@ -163,8 +204,9 @@ public sealed class WorkerSession : IDisposable
             _loader = MachineFactory.CreateLoader(cfg, _machine, assets);
             _loader.HostFileDirectory = _directory;
             _loader.WallClockLimitMs = command.WallClockLimitMs;
-            _loader.Output = text => SendAsync("output", new OutputData("print", text)).GetAwaiter().GetResult();
-            _loader.TerminalOutput = text => SendAsync("output", new OutputData("terminal", text)).GetAwaiter().GetResult();
+            _loader.CollectStatistics = command.Statistics;
+            _loader.Output = text => _output.Append("print", text);
+            _loader.TerminalOutput = text => _output.Append("terminal", text);
             _loader.Input = _ => "";
             var token = _runCancellation.Token;
             _stepObserver = opcode => InstructionBoundary(opcode, token);
@@ -196,7 +238,8 @@ public sealed class WorkerSession : IDisposable
     private void StartExecution()
     {
         if (_runTask is not null) return;
-        _runTask = Task.Run(async () =>
+        // A CPU-bound guest must not occupy the pool needed by pipe continuations.
+        _runTask = Task.Factory.StartNew(async () =>
         {
             try
             {
@@ -211,7 +254,7 @@ public sealed class WorkerSession : IDisposable
                 await SendErrorAsync(ex);
             }
             finally { _pauseReached?.TrySetResult(); }
-        });
+        }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
     }
 
     private void InstructionBoundary(Opcode opcode, CancellationToken token)
@@ -249,6 +292,7 @@ public sealed class WorkerSession : IDisposable
         _terminal = true;
         Interlocked.Exchange(ref _snapshotRequested, 0);
         await SendSnapshotAsync();
+        if (_loader!.CollectStatistics) await SendAsync("statistics", _loader.Statistics);
         await SendAsync("completed", new CompletionData(result.Success, result.Stopped,
             result.LimitExceeded, result.K, _instructions, result.ErrorMessage
                 ?? (result.LimitExceeded ? "Instruction or wall clock limit reached." : null)));
@@ -261,6 +305,7 @@ public sealed class WorkerSession : IDisposable
         await _snapshotLock.WaitAsync();
         try
         {
+            await _output.FlushAsync();
             if (includeMachineState)
             {
                 var cpu = _machine.Cpu;
@@ -334,9 +379,11 @@ public sealed class WorkerSession : IDisposable
         _resume.Set();
         try { _runTask?.Wait(TimeSpan.FromSeconds(2)); } catch { }
         _machine?.Puncher.Finish();
+        _output.Dispose();
         _runCancellation?.Dispose();
         _resume.Dispose();
-        _sendLock.Dispose();
+        _events.Writer.TryComplete();
+        try { _dispatch.Wait(TimeSpan.FromSeconds(2)); } catch { }
         _snapshotLock.Dispose();
     }
 }

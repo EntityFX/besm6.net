@@ -38,6 +38,20 @@ public class PunchCardTests
     }
 
     [TestMethod]
+    public void RequestedSpecialSymbolsUseHistoricalColumnAndGostCodes()
+    {
+        const string text = "⑩◊¬␣";
+        var ibm = PunchCardCodec.Encode(text, PunchCardEncoding.Ibm);
+        ushort[] columns = [0x604, 0x422, 0x602, 0x414];
+        for (int column = 0; column < columns.Length; column++)
+            for (int row = 0; row < 12; row++)
+                Assert.AreEqual((columns[column] & (1 << row)) != 0, ibm.IsPunched(row, column));
+        var upp = PunchCardCodec.Encode(text, PunchCardEncoding.Upp);
+        byte[] bytes = [0x10, 0x57, 0xD3, 0x8F];
+        for (int i = 0; i < bytes.Length; i++) Assert.AreEqual(bytes[i], ReadUppByte(upp, i));
+    }
+
+    [TestMethod]
     public void CyrillicAndLowercase_AreEncodedWithoutAsciiReplacement()
     {
         // А/В are shared glyphs in UPP; Б is a separate character.

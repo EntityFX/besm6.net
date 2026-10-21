@@ -43,6 +43,7 @@ public static class PunchCardCodec
                 ch = ch switch
                 {
                     '≤' => '⩽', '≥' => '⩾',
+                    '⑩' => '⏨', '␣' => ' ', '◊' => '◇',
                     _ => ch
                 };
                 int code = -1;
