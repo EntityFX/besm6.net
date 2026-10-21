@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BESM-6 Console</title>
+  <link rel="stylesheet" href="/lib/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="/site.css">
+</head>
+<body>
+  <nav class="navbar navbar-dark bg-dark px-3"><span class="navbar-brand mb-0 h1">BESM-6 Console</span><span class="small text-light" id="connection">Connecting…</span></nav>
+  <main class="container-fluid py-2">
+    <div class="row g-2 workspace">
+      <section class="col-12 col-md-5 col-lg-4 control-panel" aria-label="Job and machine state" tabindex="0">
+        <div class="card mb-2 job-panel"><div class="card-body p-2">
+          <h2 class="h6 mb-1" id="jobHeading">Job</h2>
+          <label id="dropzone" class="dropzone d-block text-center p-1 mb-1" for="file">Drop a .dub file or browse</label>
+          <input id="file" type="file" accept=".dub" class="visually-hidden" aria-describedby="fileName" disabled>
+          <div id="fileName" class="small text-muted mb-1">No file selected</div>
+          <div class="job-options mb-1">
+            <fieldset class="mode-row"><legend class="visually-hidden">Mode</legend><span class="mode-label" aria-hidden="true">Mode</span>
+              <label class="form-check"><input class="form-check-input" type="radio" name="mode" value="debug" checked> Debug</label>
+              <label class="form-check"><input class="form-check-input" type="radio" name="mode" value="full"> Full run</label>
+            </fieldset>
+            <div><label for="speed" class="form-label">Speed</label>
+              <select id="speed" class="form-select form-select-sm"><option value="max">Maximum</option><option value="original">Original</option><option value="virtual">Virtual</option></select></div>
+            <div><label for="instructionLimit" class="form-label">Instruction limit</label>
+              <input id="instructionLimit" type="number" min="1" max="1000000000" value="20000000" class="form-control form-control-sm"></div>
+            <div><label for="wallClockLimit" class="form-label">Time, s (0 = ∞)</label>
+              <input id="wallClockLimit" type="number" min="0" max="3600" step="0.1" value="0" class="form-control form-control-sm" aria-describedby="timeHelp"></div>
+          </div>
+          <p id="timeHelp" class="visually-hidden">Time limit in seconds: 0 = unlimited.</p>
+          <div class="job-toggles mb-1">
+            <div class="form-check"><input id="guestClock" class="form-check-input" type="checkbox"><label class="form-check-label" for="guestClock">Guest Clock <span class="text-muted">(GUEST-CLOCK)</span></label></div>
+            <div class="form-check"><input id="autoRefresh" class="form-check-input" type="checkbox" aria-describedby="refreshHelp"><label class="form-check-label" for="autoRefresh">Auto-refresh registers / memory</label></div>
+          </div>
+          <p id="refreshHelp" class="visually-hidden">Refresh every 300 ms while running. Leave unchecked for faster execution. Device output continues updating.</p>
+          <div class="d-flex flex-wrap gap-1" role="group" aria-label="Execution controls">
+            <button id="run" class="btn btn-sm btn-primary" disabled>Run</button>
+            <button id="pause" class="btn btn-sm btn-outline-secondary" disabled>Pause</button>
+            <button id="resume" class="btn btn-sm btn-outline-secondary" disabled>Resume</button>
+            <button id="step" class="btn btn-sm btn-outline-secondary" disabled>Step</button>
+            <button id="stop" class="btn btn-sm btn-outline-danger" disabled>Stop</button>
+          </div>
+        </div></div>
+        <section class="inspector-panel" aria-label="Machine state">
+          <div class="card mb-2"><div class="card-header panel-heading"><h2 class="h6 mb-0">Registers</h2><span id="instructionCount" class="small">0 instructions</span></div><div class="card-body p-0">
+            <dl id="registers" class="register-grid mb-0 font-monospace" aria-label="Processor registers"></dl>
+          </div></div>
+          <div class="card"><div class="card-header panel-heading"><h2 class="h6 mb-0">Memory</h2><div class="input-group input-group-sm memory-jump"><input id="address" class="form-control" placeholder="Octal address" aria-label="Memory address in octal" inputmode="numeric"><button id="inspect" class="btn btn-outline-secondary" disabled>Go</button></div></div>
+            <div class="card-body p-0"><div id="disassembly" class="px-3 py-2 small border-bottom">—</div><div id="memory" class="memory-view font-monospace small p-2" role="region" aria-label="Memory words" tabindex="0"></div></div>
+          </div>
+        </section>
+      </section>
+      <section class="col-12 col-md-7 col-lg-8 output-panel" aria-label="Program output">
+        <div class="card output-card"><div class="card-header">
+          <ul class="nav nav-tabs card-header-tabs" role="tablist" aria-label="Devices">
+            <li class="nav-item" role="presentation"><button id="printTab" class="nav-link active" data-bs-toggle="tab" data-bs-target="#printPane" type="button" role="tab" aria-controls="printPane" aria-selected="true">Printer</button></li>
+            <li class="nav-item" role="presentation"><button id="punchTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#punchPane" type="button" role="tab" aria-controls="punchPane" aria-selected="false">Punch cards</button></li>
+            <li class="nav-item" role="presentation"><button id="plotterTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#plotterPane" type="button" role="tab" aria-controls="plotterPane" aria-selected="false">Plotter</button></li>
+            <li class="nav-item" role="presentation"><button id="terminalTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#terminalPane" type="button" role="tab" aria-controls="terminalPane" aria-selected="false">Terminal</button></li>
+            <li class="nav-item" role="presentation"><button id="storageTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#storagePane" type="button" role="tab" aria-controls="storagePane" aria-selected="false">Storage</button></li>
+          </ul>
+        </div><div class="card-body p-0 tab-content">
+          <div id="printPane" class="tab-pane fade show active" role="tabpanel" aria-labelledby="printTab"><pre id="printOutput" class="console mb-0" role="region" aria-label="Print output" tabindex="0"></pre></div>
+          <div id="punchPane" class="tab-pane fade" role="tabpanel" aria-labelledby="punchTab"><pre id="punchOutput" class="console mb-0" role="region" aria-label="Punch card output" tabindex="0"></pre></div>
+          <div id="plotterPane" class="tab-pane fade" role="tabpanel" aria-labelledby="plotterTab"><div class="device-view p-2">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><label for="plotterType">Plotter</label><select id="plotterType" class="form-select form-select-sm plotter-select"><option value="watanabe">Watanabe WX4675</option><option value="calcomp">Calcomp</option><option value="tektronix">Tektronix</option></select><span id="plotterInfo" class="small text-muted">0 bytes</span></div>
+            <canvas id="plotterCanvas" width="960" height="600" role="img" aria-label="Plotter drawing">Plotter drawing preview</canvas>
+            <p id="plotterEmpty" class="small text-muted mt-2">No plotter output yet.</p>
+            <details class="mt-2"><summary>Device data</summary><pre id="plotterRaw" class="device-data small mt-2" tabindex="0" role="region" aria-label="Raw plotter data"></pre></details>
+          </div></div>
+          <div id="terminalPane" class="tab-pane fade" role="tabpanel" aria-labelledby="terminalTab"><pre id="terminalOutput" class="console mb-0" role="region" aria-label="Terminal output" tabindex="0"></pre></div>
+          <div id="storagePane" class="tab-pane fade" role="tabpanel" aria-labelledby="storageTab"><div class="device-view p-2"><h3 class="h6">Mounted devices</h3><div class="table-responsive"><table class="table table-sm small"><thead><tr><th>Device</th><th>Unit (oct)</th><th>Words</th><th>Access</th></tr></thead><tbody id="storageMounts"></tbody></table></div><h3 class="h6">Session files</h3><div class="table-responsive"><table class="table table-sm small"><thead><tr><th>File</th><th>Bytes</th></tr></thead><tbody id="storageFiles"></tbody></table></div></div></div>
+        </div></div>
+      </section>
+    </div>
+    <div class="statusbar mt-2 p-2 rounded"><span id="status" role="status" aria-live="polite">Idle</span><span id="error" class="text-danger ms-3" role="alert"></span></div>
+  </main>
+  <script src="/lib/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="/lib/signalr/signalr.min.js"></script>
+  <script src="/plotter.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

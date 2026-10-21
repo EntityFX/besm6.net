@@ -40,6 +40,14 @@ namespace Besm6.Runtime.Devices
             if (_cosy != null) { _cosy.Flush(); _cosy.Dispose(); _cosy = null; }
         }
 
+        /// <summary>Make punch output visible to observers without closing or truncating the files.</summary>
+        public void Flush()
+        {
+            _braille?.Flush();
+            _stdarray?.Flush();
+            _cosy?.Flush();
+        }
+
         /// <summary>
         /// Прошивает диапазон слов [startAddr, endAddr) как перфокарты.
         /// Диапазон обязан содержать целое число карточек (24 слова).
@@ -59,8 +67,8 @@ namespace Besm6.Runtime.Devices
                 Transpose(buf, columns);
                 switch (columns[0])
                 {
-                    case 0x1200: PunchStdarray(columns); break; // 01200 oct — стандартный массив
-                    case 0x5000: PunchCosy(columns); break;     // 05000 oct — COSY-массив
+                    case 0x280: PunchStdarray(columns); break; // 01200 oct — стандартный массив
+                    case 0xA00: PunchCosy(columns); break;     // 05000 oct — COSY-массив
                 }
                 a += 24;
             }

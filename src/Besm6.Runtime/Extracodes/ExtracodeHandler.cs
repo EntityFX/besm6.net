@@ -23,7 +23,7 @@ public sealed class ExtracodeHandler : IDisposable
 
     public void MapDrumToDisk(int drum, int diskUnit, TapeImage disk) => _storage.MapDrumToDisk(drum, diskUnit, disk);
     public void FinishOutput() => _print.FinishOutput();
-    public ExtracodeHandler(MachineCore machine, Func<long, TapeImage?> diskByTapeId, Func<int, TapeImage?> diskByUnit, Func<int, TapeImage?> drumByUnit, Action<string>? output = null, Func<string, string>? input = null, Func<long, int, bool>? mountTape = null, Func<long, int>? findTape = null, Action<long>? releaseTapes = null, Func<long, int, bool, bool>? mountTapeWithMode = null, Func<ulong, ulong, bool, uint>? fileSearch = null, Func<int, uint, bool, uint, int>? fileMount = null, Action<int, int>? scratchMount = null)
+    public ExtracodeHandler(MachineCore machine, Func<long, TapeImage?> diskByTapeId, Func<int, TapeImage?> diskByUnit, Func<int, TapeImage?> drumByUnit, Action<string>? output = null, Func<string, string>? input = null, Func<long, int, bool>? mountTape = null, Func<long, int>? findTape = null, Action<long>? releaseTapes = null, Func<long, int, bool, bool>? mountTapeWithMode = null, Func<ulong, ulong, bool, uint>? fileSearch = null, Func<int, uint, bool, uint, int>? fileMount = null, Action<int, int>? scratchMount = null, Action<string>? terminalOutput = null)
     {
         _registers = machine.Cpu;
         Action<string> write = output ?? (s => Console.Write(s));
@@ -39,7 +39,7 @@ public sealed class ExtracodeHandler : IDisposable
         }));
         _math = new(machine.Cpu, machine.Memory, machine.Plotter, _clock);
         _print = new(machine.Cpu, machine.Memory, write);
-        _terminal = new(machine.Cpu, machine.Memory, machine.Plotter, machine.Puncher, write, read, _print.FinishOutput);
+        _terminal = new(machine.Cpu, machine.Memory, machine.Plotter, machine.Puncher, terminalOutput ?? write, read, _print.FinishOutput);
         _storage = new(machine.Cpu, machine.Memory, machine.Plotter, tapes, _trace);
         _system = new(machine.Cpu, machine.Memory, machine.Cpu, machine.CommandMemory,
             () => machine.Cpu.InterceptCount = 1);

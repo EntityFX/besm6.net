@@ -30,6 +30,13 @@ namespace Besm6.Runtime.Loading
             set => _exec.InstructionLimit = value;
         }
 
+        /// <summary>Optional bound on processor step attempts, including attempts that do not complete an instruction.</summary>
+        public long? StepAttemptLimit
+        {
+            get => _exec.StepAttemptLimit;
+            set => _exec.StepAttemptLimit = value;
+        }
+
         public long WallClockLimitMs
         {
             get => _exec.WallClockLimitMs;
@@ -61,7 +68,14 @@ namespace Besm6.Runtime.Loading
         public bool ForexAsFortran { get => _programLoader.ForexAsFortran; set => _programLoader.ForexAsFortran = value; }
         public ExecutionStatistics? Statistics => _exec.Statistics;
         public Action<Opcode>? InstructionExecuted { get => _exec.InstructionExecuted; set => _exec.InstructionExecuted = value; }
+        /// <summary>Runs on the execution thread between bounded instruction batches, without enabling instruction tracing.</summary>
+        public Action<long>? ExecutionCheckpoint { get => _exec.ExecutionCheckpoint; set => _exec.ExecutionCheckpoint = value; }
         public Action<string>? Output { get; set; }
+        /// <summary>Optional terminal output sink; defaults to the normal output sink.</summary>
+        public Action<string>? TerminalOutput { get; set; }
+        public IReadOnlyList<StorageMountInfo> StorageMounts => _tapes.GetMounts();
+        /// <summary>Restrict hosted local, home, and temporary disk files to this directory.</summary>
+        public string? HostFileDirectory { get => _tapes.HostFileDirectory; set => _tapes.HostFileDirectory = value; }
         public Action<int, ulong>? InstructionTrace { get => _exec.InstructionTrace; set => _exec.InstructionTrace = value; }
         public Action<uint, bool, uint, uint>? CppInstructionTrace { get => _exec.CppInstructionTrace; set => _exec.CppInstructionTrace = value; }
         public Action<string, ulong>? RegisterTrace { get => _exec.RegisterTrace; set => _exec.RegisterTrace = value; }
@@ -99,7 +113,8 @@ namespace Besm6.Runtime.Loading
                 fileMount: (unit, idx, write, off) => _tapes.FileMount(unit, idx, write, off),
                 scratchMount: (unit, zones) => _tapes.ScratchMount(unit, zones),
                 findTape: tapeId => _tapes.FindUnitForTapeId(tapeId),
-                releaseTapes: mask => _tapes.ReleaseTapes(mask));
+                releaseTapes: mask => _tapes.ReleaseTapes(mask),
+                terminalOutput: s => (TerminalOutput ?? Output ?? (x => Console.Write(x)))(s));
 
             _programLoader = new JobProgramLoader(machine, _tapes, verboseLog);
             _mons = new MonsysBootstrapper(machine, _tapes, _extracode, verboseLog);

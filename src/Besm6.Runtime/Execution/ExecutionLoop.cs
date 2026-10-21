@@ -45,6 +45,7 @@ namespace Besm6.Runtime.Execution
         public bool ProgressEnabled { get; set; }
         public ExecutionStatistics? Statistics { get; private set; }
         public Action<Opcode>? InstructionExecuted { get; set; }
+        public Action<long>? ExecutionCheckpoint { get; set; }
         private ExecutionAccountingSession? _accounting;
         private long TotalCycles => _accounting?.TotalCycles ?? 0;
         private Timing.HostedOriginalTiming? _originalTiming;
@@ -179,6 +180,7 @@ namespace Besm6.Runtime.Execution
             }
             while (InstructionsExecuted < limit && (attemptLimit is null || stepAttempts < attemptLimit.Value))
             {
+                ExecutionCheckpoint?.Invoke(InstructionsExecuted);
                 try
                 {
                     bool stopped;

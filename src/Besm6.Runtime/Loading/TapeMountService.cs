@@ -20,6 +20,13 @@ namespace Besm6.Runtime.Loading
         private readonly List<string> _filePaths = new();
         private readonly string? _tapesDir;
         private readonly Action<string>? _verboseLog;
+        internal string? HostFileDirectory { get; set; }
+
+        internal IReadOnlyList<StorageMountInfo> GetMounts() => _disksByUnit.OrderBy(x => x.Key)
+            .Select(x => new StorageMountInfo("Disk", x.Key, x.Value.VolumeId, x.Value.ReadOnly, x.Value.NumWords))
+            .Concat(_drumsByUnit.OrderBy(x => x.Key)
+                .Select(x => new StorageMountInfo("Drum", x.Key, x.Value.VolumeId, x.Value.ReadOnly, x.Value.NumWords)))
+            .ToArray();
 
         public TapeMountService(string? tapesDir, Action<string>? verboseLog = null)
         {
@@ -104,9 +111,9 @@ namespace Besm6.Runtime.Loading
             const ulong discTmp = 0xD2DC00000000UL;
             string? directory = (discId & 0xFFFFFFFFF000UL) switch
             {
-                discLocal => Directory.GetCurrentDirectory(),
-                discHome => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                discTmp => Path.GetTempPath(),
+                discLocal => HostFileDirectory ?? Directory.GetCurrentDirectory(),
+                discHome => HostFileDirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                discTmp => HostFileDirectory ?? Path.GetTempPath(),
                 _ => null
             };
             if (string.IsNullOrEmpty(directory))

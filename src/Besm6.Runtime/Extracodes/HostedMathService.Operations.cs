@@ -9,7 +9,7 @@ namespace Besm6.Runtime.Extracodes
         // ─── E50: математика + сервисы (fn из M[16]) ─────────────────────────
         // Точный порт Processor::e50 из dubna/e50.cpp.
         // case 0-7 — математика (A = input = output).
-        // case 014/017 — parse/format (требуют записи Y + байтовый I/O, не в C# API).
+        // case 014/017 — разбор и форматирование текста через байтовый I/O.
         // Остальные case — сервисы ОС Дубна (no-op / DATE* / фиксированные ответы).
         internal void E50()
         {

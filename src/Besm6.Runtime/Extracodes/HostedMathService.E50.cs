@@ -9,6 +9,7 @@ namespace Besm6.Runtime.Extracodes
         private int _e50ParseIndex;
         private int _e50ParseLastWordAddr;
         private int _e50ParseLastByteIndex;
+        private int _e50FormatDestination;
         private static bool IsDigit(byte c) => c >= (byte)'0' && c <= (byte)'9';
         private static bool IsChar(byte c) => (c >= 65 && c <= 90) || (c >= 96 && c <= 126); // A-Z or ` to ~
         /// <summary>
@@ -267,19 +268,18 @@ namespace Besm6.Runtime.Extracodes
             var cpu = _cpu;
             long input = (long)cpu.A.Value;
             int destAddr = (int)(input & 0x7FFF);
-            bool rightAlign = ((input >> 15) & 1) != 0;
-            int destReg = (int)((input >> 16) & 0xF);
-            int srcAddr = (int)((input >> 20) & 0x7FFF);
-            int width = (int)((input >> 35) & 0x1F);
-            int precision = (int)((input >> 40) & 0xF);
+            int precision = (int)((input >> 15) & 0xF);
+            bool rightAlign = ((input >> 19) & 1) != 0;
+            int destReg = (int)((input >> 20) & 0xF);
+            int srcAddr = (int)((input >> 24) & 0x7FFF);
+            int width = (int)((input >> 39) & 0x1F);
             int srcReg = (int)((input >> 44) & 0xF);
             int actualSrc = srcAddr;
             if (srcReg != 0)
                 actualSrc = (srcAddr + (int)cpu.GetM(srcReg)) & 0x7FFF;
             double value = _memory.Read((uint)actualSrc).ToDouble();
-            int outAddr = destAddr;
             if (destAddr != 0 || destReg != 0)
-                outAddr = (destAddr + (int)cpu.GetM(destReg)) & 0x7FFF;
+                _e50FormatDestination = (destAddr + (int)cpu.GetM(destReg)) & 0x7FFF;
             if (width == 0)
             {
                 cpu.SetM(14, 0);
@@ -320,7 +320,7 @@ namespace Besm6.Runtime.Extracodes
             }
 
             var mem = _memory;
-            var bp = new BytePointer(mem, (uint)outAddr, 0);
+            var bp = new BytePointer(mem, (uint)_e50FormatDestination, 0);
             foreach (char ch in result)
                 bp.Put((byte)ch);
             while (bp.ByteIndex != 0)

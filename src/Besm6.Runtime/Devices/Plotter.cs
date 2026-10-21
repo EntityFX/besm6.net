@@ -26,6 +26,13 @@ namespace Besm6.Runtime.Devices
         /// <summary>Накопленные байты Tektronix.</summary>
         public string Tektronix => _tektronix.ToString();
 
+        public int WatanabeLength => _watanabe.Length;
+        public int CalcompLength => _calcomp.Length;
+        public int TektronixLength => _tektronix.Length;
+        public string ReadWatanabe(int offset) => _watanabe.ToString(offset, _watanabe.Length - offset);
+        public string ReadCalcomp(int offset) => _calcomp.ToString(offset, _calcomp.Length - offset);
+        public string ReadTektronix(int offset) => _tektronix.ToString(offset, _tektronix.Length - offset);
+
         /// <summary>Передать байт плоттеру Watanabe WX4675.</summary>
         public void WatanabePutCh(char ch) => _watanabe.Append(ch);
 

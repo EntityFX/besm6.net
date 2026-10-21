@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Update="besm6.json" CopyToOutputDirectory="PreserveNewest" />
+    <ProjectReference Include="..\Besm6.Runtime\Besm6.Runtime.csproj" />
+    <ProjectReference Include="..\Besm6.Assembler\Besm6.Assembler.csproj" />
+    <None Include="..\..\tapes\**\*" Link="tapes\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -453,6 +453,30 @@ namespace Besm6.Tests
         }
 
         [TestMethod]
+        [DataRow(false, 0, 4, "125   ", 0)]
+        [DataRow(true, 1, 6, " 125.0", 0)]
+        [DataRow(false, 0, 2, "12    ", 1)]
+        public void E50_FormatUsesDubnaAbi(bool rightAlign, int precision, int width, string expected, int overflow)
+        {
+            var machine = new MachineCore();
+            var handler = MakeHandler(machine);
+            machine.Memory.Write(100, Word48.FromDouble(125));
+            machine.Cpu.SetM(1, 90);
+            machine.Cpu.SetM(2, 190);
+            // Indexed source 1:10, destination 2:10; real PUTG ABI used by PLOTWX.
+            ulong control = (1UL << 44) | ((ulong)width << 39) | (10UL << 24)
+                | (2UL << 20) | (rightAlign ? 1UL << 19 : 0UL) | ((ulong)precision << 15) | 10UL;
+            machine.Cpu.SetM(14, 15);
+            machine.Cpu.SetA(control);
+            handler.Handle(40, 0);
+            var bytes = new Besm6.Processor.Memory.BytePointer(machine.Memory, 200);
+            string text = new(Enumerable.Range(0, 6).Select(_ => (char)bytes.Get()).ToArray());
+            Assert.AreEqual(expected, text);
+            Assert.AreEqual((ulong)width, machine.Cpu.A.Value);
+            Assert.AreEqual((uint)overflow, machine.Cpu.GetM(14));
+        }
+
+        [TestMethod]
         public void E57_FloorA()
         {
             var machine = new MachineCore();
