@@ -22,9 +22,9 @@ public static class PunchCardRenderer
         {
             int label = encoding == PunchCardEncoding.Ibm ? IbmRows[row] : row + 1;
             result.Append("Row ").Append(label.ToString("00", CultureInfo.InvariantCulture)).Append("   ");
-            Columns(c => card.IsPunched(row, c - 1) ? (ascii ? 'O' : '●') : (ascii ? '.' : '·'));
+            Columns(c => card.IsPunched(row, c - 1) ? (ascii ? 'O' : '▯') : (ascii ? '.' : '▮'));
         }
-        result.Append(ascii ? "O = hole; . = unpunched\n" : "● = hole; · = unpunched\n");
+        result.Append(ascii ? "O = hole; . = unpunched\n" : "▯ = hole; ▮ = unpunched\n");
         return result.ToString();
 
         void Columns(Func<int, char> character)
