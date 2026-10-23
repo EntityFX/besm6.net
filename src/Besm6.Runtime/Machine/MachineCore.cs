@@ -104,8 +104,8 @@ namespace Besm6.Runtime
         public MachineCore(uint memorySize = 32768, string? puncherOutputDir = null)
             : this(MemoryModel.Dubna, memorySize, puncherOutputDir) { }
 
-        public MachineCore(MemoryModel memoryModel, uint memorySize = 32768, string? puncherOutputDir = null)
-            : this(memoryModel, ProcessorProfile.Dubna, memorySize, puncherOutputDir) { }
+        public MachineCore(MemoryModel memoryModel, uint memorySize = 32768, string? puncherOutputDir = null, bool hostedBufferedMemory = false)
+            : this(memoryModel, ProcessorProfile.Dubna, memorySize, puncherOutputDir, hostedBufferedMemory: hostedBufferedMemory) { }
 
         public MachineCore(ProcessorProfile profile, uint memorySize = 32768, string? puncherOutputDir = null)
             : this(profile == ProcessorProfile.Supervisor ? MemoryModel.Mapped : MemoryModel.Dubna,
@@ -127,7 +127,7 @@ namespace Besm6.Runtime
         public SupervisorIoController? SupervisorIo { get; }
 
         private MachineCore(MemoryModel memoryModel, ProcessorProfile profile, uint memorySize, string? puncherOutputDir,
-            MemoryConfiguration configuration = MemoryConfiguration.Classical32K)
+            MemoryConfiguration configuration = MemoryConfiguration.Classical32K, bool hostedBufferedMemory = false)
         {
             if (!Enum.IsDefined(profile)) throw new ArgumentOutOfRangeException(nameof(profile));
             if (configuration != MemoryConfiguration.Classical32K && profile != ProcessorProfile.Supervisor)
@@ -147,7 +147,7 @@ namespace Besm6.Runtime
                 case MemoryModel.Buffered:
                     if (memorySize != ArchitectureConstants.WordCount)
                         throw new ArgumentOutOfRangeException(nameof(memorySize), "Buffered requires 32768 words.");
-                    BufferedMemory = new BufferedMemoryBackend();
+                    BufferedMemory = new BufferedMemoryBackend(hostedBufferedMemory);
                     cpuMemory = BufferedMemory;
                     hostMemory = BufferedMemory.HostMemory;
                     commandMemory = BufferedMemory;
@@ -299,17 +299,20 @@ namespace Besm6.Runtime
         /// completed commands. Failed attempts do not advance guest ticks or counters.
         /// </summary>
         public MachineExecutionResult RunInstructions(long instructionLimit,
-            ExecutionSpeed speed = ExecutionSpeed.Max, bool collectStatistics = false)
+            ExecutionSpeed speed = ExecutionSpeed.Max, bool collectStatistics = false,
+            Action<long>? executionCheckpoint = null, long wallClockLimitMs = 0)
         {
             if (instructionLimit < 1) throw new ArgumentOutOfRangeException(nameof(instructionLimit));
             if (ExecutionModel == MachineExecutionModel.Hardware)
-                return RunHardwareInstructions(instructionLimit, speed, collectStatistics);
+                return RunHardwareInstructions(instructionLimit, speed, collectStatistics, executionCheckpoint: executionCheckpoint, wallClockLimitMs: wallClockLimitMs);
             var loop = new ExecutionLoop(this)
             {
                 InstructionLimit = instructionLimit,
                 StepAttemptLimit = Cpu.Profile == ProcessorProfile.Supervisor ? instructionLimit : null,
                 Speed = speed,
-                CollectStatistics = collectStatistics
+                CollectStatistics = collectStatistics,
+                ExecutionCheckpoint = executionCheckpoint,
+                WallClockLimitMs = wallClockLimitMs
             };
             var outcome = loop.Run();
             return new(outcome, loop.Statistics);

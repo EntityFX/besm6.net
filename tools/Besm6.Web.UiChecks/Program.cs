@@ -55,6 +55,7 @@ async Task<IPage> Open(IBrowserContext context)
 }
 async Task Upload(IPage page, string text = tiny, string name = "smoke.dub")
 {
+    await page.WaitForFunctionAsync("!document.getElementById('file').disabled");
     await page.Locator("#file").SetInputFilesAsync(new FilePayload { Name = name, MimeType = "text/plain", Buffer = Encoding.UTF8.GetBytes(text) });
     await page.WaitForFunctionAsync("name => document.getElementById('fileName').textContent === name", name);
 }
@@ -455,7 +456,7 @@ await Check("reset-button", async (page, _) =>
     if (await page.Locator("#instructionCount").TextContentAsync() != "0 instructions") throw new Exception("Reset kept instruction count");
     if (await page.Locator("#run").IsDisabledAsync()) throw new Exception("Reset lost uploaded job");
     if (await page.Locator("#fileName").TextContentAsync() != "smoke.dub") throw new Exception("Reset lost filename");
-    if (!(await page.Locator("#memory").TextContentAsync())!.Split('\n').All(line=>line.EndsWith("0000000000000000"))) throw new Exception("Reset kept memory");
+    if (!(await page.Locator("#memory").TextContentAsync())!.Split('\n').All(line=>line.Split(' ',StringSplitOptions.RemoveEmptyEntries)[1]=="0000000000000000")) throw new Exception("Reset kept memory");
     await page.CheckAsync("input[value=debug]"); await page.ClickAsync("#run"); await Status(page, "Paused");
     await page.ClickAsync("#reset"); await Status(page, "Idle");
 });
@@ -474,7 +475,7 @@ await Check("number-bases", async (page, _) =>
         string register = await page.EvaluateAsync<string>("[...document.querySelectorAll('#registers .register')].find(e=>e.querySelector('dt').textContent==='A').querySelector('dd').textContent");
         if (register != formatted) throw new Exception("48-bit value lost precision in radix " + radix);
         if (await page.Locator("#address").InputValueAsync() != Convert.ToString(514, radix).ToUpperInvariant()) throw new Exception("Address changed while switching radix");
-        if (!(await page.Locator("#memory").TextContentAsync())!.Split('\n')[0].EndsWith(formatted)) throw new Exception("Memory radix mismatch");
+        if (!(await page.Locator("#memory").TextContentAsync())!.Split('\n')[0].Split(' ',StringSplitOptions.RemoveEmptyEntries)[1].Equals(formatted)) throw new Exception("Memory radix mismatch");
         await page.ClickAsync("#inspect");
     }
     await page.SelectOptionAsync("#numberBase", "16"); await page.FillAsync("#address", "8000"); await page.ClickAsync("#inspect");
@@ -567,8 +568,115 @@ await Check("cli-performance-parity", async (page, _) =>
     }
     await File.WriteAllTextAsync(Path.Combine(output,"cli-performance-parity.json"),JsonSerializer.Serialize(comparisons,new JsonSerializerOptions {WriteIndented=true}));
 });
+await Check("dhrystone-modes", async (page, _) =>
+{
+    page.SetDefaultTimeout(120000);
+    string configuration=Environment.GetEnvironmentVariable("BESM6_WEB_BUILD_CONFIGURATION") ?? "Release";
+    var samples=new List<object>(); var webMax=new List<double>(); var cliMax=new List<double>();
+    long? expectedInstructions=null; long? expectedCycles=null;
+    async Task Run(string preset, bool refresh=false, bool decode=false)
+    {
+        await page.ClickAsync("#examplesTab");
+        await page.WaitForFunctionAsync("document.querySelector('#exampleSelect option[value=\"web-jobs/dhrystone-max.json\"]')");
+        await page.SelectOptionAsync("#exampleSelect", "web-jobs/dhrystone-"+preset+".json");
+        await page.ClickAsync("#exampleLoad");
+        await page.WaitForFunctionAsync("name=>document.getElementById('fileName').textContent===name", "web-jobs/dhrystone-"+preset+".json");
+        if(await page.Locator("#machineModel").InputValueAsync()!="dubna" || await page.Locator("#autoRefresh").IsCheckedAsync()) throw new Exception("Preset settings were not applied");
+        if(refresh) await page.CheckAsync("#autoRefresh");
+        if(decode) await page.CheckAsync("#decodeMemory");
+        await page.ClickAsync("#run");
+        if(preset=="debug") { await Status(page,"Paused"); await page.ClickAsync("#resume"); }
+        await Status(page,"Completed");
+        await page.WaitForFunctionAsync("/BAD CONTROL VALUES=\\s+0\\s+ALL 18 CONTROL VALUES MATCH/.test(document.getElementById('printOutput').textContent) && /GUEST DMIPS:\\s+\\d+\\.\\d+/.test(document.getElementById('printOutput').textContent)");
+        string text=await GuestOutput(page);
+        string resultText=text[text.LastIndexOf("RUNNING     5000 PASSES",StringComparison.Ordinal)..];
+        if(!resultText.Contains("ALL 18 CONTROL VALUES MATCH") || !resultText.Contains("ALL 4 STRING VALUES MATCH: YES") || !resultText.Contains("GUEST DMIPS:") || resultText.Contains("DMIPS UNAVAILABLE")) throw new Exception("Dhrystone controls or timer failed: "+resultText);
+        var statistics=await page.EvaluateAsync<JsonElement>("window.__events.findLast(e=>e.type==='statistics').data");
+        long instructions=statistics.GetProperty("completedInstructions").GetInt64(), cycles=statistics.GetProperty("modelCycles").GetInt64();
+        // Original uses the statistical guest clock; formatting different elapsed times can execute different instructions.
+        // Full/Debug/refresh comparisons use the same max clock and must keep identical work.
+        if(preset is "max" or "debug") {
+            expectedInstructions ??= instructions; expectedCycles ??= cycles;
+            if(instructions!=expectedInstructions || cycles!=expectedCycles) throw new Exception("Mode changed Dhrystone workload");
+        }
+        double seconds=statistics.GetProperty("elapsedSeconds").GetDouble();
+        if(preset=="max" && !refresh) webMax.Add(seconds);
+        samples.Add(new{preset,refresh,decode,statistics}); Console.WriteLine($"DHRYSTONE {preset} refresh={refresh} decode={decode}: {seconds:F4}s / {instructions} instructions");
+        await File.WriteAllTextAsync(Path.Combine(output,$"dhrystone-{preset}-{refresh}-{decode}.txt"),text);
+        await page.ClickAsync("#reset"); await Status(page,"Idle");
+    }
+    await Run("max"); await Run("original"); await Run("virtual"); await Run("debug");
+    await Run("max",true); await Run("max",true,true); await Run("max"); await Run("max");
+    string cli=Path.GetFullPath($"src/Besm6.Cli/bin/{configuration}/net8.0/besm6.dll");
+    for(int repeat=0;repeat<3;repeat++) {
+        string directory=Path.Combine(output,"dhrystone-cli-"+repeat); Directory.CreateDirectory(directory);
+        var start=new System.Diagnostics.ProcessStartInfo("dotnet"){WorkingDirectory=directory,RedirectStandardOutput=true,RedirectStandardError=true,UseShellExecute=false,CreateNoWindow=true};
+        foreach(string arg in new[]{cli,"run",Path.GetFullPath("examples/dhrystone-forex.dub"),"--speed","max","--guest-clock","--stats","--limit","1000000000"}) start.ArgumentList.Add(arg);
+        using var process=System.Diagnostics.Process.Start(start)!; var stdout=process.StandardOutput.ReadToEndAsync(); var stderr=process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync(); string text=await stdout; string diagnostic=await stderr;
+        await File.WriteAllTextAsync(Path.Combine(directory,"output.txt"),text+diagnostic);
+        if(process.ExitCode!=0 || !text.Contains("ALL 18 CONTROL VALUES MATCH")) throw new Exception("CLI Dhrystone failed");
+        var statistics=JsonDocument.Parse(text.Split('\n').Single(line=>line.StartsWith("Execution stats: "))[17..]).RootElement.GetProperty("statistics").Clone();
+        if(statistics.GetProperty("completedInstructions").GetInt64()!=expectedInstructions || statistics.GetProperty("modelCycles").GetInt64()!=expectedCycles) throw new Exception("CLI/web workload mismatch");
+        cliMax.Add(statistics.GetProperty("elapsedSeconds").GetDouble()); samples.Add(new{cliRepeat=repeat,statistics});
+    }
+    double webMedian=webMax.Order().ElementAt(1), cliMedian=cliMax.Order().ElementAt(1);
+    await File.WriteAllTextAsync(Path.Combine(output,"dhrystone-modes.json"),JsonSerializer.Serialize(new{configuration,webMedian,cliMedian,ratio=webMedian/cliMedian,samples},new JsonSerializerOptions{WriteIndented=true}));
+    Console.WriteLine($"DHRYSTONE PARITY web={webMedian:F4}s cli={cliMedian:F4}s ratio={webMedian/cliMedian:F3}");
+    if(webMedian>cliMedian*1.15+0.15) throw new Exception("Dhrystone web slowdown exceeds the performance budget");
+    await Upload(page,File.ReadAllText("examples/dhrystone-forex.dub")); await page.SelectOptionAsync("#machineModel","buffered");
+    await page.ClickAsync("#run"); await Status(page,"Completed");
+    await page.WaitForFunctionAsync("/BAD CONTROL VALUES=\\s+0\\s+ALL 18 CONTROL VALUES MATCH/.test(document.getElementById('printOutput').textContent)");
+    var buffered=await page.EvaluateAsync<JsonElement>("window.__events.findLast(e=>e.type==='statistics').data");
+    if(buffered.GetProperty("completedInstructions").GetInt64()!=expectedInstructions || buffered.GetProperty("modelCycles").GetInt64()!=expectedCycles) throw new Exception("Buffered Dhrystone workload changed");
+    await File.WriteAllTextAsync(Path.Combine(output,"dhrystone-buffered.json"),buffered.ToString());
+});
+await Check("dhrystone-buffered", async (page, _) =>
+{
+    page.SetDefaultTimeout(120000);
+    await page.ClickAsync("#examplesTab");
+    await page.WaitForFunctionAsync("document.querySelector('#exampleSelect option[value=\"web-jobs/dhrystone-buffered.json\"]')");
+    await page.SelectOptionAsync("#exampleSelect","web-jobs/dhrystone-buffered.json"); await page.ClickAsync("#exampleLoad");
+    await page.WaitForFunctionAsync("document.getElementById('fileName').textContent==='web-jobs/dhrystone-buffered.json' && !document.getElementById('run').disabled");
+    if(await page.Locator("#machineModel").InputValueAsync()!="buffered") throw new Exception("Buffered preset did not select its model");
+    await page.ClickAsync("#run"); await Status(page,"Completed");
+    await page.WaitForFunctionAsync("/BAD CONTROL VALUES=\\s+0\\s+ALL 18 CONTROL VALUES MATCH/.test(document.getElementById('printOutput').textContent) && /GUEST DMIPS:\\s+\\d+\\.\\d+/.test(document.getElementById('printOutput').textContent)");
+    var statistics=await page.EvaluateAsync<JsonElement>("window.__events.findLast(e=>e.type==='statistics').data");
+    string text=await GuestOutput(page);
+    if(!text.Contains("ALL 4 STRING VALUES MATCH: YES") || statistics.GetProperty("completedInstructions").GetInt64()!=24606703 || statistics.GetProperty("modelCycles").GetInt64()!=40894857) throw new Exception("Buffered Dhrystone differs from the verified ordinary Dubna run");
+    await File.WriteAllTextAsync(Path.Combine(output,"dhrystone-buffered.json"),statistics.ToString());
+    await File.WriteAllTextAsync(Path.Combine(output,"dhrystone-buffered.txt"),text);
+    Console.WriteLine("DHRYSTONE BUFFERED "+statistics);
+});
+await Check("json-preset-upload", async (page, _) =>
+{
+    await page.SelectOptionAsync("#machineModel","supervisor-hardware");
+    await Upload(page,File.ReadAllText("examples/web-jobs/dhrystone-max.json"),"dhrystone-max.json");
+    await page.WaitForFunctionAsync("document.getElementById('machineModel').value==='dubna' && document.getElementById('statistics').checked");
+    if(await page.Locator("#autoRefresh").IsCheckedAsync() || await page.Locator("#decodeMemory").IsCheckedAsync()) throw new Exception("File preset did not disable inspection");
+    await page.ClickAsync("#editorTab"); await page.FillAsync("#sourceText",File.ReadAllText("examples/web-jobs/dhrystone-virtual.json"));
+    await page.ClickAsync("#sourceLoad");
+    await page.WaitForFunctionAsync("document.getElementById('fileName').textContent==='editor.json' && document.getElementById('speed').value==='virtual'");
+    string session=await page.EvaluateAsync<string>("window.__sessionId");
+    byte[] actual=await File.ReadAllBytesAsync(Path.Combine(Path.GetTempPath(),"besm6-web",session,"job.dub"));
+    if(!actual.SequenceEqual(await File.ReadAllBytesAsync("examples/dhrystone-forex.dub"))) throw new Exception("JSON preset changed the benchmark source");
+    if(await page.Locator("#status").TextContentAsync()!="Idle") throw new Exception("Loading a preset started execution");
+});
+await Check("json-machine-examples", async (page, _) =>
+{
+    foreach(string model in new[]{"functional","hardware"}) {
+        await page.ClickAsync("#examplesTab"); await page.WaitForFunctionAsync("document.getElementById('exampleSelect').options.length>100");
+        await page.SelectOptionAsync("#exampleSelect","machines/supervisor-"+model+".json"); await page.ClickAsync("#exampleLoad");
+        await page.WaitForFunctionAsync("name=>document.getElementById('fileName').textContent===name","machines/supervisor-"+model+".json");
+        if(await page.Locator("#machineModel").InputValueAsync()!="supervisor-"+model) throw new Exception("Machine JSON did not select its execution model");
+        await page.CheckAsync("input[value=full]"); await page.ClickAsync("#run"); await Status(page,"Completed");
+        if(!string.IsNullOrEmpty(await page.Locator("#error").TextContentAsync())) throw new Exception("Ready machine JSON failed");
+        await page.ClickAsync("#reset"); await Status(page,"Idle");
+    }
+});
 await Check("examples-browser", async (page, _) =>
 {
+    await page.SelectOptionAsync("#machineModel", "supervisor-hardware");
     await page.ClickAsync("#examplesTab"); await page.Locator("#examplesPane.show").WaitForAsync();
     await page.WaitForFunctionAsync("document.getElementById('exampleSelect').options.length>100");
     await page.FillAsync("#exampleFilter","fortran");
@@ -576,7 +684,9 @@ await Check("examples-browser", async (page, _) =>
     await page.WaitForFunctionAsync("document.getElementById('exampleSource').textContent.includes('Hello, World!')");
     await page.ClickAsync("#exampleLoad");
     await page.WaitForFunctionAsync("document.getElementById('fileName').textContent==='fortran.dub'");
+    await page.WaitForFunctionAsync("document.getElementById('machineModel').value==='dubna'");
     if (await page.Locator("#status").TextContentAsync()!="Idle") throw new Exception("Loading an example executed it");
+    await page.SelectOptionAsync("#machineModel", "supervisor-functional");
     await page.CheckAsync("input[value=full]"); await page.ClickAsync("#exampleRun"); await Status(page,"Completed");
     if (!(await GuestOutput(page)).Contains("HELLO, WORLD!",StringComparison.OrdinalIgnoreCase)) throw new Exception("Selected example did not run");
     string id=await page.EvaluateAsync<string>("window.__sessionId");
@@ -676,12 +786,12 @@ await Check("media-mount-and-disassembly", async (page, context) =>
     await Upload(page,job); await page.CheckAsync("input[value=full]"); await page.ClickAsync("#run"); await Status(page,"Completed");
     await page.FillAsync("#address","4000"); await page.ClickAsync("#inspect");
     string expected=Convert.ToString((long)word,8).PadLeft(16,'0');
-    await page.WaitForFunctionAsync("expected=>document.getElementById('memory').textContent.split('\\n')[0].endsWith(expected)",expected);
+    await page.WaitForFunctionAsync("expected=>document.getElementById('memory').textContent.split('\\n')[0].trim().split(/\\s+/)[1]===expected",expected);
     await page.SelectOptionAsync("#mediaSource","mounted:Tape:25"); await page.ClickAsync("#mediaRead");
     await page.WaitForFunctionAsync("document.getElementById('mediaDisassembly').textContent.includes('xta 1002,stop')");
     await page.FillAsync("#mediaAddress","3000"); await page.ClickAsync("#mediaLoad");
     await page.WaitForFunctionAsync("document.getElementById('mediaMessage').textContent.includes('loaded at 3000')");
-    if (!(await page.Locator("#memory").TextContentAsync())!.Split('\n')[0].EndsWith(expected)) throw new Exception("Copy to memory lost media data");
+    if (!(await page.Locator("#memory").TextContentAsync())!.Split('\n')[0].Split(' ',StringSplitOptions.RemoveEmptyEntries)[1].Equals(expected)) throw new Exception("Copy to memory lost media data");
     await page.SelectOptionAsync("#mediaSource",imageId); await page.ClickAsync("#mediaMount");
     await page.WaitForFunctionAsync("document.getElementById('error').textContent.includes('already mounted')");
     if (await page.Locator("#status").TextContentAsync()!="Completed") throw new Exception("Mount error changed machine state");
@@ -695,6 +805,91 @@ await Check("media-mount-and-disassembly", async (page, context) =>
     await page.WaitForFunctionAsync("!document.getElementById('storageMounts').textContent.includes('Tape')");
     await Upload(page,await File.ReadAllTextAsync("examples/fortran.dub")); await page.ClickAsync("#run"); await Status(page,"Completed");
     if (!(await GuestOutput(page)).Contains("HELLO, WORLD!",StringComparison.OrdinalIgnoreCase)) throw new Exception("Media operations broke source execution");
+});
+await Check("instruction-codec", async (page, _) =>
+{
+    await page.ClickAsync("#instructionTab"); await page.Locator("#instructionPane.show").WaitForAsync();
+    await page.WaitForFunctionAsync("document.querySelectorAll('#instructionBits button').length===24");
+    uint expected=Besm6.Assembler.Disassembly.InstructionEditor.Encode(8,15,32767);
+    var view=Besm6.Assembler.Disassembly.InstructionEditor.Decode(expected);
+    foreach(var (syntax,text) in new[]{("autocode",view.Autocode),("bemsh",view.Bemsh),("madlen",view.Madlen)})
+    {
+        await page.SelectOptionAsync("#instructionSyntax",syntax); await page.FillAsync("#instructionText",text); await page.ClickAsync("#instructionAssemble");
+        await page.WaitForFunctionAsync("value=>document.getElementById('instructionDecoded').textContent.includes(value)",view.Hex);
+    }
+    await page.FillAsync("#instructionAddress","10000"); await page.ClickAsync("#instructionEncode");
+    await page.WaitForFunctionAsync("document.getElementById('instructionError').textContent.length>0");
+    await page.SelectOptionAsync("#instructionWidth","48"); await page.SelectOptionAsync("#instructionRadix","16");
+    await page.FillAsync("#instructionValue","FFFFFFFFFFFF");
+    await page.WaitForFunctionAsync("document.getElementById('instructionDecoded').textContent.includes('HEX FFFFFFFFFFFF')");
+    if(await page.Locator("#instructionBits button").CountAsync()!=48) throw new Exception("Missing word halves");
+    await page.Locator("#instructionBits button").First.ClickAsync();
+    await page.WaitForFunctionAsync("document.getElementById('instructionDecoded').textContent.includes('HEX 7FFFFFFFFFFF')");
+    await page.SelectOptionAsync("#instructionHalf","1"); await page.SelectOptionAsync("#instructionOpcode","8");
+    await page.FillAsync("#instructionRegister","3"); await page.FillAsync("#instructionAddress","00010"); await page.ClickAsync("#instructionEncode");
+    await page.WaitForFunctionAsync("document.getElementById('instructionDecoded').textContent.includes('HEX 7FFFFF308008')");
+    await page.ScreenshotAsync(new(){Path=Path.Combine(output,"instruction-codec.png"),FullPage=true});
+});
+await Check("machine-models-and-registers", async (page, _) =>
+{
+    await Upload(page,Raw([Asm("xta 1004, atx 1005"),Asm("uj 1000"),0UL,0UL,0x123456789ABCUL]));
+    await page.SelectOptionAsync("#machineModel","buffered"); await page.CheckAsync("input[value=full]"); await page.CheckAsync("#autoRefresh");
+    await page.FillAsync("#instructionLimit","1000000000"); await page.ClickAsync("#run"); await Status(page,"Running");
+    await page.WaitForFunctionAsync("document.getElementById('machineRegisters').textContent.includes('БРЗ') && document.getElementById('machineRegisters').textContent.includes('БРС')");
+    await page.ClickAsync("#stop"); await Status(page,"Halted"); await page.ClickAsync("#reset"); await Status(page,"Idle");
+    await page.ClickAsync("#editorTab"); await page.ClickAsync("#machineTemplate");
+    await page.WaitForFunctionAsync("document.getElementById('sourceText').value.includes('memoryWords')");
+    await page.SelectOptionAsync("#machineModel","supervisor-functional"); await page.CheckAsync("input[value=debug]");
+    await page.ClickAsync("#sourceRun"); await Status(page,"Paused"); await page.ClickAsync("#step");
+    await page.WaitForFunctionAsync("document.getElementById('instructionCount').textContent==='1 instruction'");
+    await page.ClickAsync("#resume"); await Status(page,"Completed");
+    if(!(await page.Locator("#machineStateInfo").TextContentAsync())!.Contains("Functional")) throw new Exception("Functional owner was not selected");
+    await page.ClickAsync("#sourceLoad");
+    await page.SelectOptionAsync("#machineModel","supervisor-hardware"); await page.CheckAsync("input[value=full]");
+    await page.ClickAsync("#run"); await Status(page,"Completed");
+    await page.WaitForFunctionAsync("document.getElementById('machineStateInfo').textContent.includes('Hardware') && document.getElementById('machineRegisters').textContent.includes('БРЧ[3]') && document.getElementById('machineRegisters').textContent.includes('M20 ') && document.getElementById('machineRegisters').textContent.includes('M37 ')");
+    await page.Locator("#extendedState").ScrollIntoViewIfNeededAsync();
+    await page.ScreenshotAsync(new(){Path=Path.Combine(output,"machine-registers.png"),FullPage=true});
+});
+await Check("machine-format-selection", async (page, _) =>
+{
+    await page.SelectOptionAsync("#machineModel", "supervisor-hardware");
+    await Upload(page);
+    if (await page.Locator("#machineModel").InputValueAsync() != "dubna") throw new Exception("DUB upload retained supervisor");
+    await page.SelectOptionAsync("#machineModel", "supervisor-functional");
+    await page.WaitForFunctionAsync("document.getElementById('fileName').textContent==='machines/supervisor-functional.json' && !document.getElementById('run').disabled");
+    await page.ClickAsync("#run");
+    await Status(page,"Completed");
+    await page.ClickAsync("#editorTab");
+    await page.FillAsync("#sourceText", tiny);
+    await page.CheckAsync("input[value=full]"); await page.ClickAsync("#sourceRun"); await Status(page,"Completed");
+    if (await page.Locator("#machineModel").InputValueAsync() != "dubna") throw new Exception("DUB text retained supervisor");
+    await page.ClickAsync("#machineTemplate");
+    await page.WaitForFunctionAsync("document.getElementById('sourceText').value.includes('memoryWords')");
+    await page.SelectOptionAsync("#machineModel", "dubna");
+    await page.ClickAsync("#sourceRun"); await Status(page,"Completed");
+    if (await page.Locator("#machineModel").InputValueAsync() != "supervisor-functional") throw new Exception("JSON text retained Dubna");
+    if (!string.IsNullOrEmpty(await page.Locator("#error").TextContentAsync())) throw new Exception("Compatible job failed");
+});
+await Check("supervisor-default-template", async (page, _) =>
+{
+    await page.SelectOptionAsync("#machineModel","supervisor-hardware");
+    await page.WaitForFunctionAsync("document.getElementById('fileName').textContent==='machines/supervisor-hardware.json' && !document.getElementById('run').disabled");
+    if(!await page.Locator("input[value=full]").IsCheckedAsync()) throw new Exception("Default supervisor should be ready for full execution");
+    await page.ClickAsync("#run"); await Status(page,"Completed");
+    await page.WaitForFunctionAsync("document.getElementById('machineRegisters').textContent.includes('БРЧ[3]')");
+    if(!string.IsNullOrEmpty(await page.Locator("#error").TextContentAsync())) throw new Exception("Default supervisor failed");
+});
+await Check("memory-decode", async (page, _) =>
+{
+    await Upload(page); await page.ClickAsync("#run"); await Status(page,"Paused");
+    await page.FillAsync("#address","1000"); await page.ClickAsync("#inspect");
+    await page.WaitForFunctionAsync("document.getElementById('memory').textContent.startsWith('01000  ') && document.getElementById('memory').textContent.includes('atx 1234')");
+    string[] before=(await page.Locator("#memory").TextContentAsync())!.Split('\n').Select(line => string.Join(" ",line.Split(' ',StringSplitOptions.RemoveEmptyEntries).Take(2))).ToArray();
+    await page.UncheckAsync("#decodeMemory");
+    await page.WaitForFunctionAsync("window.__events.findLast(e=>e.type==='memory').data.words[0].disassembly===null");
+    string[] after=(await page.Locator("#memory").TextContentAsync())!.Split('\n').Select(line => string.Join(" ",line.Split(' ',StringSplitOptions.RemoveEmptyEntries).Take(2))).ToArray();
+    if(!before.SequenceEqual(after) || (await page.Locator("#memory").TextContentAsync())!.Contains("atx")) throw new Exception("Decode toggle changed raw memory");
 });
 await Check("layout", async (page, _) =>
 {
@@ -728,7 +923,7 @@ await Check("layout", async (page, _) =>
     foreach (int width in new[] { 1440, 768, 320 })
     {
         await page.SetViewportSizeAsync(width, 900);
-        foreach (string tab in new[] { "editorTab", "storageTab", "terminalTab", "punchTab", "cardTab" })
+        foreach (string tab in new[] { "editorTab", "storageTab", "terminalTab", "punchTab", "cardTab", "instructionTab" })
         {
             await page.ClickAsync("#" + tab);
             await page.WaitForFunctionAsync("tab=>document.querySelector(document.getElementById(tab).dataset.bsTarget).classList.contains('show')", tab);
@@ -752,7 +947,7 @@ await Check("accessibility", async (page, _) =>
     }
     await page.AddScriptTagAsync(new() { Path = axePath });
     var audits = new List<object>();
-    foreach (string tab in new[] { "printTab", "cardTab", "examplesTab", "editorTab", "storageTab", "terminalTab", "punchTab" })
+    foreach (string tab in new[] { "printTab", "cardTab", "examplesTab", "editorTab", "storageTab", "terminalTab", "punchTab", "instructionTab" })
     {
         await page.ClickAsync("#" + tab);
         var violations = await page.EvaluateAsync<JsonElement>("async()=>{const result=await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return result.violations.map(v=>({id:v.id,impact:v.impact,description:v.description,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}));}");

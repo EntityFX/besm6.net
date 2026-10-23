@@ -12,7 +12,8 @@ public sealed class ExampleCatalog
         root = Path.GetFullPath(root ?? Path.Combine(AppContext.BaseDirectory, "examples"));
         var entries = new List<ExampleEntry>();
         if (Directory.Exists(root))
-            foreach (string file in Directory.EnumerateFiles(root, "*.dub", SearchOption.AllDirectories).OrderBy(x => x, StringComparer.Ordinal))
+            foreach (string file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
+                .Where(file => Path.GetExtension(file) is ".dub" or ".json").OrderBy(x => x, StringComparer.Ordinal))
             {
                 if (new FileInfo(file).Length > 10_000_000) continue;
                 string id = Path.GetRelativePath(root, file).Replace('\\', '/');

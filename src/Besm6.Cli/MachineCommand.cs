@@ -12,14 +12,15 @@ public sealed class MachineCommand : ICommand
 {
     public string Name => "machine";
     public string Description => "Run a standalone supervisor machine with functional or hardware execution";
-    public string Usage => "besm6 machine <machine.json> [--execution functional|hardware] [--speed original|max|virtual] [--limit N] [--stats]";
+    public string Usage => "besm6 machine <machine.json> [--execution functional|hardware] [--speed original|max|virtual] [--limit N] [--stats] [--machine-state] [--dump-mem FILE]";
 
     public int Execute(string[] args)
     {
         if (args.Length == 0) { Console.Error.WriteLine(Usage); return 1; }
         try
         {
-            MachineExecutionModel? execution = null; ExecutionSpeed? speed = null; long? limit = null; bool stats = false;
+            MachineExecutionModel? execution = null; ExecutionSpeed? speed = null; long? limit = null; bool stats = false, detailed = false;
+            string? dump = null;
             for (int i = 1; i < args.Length; i++)
             {
                 string Value() => ++i < args.Length ? args[i] : throw new ArgumentException("Missing option value.");
@@ -34,6 +35,8 @@ public sealed class MachineCommand : ICommand
                         if (!long.TryParse(Value(), out var count) || count < 1) throw new ArgumentException("--limit requires a positive integer.");
                         limit = count; break;
                     case "--stats": stats = true; break;
+                    case "--machine-state": detailed = true; break;
+                    case "--dump-mem": dump = Value(); break;
                     default: throw new ArgumentException($"Unknown machine option: {args[i]}.");
                 }
             }
@@ -47,6 +50,7 @@ public sealed class MachineCommand : ICommand
             machine.SupervisorIo.PrinterOutput += (unit, rows) =>
                 printerLines.Add(new { unit, rows = rows.Select(row => row.ToArray()).ToArray() });
             var result = machine.RunInstructions(limit ?? configuration.InstructionLimit, selectedSpeed, stats);
+            if (dump is not null) RunOutput.DumpMemory(machine, dump, machine.Memory.Size);
             var state = machine.Cpu;
             var json = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
             json.Converters.Add(new JsonStringEnumConverter());
@@ -60,6 +64,7 @@ public sealed class MachineCommand : ICommand
                 functionalTicks = machine.Clock.Tick,
                 hardwareNanoseconds = machine.ExecutionModel == MachineExecutionModel.Hardware ? machine.HardwareTimeline.Now.Nanoseconds : (ulong?)null,
                 statistics = result.Statistics,
+                registers = detailed ? machine.InspectRegisters() : null,
                 deviceOutput = new { consoleBytes, serialBytes, printerLines }
             }, json));
             return result.Outcome.Success ? 0 : 1;

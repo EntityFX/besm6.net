@@ -6,7 +6,7 @@ namespace Besm6.Cli;
 /// <summary>Immutable invocation data, separated from machine creation and execution.</summary>
 internal sealed record RunOptions
 {
-    internal const string Usage = "besm6 run <file.dub> [--speed original|max|virtual] [--stats] [--guest-clock] [--limit N] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--config path]";
+    internal const string Usage = "besm6 run <file.dub> [--speed original|max|virtual] [--stats] [--guest-clock] [--buffered-memory] [--machine-state] [--limit N] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--config path]";
     internal string JobFile { get; init; } = string.Empty;
     internal long Limit { get; init; }
     internal bool Verbose { get; init; }
@@ -24,6 +24,8 @@ internal sealed record RunOptions
     internal bool Profile { get; init; }
     internal bool Stats { get; init; }
     internal bool GuestClock { get; init; }
+    internal bool BufferedMemory { get; init; }
+    internal bool MachineState { get; init; }
     internal ExecutionSpeed? SpeedOverride { get; init; }
 
     internal static bool TryParse(string[] args, out RunOptions options, out string? error)
@@ -59,12 +61,15 @@ internal sealed record RunOptions
         bool profile = false;
         bool stats = false;
         bool guestClock = false;
+        bool bufferedMemory = false, machineState = false;
         ExecutionSpeed? speedOverride = null;
 
         for (int i = 1; i < args.Length; i++)
         {
             switch (args[i])
             {
+                case "--buffered-memory": bufferedMemory = true; break;
+                case "--machine-state": machineState = true; break;
                 case "--speed":
                     if (++i >= args.Length || !ExecutionSpeedNames.TryParse(args[i], out var parsedSpeed))
                     {
@@ -158,6 +163,8 @@ internal sealed record RunOptions
             Profile = profile,
             Stats = stats,
             GuestClock = guestClock,
+            BufferedMemory = bufferedMemory,
+            MachineState = machineState,
             SpeedOverride = speedOverride,
         };
         return true;
@@ -168,6 +175,7 @@ internal sealed record RunOptions
         var config = Config.Load(ConfigPath);
         if (SpeedOverride is ExecutionSpeed speed) config.Speed = speed;
         if (GuestClock) config.GuestClock = true;
+        if (BufferedMemory) config.BufferedMemory = true;
         return config;
     }
 

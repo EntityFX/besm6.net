@@ -19,6 +19,10 @@ app.MapHub<EmulatorHub>("/emulator");
 app.MapGet("/api/punchcards/codebook", () => Besm6.AspNetCore.Web.Hosting.PunchCardCodebook.Data);
 app.MapGet("/api/examples", (Besm6.AspNetCore.Web.Hosting.ExampleCatalog examples) => examples.Entries);
 app.MapGet("/api/media", () => Besm6.AspNetCore.Web.Hosting.MediaCatalog.Entries);
+app.MapGet("/api/machine-template", () => Results.Text(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "machine-template.json")), "application/json"));
+app.MapGet("/api/instructions", () => Besm6.Assembler.Disassembly.InstructionEditor.Operations);
+app.MapPost("/api/instructions/decode", (Besm6.AspNetCore.Web.Hosting.InstructionRequest request) => Besm6.AspNetCore.Web.Hosting.InstructionEndpoints.Convert(request, false));
+app.MapPost("/api/instructions/encode", (Besm6.AspNetCore.Web.Hosting.InstructionRequest request) => Besm6.AspNetCore.Web.Hosting.InstructionEndpoints.Convert(request, true));
 app.MapGet("/api/examples/source", (string id, Besm6.AspNetCore.Web.Hosting.ExampleCatalog examples) =>
     examples.TryGetPath(id, out string path) ? Results.Text(File.ReadAllText(path), "text/plain", System.Text.Encoding.UTF8) : Results.NotFound());
 app.Run();

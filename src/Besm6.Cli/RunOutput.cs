@@ -57,17 +57,28 @@ internal static class RunOutput
         /// Дамп ОЗУ в SIMH-формате (6 байт на 48-битное слово) — вход для
         /// tools/besm6tape.py, которым дизассемблируется образ ОС «Дубна».
         /// </summary>
-        internal static void DumpMemory(MachineCore machine, string path, int count)
+        internal static ulong[] DumpMemory(MachineCore machine, string path, int count, bool decode = true)
         {
             int total = count > 0 ? count : 32768;   // 0o77777+1
             using var fs = File.Create(path);
+            var words = new ulong[total];
             for (uint a = 0; a < (uint)total; a++)
             {
                 ulong word = machine.Memory.Read(a).Value;
+                words[a] = word;
                 for (int sh = 40; sh >= 0; sh -= 8)
                     fs.WriteByte((byte)((word >> sh) & 0xFF));
             }
             Console.Error.WriteLine($"memory dump: {total} words -> {path}");
+            if (decode) WriteDecodedDump(words, path);
+            return words;
+        }
+
+        internal static void WriteDecodedDump(ulong[] words, string path)
+        {
+            using var decoded = new StreamWriter(path + ".disasm.txt");
+            for (int address = 0; address < words.Length; address++)
+                decoded.WriteLine($"{OctW((ulong)address,5)}  {OctW(words[address],16)}  {Besm6.Assembler.Disassembly.Disassembler.DisasmWord(words[address])}");
         }
 
         /// <summary>besm6_print_word_octal: 4 группы по 4 восьмеричных разряда.</summary>

@@ -40,6 +40,7 @@ namespace Besm6.Cli
             bool profile = options.Profile;
             bool stats = options.Stats;
             bool memDumpDone = false;
+            ulong[]? capturedDump = null;
 
             StreamWriter? regsWriter = null;
             try
@@ -59,8 +60,8 @@ namespace Besm6.Cli
                     opcodeProfiler = new OpcodeProfiler();
                 }
 
-                // Memory dumps need full snapshots; opcode profiling uses the allocation-free hook.
-                Action<InstructionTraceRecord>? dumpObserver = null;
+                // Count completed instructions without allocating register traces. Detach after one snapshot.
+                Action<Besm6.Architecture.Isa.Opcode>? dumpObserver = null;
                 if (memDumpFile != null && memDumpAt >= 0)
                 {
                     long seen = 0;
@@ -68,13 +69,14 @@ namespace Besm6.Cli
                     {
                         if (memDumpAt < 0) return;      // снимок уже сделан
                         if (++seen < memDumpAt) return;
-                        RunOutput.DumpMemory(machine, memDumpFile, memDumpCount);
+                        capturedDump = RunOutput.DumpMemory(machine, memDumpFile, memDumpCount, decode: false);
                         memDumpAt = -1;
                         memDumpDone = true;
+                        machine.Cpu.InstructionExecuted -= dumpObserver;
                     };
+                    machine.Cpu.InstructionExecuted += dumpObserver;
                 }
 
-                loader.TypedInstructionTrace = dumpObserver;
                 if (opcodeProfiler != null)
                     loader.InstructionExecuted = opcode => opcodeProfiler.Observe((uint)opcode);
 
@@ -98,6 +100,9 @@ namespace Besm6.Cli
 
                 var result = loader.RunScript(jobFile);
                 Console.WriteLine(result);
+                if (capturedDump is not null) RunOutput.WriteDecodedDump(capturedDump, memDumpFile!);
+                if (options.MachineState) Console.WriteLine("Machine state: " + System.Text.Json.JsonSerializer.Serialize(machine.InspectRegisters(),
+                    new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
 
                 if (memDumpFile != null && !memDumpDone)
                     RunOutput.DumpMemory(machine, memDumpFile, memDumpCount);

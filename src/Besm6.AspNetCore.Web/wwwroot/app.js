@@ -5,11 +5,19 @@
   const punch = new Besm6PunchOutput();
   let media;
   let ready = false, uploaded = false, uploading = false, hasSnapshot = false;
+  let jobFormat = 'dub';
+  const selectJobFormat = format => {
+    jobFormat = format;
+    const supervisor = $('machineModel').value.startsWith('supervisor-');
+    if (format === 'json' && !supervisor) $('machineModel').value = 'supervisor-functional';
+    else if (format === 'dub' && supervisor) $('machineModel').value = 'dubna';
+  };
   let terminalPending = false;
   let activeMode = 'debug', state = 'Idle';
   let memoryAddress = -1, snapshotPending = false, snapshotStarted = 0, plotterFrame = 0;
   let plotterPage = 0;
   let numberBase = 8, lastRegisters = null, lastMemory = [], lastMounts = [];
+  let lastDetailedState = null;
   const pendingOutput = new Map();
   let outputFrame = 0;
   const activeStates = new Set(['Loading', 'Running', 'WaitingInput', 'Paused', 'Pausing', 'Stepping', 'Stopping', 'Resetting']);
@@ -29,7 +37,7 @@
     $('stop').disabled = !ready || !['Running', 'WaitingInput', 'Paused', 'Loading'].includes(state);
     $('file').disabled = !ready || uploading || active;
     $('dropzone').setAttribute('aria-disabled', String($('file').disabled));
-    document.querySelectorAll('input[name=mode], #speed, #instructionLimit, #wallClockLimit, #guestClock, #statistics')
+    document.querySelectorAll('input[name=mode], #speed, #machineModel, #instructionLimit, #wallClockLimit, #guestClock, #statistics')
       .forEach(input => { input.disabled = active; });
     $('inspect').disabled = !ready || ['Loading', 'WaitingInput'].includes(state) || (!hasSnapshot && !['Running', 'Paused'].includes(state));
   };
@@ -73,7 +81,7 @@
   const requestSnapshot = async (includeMachineState = true) => {
     if (!ready || snapshotPending) return;
     snapshotPending = true; snapshotStarted = performance.now();
-    if (!await command(includeMachineState ? 'snapshot' : 'devices', { memoryAddress, memoryCount: 32 })) snapshotPending = false;
+    if (!await command(includeMachineState ? 'snapshot' : 'devices', { memoryAddress, memoryCount: 32, decodeMemory: $('decodeMemory').checked })) snapshotPending = false;
   };
   const formatNumber = (value, sourceBase, bits = 15) => {
     const text = parseInt(value, sourceBase).toString(numberBase).toUpperCase();
@@ -82,7 +90,18 @@
   const addressName = () => ({ 8: 'octal', 10: 'decimal', 16: 'hexadecimal' }[numberBase]);
   const addressWidth = () => numberBase === 16 ? 4 : 5;
   const renderMemory = () => {
-    $('memory').textContent = lastMemory.map(w => `${formatNumber(w.address, 8).padStart(addressWidth(), '0')}  ${formatNumber(w.hex, 16, 48)}`).join('\n');
+    $('memory').textContent = lastMemory.map(w => `${formatNumber(w.address, 8).padStart(addressWidth(), '0')}  ${formatNumber(w.hex, 16, 48)}${$('decodeMemory').checked && w.disassembly != null ? '  ' + Besm6Source.disassembly(w.disassembly, numberBase) : ''}`).join('\n');
+  };
+  const renderDetailedState = d => {
+    $('machineStateInfo').textContent = d ? `${d.memoryModel} / ${d.executionModel}` + (d.hardwareNanoseconds == null ? ' · БРЧ доступны в hardware' : ` · ${d.hardwareNanoseconds} ns`) : 'Состояние появится после загрузки машины.';
+    $('machineRegisters').textContent = d ? [
+      ...[...d.buffers.filter(b => b.name === 'БРЧ'), ...d.buffers.filter(b => b.name !== 'БРЧ')].map(b => `${b.name}[${b.slot}] ${formatNumber(String(b.value), 10, 48)}${b.address == null ? '' : ' @' + formatNumber(String(b.address), 10, 16)}${b.active == null ? '' : ' · active=' + Number(b.active)}${b.ready == null ? '' : ' ready=' + Number(b.ready)}${b.pendingWrite == null ? '' : ' pendingWrite=' + Number(b.pendingWrite)}`),
+      ...(d.controlFlags == null ? [] : [`УУ ${formatNumber(String(d.controlFlags),10)} · прерывания ${formatNumber(String(d.interrupts),10,48)}`]),
+      ...d.specialRegisters.map((value, i) => `M${(i + 16).toString(8)} ${formatNumber(String(value),10)}`),
+      ...d.arithmeticCommands.map((value, i) => `БАК[${i}] ${formatNumber(String(value),10,24)}`),
+      ...d.pageAssignment.map((value, i) => `РП[${i.toString(8)}] ${formatNumber(String(value),10)}`),
+      ...(d.operandProtection == null ? [] : [`РЗ ${formatNumber(String(d.operandProtection),10,32)}`])
+    ].join('\n') || 'В текущем режиме буферные регистры отсутствуют.' : '';
   };
   const renderMounts = () => renderRows('storageMounts', lastMounts.map(m => [m.kind, formatNumber(m.unit, 8, 6), m.words.toLocaleString(), m.readOnly ? 'Read only' : 'Read / write']));
   const renderRegisters = d => {
@@ -119,6 +138,7 @@
   const clearMachine = () => {
     hasSnapshot = false;
     lastRegisters = null; lastMemory = []; lastMounts = [];
+    lastDetailedState = null; renderDetailedState(null);
     pendingOutput.clear(); renderStatistics(null);
     punch.clear(); media?.clear(); $('terminalMessage').textContent = '';
     terminalPending = false;
@@ -132,6 +152,15 @@
   };
   connection.on('sessionReady', () => { ready = true; $('connection').textContent = 'Connected'; refreshButtons(); });
   connection.on('uploaded', name => { uploaded = true; $('fileName').textContent = name; refreshButtons(); });
+  connection.on('jobOptions', options => {
+    selectJobFormat(options.format);
+    for (const [field, id] of [['machineModel','machineModel'], ['speed','speed'], ['instructionLimit','instructionLimit']])
+      if (options[field] != null) $(id).value = String(options[field]);
+    for (const id of ['guestClock','statistics','autoRefresh','decodeMemory'])
+      if (options[id] != null) $(id).checked = options[id];
+    if (options.mode != null) document.querySelector(`input[name=mode][value="${options.mode}"]`).checked = true;
+    if (options.speed != null) $('wallClockLimit').value = '0';
+  });
   connection.on('mediaUploaded', data => media.uploaded(data));
   connection.on('workerEvent', event => {
     const d = event.data;
@@ -158,6 +187,7 @@
       case 'memory':
         lastMemory = d.words; renderMemory();
         break;
+      case 'machineRegisters': lastDetailedState = d; renderDetailedState(d); break;
       case 'plotter':
         if (plotterPage !== d.page) { plotterPage = d.page; schedulePlotter(); }
         break;
@@ -191,9 +221,9 @@
     if (!file || !ready || uploading || activeStates.has(state)) return;
     uploaded = false;
     refreshButtons();
-    if (!file.name.toLowerCase().endsWith('.dub') || file.size > 10_000_000 || !file.size) {
+    if (!/\.(dub|json)$/i.test(file.name) || file.size > 10_000_000 || !file.size) {
       $('fileName').textContent = 'No valid job selected';
-      showError({message: 'Select a .dub file between 1 byte and 10 MB.'}); return;
+      showError({message: 'Select a .dub or .json file between 1 byte and 10 MB.'}); return;
     }
     uploading = true; refreshButtons();
     $('fileName').textContent = `Uploading ${file.name}…`;
@@ -209,12 +239,27 @@
     finally { uploading = false; refreshButtons(); }
   }
   $('file').addEventListener('change', e => upload(e.target.files[0]));
+  $('machineModel').addEventListener('change', async () => {
+    const model = $('machineModel').value;
+    if (!ready || uploading || activeStates.has(state) || !model.startsWith('supervisor-') || (uploaded && jobFormat === 'json')) return;
+    uploading = true; refreshButtons();
+    try {
+      await connection.invoke('LoadExample', `machines/${model}.json`);
+      document.querySelector('input[name=mode][value="full"]').checked = true;
+      $('file').value = ''; $('error').textContent = '';
+    } catch (error) { showError(error); }
+    finally { uploading = false; refreshButtons(); }
+  });
   window.addEventListener('exampleSelectionChanged', refreshButtons);
   window.addEventListener('sourceChanged', refreshButtons);
   for (const id of ['sourceLoad', 'sourceRun']) $(id).addEventListener('click', async () => {
     if ($(id).disabled) return;
     uploading = true; refreshButtons(); let loaded = false;
-    try { await connection.invoke('UploadText', $('sourceText').value); $('file').value = ''; $('error').textContent = ''; loaded = true; }
+    try {
+      const text = $('sourceText').value;
+      await connection.invoke('UploadText', text);
+      $('file').value = ''; $('error').textContent = ''; loaded = true;
+    }
     catch (error) { showError(error); }
     finally { uploading = false; refreshButtons(); }
     if (loaded && id === 'sourceRun') $('run').click();
@@ -247,6 +292,12 @@
   drop.addEventListener('drop', e => upload(e.dataTransfer.files[0]));
   $('run').addEventListener('click', async () => {
     if ($('run').disabled) return;
+    if ((jobFormat === 'json') !== $('machineModel').value.startsWith('supervisor-')) {
+      showError({message: jobFormat === 'dub'
+        ? 'Supervisor требует конфигурацию машины .json. Для задания .dub выберите Dubna; пример JSON доступен в Editor → Machine JSON template.'
+        : 'Загружена конфигурация машины .json. Выберите Supervisor — functional или hardware.'});
+      return;
+    }
     const instructionLimit = Number($('instructionLimit').value);
     const wallClockLimitMs = Math.round(Number($('wallClockLimit').value) * 1000);
     if (!$('instructionLimit').value.trim() || !$('wallClockLimit').value.trim()
@@ -261,7 +312,7 @@
     const statistics = $('statistics').checked;
     clearMachine(); $('error').textContent = '';
     setState('Loading');
-    if (!await command('start', { mode: activeMode, speed, guestClock, statistics, instructionLimit, wallClockLimitMs })) setState('Idle');
+    if (!await command('start', { mode: activeMode, speed, guestClock, statistics, instructionLimit, wallClockLimitMs, machineModel: $('machineModel').value, decodeMemory: $('decodeMemory').checked })) setState('Idle');
   });
   for (const [id, nextState] of [['pause', 'Pausing'], ['resume', 'Running'], ['step', 'Stepping'], ['stop', 'Stopping'], ['reset', 'Resetting']])
     $(id).addEventListener('click', async () => {
@@ -292,10 +343,19 @@
     $('address').inputMode = numberBase === 16 ? 'text' : 'numeric';
     document.querySelector('#storageMounts').closest('table').querySelectorAll('th')[1].textContent = 'Unit';
     renderRegisters(lastRegisters); renderMemory(); renderMounts();
+    renderDetailedState(lastDetailedState);
     media.setBase(numberBase);
   });
   $('autoRefresh').addEventListener('change', () => {
     if ($('autoRefresh').checked && state === 'Running') requestSnapshot();
+  });
+  $('decodeMemory').addEventListener('change', () => { renderMemory(); if (ready && hasSnapshot && state !== 'Loading') requestSnapshot(); });
+  $('machineTemplate').addEventListener('click', async () => {
+    try {
+      const response = await fetch('/api/machine-template'); if (!response.ok) throw new Error('Cannot load machine template.');
+      $('sourceText').value = await response.text(); $('sourceText').dispatchEvent(new Event('input'));
+      if (!$('machineModel').disabled) $('machineModel').value = 'supervisor-hardware';
+    } catch (error) { showError(error); }
   });
   const refreshTimer = setInterval(() => {
     if (ready && state === 'Running') {

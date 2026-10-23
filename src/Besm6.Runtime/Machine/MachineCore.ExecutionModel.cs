@@ -67,7 +67,7 @@ public partial class MachineCore
     }
 
     internal MachineExecutionResult RunHardwareInstructions(long instructionLimit, ExecutionSpeed speed,
-        bool collectStatistics, IExecutionTimeSource? suppliedTime = null)
+        bool collectStatistics, IExecutionTimeSource? suppliedTime = null, Action<long>? executionCheckpoint = null, long wallClockLimitMs = 0)
     {
         if (_publicHardwareRunning || Cpu.ExecutionProhibited)
             throw new InvalidOperationException("Nested machine execution is not allowed.");
@@ -86,11 +86,14 @@ public partial class MachineCore
         ulong checkpoint = 10_000_000, completed = 0;
         LoadResult? outcome = null;
         _publicHardwareRunning = true;
+        var wallLimit = wallClockLimitMs > 0 ? Stopwatch.StartNew() : null;
         try
         {
             // Bound failed attempts independently, just as the functional supervisor runner does.
             for (long attempt = 0; attempt < instructionLimit; attempt++)
             {
+                executionCheckpoint?.Invoke(checked((long)completed));
+                if (wallLimit is not null && wallLimit.ElapsedMilliseconds >= wallClockLimitMs) break;
                 var step = model.AdvanceAutomaticTo(new(ulong.MaxValue), 1);
                 completed += step.Completed;
                 if (pacer is not null)

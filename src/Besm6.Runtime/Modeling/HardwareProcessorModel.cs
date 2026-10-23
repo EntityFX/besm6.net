@@ -21,6 +21,7 @@ internal sealed partial class HardwareProcessorModel
     private ArithmeticStageController? _arithmeticController;
     private ArithmeticInterruptionPort? _arithmeticInterruptions;
     internal HardwareTimeline Timeline { get; } = new();
+    internal uint[] InspectArithmeticCommands() => _arithmeticUnitStages?.SnapshotCommands() ?? [];
     private readonly Func<bool> _fetchBoundary, _dataBoundary, _completionBoundary, _retirementBoundary;
     private readonly Action<HardwareBufferedRead> _fetchCompleted, _dataReadCompleted;
     private readonly Action _dataStoreCompleted;

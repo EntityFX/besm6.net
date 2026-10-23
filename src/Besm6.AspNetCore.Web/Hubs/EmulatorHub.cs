@@ -22,12 +22,10 @@ public sealed class EmulatorHub(SessionRegistry sessions, ExampleCatalog example
 
     public async Task Upload(byte[] content, string fileName)
     {
-        if (!string.Equals(Path.GetExtension(fileName), ".dub", StringComparison.OrdinalIgnoreCase))
-            throw new HubException("Select a .dub file.");
+        if (Path.GetExtension(fileName).ToLowerInvariant() is not (".dub" or ".json"))
+            throw new HubException("Select a .dub job or a machine .json configuration.");
         if (content.Length is 0 or > 10_000_000) throw new HubException("File must be between 1 byte and 10 MB.");
-        var session = sessions.Get(Context.ConnectionId);
-        await File.WriteAllBytesAsync(Path.Combine(session.Directory, "job.dub"), content);
-        await Clients.Caller.SendAsync("uploaded", fileName);
+        await StoreJobAsync(content, fileName, Path.GetExtension(fileName).Equals(".json", StringComparison.OrdinalIgnoreCase));
     }
 
     public Task Command(WorkerCommand command)
@@ -40,18 +38,27 @@ public sealed class EmulatorHub(SessionRegistry sessions, ExampleCatalog example
     public async Task LoadExample(string id)
     {
         if (!examples.TryGetPath(id, out string path)) throw new HubException("Example not found.");
-        var session = sessions.Get(Context.ConnectionId);
-        await File.WriteAllBytesAsync(Path.Combine(session.Directory, "job.dub"), await File.ReadAllBytesAsync(path));
-        await Clients.Caller.SendAsync("uploaded", id);
+        await StoreJobAsync(await File.ReadAllBytesAsync(path), id, Path.GetExtension(path) == ".json");
     }
 
     public async Task UploadText(string text)
     {
         if (string.IsNullOrWhiteSpace(text) || System.Text.Encoding.UTF8.GetByteCount(text) > 1_000_000)
-            throw new HubException("Enter a .dub program up to 1 MB.");
+            throw new HubException("Enter a .dub program or JSON configuration up to 1 MB.");
+        bool json = text.TrimStart().StartsWith('{') || text.TrimStart().StartsWith('[');
+        await StoreJobAsync(System.Text.Encoding.UTF8.GetBytes(text), json ? "editor.json" : "editor.dub", json);
+    }
+
+    private async Task StoreJobAsync(byte[] content, string name, bool json)
+    {
+        ResolvedWebJob job;
+        try { job = WebJobPreset.Resolve(content, json, examples); }
+        catch (Exception ex) when (ex is System.Text.Json.JsonException or ArgumentException)
+        { throw new HubException("Invalid JSON configuration: " + ex.Message); }
         var session = sessions.Get(Context.ConnectionId);
-        await File.WriteAllTextAsync(Path.Combine(session.Directory, "job.dub"), text, new System.Text.UTF8Encoding(false));
-        await Clients.Caller.SendAsync("uploaded", "editor.dub");
+        await File.WriteAllBytesAsync(Path.Combine(session.Directory, "job.dub"), job.Content);
+        await Clients.Caller.SendAsync("jobOptions", job.Options);
+        await Clients.Caller.SendAsync("uploaded", name);
     }
 
     public async Task UploadMedia(byte[] content, string fileName)

@@ -15,7 +15,8 @@ namespace Besm6.Runtime.Machine
         {
             cfg ??= Config.Load();
             int memSize = cfg.MemorySize;
-            var machine = new MachineCore((uint)memSize);
+            var machine = new MachineCore(cfg.BufferedMemory ? MemoryModel.Buffered : MemoryModel.Dubna, (uint)memSize,
+                hostedBufferedMemory: cfg.BufferedMemory);
             machine.Cpu.MemoryWatchpointBatchingEnabled = cfg.MemoryWatchpointBatching;
             return machine;
         }

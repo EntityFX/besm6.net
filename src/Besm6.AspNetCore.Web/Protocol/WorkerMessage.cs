@@ -20,7 +20,9 @@ public sealed record WorkerCommand(
     bool ReadOnly = true,
     bool Replace = false,
     int MediaOffset = 0,
-    int MediaCount = 32);
+    int MediaCount = 32,
+    string MachineModel = "dubna",
+    bool DecodeMemory = true);
 
 public sealed record WorkerEvent(string Type, object? Data);
 
@@ -29,7 +31,7 @@ public sealed record OutputData(string Channel, string Text);
 public sealed record ErrorData(string Message, string? Stack);
 public sealed record CompletionData(bool Success, bool Stopped, bool LimitExceeded, long K, long Instructions, string? ErrorMessage);
 public sealed record RegisterData(string K, bool RightHalf, string A, string Y, string R, string C, string[] M, long Instructions, string Disassembly);
-public sealed record MemoryWord(string Address, string Hex);
+public sealed record MemoryWord(string Address, string Hex, string? Disassembly = null);
 public sealed record MemoryData(MemoryWord[] Words);
 public sealed record PlotterData(int Page, int WatanabeBytes, int CalcompBytes, int TektronixBytes);
 public sealed record StorageDeviceData(string Kind, string Unit, string Volume, bool ReadOnly, int Words);

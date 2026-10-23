@@ -22,6 +22,29 @@ namespace Besm6.Tests
         private const int KernelEnd = 0x7F70;     // 0o77560
 
         [TestMethod]
+        public void DecodedDumpUsesTheCapturedInstructionBoundary()
+        {
+            string directory = Path.Combine(Path.GetTempPath(), "besm6-decoded-dump-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directory);
+            try
+            {
+                var assembler = new Besm6.Assembler.Assembly.MadlenAssembler();
+                ulong[] words = [assembler.AssembleWord("xta 1003, atx 1004"), assembler.AssembleWord("xta 1005, atx 1004"), assembler.AssembleWord("stop, atx"), 42, 0, 99];
+                string job = Path.Combine(directory,"job.dub"), dump = Path.Combine(directory,"memory.bin");
+                File.WriteAllText(job,"*trans-main:1000\n" + string.Join('\n', words.Select(w=>"`"+Convert.ToString((long)w,8).PadLeft(16,'0'))) + "\n*end file\n");
+                int result = CliApplication.Run(["run",job,"--limit","20","--dump-mem",dump,"--dump-mem-at","2","--dump-mem-count","1024"], new StringWriter(), new StringWriter());
+                Assert.AreEqual(0,result);
+                byte[] bytes = File.ReadAllBytes(dump); Assert.AreEqual(6144,bytes.Length);
+                ulong value=bytes.Skip(516*6).Take(6).Aggregate(0UL,(word,b)=>(word<<8)|b);
+                Assert.AreEqual(42UL,value);
+                string line=File.ReadLines(dump+".disasm.txt").ElementAt(516);
+                StringAssert.Contains(line,"0000000000000052");
+                StringAssert.Contains(line,Besm6.Assembler.Disassembly.Disassembler.DisasmWord(42UL));
+            }
+            finally { Directory.Delete(directory,true); }
+        }
+
+        [TestMethod]
         public void Profile_DoesNotSuppressInRunMemorySnapshot()
         {
             string? job = FindFileInParentDirs("examples", "copy.dub");

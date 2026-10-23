@@ -103,6 +103,26 @@ public sealed class BufferedMemory
         return word.Data;
     }
 
+    /// <summary>Coherent hosted Dubna fetch. Its untyped, self-modifying code must see pending CPU stores.</summary>
+    public Word48 FetchHostedInstruction(uint physicalAddress, bool rightHalf)
+    {
+        ValidateAddress(physicalAddress);
+        int index = _instructions.Find(physicalAddress);
+        MemoryWord50 word;
+        if (index < 0)
+        {
+            word = PeekOperand(physicalAddress);
+            _instructions.Insert(new(physicalAddress, word, false));
+        }
+        else word = _instructions.Touch(index).Word;
+        if (!word.HasValidInstructionControl(rightHalf))
+            throw new MemoryControlException(physicalAddress, rightHalf ? MemoryAccessKind.InstructionRight : MemoryAccessKind.InstructionLeft);
+        return word.Data;
+    }
+
+    /// <summary>Hosted coherence only; hardware stores retain their separate instruction-buffer semantics.</summary>
+    public void InvalidateHostedInstruction(uint physicalAddress) => _instructions.Remove(physicalAddress);
+
     /// <summary>
     /// Explicit host synchronization, not an emulated interrupt or CTX instruction.
     /// Commits pending BRZ values oldest first; retains registers and their recency.

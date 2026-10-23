@@ -71,6 +71,54 @@ public sealed class WorkerTests
     private const string TwoInstructions = "*assem\natx 1234\nstop\n*end file\n";
 
     [TestMethod]
+    public async Task SupervisorRejectsDubWithActionableErrorAndCanRestartInDubna()
+    {
+        await using var f = new Fixture(); await f.StartAsync(TwoInstructions);
+        await f.Host.SendAsync(new WorkerCommand("start", Path.Combine(f.DirectoryPath, "job.dub"), "full", MachineModel: "supervisor-functional"));
+        string message = Fixture.Data(await f.UntilAsync("error", allowError: true)).GetProperty("message").GetString()!;
+        StringAssert.Contains(message, "Select Dubna");
+        StringAssert.Contains(message, ".json");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Failed");
+        await f.SendAsync("start", "full");
+        Assert.IsTrue(Fixture.Data(await f.UntilAsync("completed")).GetProperty("success").GetBoolean());
+    }
+
+    [TestMethod]
+    [DataRow("supervisor-functional", "full")]
+    [DataRow("supervisor-hardware", "full")]
+    [DataRow("supervisor-functional", "debug")]
+    [DataRow("supervisor-hardware", "debug")]
+    public async Task StandaloneOwnersExposeRealRegistersAndReachStop(string model, string mode)
+    {
+        string template = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory,"machine-template.json"));
+        await using var f = new Fixture(); await f.StartAsync(template);
+        await f.Host.SendAsync(new WorkerCommand("start",Path.Combine(f.DirectoryPath,"job.dub"),mode,InstructionLimit:10,MachineModel:model));
+        if (mode == "debug")
+        {
+            await f.UntilAsync("state",e=>Fixture.Data(e).GetProperty("status").GetString()=="Paused");
+            await f.SendAsync("step");
+            await f.UntilAsync("state",e=>Fixture.Data(e).GetProperty("status").GetString()=="Paused");
+            await f.SendAsync("resume");
+        }
+        Assert.IsTrue(Fixture.Data(await f.UntilAsync("completed")).GetProperty("success").GetBoolean());
+        await f.Host.SendAsync(new WorkerCommand("snapshot"));
+        var state=Fixture.Data(await f.UntilAsync("machineRegisters"));
+        Assert.AreEqual(model.EndsWith("hardware") ? "Hardware" : "Functional",state.GetProperty("executionModel").GetString());
+        Assert.AreEqual(model.EndsWith("hardware") ? 4 : 0,state.GetProperty("buffers").EnumerateArray().Count(b=>b.GetProperty("name").GetString()=="БРЧ"));
+    }
+
+    [TestMethod]
+    public async Task MemoryDecodeIsOnlyIncludedWhenRequested()
+    {
+        await using var f = new Fixture(); await f.StartAsync(TwoInstructions);
+        await f.SendAsync("start"); await f.UntilAsync("state",e=>Fixture.Data(e).GetProperty("status").GetString()=="Paused");
+        await f.Host.SendAsync(new WorkerCommand("snapshot",MemoryAddress:512,MemoryCount:1,DecodeMemory:true));
+        Assert.IsTrue(Fixture.Data(await f.UntilAsync("memory")).GetProperty("words")[0].GetProperty("disassembly").GetString()!.Contains("atx"));
+        await f.Host.SendAsync(new WorkerCommand("snapshot",MemoryAddress:512,MemoryCount:1,DecodeMemory:false));
+        Assert.AreEqual(JsonValueKind.Null,Fixture.Data(await f.UntilAsync("memory")).GetProperty("words")[0].GetProperty("disassembly").ValueKind);
+    }
+
+    [TestMethod]
     [DataRow("terminal")]
     [DataRow("teletype")]
     public async Task GuestInputWaitsForHostAndCanBeCancelled(string target)

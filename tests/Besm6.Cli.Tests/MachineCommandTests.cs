@@ -10,6 +10,14 @@ namespace Besm6.Tests;
 [DoNotParallelize]
 public sealed class MachineCommandTests
 {
+    [TestMethod]
+    public void DetailedHardwareStateIncludesReadRegisters()
+    {
+        var result=Run(Job(),"--execution","hardware","--machine-state");
+        Assert.AreEqual(0,result.Code,result.Error);
+        using var json=JsonDocument.Parse(result.Output);
+        Assert.AreEqual(4,json.RootElement.GetProperty("registers").GetProperty("buffers").EnumerateArray().Count(b=>b.GetProperty("name").GetString()=="БРЧ"));
+    }
     private static MachineJobConfiguration Job(string model = "functional", string speed = "max") => new()
     {
         ExecutionModel = model, Speed = speed, InstructionLimit = 10,

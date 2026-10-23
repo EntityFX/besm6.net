@@ -46,6 +46,11 @@ public sealed partial class WorkerSession
     {
         if (command.Text is null || command.Text.Length > 4096 || command.Text.IndexOfAny(['\0', '\r', '\n']) >= 0)
             throw new ArgumentException("Enter one line up to 4096 characters without NUL.");
+        if (_standalone)
+        {
+            _machine!.SupervisorIo!.ReceiveSerial(1, System.Text.Encoding.Latin1.GetBytes(CosyCodec.Utf8ToKoi7(command.Text + "\n")));
+            return SendAsync("inputAccepted", new { target = "serial:1" });
+        }
         if (_terminalInput.Reader.Count >= 64) throw new InvalidOperationException("Terminal input queue is full.");
         TeletypeDevice? device = null;
         if (command.InputTarget == "teletype")
@@ -115,6 +120,7 @@ public sealed partial class WorkerSession
 
     private void RequirePausedDevices()
     {
+        if (_standalone) throw new InvalidOperationException("Supervisor media are configured in machine.json. Hosted Storage controls are for .dub jobs.");
         if (!_terminal && _runTask is { IsCompleted: false } && _resume.IsSet)
             throw new InvalidOperationException("Pause or stop execution before inspecting or mounting media.");
     }

@@ -52,6 +52,8 @@ namespace Besm6.Runtime.Configuration
         /// </summary>
         [JsonPropertyName("memorySize")]
         public int MemorySize { get; set; } = 32768;
+        [JsonPropertyName("bufferedMemory")]
+        public bool BufferedMemory { get; set; }
 
         /// <summary>
         /// E50 067 (DATE*): использовать реальное системное время (localtime).

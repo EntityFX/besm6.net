@@ -12,10 +12,10 @@
   <main class="container-fluid py-2">
     <div class="row g-2 workspace">
       <section class="col-12 col-md-5 col-lg-4 control-panel" aria-label="Job and machine state" tabindex="0">
-        <div class="card mb-2 job-panel"><div class="card-body p-2">
-          <h2 class="h6 mb-1" id="jobHeading">Job</h2>
-          <label id="dropzone" class="dropzone d-block text-center p-1 mb-1" for="file">Drop a .dub file or browse</label>
-          <input id="file" type="file" accept=".dub" class="visually-hidden" aria-describedby="fileName" disabled>
+        <div class="card mb-2 job-panel"><div class="card-body px-2 py-1">
+          <div class="job-heading mb-1"><h2 class="h6 mb-0" id="jobHeading">Job</h2><label for="machineModel" class="visually-hidden">Machine</label><select id="machineModel" class="form-select form-select-sm"><option value="dubna">Dubna (.dub)</option><option value="buffered">Dubna + БРЗ/БРС (.dub)</option><option value="supervisor-functional">Supervisor — functional (.json)</option><option value="supervisor-hardware">Supervisor — hardware (.json)</option></select></div>
+          <label id="dropzone" class="dropzone d-block text-center p-1 mb-1" for="file">Drop .dub / .json or browse</label>
+          <input id="file" type="file" accept=".dub,.json" class="visually-hidden" aria-describedby="fileName" disabled>
           <div id="fileName" class="small text-muted mb-1">No file selected</div>
           <div class="job-options mb-1">
             <fieldset class="mode-row"><legend class="visually-hidden">Mode</legend><span class="mode-label" aria-hidden="true">Mode</span>
@@ -50,8 +50,9 @@
             <dl id="registers" class="register-grid mb-0 font-monospace" aria-label="Processor registers"></dl>
           </div></div>
           <div class="card"><div class="card-header panel-heading"><h2 class="h6 mb-0">Memory</h2><div class="input-group input-group-sm memory-jump"><input id="address" class="form-control" placeholder="Octal address" aria-label="Memory address in octal" inputmode="numeric"><button id="inspect" class="btn btn-outline-secondary" disabled>Go</button></div></div>
-            <div class="card-body p-0"><div id="disassembly" class="px-3 py-2 small border-bottom">—</div><div id="memory" class="memory-view font-monospace small p-2" role="region" aria-label="Memory words" tabindex="0"></div></div>
+            <div class="card-body p-0"><div class="d-flex align-items-center justify-content-between px-2 border-bottom"><div id="disassembly" class="py-2 small">—</div><label class="form-check small ms-2"><input id="decodeMemory" type="checkbox" class="form-check-input" checked> Decode</label></div><div id="memory" class="memory-view font-monospace small p-2" role="region" aria-label="Memory words" tabindex="0"></div></div>
           </div>
+          <details id="extendedState" class="card mt-2" open><summary class="card-header">БРЗ / БРС / БРЧ и управление</summary><div class="card-body p-2"><p id="machineStateInfo" class="small text-muted">Состояние появится после загрузки машины.</p><pre id="machineRegisters" class="device-data small font-monospace mb-0" tabindex="0" role="region" aria-label="Расширенные регистры машины"></pre></div></details>
         </section>
       </section>
       <section class="col-12 col-md-7 col-lg-8 output-panel" aria-label="Program output">
@@ -63,8 +64,9 @@
             <li class="nav-item" role="presentation"><button id="terminalTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#terminalPane" type="button" role="tab" aria-controls="terminalPane" aria-selected="false">Terminal</button></li>
             <li class="nav-item" role="presentation"><button id="storageTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#storagePane" type="button" role="tab" aria-controls="storagePane" aria-selected="false">Storage</button></li>
             <li class="nav-item" role="presentation"><button id="cardTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#cardPane" type="button" role="tab" aria-controls="cardPane" aria-selected="false">Card generator</button></li>
-            <li class="nav-item" role="presentation"><button id="examplesTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#examplesPane" type="button" role="tab" aria-controls="examplesPane" aria-selected="false">Examples</button></li>
             <li class="nav-item" role="presentation"><button id="editorTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#editorPane" type="button" role="tab" aria-controls="editorPane" aria-selected="false">Editor</button></li>
+            <li class="nav-item" role="presentation"><button id="instructionTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#instructionPane" type="button" role="tab" aria-controls="instructionPane" aria-selected="false">Instructions</button></li>
+            <li class="nav-item" role="presentation"><button id="examplesTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#examplesPane" type="button" role="tab" aria-controls="examplesPane" aria-selected="false">Examples</button></li>
           </ul>
         </div><div class="card-body p-0 tab-content">
           <div id="printPane" class="tab-pane fade show active" role="tabpanel" aria-labelledby="printTab"><pre id="printOutput" class="console mb-0" role="region" aria-label="Print output" tabindex="0"></pre></div>
@@ -91,17 +93,24 @@
           <div id="examplesPane" class="tab-pane fade" role="tabpanel" aria-labelledby="examplesTab"><div class="device-view p-2 examples-view">
             <h3 class="h6">Программы из примеров</h3><div class="example-controls mb-2"><label for="exampleFilter">Поиск</label><input id="exampleFilter" type="search" class="form-control form-control-sm" placeholder="Название или каталог"><label for="exampleSelect">Пример</label><select id="exampleSelect" class="form-select form-select-sm" disabled><option value="">Загрузка…</option></select></div>
             <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><button id="exampleLoad" class="btn btn-sm btn-outline-primary" disabled>Load into machine</button><button id="exampleRun" class="btn btn-sm btn-primary" disabled>Run example</button><button id="exampleEdit" class="btn btn-sm btn-outline-secondary" disabled>Edit copy</button><span id="exampleMessage" class="small text-muted" role="status" aria-live="polite"></span></div>
-            <p class="small text-muted mb-2">Используются режим, скорость и лимиты из Job. В Debug программа будет загружена на паузе. Для своих файлов доступна загрузка .dub.</p>
+            <p class="small text-muted mb-2">Программы .dub используют настройки Job. Готовые JSON в web-jobs задают программу, режим, скорость и галки; machines содержит образы Supervisor. JSON можно выбрать здесь, загрузить файлом или изменить в Editor. В Debug запуск начинается с паузы.</p>
             <pre id="exampleSource" class="example-source font-monospace small p-2 mb-0" tabindex="0" role="region" aria-label="Исходный текст примера">Выберите пример для просмотра.</pre>
           </div></div>
           <div id="editorPane" class="tab-pane fade" role="tabpanel" aria-labelledby="editorTab"><div class="device-view p-2 editor-view">
-            <h3 class="h6">Своё задание .dub</h3><label for="sourceText" class="form-label small">Текст программы</label><textarea id="sourceText" class="form-control form-control-sm font-monospace mb-2" rows="10" spellcheck="false" maxlength="1000000">*assem
+            <h3 class="h6">Задание .dub / машина .json</h3><label for="sourceText" class="form-label small">Текст программы или конфигурации</label><textarea id="sourceText" class="form-control form-control-sm font-monospace mb-2" rows="10" spellcheck="false" maxlength="1000000">*assem
 atx 1234
 stop
 *end file
 </textarea>
-            <div class="d-flex flex-wrap gap-2 mb-2"><button id="sourceLoad" class="btn btn-sm btn-outline-primary" disabled>Load into machine</button><button id="sourceRun" class="btn btn-sm btn-primary" disabled>Run text</button></div><p class="small text-muted">Полное задание .dub, до 1 MB. Используются режим и лимиты Job. Изменения текста не меняют уже запущенную программу.</p>
+            <div class="d-flex flex-wrap gap-2 mb-2"><button id="sourceLoad" class="btn btn-sm btn-outline-primary" disabled>Load into machine</button><button id="sourceRun" class="btn btn-sm btn-primary" disabled>Run text</button><button id="machineTemplate" class="btn btn-sm btn-outline-secondary">Machine JSON template</button></div><p class="small text-muted">Задание .dub или конфигурация supervisor .json, до 1 MB. Выберите Machine в Job. Аппаратная машина использует явные тайминги из JSON. Правка текста не меняет выполняемую программу.</p>
             <h4 class="h6">Подсветка кода</h4><pre id="sourcePreview" class="example-source font-monospace small p-2" tabindex="0" role="region" aria-label="Подсвеченный исходный код"></pre>
+          </div></div>
+          <div id="instructionPane" class="tab-pane fade" role="tabpanel" aria-labelledby="instructionTab"><div class="device-view p-2">
+            <h3 class="h6">Кодер / декодер инструкций БЭСМ-6</h3>
+            <div class="media-fields mb-2"><label for="instructionWidth">Разрядность</label><select id="instructionWidth" class="form-select form-select-sm"><option value="24">24 бита — инструкция</option><option value="48">48 бит — две инструкции</option></select><label for="instructionRadix">Число</label><select id="instructionRadix" class="form-select form-select-sm"><option value="8">OCT</option><option value="16">HEX</option><option value="10">DEC</option><option value="2">BIN</option></select><label for="instructionValue">Значение</label><input id="instructionValue" class="form-control form-control-sm font-monospace" value="00100000" maxlength="64"><label for="instructionSyntax">Формат</label><select id="instructionSyntax" class="form-select form-select-sm"><option value="autocode">Автокод</option><option value="bemsh">БЭМШ</option><option value="madlen">Madlen</option></select></div>
+            <div id="instructionBits" class="instruction-bits" aria-label="Разряды инструкции"></div><pre id="instructionDecoded" class="example-source small font-monospace p-2 mt-2" tabindex="0" role="region" aria-label="Декодированные инструкции"></pre>
+            <div class="media-fields mb-2"><label for="instructionHalf">Кодировать в</label><select id="instructionHalf" class="form-select form-select-sm"><option value="0">Левую / единственную</option><option value="1">Правую</option></select><label for="instructionOpcode">Операция</label><select id="instructionOpcode" class="form-select form-select-sm"></select><label for="instructionRegister">Модификатор (DEC)</label><input id="instructionRegister" class="form-control form-control-sm" type="number" min="0" max="15" value="0"><label for="instructionAddress">Адрес (OCT)</label><input id="instructionAddress" class="form-control form-control-sm font-monospace" value="00000"><label for="instructionText">Мнемоника</label><input id="instructionText" class="form-control form-control-sm font-monospace" maxlength="256"></div>
+            <div class="d-flex flex-wrap gap-2"><button id="instructionEncode" class="btn btn-sm btn-primary" disabled>Кодировать поля</button><button id="instructionAssemble" class="btn btn-sm btn-outline-primary" disabled>Кодировать мнемонику</button></div><p id="instructionError" class="text-danger small mt-2" role="alert"></p><p class="small text-muted">Клик по разряду переключает бит. Короткая команда: M[24–21], формат[20], расширение[19], операция[18–13], адрес[12–1]. Длинная: M[24–21], формат[20], операция[19–16], адрес[15–1]. Регистры в мнемонике — DEC, адреса — OCT.</p>
           </div></div>
           <div id="terminalPane" class="tab-pane fade" role="tabpanel" aria-labelledby="terminalTab"><div class="device-view terminal-view">
             <pre id="terminalOutput" class="console mb-0" role="region" aria-label="Terminal output" tabindex="0"></pre>
@@ -134,6 +143,7 @@ stop
   <script src="/card-view.js"></script>
   <script src="/card-generator.js"></script>
   <script src="/source-code.js"></script>
+  <script src="/instructions.js"></script>
   <script src="/examples.js"></script>
   <script src="/media.js"></script>
   <script src="/app.js"></script>

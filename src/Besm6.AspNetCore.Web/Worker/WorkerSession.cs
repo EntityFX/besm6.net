@@ -127,6 +127,7 @@ public sealed partial class WorkerSession : IDisposable
                 break;
             case "snapshot":
             case "devices":
+                _decodeMemory = command.DecodeMemory;
                 _memoryAddress = command.MemoryAddress;
                 _memoryCount = Math.Clamp(command.MemoryCount, 1, 128);
                 if (!_terminal && _resume.IsSet && _runTask is { IsCompleted: false })
@@ -140,7 +141,7 @@ public sealed partial class WorkerSession : IDisposable
 
     private void EnsureLoaded()
     {
-        if (_terminal || _loader is null) throw new InvalidOperationException("Load a new job first.");
+        if (_terminal || (_loader is null && !_standalone)) throw new InvalidOperationException("Load a new job first.");
     }
 
     private async Task ResetAsync()
@@ -160,6 +161,7 @@ public sealed partial class WorkerSession : IDisposable
         _pauseReached = null;
         _runCancellation?.Dispose();
         _runCancellation = null;
+        _standalone = false; _machineCommand = null; _standaloneStatistics = null;
         ClearInput();
         _instructions = 0;
         _stepBudget = -1;
@@ -184,6 +186,7 @@ public sealed partial class WorkerSession : IDisposable
                 Path.Combine(_directory, "job.dub"), StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("Job must be the uploaded session file.");
         if (command.Mode is not ("debug" or "full")) throw new InvalidDataException("Invalid mode.");
+        if (command.MachineModel is not ("dubna" or "buffered" or "supervisor-functional" or "supervisor-hardware")) throw new InvalidDataException("Invalid machine model.");
         if (!ExecutionSpeedNames.TryParse(command.Speed ?? "max", out var speed))
             throw new InvalidDataException("Invalid speed.");
         if (command.InstructionLimit is < 1 or > 1_000_000_000 || command.WallClockLimitMs is < 0 or > 3_600_000)
@@ -197,7 +200,10 @@ public sealed partial class WorkerSession : IDisposable
         _runTask = null;
         _pauseReached = null;
         _terminal = false;
+        _stepObserver = null;
         _debug = command.Mode == "debug";
+        _standalone = false;
+        _decodeMemory = command.DecodeMemory;
         _jobPath = command.JobPath;
         _instructions = 0;
         _stepBudget = -1;
@@ -208,6 +214,7 @@ public sealed partial class WorkerSession : IDisposable
         await SendStateAsync("Loading");
         try
         {
+            if (command.MachineModel.StartsWith("supervisor-", StringComparison.Ordinal)) { await StartStandaloneAsync(command); return; }
             var cfg = Config.Load(Path.Combine(AppContext.BaseDirectory, "besm6.json"));
             cfg.Tapes = Path.Combine(AppContext.BaseDirectory, "tapes");
             cfg.Disk = Path.Combine(_directory, "disk.bin");
@@ -215,6 +222,7 @@ public sealed partial class WorkerSession : IDisposable
             cfg.DefaultLimit = command.InstructionLimit;
             cfg.Speed = speed;
             cfg.GuestClock = command.GuestClock;
+            cfg.BufferedMemory = command.MachineModel == "buffered";
             var assets = MachineFactory.ValidateRuntimeAssets(cfg);
             _machine = MachineFactory.CreateMachine(cfg);
             _loader = MachineFactory.CreateLoader(cfg, _machine, assets);
@@ -261,7 +269,7 @@ public sealed partial class WorkerSession : IDisposable
         {
             try
             {
-                var result = _debug ? _loader!.RunLoaded() : _loader!.RunScript(_jobPath!);
+                var result = _standalone ? RunStandalone() : _debug ? _loader!.RunLoaded() : _loader!.RunScript(_jobPath!);
                 _instructions = result.Instructions;
                 await CompleteAsync(result);
             }
@@ -310,7 +318,8 @@ public sealed partial class WorkerSession : IDisposable
         _terminal = true;
         Interlocked.Exchange(ref _snapshotRequested, 0);
         await SendSnapshotAsync();
-        if (_loader!.CollectStatistics) await SendAsync("statistics", _loader.Statistics);
+        if (_standalone && _machineCommand!.Statistics) await SendAsync("statistics", _standaloneStatistics);
+        else if (_loader?.CollectStatistics == true) await SendAsync("statistics", _loader.Statistics);
         await SendAsync("completed", new CompletionData(result.Success, result.Stopped,
             result.LimitExceeded, result.K, _instructions, result.ErrorMessage
                 ?? (result.LimitExceeded ? "Instruction or wall clock limit reached." : null)));
@@ -338,9 +347,10 @@ public sealed partial class WorkerSession : IDisposable
                 int address = _memoryAddress < 0 ? Math.Max(0, (int)cpu.K - 8) : _memoryAddress;
                 address = Math.Clamp(address, 0, _machine.Memory.Size - 1);
                 var words = Enumerable.Range(address, Math.Min(_memoryCount, _machine.Memory.Size - address))
-                    .Select(x => new MemoryWord(Convert.ToString(x, 8), _machine.Memory.Read((uint)x).Value.ToString("X12")))
+                    .Select(x => { ulong word = _machine.Memory.Read((uint)x).Value; return new MemoryWord(Convert.ToString(x, 8), word.ToString("X12"), _decodeMemory ? Disassembler.DisasmWord(word) : null); })
                     .ToArray();
                 await SendAsync("memory", new MemoryData(words));
+                await SendAsync("machineRegisters", _machine.InspectRegisters());
             }
             await SendDeviceOutputAsync();
         }
@@ -382,6 +392,7 @@ public sealed partial class WorkerSession : IDisposable
                 .Select(x => new FileInfo(x)).Select(x => new SessionFileData(x.Name, x.Length)).ToArray();
             await SendAsync("storage", new StorageData(mounts, files));
         }
+        else await SendAsync("storage", new StorageData([], []));
     }
 
     private async Task SendOutputChunksAsync(string channel, string text)
