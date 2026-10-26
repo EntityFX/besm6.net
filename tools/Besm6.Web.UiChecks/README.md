@@ -2,20 +2,37 @@
 
 Запускайте команды из корня репозитория. Нужны .NET 8+ и Chromium для Playwright.
 
-В одном терминале запустите локальное приложение:
+По умолчанию проверки открывают лендинг на `http://127.0.0.1:8080/` и консоль
+на `/simulator/` через nginx. Запустите Compose:
+
+```powershell
+docker compose up --build -d
+```
+
+Для локальной разработки без nginx вместо Compose запустите приложение:
 
 ```powershell
 dotnet run --project src/Besm6.AspNetCore.Web -c Release --urls http://127.0.0.1:5186
 ```
 
-В другом установите браузер и выполните проверки:
+При таком прямом запуске задайте адреса в терминале проверок:
 
 ```powershell
-dotnet build tools/Besm6.Web.UiChecks
+$env:BESM6_WEB_URL = 'http://127.0.0.1:5186'
+$env:BESM6_WEB_SIMULATOR_URL = 'http://127.0.0.1:5186/'
+```
+
+С `BESM6_WEB_SIMULATOR_URL` полный прогон пропускает лендинг. Перед возвращением
+к Compose удалите эту переменную: `Remove-Item Env:BESM6_WEB_SIMULATOR_URL`.
+
+Установите браузер и выполните проверки:
+
+```powershell
+dotnet build tools/Besm6.Web.UiChecks -c Release
 dotnet build src/Besm6.Cli -c Release
-pwsh tools/Besm6.Web.UiChecks/bin/Debug/net8.0/playwright.ps1 install chromium
+pwsh tools/Besm6.Web.UiChecks/bin/Release/net8.0/playwright.ps1 install chromium
 $env:BESM6_WEB_BUILD_CONFIGURATION = 'Release'
-dotnet run --project tools/Besm6.Web.UiChecks
+dotnet run --project tools/Besm6.Web.UiChecks -c Release --no-build
 ```
 
 Проверяются загрузка `.dub` через выбор файла и drag & drop, границы размера файла, отладка, пауза и остановка, полный запуск, восстановление соединения, независимость нескольких машин, параллельные исходные программы, Guest Clock, обновления памяти и регистров, плоттеры, терминал, перфокарты и накопители. Проверка вёрстки использует шесть ширин от 320 до 1440 пикселей. Проверка доступности использует axe-core 4.10.3, который загружается в каталог результатов при первом запуске.
@@ -34,10 +51,28 @@ dotnet run --project tools/Besm6.Web.UiChecks
 
 `json-machine-examples` выполняет оба самостоятельных образа supervisor. `supervisor-default-template` проверяет выбор Supervisor в пустой сессии и полный запуск одним нажатием Run, с автоматической загрузкой подходящего образа. `json-preset-upload` проверяет выбор настроек из файла и текста, сохранение исходного задания и отсутствие запуска при загрузке.
 
-Результаты, вывод программ и скриншоты сохраняются в `tests-run/web-ui-checks/`. При ошибке программа возвращает ненулевой код. Приложение и проверки должны работать на одной машине, поскольку проверяется также изоляция и очистка временных каталогов сессий.
+Результаты, вывод программ и скриншоты сохраняются в `tests-run/web-ui-checks/`. При ошибке программа возвращает ненулевой код. Полный прогон требует приложения на той же машине, поскольку часть сценариев читает временные каталоги сессий и сравнивает результаты с локальным CLI.
+
+Для Compose или удалённого сервера запускайте сценарии без доступа к серверной файловой системе:
+
+```powershell
+$env:BESM6_WEB_URL = 'http://127.0.0.1:8080'
+dotnet run --project tools/Besm6.Web.UiChecks -c Release --no-build -- landing deployment-smoke languages-and-guide debug full reconnect layout accessibility
+```
+
+`landing` проверяет изображения, якоря, вёрстку от 320 до 1440 пикселей,
+перенаправление `/simulator`, переход в консоль и возврат на главную.
+`deployment-smoke` проверяет реальный WebSocket, наличие пяти лент и шаблона
+машины, выполнение встроенного Фортран-задания и независимость двух сессий.
 
 Для другого локального порта задайте `BESM6_WEB_URL`. Можно выполнить отдельные сценарии:
 
 ```powershell
-dotnet run --project tools/Besm6.Web.UiChecks -- multiple-sessions running-session-isolation live-updates-full live-updates-debug
+dotnet run --project tools/Besm6.Web.UiChecks -c Release -- multiple-sessions running-session-isolation live-updates-full live-updates-debug
 ```
+
+`languages-and-guide` проверяет порядок вкладок, быстрый старт из инструкции,
+переключение RU/EN без потери сессии, исходного текста и вывода, сохранение языка
+после перезагрузки и вёрстку обоих переводов на 320, 768 и 1440 пикселях.
+Остальные сценарии используют явную английскую локаль, чтобы их результаты
+не зависели от языка операционной системы.

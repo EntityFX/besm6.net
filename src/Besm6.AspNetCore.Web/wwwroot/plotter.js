@@ -73,7 +73,7 @@
       this.raw.textContent = data.replace(/[\x00-\x09\x0b-\x1f\x7f-\xff]/g,
         ch => `\\x${ch.charCodeAt(0).toString(16).padStart(2, '0')}`);
       this.empty.hidden = lines.length > 0;
-      this.empty.textContent = data.length ? 'Device data received; no drawable lines yet.' : 'No plotter output yet.';
+      Besm6I18n.text(this.empty, data.length ? 'Device data received; no drawable lines yet.' : 'No plotter output yet.');
       const { canvas } = this, context = canvas.getContext('2d');
       context.fillStyle = '#ffffff'; context.fillRect(0, 0, canvas.width, canvas.height);
       canvas.dataset.segments = String(lines.length);

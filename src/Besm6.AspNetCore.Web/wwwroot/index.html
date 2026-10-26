@@ -4,16 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BESM-6 Console</title>
-  <link rel="stylesheet" href="/lib/bootstrap/bootstrap.min.css">
-  <link rel="stylesheet" href="/site.css">
+  <link rel="stylesheet" href="lib/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="site.css">
 </head>
 <body>
-  <nav class="navbar navbar-dark bg-dark px-3"><span class="navbar-brand mb-0 h1">BESM-6 Console</span><span class="small text-light" id="connection">Connecting…</span></nav>
+  <nav class="navbar navbar-dark bg-dark px-3" aria-label="Main navigation"><span class="navbar-brand mb-0 h1">BESM-6 Console</span><a class="small text-light me-3" href="/">About BESM-6</a><div class="language-picker"><label for="languageSelect" class="visually-hidden">Language</label><select id="languageSelect" class="form-select form-select-sm" aria-label="Language"><option value="ru" lang="ru">Русский</option><option value="en" lang="en">English</option></select></div><span class="small text-light" id="connection">Connecting…</span></nav>
   <main class="container-fluid py-2">
     <div class="row g-2 workspace">
       <section class="col-12 col-md-5 col-lg-4 control-panel" aria-label="Job and machine state" tabindex="0">
         <div class="card mb-2 job-panel"><div class="card-body px-2 py-1">
-          <div class="job-heading mb-1"><h2 class="h6 mb-0" id="jobHeading">Job</h2><label for="machineModel" class="visually-hidden">Machine</label><select id="machineModel" class="form-select form-select-sm"><option value="dubna">Dubna (.dub)</option><option value="buffered">Dubna + БРЗ/БРС (.dub)</option><option value="supervisor-functional">Supervisor — functional (.json)</option><option value="supervisor-hardware">Supervisor — hardware (.json)</option></select></div>
+          <div class="job-heading mb-1"><h2 class="h6 mb-0" id="jobHeading">Job</h2><label for="machineModel" class="visually-hidden">Machine</label><select id="machineModel" class="form-select form-select-sm"><option value="dubna">Dubna (.dub)</option><option value="buffered">Dubna + write/instruction buffers (.dub)</option><option value="supervisor-functional">Supervisor — functional (.json)</option><option value="supervisor-hardware">Supervisor — hardware (.json)</option></select></div>
           <label id="dropzone" class="dropzone d-block text-center p-1 mb-1" for="file">Drop .dub / .json or browse</label>
           <input id="file" type="file" accept=".dub,.json" class="visually-hidden" aria-describedby="fileName" disabled>
           <div id="fileName" class="small text-muted mb-1">No file selected</div>
@@ -52,24 +52,63 @@
           <div class="card"><div class="card-header panel-heading"><h2 class="h6 mb-0">Memory</h2><div class="input-group input-group-sm memory-jump"><input id="address" class="form-control" placeholder="Octal address" aria-label="Memory address in octal" inputmode="numeric"><button id="inspect" class="btn btn-outline-secondary" disabled>Go</button></div></div>
             <div class="card-body p-0"><div class="d-flex align-items-center justify-content-between px-2 border-bottom"><div id="disassembly" class="py-2 small">—</div><label class="form-check small ms-2"><input id="decodeMemory" type="checkbox" class="form-check-input" checked> Decode</label></div><div id="memory" class="memory-view font-monospace small p-2" role="region" aria-label="Memory words" tabindex="0"></div></div>
           </div>
-          <details id="extendedState" class="card mt-2" open><summary class="card-header">БРЗ / БРС / БРЧ и управление</summary><div class="card-body p-2"><p id="machineStateInfo" class="small text-muted">Состояние появится после загрузки машины.</p><pre id="machineRegisters" class="device-data small font-monospace mb-0" tabindex="0" role="region" aria-label="Расширенные регистры машины"></pre></div></details>
+          <details id="extendedState" class="card mt-2" open><summary class="card-header">Write / instruction / read buffers and control</summary><div class="card-body p-2"><p id="machineStateInfo" class="small text-muted">State appears after loading a machine.</p><pre id="machineRegisters" class="device-data small font-monospace mb-0" tabindex="0" role="region" aria-label="Extended machine registers"></pre></div></details>
         </section>
       </section>
       <section class="col-12 col-md-7 col-lg-8 output-panel" aria-label="Program output">
         <div class="card output-card"><div class="card-header">
           <ul class="nav nav-tabs card-header-tabs" role="tablist" aria-label="Devices">
-            <li class="nav-item" role="presentation"><button id="printTab" class="nav-link active" data-bs-toggle="tab" data-bs-target="#printPane" type="button" role="tab" aria-controls="printPane" aria-selected="true">Printer</button></li>
+            <li class="nav-item" role="presentation"><button id="manualTab" class="nav-link active" data-bs-toggle="tab" data-bs-target="#manualPane" type="button" role="tab" aria-controls="manualPane" aria-selected="true">User guide</button></li>
+            <li class="nav-item" role="presentation"><button id="examplesTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#examplesPane" type="button" role="tab" aria-controls="examplesPane" aria-selected="false">Examples</button></li>
+            <li class="nav-item" role="presentation"><button id="printTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#printPane" type="button" role="tab" aria-controls="printPane" aria-selected="false">Printer</button></li>
             <li class="nav-item" role="presentation"><button id="punchTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#punchPane" type="button" role="tab" aria-controls="punchPane" aria-selected="false">Punch cards</button></li>
             <li class="nav-item" role="presentation"><button id="plotterTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#plotterPane" type="button" role="tab" aria-controls="plotterPane" aria-selected="false">Plotter</button></li>
             <li class="nav-item" role="presentation"><button id="terminalTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#terminalPane" type="button" role="tab" aria-controls="terminalPane" aria-selected="false">Terminal</button></li>
             <li class="nav-item" role="presentation"><button id="storageTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#storagePane" type="button" role="tab" aria-controls="storagePane" aria-selected="false">Storage</button></li>
             <li class="nav-item" role="presentation"><button id="cardTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#cardPane" type="button" role="tab" aria-controls="cardPane" aria-selected="false">Card generator</button></li>
             <li class="nav-item" role="presentation"><button id="editorTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#editorPane" type="button" role="tab" aria-controls="editorPane" aria-selected="false">Editor</button></li>
-            <li class="nav-item" role="presentation"><button id="instructionTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#instructionPane" type="button" role="tab" aria-controls="instructionPane" aria-selected="false">Instructions</button></li>
-            <li class="nav-item" role="presentation"><button id="examplesTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#examplesPane" type="button" role="tab" aria-controls="examplesPane" aria-selected="false">Examples</button></li>
+            <li class="nav-item" role="presentation"><button id="instructionTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#instructionPane" type="button" role="tab" aria-controls="instructionPane" aria-selected="false">Instruction codec</button></li>
           </ul>
         </div><div class="card-body p-0 tab-content">
-          <div id="printPane" class="tab-pane fade show active" role="tabpanel" aria-labelledby="printTab"><pre id="printOutput" class="console mb-0" role="region" aria-label="Print output" tabindex="0"></pre></div>
+          <div id="manualPane" class="tab-pane fade show active" role="tabpanel" aria-labelledby="manualTab"><div class="device-view user-guide p-3">
+            <section data-language="ru" lang="ru" hidden>
+              <h3>Инструкция пользователя</h3>
+              <p>Веб-консоль запускает программы БЭСМ-6 на сервере. Для каждого подключения создаётся отдельная машина; устанавливать симулятор на свой компьютер не нужно.</p>
+              <h4>Первый запуск</h4>
+              <ol><li>Дождитесь надписи «Подключено» в верхней панели.</li><li>Откройте <button type="button" class="btn btn-sm btn-outline-primary" data-show-tab="examplesTab">Примеры</button>, найдите <code>fortran.dub</code> и нажмите «Загрузить в машину».</li><li>Выберите «Полный запуск» и нажмите «Пуск». Результат программы смотрите во вкладке «Печать».</li></ol>
+              <h4>Своя программа</h4>
+              <p>Перетащите файл <code>.dub</code> в область задания или выберите его с диска. Лимит файла — 10 MB. Во вкладке «Редактор» можно изменить копию примера или ввести программу (до 1 MB), затем загрузить её в машину. Правка текста не меняет уже загруженную программу.</p>
+              <h4>Режимы машины и скорость</h4>
+              <p>Для Фортрана, Алгола и ассемблерных заданий <code>.dub</code> выберите Dubna. Для Supervisor нужна конфигурация машины <code>.json</code>; шаблон доступен в редакторе. Максимальная скорость предназначена для быстрого запуска, историческая использует модель времени БЭСМ-6, виртуальная — таймер хоста. Лимит времени 0 означает отсутствие ограничения.</p>
+              <h4>Отладка</h4>
+              <p>В режиме «Отладка» запуск останавливается на паузе. «Шаг» выполняет одну команду, «Продолжить» возобновляет выполнение, «Пауза» приостанавливает его. Регистры и память показаны слева. OCT, DEC и HEX переключают систему счисления; адрес вводится в выбранной системе. Автообновление показывает состояние во время работы, но может замедлять исполнение.</p>
+              <h4>Результаты и устройства</h4>
+              <p>«Печать» показывает листинг и результаты. Во вкладках «Перфокарты» и «Плоттер» доступны вывод соответствующих устройств. Если программа ждёт ввод, откроется «Терминал»: введите строку и отправьте её. «Накопители» позволяют читать и подключать образы при остановленной машине; встроенные ленты уже включены в поставку. «Кодер команд» преобразует 24- и 48-битные значения и мнемоники.</p>
+              <h4>Остановка и сессия</h4>
+              <p>«Остановить» прекращает выполнение, «Сброс» очищает машину и её вывод. При разрыве соединения сессия и загруженные файлы теряются: после подключения загрузите задание заново. Для параллельных запусков откройте отдельные вкладки браузера.</p>
+              <h4>Язык интерфейса</h4>
+              <p>Русский и английский переключаются в верхней панели. Выбор сохраняется в этом браузере. Язык интерфейса не изменяет исходный код, мнемоники и вывод гостевой программы.</p>
+            </section>
+            <section data-language="en" lang="en">
+              <h3>User guide</h3>
+              <p>The web console runs BESM-6 programs on the server. Each connection gets its own machine; no simulator installation is needed on your computer.</p>
+              <h4>First run</h4>
+              <ol><li>Wait for Connected in the top bar.</li><li>Open <button type="button" class="btn btn-sm btn-outline-primary" data-show-tab="examplesTab">Examples</button>, select <code>fortran.dub</code> and click Load into machine.</li><li>Select Full run and click Run. Open Printer to see the program output.</li></ol>
+              <h4>Your own program</h4>
+              <p>Drop a <code>.dub</code> file onto the job area or browse for it (up to 10 MB). In Editor you can edit a copy of an example or enter a program (up to 1 MB), then load it into the machine. Editing does not change the program already loaded.</p>
+              <h4>Machine models and speed</h4>
+              <p>Choose Dubna for Fortran, Algol and assembly <code>.dub</code> jobs. Supervisor needs a <code>.json</code> machine configuration; a template is available in Editor. Maximum runs as fast as possible, Original uses the BESM-6 timing model, and Virtual uses the host clock. A time limit of 0 means unlimited.</p>
+              <h4>Debugging</h4>
+              <p>Debug mode starts paused. Step executes one instruction, Resume continues, and Pause suspends execution. Registers and memory are on the left. OCT, DEC and HEX change the number base; enter addresses in the selected base. Auto-refresh updates state during execution and can reduce performance.</p>
+              <h4>Output and devices</h4>
+              <p>Printer shows listings and results. Punch cards and Plotter show device output. When a program requests input, Terminal opens: enter a line and send it. Storage lets you read and mount images while the machine is stopped; built-in tapes are included. Instruction codec converts 24- and 48-bit values and mnemonics.</p>
+              <h4>Stopping and sessions</h4>
+              <p>Stop ends execution; Reset clears the machine and its output. Disconnecting loses the session and uploaded files: load the job again after reconnecting. Use separate browser tabs for parallel runs.</p>
+              <h4>Interface language</h4>
+              <p>Switch between Russian and English in the top bar. Your selection is saved in this browser. It does not change source code, mnemonics or guest program output.</p>
+            </section>
+          </div></div>
+          <div id="printPane" class="tab-pane fade" role="tabpanel" aria-labelledby="printTab"><pre id="printOutput" class="console mb-0" role="region" aria-label="Print output" tabindex="0"></pre></div>
           <div id="punchPane" class="tab-pane fade" role="tabpanel" aria-labelledby="punchTab"><div class="device-view punch-device-view">
             <div class="d-flex align-items-center flex-wrap gap-2 p-2"><label for="punchFormat">Format</label><select id="punchFormat" class="form-select form-select-sm card-select"><option value="braille">Braille</option><option value="ascii">ASCII</option><option value="grid">Grid</option><option value="card">Card</option></select><span id="punchCount" class="small text-muted">0 cards</span></div>
             <pre id="punchOutput" class="console punch-braille mb-0" role="region" aria-label="Punch card output" tabindex="0"></pre><div id="punchVisual" class="card-preview p-2" hidden></div>
@@ -81,46 +120,46 @@
             <details class="mt-2"><summary>Device data</summary><pre id="plotterRaw" class="device-data small mt-2" tabindex="0" role="region" aria-label="Raw plotter data"></pre></details>
           </div></div>
           <div id="cardPane" class="tab-pane fade" role="tabpanel" aria-labelledby="cardTab"><div class="device-view p-2 card-generator">
-            <h3 class="h6">Генератор перфокарт БЭСМ-6</h3>
-            <div class="d-flex align-items-center flex-wrap gap-2 mb-2"><label for="cardEncoding">Кодировка</label><select id="cardEncoding" class="form-select form-select-sm card-select"><option value="ibm">IBM — по колонкам</option><option value="upp">УПП-IBM — по строкам</option></select><span id="cardCapacity" class="small text-muted">80 символов</span></div>
-            <label for="cardText" class="form-label small mb-1">Текст карты</label><textarea id="cardText" class="form-control form-control-sm font-monospace mb-2" rows="2" spellcheck="false" aria-describedby="cardHelp cardMessage" disabled></textarea>
-            <div id="cardSymbols" class="card-symbols mb-2" role="group" aria-label="Панель символов"></div>
-            <div class="d-flex align-items-center flex-wrap gap-2 mb-2"><label for="cardRow">Ряд</label><select id="cardRow" class="form-select form-select-sm card-select"></select><label for="cardColumn">Колонка</label><input id="cardColumn" class="form-control form-control-sm card-column" type="number" min="1" max="80" value="1"><button id="cardToggle" class="btn btn-sm btn-outline-secondary" disabled>Пробить / закрыть</button><button id="cardClear" class="btn btn-sm btn-outline-secondary" disabled>Очистить</button><button id="cardSvg" class="btn btn-sm btn-outline-primary" disabled>SVG</button><button id="cardPng" class="btn btn-sm btn-outline-primary" disabled>PNG · 600 dpi</button></div>
-            <p id="cardHelp" class="small text-muted mb-1">Клик — изменить отверстие. Стрелки — выбрать ячейку, пробел — пробить. УПП: 10 символов в ряду, нечётность. Совпадающие латинские и кириллические буквы имеют общий код.</p>
-            <p id="cardMessage" class="small mb-2" role="status" aria-live="polite">Загрузка таблиц кодирования…</p>
-            <div id="cardPreview" class="card-preview"></div><p class="small text-muted mt-2 mb-0">187.325 × 82.55 мм · 80 × 12 · отверстие 1.397 × 3.175 мм. SVG: печать 100%, без подгонки к странице.</p>
+            <h3 class="h6">BESM-6 punch card generator</h3>
+            <div class="d-flex align-items-center flex-wrap gap-2 mb-2"><label for="cardEncoding">Encoding</label><select id="cardEncoding" class="form-select form-select-sm card-select"><option value="ibm">IBM — by columns</option><option value="upp">UPP-IBM — by rows</option></select><span id="cardCapacity" class="small text-muted">80 символов</span></div>
+            <label for="cardText" class="form-label small mb-1">Card text</label><textarea id="cardText" class="form-control form-control-sm font-monospace mb-2" rows="2" spellcheck="false" aria-describedby="cardHelp cardMessage" disabled></textarea>
+            <div id="cardSymbols" class="card-symbols mb-2" role="group" aria-label="Symbol palette"></div>
+            <div class="d-flex align-items-center flex-wrap gap-2 mb-2"><label for="cardRow">Row</label><select id="cardRow" class="form-select form-select-sm card-select"></select><label for="cardColumn">Column</label><input id="cardColumn" class="form-control form-control-sm card-column" type="number" min="1" max="80" value="1"><button id="cardToggle" class="btn btn-sm btn-outline-secondary" disabled>Punch / close</button><button id="cardClear" class="btn btn-sm btn-outline-secondary" disabled>Clear</button><button id="cardSvg" class="btn btn-sm btn-outline-primary" disabled>SVG</button><button id="cardPng" class="btn btn-sm btn-outline-primary" disabled>PNG · 600 dpi</button></div>
+            <p id="cardHelp" class="small text-muted mb-1">Click to toggle a hole. Arrows select a cell; Space punches it. UPP: 10 characters per row, odd parity. Matching Latin and Cyrillic letters share a code.</p>
+            <p id="cardMessage" class="small mb-2" role="status" aria-live="polite">Loading code tables…</p>
+            <div id="cardPreview" class="card-preview"></div><p class="small text-muted mt-2 mb-0">187.325 × 82.55 mm · 80 × 12 · hole 1.397 × 3.175 mm. SVG: print at 100%, without fit to page.</p>
           </div></div>
           <div id="examplesPane" class="tab-pane fade" role="tabpanel" aria-labelledby="examplesTab"><div class="device-view p-2 examples-view">
-            <h3 class="h6">Программы из примеров</h3><div class="example-controls mb-2"><label for="exampleFilter">Поиск</label><input id="exampleFilter" type="search" class="form-control form-control-sm" placeholder="Название или каталог"><label for="exampleSelect">Пример</label><select id="exampleSelect" class="form-select form-select-sm" disabled><option value="">Загрузка…</option></select></div>
+            <h3 class="h6">Programs from the example catalog</h3><div class="example-controls mb-2"><label for="exampleFilter">Search</label><input id="exampleFilter" type="search" class="form-control form-control-sm" placeholder="Name or directory"><label for="exampleSelect">Example</label><select id="exampleSelect" class="form-select form-select-sm" disabled><option value="">Loading…</option></select></div>
             <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><button id="exampleLoad" class="btn btn-sm btn-outline-primary" disabled>Load into machine</button><button id="exampleRun" class="btn btn-sm btn-primary" disabled>Run example</button><button id="exampleEdit" class="btn btn-sm btn-outline-secondary" disabled>Edit copy</button><span id="exampleMessage" class="small text-muted" role="status" aria-live="polite"></span></div>
-            <p class="small text-muted mb-2">Программы .dub используют настройки Job. Готовые JSON в web-jobs задают программу, режим, скорость и галки; machines содержит образы Supervisor. JSON можно выбрать здесь, загрузить файлом или изменить в Editor. В Debug запуск начинается с паузы.</p>
-            <pre id="exampleSource" class="example-source font-monospace small p-2 mb-0" tabindex="0" role="region" aria-label="Исходный текст примера">Выберите пример для просмотра.</pre>
+            <p class="small text-muted mb-2">.dub programs use the Job settings. JSON presets in web-jobs set the program, mode, speed and toggles; machines contains Supervisor images. Select JSON here, upload a file, or edit it in Editor. Debug starts paused.</p>
+            <pre id="exampleSource" class="example-source font-monospace small p-2 mb-0" tabindex="0" role="region" aria-label="Example source">Выберите пример для просмотра.</pre>
           </div></div>
           <div id="editorPane" class="tab-pane fade" role="tabpanel" aria-labelledby="editorTab"><div class="device-view p-2 editor-view">
-            <h3 class="h6">Задание .dub / машина .json</h3><label for="sourceText" class="form-label small">Текст программы или конфигурации</label><textarea id="sourceText" class="form-control form-control-sm font-monospace mb-2" rows="10" spellcheck="false" maxlength="1000000">*assem
+            <h3 class="h6">.dub job / .json machine</h3><label for="sourceText" class="form-label small">Program or configuration text</label><textarea id="sourceText" class="form-control form-control-sm font-monospace mb-2" rows="10" spellcheck="false" maxlength="1000000">*assem
 atx 1234
 stop
 *end file
 </textarea>
-            <div class="d-flex flex-wrap gap-2 mb-2"><button id="sourceLoad" class="btn btn-sm btn-outline-primary" disabled>Load into machine</button><button id="sourceRun" class="btn btn-sm btn-primary" disabled>Run text</button><button id="machineTemplate" class="btn btn-sm btn-outline-secondary">Machine JSON template</button></div><p class="small text-muted">Задание .dub или конфигурация supervisor .json, до 1 MB. Выберите Machine в Job. Аппаратная машина использует явные тайминги из JSON. Правка текста не меняет выполняемую программу.</p>
-            <h4 class="h6">Подсветка кода</h4><pre id="sourcePreview" class="example-source font-monospace small p-2" tabindex="0" role="region" aria-label="Подсвеченный исходный код"></pre>
+            <div class="d-flex flex-wrap gap-2 mb-2"><button id="sourceLoad" class="btn btn-sm btn-outline-primary" disabled>Load into machine</button><button id="sourceRun" class="btn btn-sm btn-primary" disabled>Run text</button><button id="machineTemplate" class="btn btn-sm btn-outline-secondary">Machine JSON template</button></div><p class="small text-muted">.dub job or supervisor .json configuration, up to 1 MB. Choose Machine in Job. Hardware mode uses explicit timings from JSON. Editing does not change the running program.</p>
+            <h4 class="h6">Syntax highlighting</h4><pre id="sourcePreview" class="example-source font-monospace small p-2" tabindex="0" role="region" aria-label="Highlighted source code"></pre>
           </div></div>
           <div id="instructionPane" class="tab-pane fade" role="tabpanel" aria-labelledby="instructionTab"><div class="device-view p-2">
-            <h3 class="h6">Кодер / декодер инструкций БЭСМ-6</h3>
-            <div class="media-fields mb-2"><label for="instructionWidth">Разрядность</label><select id="instructionWidth" class="form-select form-select-sm"><option value="24">24 бита — инструкция</option><option value="48">48 бит — две инструкции</option></select><label for="instructionRadix">Число</label><select id="instructionRadix" class="form-select form-select-sm"><option value="8">OCT</option><option value="16">HEX</option><option value="10">DEC</option><option value="2">BIN</option></select><label for="instructionValue">Значение</label><input id="instructionValue" class="form-control form-control-sm font-monospace" value="00100000" maxlength="64"><label for="instructionSyntax">Формат</label><select id="instructionSyntax" class="form-select form-select-sm"><option value="autocode">Автокод</option><option value="bemsh">БЭМШ</option><option value="madlen">Madlen</option></select></div>
-            <div id="instructionBits" class="instruction-bits" aria-label="Разряды инструкции"></div><pre id="instructionDecoded" class="example-source small font-monospace p-2 mt-2" tabindex="0" role="region" aria-label="Декодированные инструкции"></pre>
-            <div class="media-fields mb-2"><label for="instructionHalf">Кодировать в</label><select id="instructionHalf" class="form-select form-select-sm"><option value="0">Левую / единственную</option><option value="1">Правую</option></select><label for="instructionOpcode">Операция</label><select id="instructionOpcode" class="form-select form-select-sm"></select><label for="instructionRegister">Модификатор (DEC)</label><input id="instructionRegister" class="form-control form-control-sm" type="number" min="0" max="15" value="0"><label for="instructionAddress">Адрес (OCT)</label><input id="instructionAddress" class="form-control form-control-sm font-monospace" value="00000"><label for="instructionText">Мнемоника</label><input id="instructionText" class="form-control form-control-sm font-monospace" maxlength="256"></div>
-            <div class="d-flex flex-wrap gap-2"><button id="instructionEncode" class="btn btn-sm btn-primary" disabled>Кодировать поля</button><button id="instructionAssemble" class="btn btn-sm btn-outline-primary" disabled>Кодировать мнемонику</button></div><p id="instructionError" class="text-danger small mt-2" role="alert"></p><p class="small text-muted">Клик по разряду переключает бит. Короткая команда: M[24–21], формат[20], расширение[19], операция[18–13], адрес[12–1]. Длинная: M[24–21], формат[20], операция[19–16], адрес[15–1]. Регистры в мнемонике — DEC, адреса — OCT.</p>
+            <h3 class="h6">BESM-6 instruction encoder / decoder</h3>
+            <div class="media-fields mb-2"><label for="instructionWidth">Bit width</label><select id="instructionWidth" class="form-select form-select-sm"><option value="24">24 bits — one instruction</option><option value="48">48 bits — two instructions</option></select><label for="instructionRadix">Number</label><select id="instructionRadix" class="form-select form-select-sm"><option value="8">OCT</option><option value="16">HEX</option><option value="10">DEC</option><option value="2">BIN</option></select><label for="instructionValue">Value</label><input id="instructionValue" class="form-control form-control-sm font-monospace" value="00100000" maxlength="64"><label for="instructionSyntax">Format</label><select id="instructionSyntax" class="form-select form-select-sm"><option value="autocode">Autocode</option><option value="bemsh">BEMSH</option><option value="madlen">Madlen</option></select></div>
+            <div id="instructionBits" class="instruction-bits" aria-label="Instruction bits"></div><pre id="instructionDecoded" class="example-source small font-monospace p-2 mt-2" tabindex="0" role="region" aria-label="Decoded instructions"></pre>
+            <div class="media-fields mb-2"><label for="instructionHalf">Encode into</label><select id="instructionHalf" class="form-select form-select-sm"><option value="0">Left / only half</option><option value="1">Right half</option></select><label for="instructionOpcode">Operation</label><select id="instructionOpcode" class="form-select form-select-sm"></select><label for="instructionRegister">Index register (DEC)</label><input id="instructionRegister" class="form-control form-control-sm" type="number" min="0" max="15" value="0"><label for="instructionAddress">Address (OCT)</label><input id="instructionAddress" class="form-control form-control-sm font-monospace" value="00000"><label for="instructionText">Mnemonic</label><input id="instructionText" class="form-control form-control-sm font-monospace" maxlength="256"></div>
+            <div class="d-flex flex-wrap gap-2"><button id="instructionEncode" class="btn btn-sm btn-primary" disabled>Encode fields</button><button id="instructionAssemble" class="btn btn-sm btn-outline-primary" disabled>Encode mnemonic</button></div><p id="instructionError" class="text-danger small mt-2" role="alert"></p><p class="small text-muted">Click a bit to toggle it. Short: M[24–21], format[20], extension[19], opcode[18–13], address[12–1]. Long: M[24–21], format[20], opcode[19–16], address[15–1]. Registers are DEC; addresses are OCT.</p>
           </div></div>
           <div id="terminalPane" class="tab-pane fade" role="tabpanel" aria-labelledby="terminalTab"><div class="device-view terminal-view">
             <pre id="terminalOutput" class="console mb-0" role="region" aria-label="Terminal output" tabindex="0"></pre>
-            <form id="terminalForm" class="p-2"><div class="d-flex flex-wrap gap-2 align-items-center mb-1"><label for="terminalTarget">Input</label><select id="terminalTarget" class="form-select form-select-sm card-select"><option value="terminal">Guest terminal (*71)</option><option value="teletype">Teletype</option></select><span id="terminalMessage" class="small" role="status" aria-live="polite"></span></div><label for="terminalInput" class="visually-hidden">Строка ввода терминала</label><div class="input-group input-group-sm"><input id="terminalInput" class="form-control font-monospace" maxlength="4096" autocomplete="off"><button id="terminalSend" type="submit" class="btn btn-primary" disabled>Send line</button></div></form>
+            <form id="terminalForm" class="p-2"><div class="d-flex flex-wrap gap-2 align-items-center mb-1"><label for="terminalTarget">Input</label><select id="terminalTarget" class="form-select form-select-sm card-select"><option value="terminal">Guest terminal (*71)</option><option value="teletype">Teletype</option></select><span id="terminalMessage" class="small" role="status" aria-live="polite"></span></div><label for="terminalInput" class="visually-hidden">Terminal input line</label><div class="input-group input-group-sm"><input id="terminalInput" class="form-control font-monospace" maxlength="4096" autocomplete="off"><button id="terminalSend" type="submit" class="btn btn-primary" disabled>Send line</button></div></form>
           </div></div>
           <div id="storagePane" class="tab-pane fade" role="tabpanel" aria-labelledby="storageTab"><div class="device-view p-2">
-            <h3 class="h6">Носители</h3><div class="media-fields mb-2">
-              <label for="mediaSource">Образ</label><select id="mediaSource" class="form-select form-select-sm"><option value="">Загрузка…</option></select>
-              <label for="mediaFile">Свой образ</label><input id="mediaFile" type="file" class="form-control form-control-sm" disabled>
-              <label for="mediaKind">Устройство</label><select id="mediaKind" class="form-select form-select-sm"><option value="Tape">Tape</option><option value="Disk">Disk</option><option value="Drum">Drum</option></select>
+            <h3 class="h6">Media</h3><div class="media-fields mb-2">
+              <label for="mediaSource">Image</label><select id="mediaSource" class="form-select form-select-sm"><option value="">Loading…</option></select>
+              <label for="mediaFile">Custom image</label><input id="mediaFile" type="file" class="form-control form-control-sm" disabled>
+              <label for="mediaKind">Unit</label><select id="mediaKind" class="form-select form-select-sm"><option value="Tape">Tape</option><option value="Disk">Disk</option><option value="Drum">Drum</option></select>
               <label for="mediaUnit">Unit (<span id="mediaUnitBase">OCT</span>)</label><input id="mediaUnit" class="form-control form-control-sm font-monospace" value="30">
               <label for="mediaVolume">Volume ID (HEX)</label><input id="mediaVolume" class="form-control form-control-sm font-monospace" value="0" maxlength="12">
             </div><div class="d-flex flex-wrap gap-3 mb-2"><label class="form-check"><input id="mediaReadOnly" type="checkbox" class="form-check-input" checked> Read only</label><label class="form-check"><input id="mediaReplace" type="checkbox" class="form-check-input"> Replace</label></div>
@@ -128,7 +167,7 @@ stop
             <p id="mediaHelp" class="small text-muted"></p>
             <div class="media-fields mb-2"><label for="mediaOffset">Word offset (<span id="mediaOffsetBase">OCT</span>)</label><input id="mediaOffset" class="form-control form-control-sm font-monospace" value="0"><label for="mediaCount">Words</label><input id="mediaCount" type="number" class="form-control form-control-sm" min="1" max="128" value="32"><label for="mediaAddress">Memory address (<span id="mediaAddressBase">OCT</span>)</label><input id="mediaAddress" class="form-control form-control-sm font-monospace" value="1000"></div>
             <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><button id="mediaRead" class="btn btn-sm btn-primary" disabled>Read / Disassemble</button><button id="mediaLoad" class="btn btn-sm btn-outline-primary" disabled>Copy to memory</button><span id="mediaMessage" class="small" role="status" aria-live="polite"></span></div>
-            <pre id="mediaDisassembly" class="example-source media-disassembly small font-monospace p-2" tabindex="0" role="region" aria-label="Дизассемблированный код носителя"></pre>
+            <pre id="mediaDisassembly" class="example-source media-disassembly small font-monospace p-2" tabindex="0" role="region" aria-label="Disassembled media code"></pre>
             <h3 class="h6">Mounted devices</h3><div class="table-responsive"><table class="table table-sm small"><thead><tr><th>Device</th><th>Unit (oct)</th><th>Words</th><th>Access</th></tr></thead><tbody id="storageMounts"></tbody></table></div><h3 class="h6">Session files</h3><div class="table-responsive"><table class="table table-sm small"><thead><tr><th>File</th><th>Bytes</th></tr></thead><tbody id="storageFiles"></tbody></table></div>
           </div></div>
         </div></div>
@@ -137,15 +176,16 @@ stop
     <div class="statusbar mt-2 p-2 rounded"><span id="status" role="status" aria-live="polite">Idle</span><span id="error" class="text-danger ms-3" role="alert"></span></div>
     <section id="statisticsPanel" class="card mt-2" aria-labelledby="statisticsHeading" hidden><div class="card-header"><h2 id="statisticsHeading" class="h6 mb-0">Statistics</h2></div><dl id="statisticsOutput" class="statistics-grid card-body p-2 mb-0"></dl></section>
   </main>
-  <script src="/lib/bootstrap/bootstrap.bundle.min.js"></script>
-  <script src="/lib/signalr/signalr.min.js"></script>
-  <script src="/plotter.js"></script>
-  <script src="/card-view.js"></script>
-  <script src="/card-generator.js"></script>
-  <script src="/source-code.js"></script>
-  <script src="/instructions.js"></script>
-  <script src="/examples.js"></script>
-  <script src="/media.js"></script>
-  <script src="/app.js"></script>
+  <script src="lib/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="lib/signalr/signalr.min.js"></script>
+  <script src="i18n.js"></script>
+  <script src="plotter.js"></script>
+  <script src="card-view.js"></script>
+  <script src="card-generator.js"></script>
+  <script src="source-code.js"></script>
+  <script src="instructions.js"></script>
+  <script src="examples.js"></script>
+  <script src="media.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

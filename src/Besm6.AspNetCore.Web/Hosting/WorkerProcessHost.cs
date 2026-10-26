@@ -25,6 +25,10 @@ public sealed class WorkerProcessHost : IAsyncDisposable
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(_options.SessionDirectory);
+        // Unix named pipes are sockets under TMPDIR. The worker has a private
+        // TMPDIR, so both processes must use the same absolute socket path.
+        string pipeName = OperatingSystem.IsWindows() ? _options.PipeName
+            : Path.Combine(Path.GetFullPath(_options.SessionDirectory), "worker.pipe");
         string assembly = typeof(WorkerProcessHost).Assembly.Location;
         string? appHost = Environment.ProcessPath;
         bool ownAppHost = appHost is not null &&
@@ -40,7 +44,7 @@ public sealed class WorkerProcessHost : IAsyncDisposable
         if (!ownAppHost) start.ArgumentList.Add(assembly);
         start.ArgumentList.Add("--worker");
         start.ArgumentList.Add("--pipe");
-        start.ArgumentList.Add(_options.PipeName);
+        start.ArgumentList.Add(pipeName);
         start.ArgumentList.Add(_options.SessionDirectory);
         start.Environment["TEMP"] = _options.SessionDirectory;
         start.Environment["TMP"] = _options.SessionDirectory;
@@ -48,7 +52,7 @@ public sealed class WorkerProcessHost : IAsyncDisposable
         _process = Process.Start(start) ?? throw new InvalidOperationException("Worker process did not start.");
         _ = _process.StandardError.BaseStream.CopyToAsync(Stream.Null);
         _ = _process.StandardOutput.BaseStream.CopyToAsync(Stream.Null);
-        _pipe = new NamedPipeClientStream(".", _options.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+        _pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(10));
         await _pipe.ConnectAsync(timeout.Token);

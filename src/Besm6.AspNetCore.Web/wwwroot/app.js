@@ -1,4 +1,5 @@
 (() => {
+  const t = Besm6I18n.t, ui = (id, value) => Besm6I18n.text(document.getElementById(id), value);
   const $ = id => document.getElementById(id);
   const connection = new signalR.HubConnectionBuilder().withUrl('/emulator').withAutomaticReconnect().build();
   const plotter = new Besm6Plotter($('plotterCanvas'), $('plotterRaw'), $('plotterEmpty'));
@@ -17,11 +18,11 @@
   let memoryAddress = -1, snapshotPending = false, snapshotStarted = 0, plotterFrame = 0;
   let plotterPage = 0;
   let numberBase = 8, lastRegisters = null, lastMemory = [], lastMounts = [];
-  let lastDetailedState = null;
+  let lastDetailedState = null, lastStatistics = null;
   const pendingOutput = new Map();
   let outputFrame = 0;
   const activeStates = new Set(['Loading', 'Running', 'WaitingInput', 'Paused', 'Pausing', 'Stepping', 'Stopping', 'Resetting']);
-  const setState = value => { state = value; $('status').textContent = value; refreshButtons(); };
+  const setState = value => { state = value; ui('status', value); refreshButtons(); };
   const refreshButtons = () => {
     const active = activeStates.has(state);
     $('run').disabled = !ready || !uploaded || uploading || active;
@@ -41,7 +42,7 @@
       .forEach(input => { input.disabled = active; });
     $('inspect').disabled = !ready || ['Loading', 'WaitingInput'].includes(state) || (!hasSnapshot && !['Running', 'Paused'].includes(state));
   };
-  const showError = e => { $('error').textContent = e?.message || String(e); };
+  const showError = e => { ui('error', e?.message || String(e)); };
   const command = async (type, more = {}) => {
     try { await connection.invoke('Command', { type, ...more }); return true; }
     catch (e) { showError(e); return false; }
@@ -67,7 +68,7 @@
   const renderPlotter = () => {
     const type = $('plotterType').value;
     plotter.render(type);
-    $('plotterInfo').textContent = `Page ${Math.max(1, plotterPage)} · ${plotter.buffers[type].length} bytes`;
+    ui('plotterInfo', `Page ${Math.max(1, plotterPage)} · ${plotter.buffers[type].length} bytes`);
   };
   const schedulePlotter = () => {
     if ($('plotterPane').classList.contains('active') && !plotterFrame)
@@ -75,7 +76,7 @@
   };
   const renderRows = (id, rows) => $(id).replaceChildren(...rows.map(values => {
     const row = document.createElement('tr');
-    row.append(...values.map(value => { const cell = document.createElement('td'); cell.textContent = value; return cell; }));
+    row.append(...values.map(value => { const cell = document.createElement('td'); cell.textContent = t(value); return cell; }));
     return row;
   }));
   const requestSnapshot = async (includeMachineState = true) => {
@@ -93,17 +94,17 @@
     $('memory').textContent = lastMemory.map(w => `${formatNumber(w.address, 8).padStart(addressWidth(), '0')}  ${formatNumber(w.hex, 16, 48)}${$('decodeMemory').checked && w.disassembly != null ? '  ' + Besm6Source.disassembly(w.disassembly, numberBase) : ''}`).join('\n');
   };
   const renderDetailedState = d => {
-    $('machineStateInfo').textContent = d ? `${d.memoryModel} / ${d.executionModel}` + (d.hardwareNanoseconds == null ? ' · БРЧ доступны в hardware' : ` · ${d.hardwareNanoseconds} ns`) : 'Состояние появится после загрузки машины.';
+    ui('machineStateInfo', d ? `${d.memoryModel} / ${d.executionModel}` + (d.hardwareNanoseconds == null ? ' · ' + t('Read buffers require hardware mode') : ` · ${d.hardwareNanoseconds} ns`) : 'Состояние появится после загрузки машины.');
     $('machineRegisters').textContent = d ? [
       ...[...d.buffers.filter(b => b.name === 'БРЧ'), ...d.buffers.filter(b => b.name !== 'БРЧ')].map(b => `${b.name}[${b.slot}] ${formatNumber(String(b.value), 10, 48)}${b.address == null ? '' : ' @' + formatNumber(String(b.address), 10, 16)}${b.active == null ? '' : ' · active=' + Number(b.active)}${b.ready == null ? '' : ' ready=' + Number(b.ready)}${b.pendingWrite == null ? '' : ' pendingWrite=' + Number(b.pendingWrite)}`),
-      ...(d.controlFlags == null ? [] : [`УУ ${formatNumber(String(d.controlFlags),10)} · прерывания ${formatNumber(String(d.interrupts),10,48)}`]),
+      ...(d.controlFlags == null ? [] : [`УУ ${formatNumber(String(d.controlFlags),10)} · ${t('interrupts')} ${formatNumber(String(d.interrupts),10,48)}`]),
       ...d.specialRegisters.map((value, i) => `M${(i + 16).toString(8)} ${formatNumber(String(value),10)}`),
       ...d.arithmeticCommands.map((value, i) => `БАК[${i}] ${formatNumber(String(value),10,24)}`),
       ...d.pageAssignment.map((value, i) => `РП[${i.toString(8)}] ${formatNumber(String(value),10)}`),
       ...(d.operandProtection == null ? [] : [`РЗ ${formatNumber(String(d.operandProtection),10,32)}`])
     ].join('\n') || 'В текущем режиме буферные регистры отсутствуют.' : '';
   };
-  const renderMounts = () => renderRows('storageMounts', lastMounts.map(m => [m.kind, formatNumber(m.unit, 8, 6), m.words.toLocaleString(), m.readOnly ? 'Read only' : 'Read / write']));
+  const renderMounts = () => renderRows('storageMounts', lastMounts.map(m => [m.kind, formatNumber(m.unit, 8, 6), m.words.toLocaleString(Besm6I18n.language), m.readOnly ? 'Read only' : 'Read / write']));
   const renderRegisters = d => {
     const fields = [['K', d ? `${formatNumber(d.k, 8)}${d.rightHalf ? ' R' : ' L'}` : '—'],
       ['A', d ? formatNumber(d.a, 16, 48) : '—'], ['Y', d ? formatNumber(d.y, 16, 48) : '—'],
@@ -116,23 +117,24 @@
       item.append(key, cell); return item;
     }));
     const count = d?.instructions ?? 0;
-    $('instructionCount').textContent = `${count} ${count === 1 ? 'instruction' : 'instructions'}`;
+    ui('instructionCount', `${count} ${count === 1 ? 'instruction' : 'instructions'}`);
     const disassembly = d ? Besm6Source.disassembly(d.disassembly, numberBase) : '';
     $('disassembly').textContent = d ? `K ${formatNumber(d.k, 8)}: ${disassembly}` : '—';
   };
   const renderStatistics = d => {
+    lastStatistics = d;
     $('statisticsPanel').hidden = !d;
     const fields = d ? [
-      ['Instructions', d.completedInstructions.toLocaleString()],
+      ['Instructions', d.completedInstructions.toLocaleString(Besm6I18n.language)],
       ['Elapsed', `${d.elapsedSeconds.toFixed(3)} s`],
       ['Throughput', `${(d.instructionsPerSecond / 1e6).toFixed(3)} MIPS`],
       ['Model time', d.modelSeconds == null ? '—' : `${d.modelSeconds.toFixed(6)} s`],
-      ['Model cycles', d.modelCycles?.toLocaleString() ?? '—'],
-      ['Allocated', `${d.allocatedBytes.toLocaleString()} bytes`],
-      ['Gen 0 collections', d.gen0Collections.toLocaleString()]] : [];
+      ['Model cycles', d.modelCycles?.toLocaleString(Besm6I18n.language) ?? '—'],
+      ['Allocated', `${d.allocatedBytes.toLocaleString(Besm6I18n.language)} bytes`],
+      ['Gen 0 collections', d.gen0Collections.toLocaleString(Besm6I18n.language)]] : [];
     $('statisticsOutput').replaceChildren(...fields.map(([label, value]) => {
       const item = document.createElement('div'), key = document.createElement('dt'), text = document.createElement('dd');
-      key.textContent = label; text.textContent = value; item.append(key, text); return item;
+      key.textContent = t(label); text.textContent = value; item.append(key, text); return item;
     }));
   };
   const clearMachine = () => {
@@ -140,7 +142,7 @@
     lastRegisters = null; lastMemory = []; lastMounts = [];
     lastDetailedState = null; renderDetailedState(null);
     pendingOutput.clear(); renderStatistics(null);
-    punch.clear(); media?.clear(); $('terminalMessage').textContent = '';
+    punch.clear(); media?.clear(); ui('terminalMessage', '');
     terminalPending = false;
     renderRegisters(null);
     $('memory').textContent = '';
@@ -150,8 +152,8 @@
     plotterPage = 0; plotter.reset(); renderPlotter();
     $('storageMounts').replaceChildren(); $('storageFiles').replaceChildren();
   };
-  connection.on('sessionReady', () => { ready = true; $('connection').textContent = 'Connected'; refreshButtons(); });
-  connection.on('uploaded', name => { uploaded = true; $('fileName').textContent = name; refreshButtons(); });
+  connection.on('sessionReady', () => { ready = true; ui('connection', 'Connected'); refreshButtons(); });
+  connection.on('uploaded', name => { uploaded = true; ui('fileName', name); refreshButtons(); });
   connection.on('jobOptions', options => {
     selectJobFormat(options.format);
     for (const [field, id] of [['machineModel','machineModel'], ['speed','speed'], ['instructionLimit','instructionLimit']])
@@ -173,10 +175,10 @@
         if (d.loadedAddress != null) { memoryAddress = d.loadedAddress; $('address').value = memoryAddress.toString(numberBase).toUpperCase(); }
         break;
       case 'inputRequest':
-        $('terminalTarget').value = 'terminal'; $('terminalMessage').textContent = 'Программа ждёт строку ввода.';
+        $('terminalTarget').value = 'terminal'; ui('terminalMessage', 'Программа ждёт строку ввода.');
         bootstrap.Tab.getOrCreateInstance($('terminalTab')).show(); $('terminalInput').focus();
         break;
-      case 'inputAccepted': terminalPending = false; $('terminalInput').value = ''; $('terminalMessage').textContent = 'Строка передана устройству.'; refreshButtons(); break;
+      case 'inputAccepted': terminalPending = false; $('terminalInput').value = ''; ui('terminalMessage', 'Строка передана устройству.'); refreshButtons(); break;
       case 'registers': {
         hasSnapshot = true;
         lastRegisters = d;
@@ -194,13 +196,13 @@
       case 'storage':
         media.storage(d);
         lastMounts = d.mounts; renderMounts();
-        renderRows('storageFiles', d.files.map(f => [f.name, f.bytes.toLocaleString()]));
+        renderRows('storageFiles', d.files.map(f => [f.name, f.bytes.toLocaleString(Besm6I18n.language)]));
         snapshotPending = false;
         break;
       case 'commandError':
         terminalPending = false; refreshButtons(); showError(d); break;
       case 'error': showError(d); break;
-      case 'reset': clearMachine(); $('error').textContent = ''; break;
+      case 'reset': clearMachine(); ui('error', ''); break;
       case 'statistics': renderStatistics(d); break;
       case 'completed':
         if (!d.success) showError({message: d.errorMessage || (d.limitExceeded ? 'Instruction or time limit reached.' : 'Execution failed.')});
@@ -211,31 +213,31 @@
     ready = false; uploaded = false;
     media.sessionLost();
     $('file').value = '';
-    $('fileName').textContent = 'Connection lost. Upload the job again after reconnecting.';
+    ui('fileName', 'Connection lost. Upload the job again after reconnecting.');
     clearMachine(); setState('Idle');
-    $('connection').textContent = 'Reconnecting…';
+    ui('connection', 'Reconnecting…');
   });
-  connection.onreconnected(() => { if (!ready) $('connection').textContent = 'Connecting session…'; });
-  connection.onclose(e => { ready = false; $('connection').textContent = 'Disconnected'; if (e) showError(e); refreshButtons(); });
+  connection.onreconnected(() => { if (!ready) ui('connection', 'Connecting session…'); });
+  connection.onclose(e => { ready = false; ui('connection', 'Disconnected'); if (e) showError(e); refreshButtons(); });
   async function upload(file) {
     if (!file || !ready || uploading || activeStates.has(state)) return;
     uploaded = false;
     refreshButtons();
     if (!/\.(dub|json)$/i.test(file.name) || file.size > 10_000_000 || !file.size) {
-      $('fileName').textContent = 'No valid job selected';
+      ui('fileName', 'No valid job selected');
       showError({message: 'Select a .dub or .json file between 1 byte and 10 MB.'}); return;
     }
     uploading = true; refreshButtons();
-    $('fileName').textContent = `Uploading ${file.name}…`;
+    ui('fileName', `Uploading ${file.name}…`);
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
       let binary = '';
       for (let i = 0; i < bytes.length; i += 8192)
         binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
       await connection.invoke('Upload', btoa(binary), file.name);
-      $('error').textContent = '';
+      ui('error', '');
     }
-    catch (e) { showError(e); $('fileName').textContent = 'Upload failed'; }
+    catch (e) { showError(e); ui('fileName', 'Upload failed'); }
     finally { uploading = false; refreshButtons(); }
   }
   $('file').addEventListener('change', e => upload(e.target.files[0]));
@@ -246,7 +248,7 @@
     try {
       await connection.invoke('LoadExample', `machines/${model}.json`);
       document.querySelector('input[name=mode][value="full"]').checked = true;
-      $('file').value = ''; $('error').textContent = '';
+      $('file').value = ''; ui('error', '');
     } catch (error) { showError(error); }
     finally { uploading = false; refreshButtons(); }
   });
@@ -258,7 +260,7 @@
     try {
       const text = $('sourceText').value;
       await connection.invoke('UploadText', text);
-      $('file').value = ''; $('error').textContent = ''; loaded = true;
+      $('file').value = ''; ui('error', ''); loaded = true;
     }
     catch (error) { showError(error); }
     finally { uploading = false; refreshButtons(); }
@@ -281,7 +283,7 @@
     let loaded = false;
     try {
       await connection.invoke('LoadExample', example);
-      $('file').value = ''; $('error').textContent = ''; loaded = true;
+      $('file').value = ''; ui('error', ''); loaded = true;
     } catch (error) { showError(error); }
     finally { uploading = false; refreshButtons(); }
     if (loaded && id === 'exampleRun') $('run').click();
@@ -310,7 +312,7 @@
     const speed = $('speed').value;
     const guestClock = $('guestClock').checked;
     const statistics = $('statistics').checked;
-    clearMachine(); $('error').textContent = '';
+    clearMachine(); ui('error', '');
     setState('Loading');
     if (!await command('start', { mode: activeMode, speed, guestClock, statistics, instructionLimit, wallClockLimitMs, machineModel: $('machineModel').value, decodeMemory: $('decodeMemory').checked })) setState('Idle');
   });
@@ -338,10 +340,10 @@
     numberBase = Number($('numberBase').value);
     if (draft && { 8: /^[0-7]+$/, 10: /^[0-9]+$/, 16: /^[0-9a-f]+$/i }[oldBase].test(draft))
       $('address').value = parseInt(draft, oldBase).toString(numberBase).toUpperCase();
-    $('address').placeholder = `Address (${({8:'OCT',10:'DEC',16:'HEX'})[numberBase]})`;
-    $('address').setAttribute('aria-label', `Memory address in ${addressName()}`);
+    $('address').placeholder = t(`Address (${({8:'OCT',10:'DEC',16:'HEX'})[numberBase]})`);
+    $('address').setAttribute('aria-label', t(`Memory address in ${addressName()}`));
     $('address').inputMode = numberBase === 16 ? 'text' : 'numeric';
-    document.querySelector('#storageMounts').closest('table').querySelectorAll('th')[1].textContent = 'Unit';
+    document.querySelector('#storageMounts').closest('table').querySelectorAll('th')[1].textContent = t('Unit');
     renderRegisters(lastRegisters); renderMemory(); renderMounts();
     renderDetailedState(lastDetailedState);
     media.setBase(numberBase);
@@ -364,6 +366,14 @@
     }
   }, 300);
   window.addEventListener('pagehide', () => clearInterval(refreshTimer));
+  window.addEventListener('languagechange', () => {
+    $('address').placeholder = t(`Address (${({8:'OCT',10:'DEC',16:'HEX'})[numberBase]})`);
+    $('address').setAttribute('aria-label', t(`Memory address in ${addressName()}`));
+    document.querySelector('#storageMounts').closest('table').querySelectorAll('th')[1].textContent = t('Unit');
+    renderRegisters(lastRegisters); renderDetailedState(lastDetailedState);
+    renderStatistics(lastStatistics); renderMounts(); renderPlotter(); punch.render();
+    media.options(); if (media.view) media.display(media.view);
+  });
   clearMachine(); refreshButtons();
   connection.start().catch(showError);
 })();

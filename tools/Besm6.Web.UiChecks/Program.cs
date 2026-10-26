@@ -10,7 +10,10 @@ var results = new List<object>();
 var errors = new List<string>();
 var layouts = new List<JsonElement>();
 int failures = 0;
-string root = Environment.GetEnvironmentVariable("BESM6_WEB_URL") ?? "http://127.0.0.1:5186";
+string root = (Environment.GetEnvironmentVariable("BESM6_WEB_URL") ?? "http://127.0.0.1:8080").TrimEnd('/');
+// An override preserves direct ASP.NET Core development without nginx.
+string? directSimulator = Environment.GetEnvironmentVariable("BESM6_WEB_SIMULATOR_URL");
+string simulatorUrl = directSimulator ?? root + "/simulator/";
 const string tiny = "*assem\natx 1234\nstop\n*end file\n";
 const string loop = "*assem\nuj 1000\n*end file\n";
 static ulong Asm(string text) => new Besm6.Assembler.Assembly.MadlenAssembler()
@@ -49,8 +52,15 @@ async Task<IPage> Open(IBrowserContext context)
       }
     };
     """);
-    await page.GotoAsync(root);
-    await page.WaitForFunctionAsync("document.getElementById('connection').textContent === 'Connected'");
+    await page.GotoAsync(simulatorUrl);
+    try { await page.WaitForFunctionAsync("document.getElementById('connection').dataset.state === 'Connected'"); }
+    catch
+    {
+        await page.ScreenshotAsync(new() { Path = Path.Combine(output, "connection-failure.png"), FullPage = true });
+        Console.WriteLine("CONNECTION " + await page.EvaluateAsync<string>("JSON.stringify({text:document.getElementById('connection').textContent,language:document.documentElement.lang,error:document.getElementById('error').textContent})"));
+        Console.WriteLine("ERRORS " + JsonSerializer.Serialize(errors));
+        throw;
+    }
     return page;
 }
 async Task Upload(IPage page, string text = tiny, string name = "smoke.dub")
@@ -65,7 +75,7 @@ async Task<string> GuestOutput(IPage page) => await page.Locator("#printOutput")
 async Task Check(string name, Func<IPage, IBrowserContext, Task> action)
 {
     if (args.Length > 0 && !args.Contains(name)) return;
-    await using var context = await browser.NewContextAsync(new() { ViewportSize = new() { Width = 1440, Height = 900 } });
+    await using var context = await browser.NewContextAsync(new() { Locale = "en-US", ViewportSize = new() { Width = 1440, Height = 900 } });
     var page = await Open(context);
     try { await action(page, context); results.Add(new { name, passed = true }); Console.WriteLine("PASS " + name); }
     catch (Exception ex)
@@ -78,6 +88,170 @@ async Task Check(string name, Func<IPage, IBrowserContext, Task> action)
         if (!page.IsClosed) await page.ScreenshotAsync(new() { Path = Path.Combine(output, name + "-failure.png"), FullPage = true });
     }
 }
+
+if ((args.Length == 0 && directSimulator is null) || args.Contains("landing"))
+{
+    await using var context = await browser.NewContextAsync(new() { Locale = "en-US" });
+    var page = await context.NewPageAsync();
+    page.PageError += (_, message) => errors.Add(message);
+    try
+    {
+        var response = await page.GotoAsync(root + "/");
+        if (response?.Status != 200) throw new Exception("Landing did not return HTTP 200");
+        if (await page.Locator("html").GetAttributeAsync("lang") != "ru") throw new Exception("Landing language is not Russian");
+        if (await page.Locator("h1").CountAsync() != 1) throw new Exception("Expected one page heading");
+        foreach (int width in new[] { 1440, 1024, 768, 390, 320 })
+        {
+            await page.SetViewportSizeAsync(width, 900);
+            // Scroll lazy images into view before checking their decoded dimensions.
+            foreach (var picture in await page.Locator("img").AllAsync())
+            {
+                await picture.ScrollIntoViewIfNeededAsync();
+                await picture.EvaluateAsync("e => e.decode()");
+            }
+            if (!await page.EvaluateAsync<bool>("[...document.images].every(i => i.complete && i.naturalWidth > 0 && i.alt.length > 0)"))
+                throw new Exception("Landing has an unloaded or unlabeled image");
+            if (await page.EvaluateAsync<int>("document.documentElement.scrollWidth") > width)
+                throw new Exception("Landing overflows at " + width);
+            await page.EvaluateAsync("scrollTo({top:0,behavior:'instant'})");
+            await page.ScreenshotAsync(new() { Path = Path.Combine(output, $"landing-{width}.png"), FullPage = true });
+            if (width == 1440)
+            {
+                await page.ScreenshotAsync(new() { Path = Path.Combine(output, "landing-preview.png") });
+                await page.Locator(".architecture-grid > article:last-child").ScreenshotAsync(new() { Path = Path.Combine(output, "landing-device.png") });
+            }
+        }
+        foreach (var link in await page.Locator("a[href^='#']").AllAsync())
+        {
+            var target = await link.GetAttributeAsync("href");
+            if (await page.Locator(target!).CountAsync() != 1) throw new Exception("Broken section link: " + target);
+        }
+        await page.Keyboard.PressAsync("Tab");
+        if (!await page.EvaluateAsync<bool>("document.activeElement.classList.contains('skip-link')"))
+            throw new Exception("Keyboard navigation does not start with the skip link");
+        string axePath = Path.Combine(output, "axe.min.js");
+        if (!File.Exists(axePath))
+        {
+            using var http = new HttpClient();
+            await File.WriteAllTextAsync(axePath, await http.GetStringAsync("https://cdn.jsdelivr.net/npm/axe-core@4.10.3/axe.min.js"));
+        }
+        await page.AddScriptTagAsync(new() { Path = axePath });
+        var violations = await page.EvaluateAsync<JsonElement>("async()=>{const result=await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return result.violations;}");
+        await File.WriteAllTextAsync(Path.Combine(output, "landing-accessibility.json"), violations.ToString());
+        if (violations.GetArrayLength() > 0) throw new Exception("Landing accessibility violations: " + violations);
+        // The canonical redirect must retain the public port and query string.
+        var redirect = await page.APIRequest.GetAsync(root + "/simulator?probe=1", new() { MaxRedirects = 0 });
+        if (redirect.Status != 308 || redirect.Headers["location"] != "/simulator/?probe=1")
+            throw new Exception("Simulator canonical redirect is incorrect");
+        await page.Locator(".hero .button").ClickAsync();
+        await page.WaitForURLAsync(root + "/simulator/");
+        await page.WaitForFunctionAsync("document.getElementById('connection')?.textContent === 'Connected'");
+        await page.Locator("nav a[href='/']").ClickAsync();
+        await page.WaitForURLAsync(root + "/");
+        results.Add(new { name = "landing", passed = true });
+        Console.WriteLine("PASS landing");
+    }
+    catch (Exception ex)
+    {
+        failures++;
+        results.Add(new { name = "landing", passed = false, error = ex.ToString() });
+        await page.ScreenshotAsync(new() { Path = Path.Combine(output, "landing-failure.png"), FullPage = true });
+        Console.WriteLine("FAIL landing " + ex.Message);
+    }
+}
+
+// This scenario deliberately uses only browser-visible state, so it also works
+// against Linux containers or a remote host without access to session files.
+await Check("deployment-smoke", async (first, _) =>
+{
+    if (!await first.EvaluateAsync<bool>("window.__sockets.some(s => s.readyState === WebSocket.OPEN && new URL(s.url).pathname === '/emulator')"))
+        throw new Exception("SignalR is not using an open WebSocket");
+    var media = await first.APIRequest.GetAsync(root + "/api/media");
+    if (!media.Ok || (await media.JsonAsync())?.GetArrayLength() != 5) throw new Exception("Published tape images are missing");
+    var template = await first.APIRequest.GetAsync(root + "/api/machine-template");
+    if (!template.Ok) throw new Exception("Published machine template is missing");
+
+    await using var otherContext = await browser.NewContextAsync(new() { Locale = "en-US" });
+    var second = await Open(otherContext);
+    if (await first.EvaluateAsync<string>("window.__sessionId") == await second.EvaluateAsync<string>("window.__sessionId"))
+        throw new Exception("Two browsers share a session");
+    await Upload(second);
+    await second.ClickAsync("#run"); await Status(second, "Paused");
+    await first.ClickAsync("#examplesTab");
+    await first.WaitForFunctionAsync("[...document.getElementById('exampleSelect').options].some(o => o.value === 'fortran.dub')");
+    await first.SelectOptionAsync("#exampleSelect", "fortran.dub");
+    await first.WaitForFunctionAsync("document.getElementById('exampleSource').dataset.loaded === 'fortran.dub'");
+    await first.ClickAsync("#exampleLoad");
+    await first.CheckAsync("input[value=full]");
+    await first.ClickAsync("#run"); await Status(first, "Completed");
+    if (!(await GuestOutput(first)).Contains("HELLO, WORLD!", StringComparison.OrdinalIgnoreCase)) throw new Exception("Built-in Fortran example failed");
+    if (await second.Locator("#status").InnerTextAsync() != "Paused") throw new Exception("First run changed the other session");
+    await second.ClickAsync("#resume"); await Status(second, "Completed");
+    if (!(await GuestOutput(first)).Contains("HELLO, WORLD!", StringComparison.OrdinalIgnoreCase)) throw new Exception("Second run changed the first output");
+});
+
+await Check("languages-and-guide", async (page, _) =>
+{
+    string[] order = await page.Locator("[role=tablist] [role=tab]").EvaluateAllAsync<string[]>("tabs => tabs.map(t => t.id)");
+    if (!order.Take(3).SequenceEqual(new[] { "manualTab", "examplesTab", "printTab" })) throw new Exception("User guide and Examples must be the first tabs");
+    if (!await page.Locator("#manualPane").IsVisibleAsync()) throw new Exception("The user guide is not the initial view");
+    await page.Locator("#manualPane [data-language=en] [data-show-tab=examplesTab]").ClickAsync();
+    await page.Locator("#examplesPane.show").WaitForAsync();
+    await page.WaitForFunctionAsync("[...document.getElementById('exampleSelect').options].some(o => o.value === 'fortran.dub')");
+    await page.SelectOptionAsync("#exampleSelect", "fortran.dub");
+    await page.WaitForFunctionAsync("document.getElementById('exampleSource').dataset.loaded === 'fortran.dub'");
+    await page.ClickAsync("#exampleLoad");
+    await page.CheckAsync("input[value=full]"); await page.ClickAsync("#run"); await Status(page, "Completed");
+    await page.ClickAsync("#printTab");
+    if (!await page.Locator("#printPane").IsVisibleAsync()) throw new Exception("Printer did not open");
+    string guest = await GuestOutput(page), source = await page.Locator("#exampleSource").TextContentAsync() ?? "";
+    string session = await page.EvaluateAsync<string>("window.__sessionId");
+    int sockets = await page.EvaluateAsync<int>("window.__sockets.length");
+    await page.ClickAsync("#editorTab");
+    await page.FillAsync("#sourceText", "Run\nConnected\nПример\n<not-markup>");
+    await page.SelectOptionAsync("#languageSelect", "ru");
+    if (await page.Locator("html").GetAttributeAsync("lang") != "ru" || await page.Locator("#run").InnerTextAsync() != "Пуск"
+        || await page.Locator("#connection").InnerTextAsync() != "Подключено" || await page.Locator("#status").InnerTextAsync() != "Завершено")
+        throw new Exception("Russian controls or dynamic status were not translated");
+    if (!(await page.Locator("#instructionCount").InnerTextAsync()).Contains("команд")) throw new Exception("Instruction counter was not translated");
+    if (await GuestOutput(page) != guest || await page.Locator("#exampleSource").TextContentAsync() != source
+        || await page.Locator("#sourceText").InputValueAsync() != "Run\nConnected\nПример\n<not-markup>")
+        throw new Exception("Changing language modified guest output or source");
+    if (await page.EvaluateAsync<string>("window.__sessionId") != session || await page.EvaluateAsync<int>("window.__sockets.length") != sockets)
+        throw new Exception("Changing language restarted the session");
+    string guideAxePath = Path.Combine(output, "axe.min.js");
+    if (!File.Exists(guideAxePath))
+    {
+        using var http = new HttpClient();
+        await File.WriteAllTextAsync(guideAxePath, await http.GetStringAsync("https://cdn.jsdelivr.net/npm/axe-core@4.10.3/axe.min.js"));
+    }
+    foreach (string language in new[] { "ru", "en" })
+    {
+        await page.SelectOptionAsync("#languageSelect", language);
+        await page.ClickAsync("#manualTab");
+        await page.Locator("#manualPane.show.active").WaitForAsync();
+        if (!await page.Locator($"#manualPane [data-language={language}]").IsVisibleAsync()) throw new Exception("Wrong guide language");
+        foreach (int width in new[] { 1440, 768, 320 })
+        {
+            await page.SetViewportSizeAsync(width, 900);
+            if (await page.EvaluateAsync<int>("document.documentElement.scrollWidth") > width) throw new Exception("Translated layout overflows: " + language + " " + width);
+            await page.ScreenshotAsync(new() { Path = Path.Combine(output, $"guide-{language}-{width}.png"), FullPage = true, Animations = ScreenshotAnimations.Disabled });
+        }
+        await page.AddScriptTagAsync(new() { Path = guideAxePath });
+        var violations = await page.EvaluateAsync<JsonElement>("async()=>{const r=await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return r.violations;}");
+        if (violations.GetArrayLength() > 0) throw new Exception("Guide accessibility: " + language + " " + violations);
+    }
+    await page.SelectOptionAsync("#languageSelect", "ru");
+    await page.ReloadAsync();
+    await page.WaitForFunctionAsync("document.getElementById('connection').dataset.state === 'Connected'");
+    if (await page.Locator("#languageSelect").InputValueAsync() != "ru" || await page.Locator("html").GetAttributeAsync("lang") != "ru")
+        throw new Exception("The language preference did not survive reload");
+    await page.SelectOptionAsync("#languageSelect", "en");
+    if (await page.Locator("#run").InnerTextAsync() != "Run") throw new Exception("English was not restored");
+    await using var russianContext = await browser.NewContextAsync(new() { Locale = "ru-RU" });
+    var russian = await Open(russianContext);
+    if (await russian.Locator("html").GetAttributeAsync("lang") != "ru") throw new Exception("Browser language was not detected");
+});
 
 await Check("debug", async (page, _) =>
 {
@@ -141,8 +315,8 @@ await Check("reconnect", async (page, context) =>
 });
 await Check("multiple-sessions", async (first, _) =>
 {
-    await using var secondContext = await browser.NewContextAsync();
-    await using var thirdContext = await browser.NewContextAsync();
+    await using var secondContext = await browser.NewContextAsync(new() { Locale = "en-US" });
+    await using var thirdContext = await browser.NewContextAsync(new() { Locale = "en-US" });
     var others = await Task.WhenAll(Open(secondContext), Open(thirdContext));
     var second = others[0]; var third = others[1];
     string Marker(int value) => "*trans-main:1000\n`0010100200000000\n`0330000000000000\n`000000000000000" + value + "\n*end file\n";
@@ -182,8 +356,8 @@ await Check("drop-upload-and-tabs", async (page, _) =>
 });
 await Check("parallel-source-jobs", async (first, _) =>
 {
-    await using var secondContext = await browser.NewContextAsync();
-    await using var thirdContext = await browser.NewContextAsync();
+    await using var secondContext = await browser.NewContextAsync(new() { Locale = "en-US" });
+    await using var thirdContext = await browser.NewContextAsync(new() { Locale = "en-US" });
     var others = await Task.WhenAll(Open(secondContext), Open(thirdContext));
     var pages = new[] { first, others[0], others[1] };
     var programs = new[] { ("examples/fortran.dub", "Hello, World!", "HELLO, WORLD1!"),
@@ -217,7 +391,7 @@ await Check("parallel-source-jobs", async (first, _) =>
 });
 await Check("running-session-isolation", async (first, _) =>
 {
-    await using var secondContext = await browser.NewContextAsync();
+    await using var secondContext = await browser.NewContextAsync(new() { Locale = "en-US" });
     var second = await Open(secondContext);
     await Task.WhenAll(new[] { first, second }.Select(async page =>
     {
@@ -515,7 +689,7 @@ await Check("card-generator", async (page, _) =>
     await page.Locator(".card-cell[data-index='2']").ClickAsync();
     if (await page.Locator("#cardText").InputValueAsync() != "A") throw new Exception("Click did not decode UPP byte");
     await page.Locator(".card-cell[data-index='7']").ClickAsync();
-    if (!(await page.Locator("#cardMessage").TextContentAsync())!.Contains("нечётность")) throw new Exception("Parity errors are not detected");
+    if (!(await page.Locator("#cardMessage").TextContentAsync())!.Contains("parity", StringComparison.OrdinalIgnoreCase)) throw new Exception("Parity errors are not detected");
     await page.ClickAsync("#cardClear"); await page.SelectOptionAsync("#cardEncoding", "ibm"); await page.FillAsync("#cardText", "A");
     var dimensions = await page.EvaluateAsync<JsonElement>("""
     (()=>{const s=document.querySelector('#cardPreview svg'), h=s.querySelector('[data-holes] rect'), n=[...s.querySelectorAll('text')].filter(e=>e.textContent==='80');return {width:s.getAttribute('width'),height:s.getAttribute('height'),viewBox:s.getAttribute('viewBox'),cut:s.querySelector('polygon').getAttribute('points'),x:h.getAttribute('x'),y:h.getAttribute('y'),hw:h.getAttribute('width'),hh:h.getAttribute('height'),cells:s.querySelectorAll('.card-cell').length,columnY:n[0].getAttribute('y')}})()
@@ -810,10 +984,12 @@ await Check("instruction-codec", async (page, _) =>
 {
     await page.ClickAsync("#instructionTab"); await page.Locator("#instructionPane.show").WaitForAsync();
     await page.WaitForFunctionAsync("document.querySelectorAll('#instructionBits button').length===24");
-    uint expected=Besm6.Assembler.Disassembly.InstructionEditor.Encode(8,15,32767);
-    var view=Besm6.Assembler.Disassembly.InstructionEditor.Decode(expected);
-    foreach(var (syntax,text) in new[]{("autocode",view.Autocode),("bemsh",view.Bemsh),("madlen",view.Madlen)})
+    // A distinct value per syntax makes the wait observe the completed decode,
+    // rather than matching the previous result while its request is still pending.
+    foreach(var (syntax,register) in new[]{("autocode",15),("bemsh",14),("madlen",13)})
     {
+        var view=Besm6.Assembler.Disassembly.InstructionEditor.Decode(Besm6.Assembler.Disassembly.InstructionEditor.Encode(8,register,32767));
+        string text=syntax=="autocode"?view.Autocode:syntax=="bemsh"?view.Bemsh:view.Madlen;
         await page.SelectOptionAsync("#instructionSyntax",syntax); await page.FillAsync("#instructionText",text); await page.ClickAsync("#instructionAssemble");
         await page.WaitForFunctionAsync("value=>document.getElementById('instructionDecoded').textContent.includes(value)",view.Hex);
     }
