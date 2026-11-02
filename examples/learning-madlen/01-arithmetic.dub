@@ -1,0 +1,35 @@
+*name arithmetic
+*madlen
+ PROGRAM: ,NAME,
+          ,NTR,0
+          ,XTA,X
+          ,A+X,Y
+          ,A*X,SCALE
+          ,A/X,DIVISOR
+          ,ATX,RESULT
+          ,AEX,=R12.
+          ,U1A,FAIL
+          ,*64,OKINFO
+          ,*74,
+ FAIL:    ,*64,BADINFO
+          ,*74,
+ X:       ,REAL,9.
+ Y:       ,REAL,3.
+ SCALE:   ,REAL,2.
+ DIVISOR: ,REAL,2.
+ RESULT:  ,BSS,1
+ OKINFO:  ,    ,OKTEXT
+          ,    ,OKTEXT
+          ,001,
+         8,    ,
+ BADINFO: ,    ,BADTEXT
+          ,    ,BADTEXT
+          ,001,
+         8,    ,
+ OKTEXT:  ,GOST,6HOK 01
+          ,GOST,6H'231'
+ BADTEXT: ,GOST,6HFAIL01
+          ,GOST,6H'231'
+          ,END,
+*execute
+*end file

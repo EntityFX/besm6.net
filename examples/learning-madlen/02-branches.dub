@@ -1,0 +1,52 @@
+*name branches
+*madlen
+ PROGRAM: ,NAME,
+          ,NTR,0
+          ,XTA,X
+          ,A-X,Y
+          ,UZA,GE
+          ,XTA,Y
+          ,UJ,READY
+ GE:      ,XTA,X
+ READY:   ,ATX,MAXIMUM
+          ,AEX,=R7.
+          ,U1A,FAIL
+C NEGATIVE, ZERO AND POSITIVE SUBTRACTIONS
+          ,XTA,=R3.
+          ,A-X,=R7.
+          ,UZA,FAIL
+          ,XTA,=R7.
+          ,A-X,=R7.
+          ,U1A,FAIL
+          ,XTA,=R7.
+          ,A-X,=R3.
+          ,U1A,FAIL
+C BITWISE EQUALITY AND INEQUALITY
+          ,XTA,X
+          ,AEX,X
+          ,U1A,FAIL
+          ,XTA,X
+          ,AEX,Y
+          ,UZA,FAIL
+          ,*64,OKINFO
+          ,*74,
+ FAIL:    ,*64,BADINFO
+          ,*74,
+ X:       ,REAL,7.
+ Y:       ,REAL,3.
+ MAXIMUM: ,BSS,1
+ OKINFO:  ,    ,OKTEXT
+          ,    ,OKTEXT
+          ,001,
+         8,    ,
+ BADINFO: ,    ,BADTEXT
+          ,    ,BADTEXT
+          ,001,
+         8,    ,
+ OKTEXT:  ,GOST,6HOK 02
+          ,GOST,6H'231'
+ BADTEXT: ,GOST,6HFAIL02
+          ,GOST,6H'231'
+          ,END,
+*execute
+*end file

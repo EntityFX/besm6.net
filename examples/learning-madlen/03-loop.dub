@@ -1,0 +1,52 @@
+*name loop
+*madlen
+ PROGRAM: ,NAME,
+          ,NTR,0
+         1,VTM,0
+         2,VTM,-3
+          ,XTA,=R0.
+ LOOP:   1,A+X,ARRAY
+         1,UTM,1
+         2,VLM,LOOP
+          ,ATX,SUM
+          ,AEX,=R10.
+          ,U1A,FAIL
+C ZERO LENGTH: TEST BEFORE ENTERING THE BODY
+         2,VTM,0
+         2,VZM,EMPTY
+          ,UJ,FAIL
+ EMPTY:   ,XTA,=R0.
+          ,AEX,=R0.
+          ,U1A,FAIL
+C ONE ITERATION: VLM WITH ZERO DOES NOT BRANCH
+         2,VTM,0
+         1,VTM,0
+ ONCE:   1,UTM,1
+         2,VLM,ONCE
+          ,ITA,1
+          ,AEX,=1
+          ,U1A,FAIL
+          ,*64,OKINFO
+          ,*74,
+ FAIL:    ,*64,BADINFO
+          ,*74,
+ ARRAY:   ,REAL,1.
+          ,REAL,2.
+          ,REAL,3.
+          ,REAL,4.
+ SUM:     ,BSS,1
+ OKINFO:  ,    ,OKTEXT
+          ,    ,OKTEXT
+          ,001,
+         8,    ,
+ BADINFO: ,    ,BADTEXT
+          ,    ,BADTEXT
+          ,001,
+         8,    ,
+ OKTEXT:  ,GOST,6HOK 03
+          ,GOST,6H'231'
+ BADTEXT: ,GOST,6HFAIL03
+          ,GOST,6H'231'
+          ,END,
+*execute
+*end file

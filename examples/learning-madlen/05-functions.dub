@@ -1,0 +1,43 @@
+*name functions
+*madlen
+ PROGRAM: ,NAME,
+          ,NTR,0
+          ,XTA,=R3.
+        13,VJM,OUTER
+          ,ATX,RESULT
+          ,AEX,=R8.
+          ,U1A,FAIL
+C ARGUMENT BY ADDRESS IN M1
+         1,VTM,ARG
+          ,XTA,=R5.
+        13,VJM,ADDARG
+          ,AEX,=R12.
+          ,U1A,FAIL
+          ,*64,OKINFO
+          ,*74,
+ FAIL:    ,*64,BADINFO
+          ,*74,
+ OUTER:   ,A+X,=R1.
+        12,VJM,TWICE
+        13,UJ,
+ TWICE:   ,A*X,=R2.
+        12,UJ,
+ ADDARG: 1,A+X,
+        13,UJ,
+ ARG:     ,REAL,7.
+ RESULT:  ,BSS,1
+ OKINFO:  ,    ,OKTEXT
+          ,    ,OKTEXT
+          ,001,
+         8,    ,
+ BADINFO: ,    ,BADTEXT
+          ,    ,BADTEXT
+          ,001,
+         8,    ,
+ OKTEXT:  ,GOST,6HOK 05
+          ,GOST,6H'231'
+ BADTEXT: ,GOST,6HFAIL05
+          ,GOST,6H'231'
+          ,END,
+*execute
+*end file
