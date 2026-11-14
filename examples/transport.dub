@@ -1,0 +1,160 @@
+*name transport
+*fortran
+c---- Transportation problem: min-cost flow (successive shortest paths)
+      program trans
+      integer n,m,i,j,k,u,v,e,nodes,src,snk,iter,done
+      integer nd,minf,total,inf,flow,need
+      integer a(20),b(20),c(20,20),x(20,20),fwd(20,20)
+      integer eu(1000),ev(1000),ecap(1000),ecost(1000)
+      integer dist(42),pedge(42)
+c
+c---- Read the instance from data cards after *EXECUTE
+      read 10, n, m
+      read 11, (a(i), i=1,n)
+      read 11, (b(j), j=1,m)
+      do 20 i=1,n
+      read 11, (c(i,j), j=1,m)
+   20 continue
+c
+c---- Check balance
+      need = 0
+      do 30 i=1,n
+   30 need = need + a(i)
+      flow = 0
+      do 35 j=1,m
+   35 flow = flow + b(j)
+      if (need .ne. flow) goto 900
+c
+c---- Build the residual network
+      nodes = n + m + 2
+      src = 1
+      snk = nodes
+      e = 0
+      do 40 i=1,n
+        e = e + 1
+        eu(e) = src
+        ev(e) = i + 1
+        ecap(e) = a(i)
+        ecost(e) = 0
+        e = e + 1
+        eu(e) = i + 1
+        ev(e) = src
+        ecap(e) = 0
+        ecost(e) = 0
+   40 continue
+      do 50 i=1,n
+        do 50 j=1,m
+          e = e + 1
+          fwd(i,j) = e
+          eu(e) = i + 1
+          ev(e) = n + 1 + j
+          ecap(e) = 1000000
+          ecost(e) = c(i,j)
+          e = e + 1
+          eu(e) = n + 1 + j
+          ev(e) = i + 1
+          ecap(e) = 0
+          ecost(e) = -c(i,j)
+   50 continue
+      do 60 j=1,m
+        e = e + 1
+        eu(e) = n + 1 + j
+        ev(e) = snk
+        ecap(e) = b(j)
+        ecost(e) = 0
+        e = e + 1
+        eu(e) = snk
+        ev(e) = n + 1 + j
+        ecap(e) = 0
+        ecost(e) = 0
+   60 continue
+c
+c---- Successive shortest paths with Bellman-Ford
+      total = 0
+      inf = 1000000
+  100 continue
+      do 110 v=1,nodes
+        dist(v) = inf
+        pedge(v) = 0
+  110 continue
+      dist(src) = 0
+      do 140 iter=1,nodes
+        done = 1
+        do 120 k=1,e
+          if (ecap(k) .le. 0) goto 120
+          u = eu(k)
+          v = ev(k)
+          if (dist(u) .ge. inf) goto 120
+          nd = dist(u) + ecost(k)
+          if (nd .ge. dist(v)) goto 120
+          dist(v) = nd
+          pedge(v) = k
+          done = 0
+  120   continue
+        if (done .eq. 1) goto 150
+  140 continue
+  150 continue
+      if (dist(snk) .ge. inf) goto 200
+c
+c---- Find the bottleneck along the path
+      minf = inf
+      v = snk
+  160 continue
+      if (v .eq. src) goto 170
+      k = pedge(v)
+      if (k .eq. 0) goto 200
+      if (ecap(k) .lt. minf) minf = ecap(k)
+      v = eu(k)
+      goto 160
+  170 continue
+c
+c---- Augment and update the reverse edge
+      v = snk
+  180 continue
+      if (v .eq. src) goto 190
+      k = pedge(v)
+      ecap(k) = ecap(k) - minf
+      if (k .eq. 2*(k/2)) goto 185
+      ecap(k+1) = ecap(k+1) + minf
+      goto 186
+  185 continue
+      ecap(k-1) = ecap(k-1) + minf
+  186 continue
+      v = eu(k)
+      goto 180
+  190 continue
+      total = total + minf * dist(snk)
+      goto 100
+c
+c---- Extract shipment matrix
+  200 continue
+      do 210 i=1,n
+        do 210 j=1,m
+          x(i,j) = 1000000 - ecap(fwd(i,j))
+  210 continue
+      print 1000, total
+      do 220 i=1,n
+        print 1001, (x(i,j), j=1,m)
+  220 continue
+      print 1002
+      goto 999
+c
+  900 continue
+      print 1003
+  999 continue
+      stop
+ 1000 format('OPTIMAL COST = ', i10)
+ 1001 format(10i5)
+ 1002 format('DONE')
+ 1003 format('ERROR: SUPPLY <> DEMAND')
+   10 format(2i5)
+   11 format(10i5)
+      end
+*execute
+    3    4
+   30   40   20
+   20   30   30   10
+    2    3    2    4
+    3    2    5    1
+    4    3    2    6
+*end file
