@@ -6,7 +6,7 @@
       const element = document.createElementNS(ns, name); for (const [key, value] of Object.entries(attrs)) element.setAttribute(key, value);
       if (text != null) element.textContent = text; return element;
     };
-    const svg = node('svg', { xmlns: ns, width: `${geometry.width}mm`, height: `${geometry.height}mm`, viewBox: `0 0 ${geometry.width} ${geometry.height}`, role: 'img', 'aria-label': caption || 'Перфокарта' });
+    const svg = node('svg', { xmlns: ns, width: `${geometry.width}mm`, height: `${geometry.height}mm`, viewBox: `0 0 ${geometry.width} ${geometry.height}`, role: 'img', 'aria-label': caption || Besm6I18n.t('Punch cards') });
     svg.append(node('polygon', { points: `${geometry.cut},0 ${geometry.width},0 ${geometry.width},${geometry.height} 0,${geometry.height} 0,${geometry.cut}`, fill: '#FAD7B9', stroke: '#9D7E61', 'stroke-width': .3 }));
     const print = node('g', { fill: '#9D7E61', 'font-family': 'Courier New, monospace', 'font-weight': 'bold', 'text-anchor': 'middle', 'aria-hidden': 'true' });
     print.append(node('text', { x: 7, y: 2.8, 'text-anchor': 'start', 'font-size': 1.8 }, caption));
@@ -35,13 +35,13 @@
       const format = document.getElementById('punchFormat').value, text = document.getElementById('punchOutput'), visual = document.getElementById('punchVisual');
       text.hidden = format === 'card'; visual.hidden = format !== 'card';
       text.classList.toggle('punch-braille', format === 'braille');
-      document.getElementById('punchCount').textContent = `${this.cards.length} cards`;
+      Besm6I18n.text(document.getElementById('punchCount'), `${this.cards.length} cards`);
       if (format === 'braille') { text.textContent = this.braille; return; }
       if (format === 'card') {
         visual.replaceChildren(...this.cards.map((rows, index) => create(rows.join('').split('').map(c => c === '1'), `БЭСМ-6 · ${index + 1}`)));
       } else {
         const labels = [12, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        text.textContent = this.cards.map((rows, index) => `Card ${index + 1}\n    ${Array.from({ length: 80 }, (_, i) => (i + 1) % 10).join('')}\n`
+        text.textContent = this.cards.map((rows, index) => `${Besm6I18n.t('Card {number}', { number: index + 1 })}\n    ${Array.from({ length: 80 }, (_, i) => (i + 1) % 10).join('')}\n`
           + rows.map((row, i) => `${String(labels[i]).padStart(2, ' ')} |${row.replace(/1/g, format === 'ascii' ? 'O' : '□').replace(/0/g, '.')}|`).join('\n')).join('\n\n');
       }
     }

@@ -1,0 +1,27 @@
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx.Dockerfile
+    ports:
+      - "${BESM6_PORT:-8080}:80"
+    depends_on:
+      - simulator
+    restart: unless-stopped
+    networks:
+      - besm6
+
+  simulator:
+    build:
+      context: .
+      dockerfile: docker/simulator.Dockerfile
+    init: true
+    environment:
+      ASPNETCORE_HTTP_PORTS: "8080"
+      TMPDIR: /tmp
+    restart: unless-stopped
+    networks:
+      - besm6
+
+networks:
+  besm6:

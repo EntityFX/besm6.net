@@ -1,4 +1,5 @@
 (() => {
+  const t = Besm6I18n.t, ui = (id, value) => Besm6I18n.text(document.getElementById(id), value);
   const $ = id => document.getElementById(id), ns = 'http://www.w3.org/2000/svg';
   const geometry = Besm6CardView.geometry;
   const rows = [12, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -12,7 +13,7 @@
     return element;
   };
   const message = (text, error = false) => {
-    $('cardMessage').textContent = text;
+    ui('cardMessage', text);
     $('cardMessage').classList.toggle('text-danger', error);
     $('cardText').setAttribute('aria-invalid', String(error));
   };
@@ -54,11 +55,11 @@
   }
   function render() {
     svg = Besm6CardView.create(holes, `БЭСМ-6 / ${$('cardEncoding').value === 'ibm' ? 'IBM' : 'УПП-IBM'}  ${$('cardText').value.toUpperCase()}`);
-    svg.setAttribute('role', 'group'); svg.setAttribute('aria-label', 'Перфокарта 80 колонок на 12 рядов');
+    svg.setAttribute('role', 'group'); svg.setAttribute('aria-label', t('Punch card: 80 columns and 12 rows'));
     const cells = create('g', { 'data-editor': '' });
     for (let row = 0; row < 12; row++) for (let column = 0; column < 80; column++) {
       const x = geometry.firstX + column * geometry.pitchX, y = geometry.firstY + row * geometry.pitchY, index = row * 80 + column;
-      cells.append(create('rect', { x: x - (geometry.pitchX - geometry.holeWidth) / 2, y: y - (geometry.pitchY - geometry.holeHeight) / 2, width: geometry.pitchX, height: geometry.pitchY, fill: 'transparent', class: 'card-cell', 'data-index': index, role: 'button', tabindex: index === activeCell ? 0 : -1, 'aria-label': `Ряд ${rows[row]}, колонка ${column + 1}`, 'aria-pressed': holes[index] }));
+      cells.append(create('rect', { x: x - (geometry.pitchX - geometry.holeWidth) / 2, y: y - (geometry.pitchY - geometry.holeHeight) / 2, width: geometry.pitchX, height: geometry.pitchY, fill: 'transparent', class: 'card-cell', 'data-index': index, role: 'button', tabindex: index === activeCell ? 0 : -1, 'aria-label': t('Row {row}, column {column}', { row: rows[row], column: column + 1 }), 'aria-pressed': holes[index] }));
     }
     svg.append(cells); $('cardPreview').replaceChildren(svg);
   }
@@ -83,6 +84,7 @@
     else return;
     event.preventDefault(); selectCell(index); svg.querySelector(`[data-index="${index}"]`).focus();
   });
+  window.addEventListener('languagechange', () => { if (tables) { render(); symbols(); } });
   function download(blob, name) {
     const url = URL.createObjectURL(blob), anchor = document.createElement('a');
     anchor.href = url; anchor.download = name; document.body.append(anchor); anchor.click(); anchor.remove();
@@ -115,11 +117,11 @@
   function symbols() {
     const buttons = Object.keys(table()).filter(character => character !== ' ').map(character => {
       const button = document.createElement('button'); button.type = 'button'; button.className = 'btn btn-sm btn-outline-secondary'; button.textContent = character;
-      button.setAttribute('aria-label', `Вставить ${character}`);
+      button.setAttribute('aria-label', t('Insert {symbol}', { symbol: character }));
       button.addEventListener('click', () => { const input = $('cardText'); input.setRangeText(character, input.selectionStart, input.selectionEnd, 'end'); input.focus(); encode(); });
       return button;
     });
-    $('cardSymbols').replaceChildren(...buttons); $('cardCapacity').textContent = `${capacity()} символов`; $('cardText').maxLength = capacity();
+    $('cardSymbols').replaceChildren(...buttons); ui('cardCapacity', `${capacity()} символов`); $('cardText').maxLength = capacity();
   }
   $('cardText').addEventListener('input', encode);
   $('cardEncoding').addEventListener('change', () => { if (tables) { symbols(); encode(); } });

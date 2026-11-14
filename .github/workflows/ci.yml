@@ -13,6 +13,46 @@ permissions:
   contents: read
 
 jobs:
+  web-deployment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Web workers on Linux
+        run: dotnet test tests/Besm6.AspNetCore.Web.Tests -c Release
+      - name: Build and start nginx and simulator
+        run: |
+          docker compose config --quiet
+          docker compose up --build -d
+          curl --fail --retry 20 --retry-connrefused --retry-delay 1 http://localhost:8080/
+      - name: Install browser checks
+        run: |
+          dotnet build tools/Besm6.Web.UiChecks -c Release
+          pwsh tools/Besm6.Web.UiChecks/bin/Release/net8.0/playwright.ps1 install chromium --with-deps
+      - name: Check published ports
+        run: |
+          test -z "$(docker compose port simulator 8080)"
+      - name: Landing and simulator through nginx
+        env:
+          BESM6_WEB_URL: http://localhost:8080
+        run: dotnet run --project tools/Besm6.Web.UiChecks -c Release --no-build -- landing deployment-smoke languages-and-guide debug full reconnect layout accessibility
+      - name: Container logs
+        if: always()
+        run: docker compose logs --no-color
+      - name: Stop containers
+        if: always()
+        run: docker compose down
+      - name: Upload browser checks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-deployment-${{ github.run_id }}
+          path: tests-run/web-ui-checks
+          if-no-files-found: ignore
+
   fast-gate:
     runs-on: windows-latest
     timeout-minutes: 30

@@ -1,0 +1,48 @@
+*name nested loops
+*madlen
+ PROGRAM: ,NAME,
+          ,NTR,0
+         1,VTM,0
+         2,VTM,-1
+          ,XTA,=R0.
+ ROW:    3,VTM,-2
+ COL:    1,A+X,DATA
+         1,UTM,1
+         3,VLM,COL
+         2,VLM,ROW
+          ,ATX,SUM
+          ,AEX,=R21.
+          ,U1A,FAIL
+          ,ITA,1
+          ,AEX,=6
+          ,U1A,FAIL
+          ,ITA,2
+          ,U1A,FAIL
+          ,ITA,3
+          ,U1A,FAIL
+          ,*64,OKINFO
+          ,*74,
+ FAIL:    ,*64,BADINFO
+          ,*74,
+ DATA:    ,REAL,1.
+          ,REAL,2.
+          ,REAL,3.
+          ,REAL,4.
+          ,REAL,5.
+          ,REAL,6.
+ SUM:     ,BSS,1
+ OKINFO:  ,    ,OKTEXT
+          ,    ,OKTEXT
+          ,001,
+         8,    ,
+ BADINFO: ,    ,BADTEXT
+          ,    ,BADTEXT
+          ,001,
+         8,    ,
+ OKTEXT:  ,GOST,6HOK 04
+          ,GOST,6H'231'
+ BADTEXT: ,GOST,6HFAIL04
+          ,GOST,6H'231'
+          ,END,
+*execute
+*end file

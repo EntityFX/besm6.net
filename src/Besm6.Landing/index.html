@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f0e7">
+  <meta name="description" content="История и архитектура БЭСМ-6. Запускайте программы на Фортране и Алголе, исследуйте память и регистры в браузерном симуляторе Besm6.Net.">
+  <title>БЭСМ-6 — Большая Электронно-Счётная Машина в вашем браузере</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets/landing.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">К содержанию</a>
+  <header class="site-header wrap">
+    <a class="brand" href="/" aria-label="БЭСМ-6 — главная"><span class="brand-symbol" aria-hidden="true">Б⁶</span><span>БЭСМ-6<span class="brand-subtitle">Живая история вычислений</span></span></a>
+    <nav aria-label="Основная навигация">
+      <a href="#history">История</a>
+      <a href="#architecture">Устройство</a>
+      <a href="#simulator">Симулятор</a>
+    </nav>
+    <a class="header-launch" href="/simulator/">К пульту <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main id="main">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Советская вычислительная техника · 1967</div>
+      <div class="hero-heading"><h1 id="hero-title">БЭСМ-6<span>Большая Электронно-Счётная Машина —<br>в вашем браузере.</span></h1><span class="edition" aria-hidden="true">48 БИТ<br>БОЛЬШОЙ<br>ИСТОРИИ</span></div>
+      <div class="hero-intro"><p>Когда-то она занимала целый машинный зал.<br>Сегодня её программы можно запустить прямо здесь.</p><a class="button" href="/simulator/">Открыть симулятор <span aria-hidden="true">↗</span></a></div>
+      <figure class="hero-photo">
+        <img src="assets/images/machine-room.jpg" width="1280" height="854" alt="Машинный зал БЭСМ-6: центральные стойки полукругом, пульт и периферийные устройства" fetchpriority="high">
+        <figcaption><span>01 / БЭСМ-6 в машинном зале</span><a href="https://besm-6.ru/besm6.html">Источник фотографии ↗</a></figcaption>
+      </figure>
+      <dl class="machine-facts">
+        <div><dt>Год государственной приёмки</dt><dd>1967</dd></div>
+        <div><dt>Длина машинного слова</dt><dd>48 <span>бит</span></dd></div>
+        <div><dt>Базовая оперативная память</dt><dd>32 768 <span>слов</span></dd></div>
+        <div><dt>Серийное производство</dt><dd>355 <span>машин</span></dd></div>
+      </dl>
+    </section>
+
+    <section class="section wrap history" id="history" aria-labelledby="history-title">
+      <div class="section-label">01 / Машина своей эпохи</div>
+      <div class="history-grid">
+        <div class="history-copy"><h2 id="history-title">Большая электронная.<br>Большие задачи.</h2><p class="lead">БЭСМ-6 создавали для того, чтобы считать то, что прежде казалось слишком сложным.</p><p>Разработанная в ИТМиВТ под руководством Сергея Лебедева, машина прошла государственную приёмку в 1967 году. Она стала инструментом научных расчётов — в исследовательских институтах и вычислительных центрах.</p><p>Транзисторная логика, ферритовая память и совмещение этапов выполнения команд. За рядами тумблеров и ламп стояла архитектура, которую интересно изучать и сегодня.</p><div class="timeline"><div><strong>1967</strong><span>Государственная приёмка</span></div><div><strong>1968–1987</strong><span>Серийный выпуск</span></div></div></div>
+        <figure class="console-photo"><img src="assets/images/console.jpg" width="2816" height="2112" alt="Пульт БЭСМ-6 с цветными клавишами и рядами индикаторов регистров" loading="lazy"><figcaption>02 / Пульт БЭСМ-6 BRUS · Фото: Kristopher Doern<br><a href="https://commons.wikimedia.org/wiki/File:Console_BESM-6_BRUS.jpg">Wikimedia Commons</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a></figcaption></figure>
+      </div>
+    </section>
+
+    <section class="architecture-band" id="architecture" aria-labelledby="architecture-title"><div class="section wrap">
+      <div class="section-label">02 / Внутри БЭСМ-6</div>
+      <div class="section-heading"><h2 id="architecture-title">48 бит.<br>Целый мир внутри.</h2><p class="lead">Слова, команды и память —<br>настоящая архитектура большой машины.</p></div>
+      <div class="architecture-grid">
+        <article class="word-panel"><span class="panel-number">01 — Данные</span><h3>Одно слово. Две команды.</h3><p>48 разрядов для данных или двух 24-битных команд. Например: загрузить число из ячейки 01000 в сумматор и прибавить число из ячейки 01001.</p><div class="word-bits" aria-label="48-битное слово: слева команда СЧ 0,01000, справа команда СЛ 0,01001"><span>0010 1000</span><span>0004 1001</span></div><div class="word-labels"><span><code>СЧ 0,01000</code><br>Левая команда · 24 бита</span><span><code>СЛ 0,01001</code><br>Правая команда · 24 бита</span></div><p class="word-note">Код команд и адреса — в восьмеричной системе.</p></article>
+        <article class="memory-panel"><span class="panel-number">02 — Память</span><h3>Память, которую можно увидеть.</h3><p>Базовые 32 768 слов — это 192 КиБ полезных данных. Каждый бит хранился в крошечном ферритовом сердечнике.</p><figure><img src="assets/images/ferrite-memory.jpg" alt="Рамка памяти БЭСМ-6: сетка ферритовых сердечников, прошитых тонкими проводами" loading="lazy"><figcaption>Фото: Hans Bln · <a href="https://commons.wikimedia.org/wiki/File:BESM6_Ferritkernspeicher_1.JPG">Wikimedia Commons</a> · <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a></figcaption></figure></article>
+        <article class="io-panel"><div><span class="panel-number">03 — Печать</span><h3>Результаты на бумаге.</h3><p>Алфавитно-цифровое печатающее устройство АЦПУ-128 печатало результаты расчётов и листинги программ. В симуляторе этот вывод можно читать во вкладке «Печать / Printer».</p></div><figure><img src="assets/images/acpu-128-3.jpg" width="2572" height="3413" alt="Оригинальная фотография АЦПУ-128-3 с открытым печатающим механизмом и бумажной лентой" loading="lazy"><figcaption>АЦПУ-128-3 · Фото: Radiolok<br><a href="https://commons.wikimedia.org/wiki/File:BESM-6_ACPY.jpg">Wikimedia Commons</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a></figcaption></figure></article>
+      </div>
+    </div></section>
+
+    <section class="section wrap simulator-section" id="simulator" aria-labelledby="simulator-title">
+      <div class="section-label">03 / Besm6.Net</div>
+      <div class="section-heading"><h2 id="simulator-title">История оживает,<br>когда работает код.</h2><p class="lead">Исследуйте БЭСМ-6 через программы.<br>Без установки на ваш компьютер.</p></div>
+      <div class="simulator-grid">
+        <div class="terminal"><div class="terminal-header"><span><span class="status-dot" aria-hidden="true"></span> Задание для системы «Дубна»</span><span>.dub</span></div><pre aria-label="Пример задания на Фортране"><code><span class="code-muted">*name hello
+*ftn</span>
+      PROGRAM HELLO
+      PRINT 10
+      STOP
+   10 FORMAT('HELLO, WORLD!')
+      END
+<span class="code-muted">*execute
+*end file</span></code></pre><div class="terminal-output"><span>Вывод программы</span><samp>HELLO, WORLD!</samp></div><p class="terminal-note">Фортран · Один из языков системы «Дубна»</p></div>
+        <div class="capabilities"><article><span>01</span><div><h3>Запускайте настоящие программы</h3><p>Фортран, Алгол, ассемблер и готовые задания из встроенного каталога примеров.</p></div></article><article><span>02</span><div><h3>Наблюдайте за каждым шагом</h3><p>Регистры, память, дизассемблирование, пошаговое выполнение и выбор скорости работы.</p></div></article><article><span>03</span><div><h3>Смотрите, как машина отвечает</h3><p>Листинги печатающего устройства, перфокарты, терминал и рисунки на плоттере.</p></div></article><a class="text-link" href="/simulator/">Перейти к веб-консоли <span aria-hidden="true">↗</span></a></div>
+      </div>
+    </section>
+
+    <section class="start-section" id="start" aria-labelledby="start-title"><div class="wrap">
+      <div class="section-label">04 / Ваш первый запуск</div>
+      <div class="start-heading"><h2 id="start-title">Теперь вы —<br>за пультом.</h2><a class="button button-dark" href="/simulator/">Открыть симулятор <span aria-hidden="true">↗</span></a></div>
+      <ol class="steps"><li><span class="step-number" aria-hidden="true">01</span><h3>Откройте консоль</h3><p>Дождитесь статуса Connected: для вас будет создана отдельная сессия.</p></li><li><span class="step-number" aria-hidden="true">02</span><h3>Выберите программу</h3><p>Во вкладке Examples найдите <code>fortran.dub</code> и нажмите «Загрузить в машину / Load into machine».</p></li><li><span class="step-number" aria-hidden="true">03</span><h3>Нажмите «Пуск / Run»</h3><p>Для непрерывного выполнения выберите «Полный запуск / Full run». Результат появится во вкладке «Печать / Printer».</p></li></ol>
+    </div></section>
+  </main>
+
+  <footer class="site-footer wrap">
+    <div class="footer-top"><a class="brand" href="/">БЭСМ-6 <span class="footer-project">/ Besm6.Net</span></a><a class="text-link" href="https://github.com/EntityFX/besm6.net">Исходный код на GitHub ↗</a></div>
+    <p>Исследовательский симулятор на C# / .NET. Сохраняем возможность изучать архитектуру и запускать программы БЭСМ-6.</p>
+    <details class="credits"><summary>Материалы и источники изображений</summary><ul><li>История и архитектура: <a href="https://besm-6.ru/besm6.html">описание БЭСМ-6</a> и <a href="https://github.com/EntityFX/besm6.net/tree/main/docs/articles/besm6-performance">материалы проекта</a>.</li><li>Машинный зал: <a href="https://besm-6.ru/besm6.html">besm-6.ru</a>; изображение из репозитория, без изменений.</li><li>Пульт BRUS: Kristopher Doern, <a href="https://commons.wikimedia.org/wiki/File:Console_BESM-6_BRUS.jpg">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>; без изменений.</li><li>Ферритовая память: Hans Bln, <a href="https://commons.wikimedia.org/wiki/File:BESM6_Ferritkernspeicher_1.JPG">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>; без изменений.</li><li>АЦПУ-128-3: Radiolok, <a href="https://commons.wikimedia.org/wiki/File:BESM-6_ACPY.jpg">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>; оригинальная фотография, без изменений.</li></ul></details>
+    <div class="footer-bottom"><span>Большая Электронно-Счётная Машина — 6</span><span>1967 → Сегодня</span></div>
+  </footer>
+</body>
+</html>

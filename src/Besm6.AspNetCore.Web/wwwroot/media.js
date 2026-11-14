@@ -1,3 +1,5 @@
+(() => {
+const t = Besm6I18n.t, ui = (id, value) => Besm6I18n.text(document.getElementById(id), value);
 window.Besm6Media = class {
   entries = []; mounts = []; view = null; ready = false; state = 'Idle'; radix = 8; uploading = false;
   constructor(send, upload, report) {
@@ -38,9 +40,9 @@ window.Besm6Media = class {
   }
   number(value, width = 0) { return value.toString(this.radix).toUpperCase().padStart(width, '0'); }
   options(selected = document.getElementById('mediaSource').value) {
-    const select = document.getElementById('mediaSource'), first = document.createElement('option'); first.value = ''; first.textContent = 'Выберите образ';
-    const options = this.entries.map(entry => [entry.id, `${entry.name} · ${entry.words.toLocaleString()} words`]);
-    for (const mount of this.mounts) options.push([`mounted:${mount.kind}:${parseInt(mount.unit, 8)}`, `${mount.kind} ${this.number(parseInt(mount.unit, 8))} · mounted · ${mount.words.toLocaleString()} words`]);
+    const select = document.getElementById('mediaSource'), first = document.createElement('option'); first.value = ''; first.textContent = t('Select an image');
+    const options = this.entries.map(entry => [entry.id, t('{name} · {words} words', { name: entry.name, words: entry.words.toLocaleString(Besm6I18n.language) })]);
+    for (const mount of this.mounts) options.push([`mounted:${mount.kind}:${parseInt(mount.unit, 8)}`, t('{kind} {unit} · mounted · {words} words', { kind: t(mount.kind), unit: this.number(parseInt(mount.unit, 8)), words: mount.words.toLocaleString(Besm6I18n.language) })]);
     select.replaceChildren(first, ...options.map(([value, text]) => { const option = document.createElement('option'); option.value = value; option.textContent = text; return option; }));
     select.value = options.some(([id]) => id === selected) ? selected : '';
     this.updateState(this.ready, this.state);
@@ -65,10 +67,12 @@ window.Besm6Media = class {
   }
   display(data) {
     this.view = data;
-    const message = document.getElementById('mediaMessage'); message.textContent = `${data.words.length} / ${data.totalWords.toLocaleString()} words` + (data.loadedAddress == null ? '' : ` · loaded at ${this.number(data.loadedAddress)}`);
+    const message = document.getElementById('mediaMessage'); Besm6I18n.text(message, t('{count} / {total} words', { count: data.words.length, total: data.totalWords.toLocaleString(Besm6I18n.language) }) + (data.loadedAddress == null ? '' : t(' · loaded at {address}', { address: this.number(data.loadedAddress) })));
     const source = data.words.map(word => `${this.number(word.offset, this.radix === 16 ? 4 : 5)}  ${this.number(parseInt(word.hex, 16), this.radix === 8 ? 16 : this.radix === 16 ? 12 : 0)}  ${Besm6Source.disassembly(word.disassembly, this.radix).padEnd(34)}  ${word.text}`).join('\n');
     Besm6Source.render(document.getElementById('mediaDisassembly'), source);
   }
   clear() { this.view = null; document.getElementById('mediaMessage').textContent = ''; document.getElementById('mediaDisassembly').replaceChildren(); }
   sessionLost() { this.entries = this.entries.filter(entry => entry.id.startsWith('builtin:')); this.mounts = []; this.options(); this.clear(); }
 };
+
+})();
