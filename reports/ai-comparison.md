@@ -5,7 +5,8 @@
 **Технический отчёт**  
 **Дата:** 15.11.2026  
 **Объект исследования:** модель БЭСМ-6 в эмуляторе `besm6`, Python 3.12.7, GNU Fortran 13.2.1  
-**Исходные данные:** [`ai-comparison.json`](ai-comparison.json), [`ai-python-results.json`](ai-python-results.json), [`ai-fortran-results.json`](ai-fortran-results.json)
+**Исходные данные:** [`ai-comparison.json`](ai-comparison.json), [`ai-python-results.json`](ai-python-results.json), [`ai-fortran-results.json`](ai-fortran-results.json)  
+**PDF:** [`ai-comparison.pdf`](ai-comparison.pdf)
 
 ## Аннотация
 
