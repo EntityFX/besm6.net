@@ -64,7 +64,8 @@ Python относительно модели БЭСМ-6 составляет о�
 
 Для машины характерны 48-битные слова, полусловные команды, развитая
 адресация и работа с лентами, барабанами и дисками. Именно эти свойства
-воспроизводит модель, использованная в эксперименте.
+воспроизводит модель, использованная в эксперименте. Приведённые параметры
+согласуются с описаниями музея и Wikipedia [1, 2].
 
 ### 1.2. Симулятор `besm6`
 
@@ -77,7 +78,8 @@ Python относительно модели БЭСМ-6 составляет о�
 - `original` — статистическая модель БЭСМ-6, откалиброванная по Whetstone;
 - `virtual` — привязка гостевого времени к часам хоста.
 
-В данной работе используется `original`. Это модель, а не потактовое
+В данной работе используется `original`. Устройство и режимы симулятора
+описаны в [7, 8]. Это модель, а не потактовое
 воспроизведение физического железа: она сохраняет семантику команд и
 устройств, но абсолютные секунды зависят от калибровки. Поэтому в статье
 разделены полное время задания, время счёта и накладные расходы запуска.
@@ -116,7 +118,7 @@ dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run <job> \
 ```
 
 Режим `original` — статистическая модель БЭСМ-6, откалиброванная по Whetstone
-(0.809 MWIPS). Модельное время детерминировано при фиксированной конфигурации:
+(0.809 MWIPS) [3]. Модельное время детерминировано при фиксированной конфигурации:
 три повторных запуска `01_perceptron` дали одно и то же значение
 `modelSeconds = 1.463660818`. Поэтому для БЭСМ-6 приведено одно измерение,
 а не серия.
@@ -131,7 +133,7 @@ T_solve(BESM) = T_total(BESM) - T_baseline(BESM).
 
 ### 2.3. Python
 
-Реализации на Python используют только стандартную библиотеку и повторяют
+Реализации на Python используют только стандартную библиотеку [6] и повторяют
 исходные алгоритмы; NumPy не применялся. Каждая функция прогревалась, затем
 выполнялась серия повторов. Время одной итерации — среднее внутри сессии;
 для снижения влияния нагрузки выполнено пять независимых сессий, в таблицах
@@ -147,7 +149,7 @@ T_total(Python) = T_startup(Python) + T_solve(Python),
 ### 2.4. Современный Фортран
 
 Исходный текст извлекался из `.dub` без изменения алгоритма и компилировался
-GNU Fortran 13.2.1:
+GNU Fortran 13.2.1 [5]:
 
 ```bash
 gfortran -O2 -std=legacy -ffixed-form -o <exe> <source.f>
@@ -363,3 +365,28 @@ python3 tools/benchmark_ai_fortran.py
 5. `examples/ai/README.md` — описание тестового корпуса.
 6. `tools/benchmark_ai.py`, `tools/benchmark_ai_fortran.py` — реализации
    и сценарии измерений.
+
+### 7.1. Внешние источники
+
+1. BESM-6 // Wikipedia. URL: <https://en.wikipedia.org/wiki/BESM-6>
+   (дата обращения: 15.11.2026).
+2. BESM-6 Computer // Russian Virtual Computer Museum.
+   URL: <https://www.computer-museum.ru/english/besm6.htm>
+   (дата обращения: 15.11.2026).
+3. Curnow H. J., Wichmann B. A. A synthetic benchmark // The Computer
+   Journal. 1976. Vol. 19, No. 1. P. 43–49.
+   DOI: <https://doi.org/10.1093/comjnl/19.1.43>.
+4. Weicker R. P. Dhrystone: a synthetic systems programming benchmark //
+   Communications of the ACM. 1984. Vol. 27, No. 10. P. 1013–1030.
+   DOI: <https://doi.org/10.1145/358274.358283>.
+5. GNU Fortran. URL: <https://gcc.gnu.org/fortran/>
+   (дата обращения: 15.11.2026).
+6. Python 3.12 documentation. URL: <https://docs.python.org/3.12/>
+   (дата обращения: 15.11.2026).
+7. SIMH BESM-6 simulator. URL: <https://github.com/besm6/simh>
+   (дата обращения: 15.11.2026).
+8. besm6.net — симулятор БЭСМ-6. URL: <https://github.com/EntityFX/besm6.net>
+   (дата обращения: 15.11.2026).
+9. Intel Xeon Processor E5-2680 v3 specifications.
+   URL: <https://www.intel.com/content/www/us/en/products/sku/81908/intel-xeon-processor-e52680-v3-30m-cache-2-50-ghz/specifications.html>
+   (дата обращения: 15.11.2026).
