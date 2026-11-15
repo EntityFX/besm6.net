@@ -250,6 +250,73 @@ def astar():
     return {"path_length": len(path), "path": path}
 
 
+def chess_mate():
+    board = [[0] * 8 for _ in range(8)]
+    board[5][6] = 1  # white king g6
+    board[0][0] = 2  # white rook a1
+    board[7][7] = -1  # black king h8
+    moves = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+    def in_check(b, kr, kc):
+        for dr in (-1, 0, 1):
+            for dc in (-1, 0, 1):
+                if dr == 0 and dc == 0:
+                    continue
+                r, c = kr + dr, kc + dc
+                if 0 <= r < 8 and 0 <= c < 8 and b[r][c] == 1:
+                    return True
+        for dr, dc in moves:
+            r, c = kr, kc
+            while True:
+                r += dr
+                c += dc
+                if not (0 <= r < 8 and 0 <= c < 8):
+                    break
+                if b[r][c] == 0:
+                    continue
+                if b[r][c] == 2:
+                    return True
+                break
+        return False
+
+    rook_moves = 0
+    mates = 0
+    mate_to = None
+    for dr, dc in moves:
+        nr, nc = 0 + dr, 0 + dc
+        while 0 <= nr < 8 and 0 <= nc < 8:
+            if board[nr][nc] == 1 or board[nr][nc] == -1:
+                break
+            board[0][0] = 0
+            board[nr][nc] = 2
+            rook_moves += 1
+            if in_check(board, 7, 7):
+                legal = False
+                for kr, kc in moves:
+                    i, j = 7 + kr, 7 + kc
+                    if not (0 <= i < 8 and 0 <= j < 8):
+                        continue
+                    if board[i][j] == 1:
+                        continue
+                    saved = board[i][j]
+                    board[7][7] = 0
+                    board[i][j] = -1
+                    if not in_check(board, i, j):
+                        legal = True
+                    board[i][j] = saved
+                    board[7][7] = -1
+                    if legal:
+                        break
+                if not legal:
+                    mates += 1
+                    mate_to = (nr, nc)
+            board[nr][nc] = 0
+            board[0][0] = 2
+            nr += dr
+            nc += dc
+    return {"rook_moves": rook_moves, "mates": mates, "mate_to": mate_to}
+
+
 def mlp_xor():
     x1 = [0.0, 0.0, 1.0, 1.0]
     x2 = [0.0, 1.0, 0.0, 1.0]
@@ -303,6 +370,7 @@ ALGORITHMS = [
     ("08_qlearning", qlearning, 2000),
     ("09_astar", astar, 5000),
     ("10_mlp_xor", mlp_xor, 20),
+    ("11_chess_mate", chess_mate, 2000),
 ]
 
 
