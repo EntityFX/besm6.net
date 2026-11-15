@@ -1,0 +1,41 @@
+*name k means
+*fortran
+c---- k-means, one feature, two clusters
+      program kmeans
+      real x(6),c1,c2,s1,s2
+      integer n1,n2,i,it
+      x(1)=1.
+      x(2)=2.
+      x(3)=3.
+      x(4)=10.
+      x(5)=11.
+      x(6)=12.
+      c1=1.
+      c2=12.
+      do 20 it=1,10
+        s1=0.
+        s2=0.
+        n1=0
+        n2=0
+        do 10 i=1,6
+          if (abs(x(i)-c1) .gt. abs(x(i)-c2)) goto 11
+          s1=s1+x(i)
+          n1=n1+1
+          goto 10
+   11     s2=s2+x(i)
+          n2=n2+1
+   10   continue
+        if (n1 .gt. 0) c1=s1/n1
+        if (n2 .gt. 0) c2=s2/n2
+   20 continue
+      print 100, c1, c2
+      do 30 i=1,6
+        if (abs(x(i)-c1) .le. abs(x(i)-c2)) print 110, x(i), 1
+        if (abs(x(i)-c1) .gt. abs(x(i)-c2)) print 110, x(i), 2
+   30 continue
+      stop
+ 100  format('CENTERS ',2f8.3)
+ 110  format('X=',f6.1,' CLUSTER=',i2)
+      end
+*execute
+*end file

@@ -1,0 +1,71 @@
+*name mlp xor
+*fortran
+c---- Two-layer perceptron (2-2-1) learns XOR by backpropagation
+      program mlp
+      real w11,w12,w21,w22,v1,v2,b1,b2,b3,eta
+      real x1(4),x2(4),y(4)
+      real z1,h1,z2,h2,z3,o,d3,d1,d2,loss,se
+      integer i,ep
+      x1(1)=0.
+      x1(2)=0.
+      x1(3)=1.
+      x1(4)=1.
+      x2(1)=0.
+      x2(2)=1.
+      x2(3)=0.
+      x2(4)=1.
+      y(1)=0.
+      y(2)=1.
+      y(3)=1.
+      y(4)=0.
+      w11=0.5
+      w12=0.1
+      w21=0.3
+      w22=0.7
+      v1=0.2
+      v2=0.4
+      b1=-0.1
+      b2=0.2
+      b3=-0.3
+      eta=0.5
+      do 20 ep=1,2000
+        do 10 i=1,4
+          z1=w11*x1(i)+w12*x2(i)+b1
+          h1=1.0/(1.0+exp(-z1))
+          z2=w21*x1(i)+w22*x2(i)+b2
+          h2=1.0/(1.0+exp(-z2))
+          z3=v1*h1+v2*h2+b3
+          o=1.0/(1.0+exp(-z3))
+          d3=o-y(i)
+          d1=d3*v1*h1*(1.0-h1)
+          d2=d3*v2*h2*(1.0-h2)
+          v1=v1-eta*d3*h1
+          v2=v2-eta*d3*h2
+          b3=b3-eta*d3
+          w11=w11-eta*d1*x1(i)
+          w12=w12-eta*d1*x2(i)
+          w21=w21-eta*d2*x1(i)
+          w22=w22-eta*d2*x2(i)
+          b1=b1-eta*d1
+          b2=b2-eta*d2
+   10   continue
+   20 continue
+      loss=0.
+      do 30 i=1,4
+        z1=w11*x1(i)+w12*x2(i)+b1
+        h1=1.0/(1.0+exp(-z1))
+        z2=w21*x1(i)+w22*x2(i)+b2
+        h2=1.0/(1.0+exp(-z2))
+        z3=v1*h1+v2*h2+b3
+        o=1.0/(1.0+exp(-z3))
+        se=o-y(i)
+        loss=loss+se*se
+        print 100, x1(i), x2(i), y(i), o
+   30 continue
+      print 110, loss
+      stop
+ 100  format('X1=',f3.1,' X2=',f3.1,' Y=',f3.1,' OUT=',f7.4)
+ 110  format('LOSS=',f8.5)
+      end
+*execute
+*end file

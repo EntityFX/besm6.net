@@ -1,0 +1,47 @@
+*name perceptron
+*fortran
+c---- Perceptron: logical AND
+      program perc
+      real w1,w2,b,eta,out,err
+      real x1(4),x2(4),y(4)
+      integer i,ep
+      x1(1)=0.
+      x1(2)=0.
+      x1(3)=1.
+      x1(4)=1.
+      x2(1)=0.
+      x2(2)=1.
+      x2(3)=0.
+      x2(4)=1.
+      y(1)=0.
+      y(2)=0.
+      y(3)=0.
+      y(4)=1.
+      w1=0.
+      w2=0.
+      b=0.
+      eta=0.1
+      do 20 ep=1,20
+        do 10 i=1,4
+          out=w1*x1(i)+w2*x2(i)+b
+          if (out .gt. 0.) out=1.
+          if (out .le. 0.) out=0.
+          err=y(i)-out
+          w1=w1+eta*err*x1(i)
+          w2=w2+eta*err*x2(i)
+          b=b+eta*err
+   10   continue
+   20 continue
+      print 100, w1, w2, b
+      do 30 i=1,4
+        out=w1*x1(i)+w2*x2(i)+b
+        if (out .gt. 0.) out=1.
+        if (out .le. 0.) out=0.
+        print 110, x1(i), x2(i), y(i), out
+   30 continue
+      stop
+ 100  format('WEIGHTS ',3f8.3)
+ 110  format('X1=',f3.1,' X2=',f3.1,' Y=',f3.1,' OUT=',f3.1)
+      end
+*execute
+*end file

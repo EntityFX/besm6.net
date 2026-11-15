@@ -1,0 +1,44 @@
+*name annealing
+*fortran
+c---- Simulated annealing: maximize 9-(x-3)^2 on 0..10
+      program anneal
+      real fx,fn,t,r1,r2,fb
+      integer x,best,xn,it,iseed
+      iseed=12345
+      x=0
+      fx=9.0-(x-3.0)**2
+      best=x
+      fb=fx
+      t=5.0
+      do 40 it=1,30
+        iseed=iseed*75+74
+        iseed=iseed-65537*(iseed/65537)
+        r1=iseed/65537.0
+        xn=x
+        if (r1 .lt. 0.5) xn=x-1
+        if (r1 .ge. 0.5) xn=x+1
+        if (xn .lt. 0) xn=0
+        if (xn .gt. 10) xn=10
+        fn=9.0-(xn-3.0)**2
+        if (fn .ge. fx) goto 30
+        iseed=iseed*75+74
+        iseed=iseed-65537*(iseed/65537)
+        r2=iseed/65537.0
+        if (r2 .lt. exp((fn-fx)/t)) goto 30
+        goto 35
+   30   continue
+        x=xn
+        fx=fn
+        if (fx .gt. fb) best=x
+        if (fx .gt. fb) fb=fx
+   35   continue
+        t=t*0.8
+   40 continue
+      print 100, best, fb
+      print 110, x, fx, t
+      stop
+ 100  format('BEST X=',i3,' F=',f7.3)
+ 110  format('FINAL X=',i3,' F=',f7.3,' T=',f6.3)
+      end
+*execute
+*end file

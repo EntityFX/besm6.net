@@ -1,0 +1,48 @@
+*name genetic algorithm
+*fortran
+c---- Simple genetic algorithm: maximize x*x on 0..31
+      program ga
+      integer p(4),fit(4),i,gen,i1,i2,p1,p2,c1,c2,bx,bf
+      p(1)=3
+      p(2)=12
+      p(3)=21
+      p(4)=30
+      do 100 gen=1,8
+        do 10 i=1,4
+          fit(i)=p(i)*p(i)
+   10   continue
+        i1=1
+        do 20 i=2,4
+          if (fit(i) .gt. fit(i1)) i1=i
+   20   continue
+        i2=0
+        do 30 i=1,4
+          if (i .eq. i1) goto 30
+          if (i2 .eq. 0) i2=i
+          if (fit(i) .gt. fit(i2)) i2=i
+   30   continue
+        p1=p(i1)
+        p2=p(i2)
+        c1=(p1/4)*4+(p2-4*(p2/4))
+        c2=(p2/4)*4+(p1-4*(p1/4))
+        c1=c1+3
+        if (c1 .gt. 31) c1=c1-32
+        c2=c2+5
+        if (c2 .gt. 31) c2=c2-32
+        p(1)=p1
+        p(2)=p2
+        p(3)=c1
+        p(4)=c2
+  100 continue
+      bx=p(1)
+      bf=fit(1)
+      do 110 i=2,4
+        if (p(i)*p(i) .gt. bf) bx=p(i)
+        if (p(i)*p(i) .gt. bf) bf=p(i)*p(i)
+  110 continue
+      print 200, bx, bf
+      stop
+ 200  format('BEST X=',i3,' FITNESS=',i6)
+      end
+*execute
+*end file

@@ -1,0 +1,57 @@
+*name q learning
+*fortran
+c---- Q-learning in a four-state corridor
+      program qlearn
+      real q(4,2),r,r2,alpha,gamma,eps,maxq
+      integer s,a,ns,ep,st,rwd,iseed
+      alpha=0.5
+      gamma=0.9
+      eps=0.2
+      iseed=12345
+      do 5 s=1,4
+        q(s,1)=0.
+        q(s,2)=0.1
+    5 continue
+      do 100 ep=1,20
+        s=1
+        do 90 st=1,10
+          iseed=iseed*75+74
+          iseed=iseed-65537*(iseed/65537)
+          r=iseed/65537.0
+          if (r .lt. eps) goto 20
+          a=1
+          if (q(s,2) .gt. q(s,1)) a=2
+          goto 30
+   20     iseed=iseed*75+74
+          iseed=iseed-65537*(iseed/65537)
+          r2=iseed/65537.0
+          a=1
+          if (r2 .ge. 0.5) a=2
+   30     continue
+          ns=s-1
+          if (a .eq. 2) ns=s+1
+          if (ns .lt. 1) ns=1
+          if (ns .gt. 4) ns=4
+          rwd=0
+          if (ns .eq. 4) rwd=1
+          maxq=q(ns,1)
+          if (q(ns,2) .gt. maxq) maxq=q(ns,2)
+          q(s,a)=q(s,a)+alpha*(rwd+gamma*maxq-q(s,a))
+          s=ns
+          if (s .eq. 4) goto 100
+   90   continue
+  100 continue
+      do 110 s=1,4
+        print 200, s, q(s,1), q(s,2)
+  110 continue
+      do 120 s=1,3
+        a=1
+        if (q(s,2) .gt. q(s,1)) a=2
+        print 210, s, a
+  120 continue
+      stop
+ 200  format(1x,'STATE=',i2,' QLEFT=',f7.3,' QRIGHT=',f7.3)
+ 210  format(1x,'POLICY STATE=',i2,' ACTION=',i2)
+      end
+*execute
+*end file

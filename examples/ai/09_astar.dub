@@ -1,0 +1,95 @@
+*name a star
+*fortran
+c---- A* search on a 5x5 grid with obstacles
+      program astar
+      integer obs(5,5),g(25),f(25),par(25),op(25),cl(25)
+      integer dr(4),dc(4),path(25)
+      integer i,r,c,k,nr,nc,v,u,best,ng,l,rr,cc,it,ii
+      do 10 i=1,25
+        g(i)=1000
+        f(i)=1000
+        par(i)=0
+        op(i)=0
+        cl(i)=0
+   10 continue
+      do 15 r=1,5
+        do 15 c=1,5
+          obs(r,c)=0
+   15 continue
+      obs(2,2)=1
+      obs(2,3)=1
+      obs(3,3)=1
+      obs(4,2)=1
+      dr(1)=-1
+      dc(1)=0
+      dr(2)=1
+      dc(2)=0
+      dr(3)=0
+      dc(3)=-1
+      dr(4)=0
+      dc(4)=1
+      g(1)=0
+      f(1)=8
+      op(1)=1
+      do 100 it=1,25
+        u=0
+        best=1000
+        do 20 v=1,25
+          if (op(v) .eq. 0) goto 20
+          if (f(v) .ge. best) goto 20
+          best=f(v)
+          u=v
+   20   continue
+        if (u .eq. 0) goto 900
+        if (u .eq. 25) goto 200
+        op(u)=0
+        cl(u)=1
+        r=(u-1)/5+1
+        c=(u-1)-5*((u-1)/5)+1
+        do 30 k=1,4
+          nr=r+dr(k)
+          nc=c+dc(k)
+          if (nr .lt. 1) goto 30
+          if (nr .gt. 5) goto 30
+          if (nc .lt. 1) goto 30
+          if (nc .gt. 5) goto 30
+          if (obs(nr,nc) .ne. 0) goto 30
+          v=(nr-1)*5+nc
+          if (cl(v) .ne. 0) goto 30
+          ng=g(u)+1
+          if (ng .ge. g(v)) goto 30
+          g(v)=ng
+          f(v)=ng+iabs(nr-5)+iabs(nc-5)
+          par(v)=u
+          op(v)=1
+   30   continue
+  100 continue
+      goto 900
+  200 continue
+      l=0
+      v=25
+  210 continue
+      l=l+1
+      path(l)=v
+      if (v .eq. 1) goto 220
+      v=par(v)
+      goto 210
+  220 continue
+      print 300, l
+      do 230 ii=1,l
+        i=l+1-ii
+        rr=(path(i)-1)/5+1
+        cc=(path(i)-1)-5*((path(i)-1)/5)+1
+        print 310, rr, cc
+  230 continue
+      goto 999
+  900 continue
+      print 320
+  999 continue
+      stop
+ 300  format('PATH LENGTH=',i3)
+ 310  format('R=',i2,' C=',i2)
+ 320  format('NO PATH')
+      end
+*execute
+*end file

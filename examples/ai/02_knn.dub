@@ -1,0 +1,47 @@
+*name k nearest
+*fortran
+c---- k-nearest neighbours, one feature, k=3
+      program knn
+      real xt(6),yt(6),d(6),qa(3),q
+      integer used(6),i,j,k,best,sum,p,iq
+      xt(1)=1.
+      xt(2)=2.
+      xt(3)=3.
+      xt(4)=6.
+      xt(5)=7.
+      xt(6)=8.
+      yt(1)=0.
+      yt(2)=0.
+      yt(3)=0.
+      yt(4)=1.
+      yt(5)=1.
+      yt(6)=1.
+      qa(1)=2.5
+      qa(2)=5.5
+      qa(3)=7.5
+      do 40 iq=1,3
+        q=qa(iq)
+        do 10 i=1,6
+          d(i)=abs(xt(i)-q)
+          used(i)=0
+   10   continue
+        sum=0
+        do 20 k=1,3
+          best=0
+          do 15 i=1,6
+            if (used(i) .ne. 0) goto 15
+            if (best .eq. 0) best=i
+            if (d(i) .lt. d(best)) best=i
+   15     continue
+          used(best)=1
+          sum=sum+yt(best)
+   20   continue
+        p=0
+        if (sum .gt. 1) p=1
+        print 100, q, p
+   40 continue
+      stop
+ 100  format('QUERY=',f5.1,' CLASS=',i2)
+      end
+*execute
+*end file

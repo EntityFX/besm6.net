@@ -1,0 +1,61 @@
+*name naive bayes
+*fortran
+c---- Naive Bayes with two binary features and Laplace smoothing
+      program nb
+      integer a(8),b(8),y(8),n(2),na(2,2),nbf(2,2)
+      integer i,c,ca,cb,pa,pb,cc
+      real s(2),p1,p2
+      a(1)=0
+      a(2)=0
+      a(3)=0
+      a(4)=1
+      a(5)=1
+      a(6)=1
+      a(7)=1
+      a(8)=0
+      b(1)=0
+      b(2)=1
+      b(3)=0
+      b(4)=0
+      b(5)=1
+      b(6)=1
+      b(7)=0
+      b(8)=1
+      y(1)=0
+      y(2)=0
+      y(3)=0
+      y(4)=0
+      y(5)=1
+      y(6)=1
+      y(7)=1
+      y(8)=1
+      do 10 c=1,2
+        n(c)=0
+        do 11 ca=1,2
+          na(c,ca)=0
+          nbf(c,ca)=0
+   11   continue
+   10 continue
+      do 20 i=1,8
+        c=y(i)+1
+        ca=a(i)+1
+        cb=b(i)+1
+        n(c)=n(c)+1
+        na(c,ca)=na(c,ca)+1
+        nbf(c,cb)=nbf(c,cb)+1
+   20 continue
+      do 30 c=1,2
+        p1=(na(c,2)+1.0)/(n(c)+2.0)
+        p2=(nbf(c,2)+1.0)/(n(c)+2.0)
+        s(c)=0.5*p1*p2
+        cc=c-1
+        print 100, cc, n(c), s(c)
+   30 continue
+      if (s(1) .gt. s(2)) print 110, 0
+      if (s(1) .le. s(2)) print 110, 1
+      stop
+ 100  format('CLASS=',i2,' COUNT=',i3,' SCORE=',f8.4)
+ 110  format('PREDICTED CLASS=',i2)
+      end
+*execute
+*end file
