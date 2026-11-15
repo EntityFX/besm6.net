@@ -109,9 +109,9 @@ C# нумерует биты от 0 до 47. Поэтому историческ
 - [периферийные устройства](../06-peripherals.md);
 - [программирование и отладка](../07-programming.md);
 - [презентация для студентов](../presentation-besm6/besm6-for-students.md);
-- [`Word48`](../../src/besm6.net/Core/Word48.cs), [`Processor`](../../src/besm6.net/Core/Processor.cs),
-  [`InstructionExecutor`](../../src/besm6.net/Core/InstructionExecutor.cs) и
-  [`MachineCore`](../../src/besm6.net/Core/MachineCore.cs) — исполняемая модель.
+- `Word48`, `Processor`,
+  `InstructionExecutor` и
+  `MachineCore` — исполняемая модель.
 
 Историческая документация определяет смысл архитектуры. Текущие классы и тесты
 репозитория определяют программный контракт лабораторной модели. Если между

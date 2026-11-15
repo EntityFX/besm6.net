@@ -73,7 +73,7 @@ BESM6_WEB_URL=http://localhost:8080 dotnet run --project tools/Besm6.Web.UiCheck
 Эти два сценария работают и с удалённым Linux-сервером: проверяют лендинг,
 переход в консоль, WebSocket, наличие лент, выполнение встроенного задания и
 независимость двух сессий без чтения файлов сервера. Остальные проверки и
-локальный запуск без nginx описаны в [инструкции веб-проверок](tools/Besm6.Web.UiChecks/README.md).
+локальный запуск без nginx описаны в инструкции веб-проверок.
 
 ## Внутреннее устройство
 
@@ -139,7 +139,7 @@ dotnet $DLL check examples --limit 100000
 Псевдографика перфокарт с номерами колонок и рядов, например:
 `dotnet $DLL punch --text "      A=B+3" --encoding upp`.
 Поддерживаются форматы IBM/УПДК, УПП и вывод grid / ASCII / Braille;
-[примеры и форматы](docs/punchcards.md).
+примеры и форматы.
 
 Hosted-запуск `--speed original` использует статистическую модель УУ/АУ и МОЗУ
 для гостевого таймера и замедления хоста. Стоимость математических экстракодов
@@ -154,7 +154,7 @@ Hosted-запуск `--speed original` использует статистиче
 Она разрешает быстрые блоки с сохранением проверок чтения/записи и перехода
 по watchpoint. По умолчанию выключена; fetch watchpoints, наблюдатели и
 аппаратная модель сохраняют существующие ограничения исполнения.
-Замеры и проверки: [быстрые блоки с memory watchpoints](reports/misc/dhrystone-memory-watchpoint-batching.md).
+Замеры и проверки: быстрые блоки с memory watchpoints.
 
 ### Формат `.dub`
 
@@ -180,7 +180,7 @@ python tools/run_all_examples.py \
 
 Актуальное состояние: **~2500+ тестов зелёные**, **CERNlib 397/397**,
 golden-набор **3/3**, максимальная регрессия скорости в пределах допуска 5%.
-Подробная карта готовности по этапам — в [`docs/besm6-readiness.md`](docs/besm6-readiness.md).
+
 
 ## Структура репозитория
 
@@ -191,21 +191,23 @@ examples/     .dub-задания (исторические программы �
 tools/        python-инструменты (golden-прогон, дизассемблер, разбор ОС)
 book/         книжные материалы по БЭСМ-6 и Фортрану-Дубна (источники)
 tapes/        образы лент ОС «Дубна» и разбор
-docs/         спецификации архитектуры, памяти, приёмки по этапам
-reports/      текущая приёмка и необходимые исторические контрольные данные
-plans/        планы разработки
+docs/         описание машины, SDD, статьи и калибровка времени
+reports/      статьи и данные измерений
 ```
 
 ## Документация
 
-- [docs/besm6-machine.md](docs/besm6-machine.md) — устройство, симулятор, скорость.
-- [docs/performance-methodology.md](docs/performance-methodology.md) — устройство машины, бенчмарки, сбор статистики, проверка результатов и расчёт производительности.
-- [docs/besm6-commands.md](docs/besm6-commands.md) — команды, признаки, супервизор.
-- [docs/besm6-memory.md](docs/besm6-memory.md) — память, приписка, буферы.
-- [docs/besm6-hardware-time.md](docs/besm6-hardware-time.md) — аппаратное время и стадии АУ.
-- [docs/besm6-readiness.md](docs/besm6-readiness.md) — готовность и границы по этапам.
-- [docs/ose-dubna.md](docs/ose-dubna.md) — восстановление кода ОС «Дубна».
-- [docs/dubna-languages.md](docs/dubna-languages.md) — Фортран-Дубна, портирования.
+- [ARCHITECTURE.md](ARCHITECTURE.md) — архитектура программной модели.
+- [docs/besm6-machine.md](docs/besm6-machine.md) — устройство машины, симулятор, исполнение и скорость.
+- [docs/besm6-sdd.md](docs/besm6-sdd.md) — спецификация проектирования симулятора.
+- [book/README.md](book/README.md) — книга по БЭСМ-6 и Фортрану-Дубна.
+- [docs/original-timing.md](docs/original-timing.md) — калибровка режима `original`.
+- [docs/articles/](docs/articles/) — статьи по производительности.
+- [reports/ai-comparison.md](reports/ai-comparison.md) — сравнение алгоритмов ИИ на БЭСМ-6, Python и современном Фортране; [PDF](reports/ai-comparison.pdf).
+- [reports/transport-performance.md](reports/transport-performance.md) — производительность на транспортных задачах.
+- [reports/transport-modi-100.md](reports/transport-modi-100.md) — задача 100×100.
+- [reports/transport-ssp-200.md](reports/transport-ssp-200.md) — задача 200×200.
+- [examples/ai/README.md](examples/ai/README.md) — корпус алгоритмов ИИ.
 
 ## Лицензия
 
@@ -285,7 +287,7 @@ dotnet run --project src/Besm6.AspNetCore.Web -c Release
 - **Examples** содержит встроенные задания из `examples/`: поиск, просмотр исходника, **Load into machine** и **Run example**. Запуск использует настройки Job; Debug начинается с паузы. Обычная загрузка собственных `.dub` также доступна.
 - Готовые JSON выбираются в том же списке: [Dhrystone Maximum](examples/web-jobs/dhrystone-max.json), [Original](examples/web-jobs/dhrystone-original.json), [Virtual](examples/web-jobs/dhrystone-virtual.json), [Debug](examples/web-jobs/dhrystone-debug.json), [Supervisor functional](examples/machines/supervisor-functional.json) и [Supervisor hardware](examples/machines/supervisor-hardware.json). Введите `web-jobs` или `machines` в поиск, выберите файл и нажмите **Run example**. JSON можно также загрузить файлом или вставить в Editor.
 - **Edit copy** переносит пример в **Editor**. В редактор можно вставить своё полное задание `.dub`, просмотреть подсветку и выполнить **Run text**. Подсветка распознаёт управляющие карты, Fortran/ФОРЕКС, Algol и мнемоники ассемблера; исходники выводятся как текст. Правка редактора во время исполнения готовит следующее задание.
-- **Card generator** кодирует текст и декодирует ручную пробивку IBM/УПП, проверяет нечётность и сохраняет SVG точного физического размера и PNG 600 dpi. [Описание форматов и геометрии](docs/punchcards.md).
+- **Card generator** кодирует текст и декодирует ручную пробивку IBM/УПП, проверяет нечётность и сохраняет SVG точного физического размера и PNG 600 dpi. Описание форматов и геометрии.
 - **Instructions** кодирует и декодирует 24-битную инструкцию или 48-битное слово: Автокод (`СЧ M3 00123`), БЕМШ (`сч 3,00123`) и Madlen (` ,xta,3 00123,`). Доступны поля команды, кликабельные биты и OCT/HEX/DEC/BIN; при изменении одной половины слова другая сохраняется.
 - **Punch cards → Format** переключает Braille, ASCII, Grid и физический вид карт после пробивки. Выбор меняет представление уже полученных карт.
 - **Terminal** принимает строки для гостевого `*71` и телетайпа. Когда программа ждёт ввод, статус меняется на **WaitingInput**, открывается вкладка терминала; **Send line** продолжает выполнение. Можно заранее передать строку гостевому терминалу, остановить ожидающую программу или выполнить Reset.
@@ -303,4 +305,4 @@ JSON с `"kind": "web-job"` — настройки веб-запуска: `examp
 
 Вкладки устройств показывают принтер, перфокарты, плоттеры Watanabe/Calcomp/Tektronix, терминал и накопители. Шрифт Braille поставляется локально. Непрерывное выполнение работает блоками на отдельном потоке; вывод объединяется в порции, а доставка сообщений вынесена из потока машины. Для сравнения скорости с консолью используйте одинаковую конфигурацию **Release**, скорость и галки Statistics/Guest Clock.
 
-Для воспроизводимой проверки интерфейса, экспорта, примеров и нескольких сессий используйте [браузерные проверки](tools/Besm6.Web.UiChecks/README.md).
+Для воспроизводимой проверки интерфейса, экспорта, примеров и нескольких сессий используйте браузерные проверки.
