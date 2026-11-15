@@ -359,6 +359,41 @@
       if (!$('machineModel').disabled) $('machineModel').value = 'supervisor-hardware';
     } catch (error) { showError(error); }
   });
+
+  // При выборе примера: автоматически заполняем исходный текст, подставляем профиль машины и загружаем в фон
+  window.addEventListener('exampleContentLoaded', async (e) => {
+    const { id, text } = e.detail;
+    $('sourceText').value = text;
+    $('sourceText').dispatchEvent(new Event('input'));
+    const isJson = id.endsWith('.json');
+    const supervisor = $('machineModel').value.startsWith('supervisor-');
+    if (isJson && !supervisor) $('machineModel').value = 'supervisor-functional';
+    else if (!isJson && supervisor) $('machineModel').value = 'dubna';
+    if (ready && !uploading && !activeStates.has(state)) {
+      try {
+        uploading = true; refreshButtons();
+        await connection.invoke('UploadText', text);
+        $('file').value = ''; $('error').textContent = '';
+      } catch (error) { showError(error); }
+      finally { uploading = false; refreshButtons(); }
+    }
+  });
+
+  // При смене профиля машины — перефильтровать примеры и сбросить несовместимое состояние
+  $('machineModel').addEventListener('change', () => {
+    window.dispatchEvent(new Event('exampleSelectionChanged'));
+    const supervisor = $('machineModel').value.startsWith('supervisor-');
+    const current = $('exampleSelect').value;
+    if (current && ((supervisor && !current.endsWith('.json')) || (!supervisor && current.endsWith('.json')))) {
+      $('exampleSelect').value = '';
+      $('exampleSource').textContent = 'Выберите пример для просмотра.';
+      $('sourceText').value = '';
+      $('sourceText').dispatchEvent(new Event('input'));
+      uploaded = false;
+      refreshButtons();
+    }
+  });
+
   const refreshTimer = setInterval(() => {
     if (ready && state === 'Running') {
       if (snapshotPending && performance.now() - snapshotStarted > 1500) snapshotPending = false;
