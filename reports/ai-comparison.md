@@ -57,14 +57,14 @@ Python относительно модели БЭСМ-6 составляет о�
 машин; она применялась для научных и инженерных расчётов, обработки
 экспериментальных данных и задач системного программирования.
 
-| Параметр | Значение |
-|---|---|
-| Слово | 48 бит |
-| Адресация | 15 бит |
-| Память, доступная заданию в модели | 24К слов, до 32К |
-| Быстродействие | порядка 1 млн операций/с |
-| Операционная система | «Дубна» |
-| Языки | Фортран, Алгол, Мадлен |
+| Параметр                           | Значение                 |
+| ---------------------------------- | ------------------------ |
+| Слово                              | 48 бит                   |
+| Адресация                          | 15 бит                   |
+| Память, доступная заданию в модели | 24К слов, до 32К         |
+| Быстродействие                     | порядка 1 млн операций/с |
+| Операционная система               | «Дубна»                  |
+| Языки                              | Фортран, Алгол, Мадлен   |
 
 Для машины характерны 48-битные слова, полусловные команды, развитая
 адресация и работа с лентами, барабанами и дисками. Именно эти свойства
@@ -99,19 +99,19 @@ Python относительно модели БЭСМ-6 составляет о�
 
 **Таблица 1. Тестовый корпус.**
 
-| № | Алгоритм | Файл | Python-функция |
-|---:|---|---|---|
-| 1 | Перцептрон, логическое И | `01_perceptron.dub` | `perceptron()` |
-| 2 | k ближайших соседей | `02_knn.dub` | `knn()` |
-| 3 | k-means, два кластера | `03_kmeans.dub` | `kmeans()` |
-| 4 | Наивный Байес | `04_naive_bayes.dub` | `naive_bayes()` |
-| 5 | Решающий пень | `05_decision_stump.dub` | `decision_stump()` |
-| 6 | Генетический алгоритм | `06_genetic.dub` | `genetic()` |
-| 7 | Имитация отжига | `07_annealing.dub` | `annealing()` |
-| 8 | Q-learning | `08_qlearning.dub` | `qlearning()` |
-| 9 | A* на сетке 5×5 | `09_astar.dub` | `astar()` |
-| 10 | MLP 2-2-1, XOR | `10_mlp_xor.dub` | `mlp_xor()` |
-| 11 | Мини-шахматы, мат в 1 | `11_chess_mate.dub` | `chess_mate()` |
+|    № | Алгоритм                 | Файл                    | Python-функция     |
+| ---: | ------------------------ | ----------------------- | ------------------ |
+|    1 | Перцептрон, логическое И | `01_perceptron.dub`     | `perceptron()`     |
+|    2 | k ближайших соседей      | `02_knn.dub`            | `knn()`            |
+|    3 | k-means, два кластера    | `03_kmeans.dub`         | `kmeans()`         |
+|    4 | Наивный Байес            | `04_naive_bayes.dub`    | `naive_bayes()`    |
+|    5 | Решающий пень            | `05_decision_stump.dub` | `decision_stump()` |
+|    6 | Генетический алгоритм    | `06_genetic.dub`        | `genetic()`        |
+|    7 | Имитация отжига          | `07_annealing.dub`      | `annealing()`      |
+|    8 | Q-learning               | `08_qlearning.dub`      | `qlearning()`      |
+|    9 | A* на сетке 5×5          | `09_astar.dub`          | `astar()`          |
+|   10 | MLP 2-2-1, XOR           | `10_mlp_xor.dub`        | `mlp_xor()`        |
+|   11 | Мини-шахматы, мат в 1    | `11_chess_mate.dub`     | `chess_mate()`     |
 
 Классические источники по алгоритмам приведены в разделе 7.4.
 
@@ -202,19 +202,19 @@ S_FP    = T_total(Python) / T_total(Fortran)
 
 **Таблица 2. Время выполнения.**
 
-| Алгоритм | БЭСМ-6 всего, с | БЭСМ-6 счёт, с | Python, мкс | Python всего, мс | Фортран, мс |
-|---|---:|---:|---:|---:|---:|
-| Перцептрон | 1.464 | 0.753 | 20.72 | 61.1 | 1.46 |
-| k-NN | 1.457 | 0.746 | 5.37 | 61.1 | 1.52 |
-| k-means | 1.486 | 0.775 | 7.73 | 61.1 | 1.49 |
-| Наивный Байес | 1.782 | 1.071 | 2.30 | 61.1 | 1.49 |
-| Решающий пень | 1.413 | 0.702 | 10.01 | 61.1 | 1.49 |
-| Генетический алгоритм | 1.667 | 0.956 | 8.13 | 61.1 | 1.56 |
-| Имитация отжига | 1.527 | 0.816 | 22.78 | 61.2 | 1.51 |
-| Q-learning | 1.946 | 1.235 | 58.14 | 61.2 | 1.45 |
-| A* | 2.609 | 1.897 | 44.04 | 61.2 | 1.45 |
-| MLP XOR | 4.694 | 3.983 | 5 769.25 | 66.9 | 2.43 |
-| Шахматы, мат в 1 | 3.539 | 2.828 | 42.27 | 61.2 | 1.50 |
+| Алгоритм              | БЭСМ-6 всего, с | БЭСМ-6 счёт, с | Python, мкс | Python всего, мс | Фортран, мс |
+| --------------------- | --------------: | -------------: | ----------: | ---------------: | ----------: |
+| Перцептрон            |           1.464 |          0.753 |       20.72 |             61.1 |        1.46 |
+| k-NN                  |           1.457 |          0.746 |        5.37 |             61.1 |        1.52 |
+| k-means               |           1.486 |          0.775 |        7.73 |             61.1 |        1.49 |
+| Наивный Байес         |           1.782 |          1.071 |        2.30 |             61.1 |        1.49 |
+| Решающий пень         |           1.413 |          0.702 |       10.01 |             61.1 |        1.49 |
+| Генетический алгоритм |           1.667 |          0.956 |        8.13 |             61.1 |        1.56 |
+| Имитация отжига       |           1.527 |          0.816 |       22.78 |             61.2 |        1.51 |
+| Q-learning            |           1.946 |          1.235 |       58.14 |             61.2 |        1.45 |
+| A*                    |           2.609 |          1.897 |       44.04 |             61.2 |        1.45 |
+| MLP XOR               |           4.694 |          3.983 |    5 769.25 |             66.9 |        2.43 |
+| Шахматы, мат в 1      |           3.539 |          2.828 |       42.27 |             61.2 |        1.50 |
 
 ### 3.2. Ускорение
 
@@ -222,19 +222,19 @@ S_FP    = T_total(Python) / T_total(Fortran)
 
 **Таблица 3. Отношения времени.**
 
-| Алгоритм | БЭСМ-6 / Python, счёт | БЭСМ-6 / Python, всего | БЭСМ-6 / Фортран, всего | Фортран / Python, всего |
-|---|---:|---:|---:|---:|
-| Перцептрон | 36 317× | 23.9× | 1 002× | 41.9× |
-| k-NN | 138 932× | 23.8× | 959× | 40.2× |
-| k-means | 100 267× | 24.3× | 999× | 41.1× |
-| Наивный Байес | 465 950× | 29.2× | 1 199× | 41.1× |
-| Решающий пень | 70 145× | 23.1× | 945× | 40.9× |
-| Генетический алгоритм | 117 593× | 27.3× | 1 069× | 39.2× |
-| Имитация отжига | 35 795× | 25.0× | 1 010× | 40.5× |
-| Q-learning | 21 248× | 31.8× | 1 342× | 42.2× |
-| A* | 43 083× | 42.6× | 1 803× | 42.3× |
-| MLP XOR | 690× | 70.2× | 1 930× | 27.5× |
-| Шахматы, мат в 1 | 66 911× | 57.9× | 2 357× | 40.7× |
+| Алгоритм              | БЭСМ-6 / Python, счёт | БЭСМ-6 / Python, всего | БЭСМ-6 / Фортран, всего | Фортран / Python, всего |
+| --------------------- | --------------------: | ---------------------: | ----------------------: | ----------------------: |
+| Перцептрон            |               36 317× |                  23.9× |                  1 002× |                   41.9× |
+| k-NN                  |              138 932× |                  23.8× |                    959× |                   40.2× |
+| k-means               |              100 267× |                  24.3× |                    999× |                   41.1× |
+| Наивный Байес         |              465 950× |                  29.2× |                  1 199× |                   41.1× |
+| Решающий пень         |               70 145× |                  23.1× |                    945× |                   40.9× |
+| Генетический алгоритм |              117 593× |                  27.3× |                  1 069× |                   39.2× |
+| Имитация отжига       |               35 795× |                  25.0× |                  1 010× |                   40.5× |
+| Q-learning            |               21 248× |                  31.8× |                  1 342× |                   42.2× |
+| A*                    |               43 083× |                  42.6× |                  1 803× |                   42.3× |
+| MLP XOR               |                  690× |                  70.2× |                  1 930× |                   27.5× |
+| Шахматы, мат в 1      |               66 911× |                  57.9× |                  2 357× |                   40.7× |
 
 ### 3.3. Вариабельность
 
@@ -253,19 +253,19 @@ S_FP    = T_total(Python) / T_total(Fortran)
 
 **Таблица 4. Сопоставление результатов.**
 
-| Алгоритм | БЭСМ-6 | Python | Современный Фортран | Совпадение |
-|---|---|---|---|---|
-| Перцептрон | веса `0.2, 0.1, -0.2`; выходы `0,0,0,1` | то же | то же | точное |
-| k-NN | классы `0,1,1` | то же | то же | точное |
-| k-means | центры `2.000, 11.000`; кластеры `1,1,1,2,2,2` | то же | то же | точное |
-| Наивный Байес | scores `0.0556, 0.2222`; класс `1` | то же | то же | точное |
-| Решающий пень | порог `4.5`, направление `1`, ошибок `0` | то же | то же | точное |
-| Генетический алгоритм | `x=31`, fitness `961` | то же | то же | точное |
-| Имитация отжига | `x=3`, `f=9.000` | то же | то же | точное |
-| Q-learning | Q-таблица, политика `2,2,2` | отличие Q < `10⁻³` | отличие Q < `10⁻³` | в допуске |
-| A* | путь длиной `9`, тот же маршрут | то же | то же | точное |
-| MLP XOR | выходы `0.0029, 0.9969, 0.9969, 0.0047`; loss `4.90·10⁻⁵` | отличие < `3·10⁻⁵` | отличие < `3·10⁻⁵` | в допуске |
-| Шахматы | 14 ходов ладьи, 1 мат, `a1–a8` | то же | то же | точное |
+| Алгоритм              | БЭСМ-6                                                    | Python             | Современный Фортран | Совпадение |
+| --------------------- | --------------------------------------------------------- | ------------------ | ------------------- | ---------- |
+| Перцептрон            | веса `0.2, 0.1, -0.2`; выходы `0,0,0,1`                   | то же              | то же               | точное     |
+| k-NN                  | классы `0,1,1`                                            | то же              | то же               | точное     |
+| k-means               | центры `2.000, 11.000`; кластеры `1,1,1,2,2,2`            | то же              | то же               | точное     |
+| Наивный Байес         | scores `0.0556, 0.2222`; класс `1`                        | то же              | то же               | точное     |
+| Решающий пень         | порог `4.5`, направление `1`, ошибок `0`                  | то же              | то же               | точное     |
+| Генетический алгоритм | `x=31`, fitness `961`                                     | то же              | то же               | точное     |
+| Имитация отжига       | `x=3`, `f=9.000`                                          | то же              | то же               | точное     |
+| Q-learning            | Q-таблица, политика `2,2,2`                               | отличие Q < `10⁻³` | отличие Q < `10⁻³`  | в допуске  |
+| A*                    | путь длиной `9`, тот же маршрут                           | то же              | то же               | точное     |
+| MLP XOR               | выходы `0.0029, 0.9969, 0.9969, 0.0047`; loss `4.90·10⁻⁵` | отличие < `3·10⁻⁵` | отличие < `3·10⁻⁵`  | в допуске  |
+| Шахматы               | 14 ходов ладьи, 1 мат, `a1–a8`                            | то же              | то же               | точное     |
 
 Все одиннадцать алгоритмов корректно решают свои задачи: перцептрон и MLP —
 4 из 4 примеров, k-NN — 3 из 3 запросов, k-means — два кластера, наивный
@@ -442,16 +442,16 @@ python3 tools/benchmark_ai_fortran.py
 
 Позиции 28–38 содержат классические описания алгоритмов и доступные обзоры.
 
-| № | Алгоритм | Первоисточник | Обзор |
-|---:|---|---|---|
-| 28 | Перцептрон | Rosenblatt F. The perceptron: a probabilistic model for information storage and organization in the brain // Psychological Review. 1958. Vol. 65, No. 6. P. 386–408. DOI: <https://doi.org/10.1037/h0042519> | [Wikipedia](https://en.wikipedia.org/wiki/Perceptron) |
-| 29 | k-NN | Cover T. M., Hart P. E. Nearest neighbor pattern classification // IEEE Transactions on Information Theory. 1967. Vol. 13, No. 1. P. 21–27. DOI: <https://doi.org/10.1109/TIT.1967.1053964> | [Wikipedia](https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm) |
-| 30 | k-means | Lloyd S. P. Least squares quantization in PCM // IEEE Transactions on Information Theory. 1982. Vol. 28, No. 2. P. 129–137. DOI: <https://doi.org/10.1109/TIT.1982.1056489> | [Wikipedia](https://en.wikipedia.org/wiki/K-means_clustering) |
-| 31 | Наивный Байес | Domingos P., Pazzani M. On the optimality of the simple Bayesian classifier under zero-one loss // Machine Learning. 1997. Vol. 29. P. 103–130. DOI: <https://doi.org/10.1023/A:1007413511361> | [Wikipedia](https://en.wikipedia.org/wiki/Naive_Bayes_classifier) |
-| 32 | Решающий пень | — | [Wikipedia](https://en.wikipedia.org/wiki/Decision_stump) |
-| 33 | Генетический алгоритм | Holland J. H. Adaptation in Natural and Artificial Systems. University of Michigan Press, 1975. | [Wikipedia](https://en.wikipedia.org/wiki/Genetic_algorithm) |
-| 34 | Имитация отжига | Kirkpatrick S., Gelatt C. D., Vecchi M. P. Optimization by simulated annealing // Science. 1983. Vol. 220, No. 4598. P. 671–680. DOI: <https://doi.org/10.1126/science.220.4598.671> | [Wikipedia](https://en.wikipedia.org/wiki/Simulated_annealing) |
-| 35 | Q-learning | Watkins C. J. C. H., Dayan P. Q-learning // Machine Learning. 1992. Vol. 8. P. 279–292. DOI: <https://doi.org/10.1007/BF00992698> | [Wikipedia](https://en.wikipedia.org/wiki/Q-learning) |
-| 36 | A* | Hart P. E., Nilsson N. J., Raphael B. A formal basis for the heuristic determination of minimum cost paths // IEEE Transactions on Systems Science and Cybernetics. 1968. Vol. 4, No. 2. P. 100–107. DOI: <https://doi.org/10.1109/TSSC.1968.300136> | [Wikipedia](https://en.wikipedia.org/wiki/A*_search_algorithm) |
-| 37 | MLP, backpropagation | Rumelhart D. E., Hinton G. E., Williams R. J. Learning representations by back-propagating errors // Nature. 1986. Vol. 323. P. 533–536. DOI: <https://doi.org/10.1038/323533a0> | [Wikipedia](https://en.wikipedia.org/wiki/Backpropagation) |
-| 38 | Шахматы, минимакс | Shannon C. E. Programming a computer for playing chess // Philosophical Magazine. 1950. Vol. 41, No. 314. P. 256–275. DOI: <https://doi.org/10.1080/14786445008521796> | [Wikipedia](https://en.wikipedia.org/wiki/Minimax) |
+|    № | Алгоритм              | Первоисточник                                                                                                                                                                                                                                        | Обзор                                                                    |
+| ---: | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+|   28 | Перцептрон            | Rosenblatt F. The perceptron: a probabilistic model for information storage and organization in the brain // Psychological Review. 1958. Vol. 65, No. 6. P. 386–408. DOI: <https://doi.org/10.1037/h0042519>                                         | [Wikipedia](https://en.wikipedia.org/wiki/Perceptron)                    |
+|   29 | k-NN                  | Cover T. M., Hart P. E. Nearest neighbor pattern classification // IEEE Transactions on Information Theory. 1967. Vol. 13, No. 1. P. 21–27. DOI: <https://doi.org/10.1109/TIT.1967.1053964>                                                          | [Wikipedia](https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm) |
+|   30 | k-means               | Lloyd S. P. Least squares quantization in PCM // IEEE Transactions on Information Theory. 1982. Vol. 28, No. 2. P. 129–137. DOI: <https://doi.org/10.1109/TIT.1982.1056489>                                                                          | [Wikipedia](https://en.wikipedia.org/wiki/K-means_clustering)            |
+|   31 | Наивный Байес         | Domingos P., Pazzani M. On the optimality of the simple Bayesian classifier under zero-one loss // Machine Learning. 1997. Vol. 29. P. 103–130. DOI: <https://doi.org/10.1023/A:1007413511361>                                                       | [Wikipedia](https://en.wikipedia.org/wiki/Naive_Bayes_classifier)        |
+|   32 | Решающий пень         | —                                                                                                                                                                                                                                                    | [Wikipedia](https://en.wikipedia.org/wiki/Decision_stump)                |
+|   33 | Генетический алгоритм | Holland J. H. Adaptation in Natural and Artificial Systems. University of Michigan Press, 1975.                                                                                                                                                      | [Wikipedia](https://en.wikipedia.org/wiki/Genetic_algorithm)             |
+|   34 | Имитация отжига       | Kirkpatrick S., Gelatt C. D., Vecchi M. P. Optimization by simulated annealing // Science. 1983. Vol. 220, No. 4598. P. 671–680. DOI: <https://doi.org/10.1126/science.220.4598.671>                                                                 | [Wikipedia](https://en.wikipedia.org/wiki/Simulated_annealing)           |
+|   35 | Q-learning            | Watkins C. J. C. H., Dayan P. Q-learning // Machine Learning. 1992. Vol. 8. P. 279–292. DOI: <https://doi.org/10.1007/BF00992698>                                                                                                                    | [Wikipedia](https://en.wikipedia.org/wiki/Q-learning)                    |
+|   36 | A*                    | Hart P. E., Nilsson N. J., Raphael B. A formal basis for the heuristic determination of minimum cost paths // IEEE Transactions on Systems Science and Cybernetics. 1968. Vol. 4, No. 2. P. 100–107. DOI: <https://doi.org/10.1109/TSSC.1968.300136> | [Wikipedia](https://en.wikipedia.org/wiki/A*_search_algorithm)           |
+|   37 | MLP, backpropagation  | Rumelhart D. E., Hinton G. E., Williams R. J. Learning representations by back-propagating errors // Nature. 1986. Vol. 323. P. 533–536. DOI: <https://doi.org/10.1038/323533a0>                                                                     | [Wikipedia](https://en.wikipedia.org/wiki/Backpropagation)               |
+|   38 | Шахматы, минимакс     | Shannon C. E. Programming a computer for playing chess // Philosophical Magazine. 1950. Vol. 41, No. 314. P. 256–275. DOI: <https://doi.org/10.1080/14786445008521796>                                                                               | [Wikipedia](https://en.wikipedia.org/wiki/Minimax)                       |
