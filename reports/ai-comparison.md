@@ -1,5 +1,7 @@
 # Сравнительная оценка производительности и точности одиннадцати алгоритмов ИИ на модели БЭСМ-6, Python и современном Фортране
 
+**УДК 004.3**
+
 **Технический отчёт**  
 **Дата:** 15.11.2026  
 **Объект исследования:** модель БЭСМ-6 в эмуляторе `besm6`, Python 3.12.7, GNU Fortran 13.2.1  
@@ -20,8 +22,10 @@ Python относительно модели БЭСМ-6 составляет о�
 Полное время запуска Python превышает время счёта из-за старта интерпретатора
 (61.1 мс), поэтому интегральное ускорение составляет 23–70 раз. Современный
 Фортран при полном запуске оказывается быстрее Python в 27–42 раза и быстрее
-модели БЭСМ-6 примерно в `10³–2.4·10³` раза; для MLP XOR время счёта на
+модели БЭСМ-6 примерно в 950–2400 раз; для MLP XOR время счёта на
 современном Фортране оценивается примерно в 1.0 мс против 5.8 мс на Python.
+
+**Ключевые слова:** БЭСМ-6; эмуляция; производительность; Фортран; Python; алгоритмы ИИ; бенчмаркинг; точность.
 
 ## 1. Введение
 
@@ -65,9 +69,8 @@ Python относительно модели БЭСМ-6 составляет о�
 Для машины характерны 48-битные слова, полусловные команды, развитая
 адресация и работа с лентами, барабанами и дисками. Именно эти свойства
 воспроизводит модель, использованная в эксперименте. Приведённые параметры
-согласуются с описаниями музея и Wikipedia [1, 2]. Более подробно
-архитектура и программное обеспечение БЭСМ-6 освещены в советских
-публикациях [10–21].
+согласуются с описаниями музея и Wikipedia [7, 8]. Более подробно
+архитектура и программное обеспечение БЭСМ-6 освещены в [1, 16–27].
 
 ### 1.2. Симулятор `besm6`
 
@@ -81,7 +84,7 @@ Python относительно модели БЭСМ-6 составляет о�
 - `virtual` — привязка гостевого времени к часам хоста.
 
 В данной работе используется `original`. Устройство и режимы симулятора
-описаны в [7, 8]. Это модель, а не потактовое
+описаны в [2, 13, 14]. Это модель, а не потактовое
 воспроизведение физического железа: она сохраняет семантику команд и
 устройств, но абсолютные секунды зависят от калибровки. Поэтому в статье
 разделены полное время задания, время счёта и накладные расходы запуска.
@@ -90,7 +93,7 @@ Python относительно модели БЭСМ-6 составляет о�
 
 ### 2.1. Тестовый корпус
 
-Все программы расположены в `examples/ai/`. Данные фиксированы и не зависят
+Все программы расположены в `examples/ai/` [5]. Данные фиксированы и не зависят
 от платформы; параметры обучения (число эпох, шаг, температура, число итераций)
 заданы в исходном коде. Перечень алгоритмов приведён в таблице 1.
 
@@ -110,7 +113,7 @@ Python относительно модели БЭСМ-6 составляет о�
 | 10 | MLP 2-2-1, XOR | `10_mlp_xor.dub` | `mlp_xor()` |
 | 11 | Мини-шахматы, мат в 1 | `11_chess_mate.dub` | `chess_mate()` |
 
-Классические источники по алгоритмам приведены в разделе 7.3.
+Классические источники по алгоритмам приведены в разделе 7.4.
 
 ### 2.2. Модель БЭСМ-6
 
@@ -122,7 +125,9 @@ dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run <job> \
 ```
 
 Режим `original` — статистическая модель БЭСМ-6, откалиброванная по Whetstone
-(0.809 MWIPS) [3]. Модельное время детерминировано при фиксированной конфигурации:
+(0.809 MWIPS) [3, 9]. Методика проекта и калибровка описаны в [3, 4];
+в проекте также используется Dhrystone [10]. Модельное время
+детерминировано при фиксированной конфигурации:
 три повторных запуска `01_perceptron` дали одно и то же значение
 `modelSeconds = 1.463660818`. Поэтому для БЭСМ-6 приведено одно измерение,
 а не серия.
@@ -137,8 +142,9 @@ T_solve(BESM) = T_total(BESM) - T_baseline(BESM).
 
 ### 2.3. Python
 
-Реализации на Python используют только стандартную библиотеку [6] и повторяют
-исходные алгоритмы; NumPy не применялся. Каждая функция прогревалась, затем
+Реализации на Python используют только стандартную библиотеку [12]; сценарий
+измерений описан в [6]. Реализации повторяют исходные алгоритмы; NumPy не
+применялся. Каждая функция прогревалась, затем
 выполнялась серия повторов. Время одной итерации — среднее внутри сессии;
 для снижения влияния нагрузки выполнено пять независимых сессий, в таблицах
 приведена медиана. Время полного запуска:
@@ -153,7 +159,7 @@ T_total(Python) = T_startup(Python) + T_solve(Python),
 ### 2.4. Современный Фортран
 
 Исходный текст извлекался из `.dub` без изменения алгоритма и компилировался
-GNU Fortran 13.2.1 [5]:
+GNU Fortran 13.2.1 [11], сценарий измерений — [6]:
 
 ```bash
 gfortran -O2 -std=legacy -ffixed-form -o <exe> <source.f>
@@ -192,6 +198,8 @@ S_FP    = T_total(Python) / T_total(Fortran)
 
 ### 3.1. Время выполнения
 
+Результаты измерений приведены в таблице 2.
+
 **Таблица 2. Время выполнения.**
 
 | Алгоритм | БЭСМ-6 всего, с | БЭСМ-6 счёт, с | Python, мкс | Python всего, мс | Фортран, мс |
@@ -209,6 +217,8 @@ S_FP    = T_total(Python) / T_total(Fortran)
 | Шахматы, мат в 1 | 3.539 | 2.828 | 42.27 | 61.2 | 1.50 |
 
 ### 3.2. Ускорение
+
+Отношения времени приведены в таблице 3.
 
 **Таблица 3. Отношения времени.**
 
@@ -238,6 +248,8 @@ S_FP    = T_total(Python) / T_total(Fortran)
 нестабильность алгоритма. Полные ряды измерений сохранены в JSON-файлах.
 
 ### 3.4. Точность
+
+Сопоставление результатов приведено в таблице 4.
 
 **Таблица 4. Сопоставление результатов.**
 
@@ -285,7 +297,7 @@ S_FP    = T_total(Python) / T_total(Fortran)
 ### 4.3. Модель БЭСМ-6 и современные платформы
 
 Разрыв между моделью БЭСМ-6 и современным Фортраном по полному времени
-составляет `10³–2.4·10³` раз, а между БЭСМ-6 и Python по счётной части —
+составляет 950–2400 раз, а между БЭСМ-6 и Python по счётной части —
 `2.1·10⁴–4.7·10⁵` раз. Столь большой разрыв объясняется не только тактовой
 частотой, но и тем, что модель БЭСМ-6 исполняет команды интерпретатором
 эмулятора с программной реализацией вещественной арифметики и `EXP`.
@@ -298,11 +310,11 @@ S_FP    = T_total(Python) / T_total(Fortran)
    секунды зависят от калибровки; устойчивы порядки величин, а не точные
    множители.
 2. **Малые размеры задач.** Корпус содержит 4–8 точек и небольшие массивы;
-   результаты не переносятся автоматически на большие нейросети и СНС.
+   результаты не переносятся автоматически на большие нейронные сети.
 3. **Разрешение таймера.** Для лёгких алгоритмов время Фортрана и Python
    сопоставимо с накладными расходами запуска; выводы об ускорении счёта
    для них менее надёжны, чем для MLP XOR.
-4. **Один хост и один компилятор.** Использованы Xeon E5-2680 v3, CPython
+4. **Один хост и один компилятор.** Использованы Xeon E5-2680 v3 [15], CPython
    3.12.7 и gfortran 13.2.1; другие конфигурации дадут другие абсолютные
    значения.
 5. **Разная разрядность.** БЭСМ-6 и современные платформы по-разному
@@ -319,7 +331,7 @@ S_FP    = T_total(Python) / T_total(Fortran)
 опережают модель БЭСМ-6 на три–пять порядков:
 
 - Python — в 23–70 раз по полному запуску и в `2.1·10⁴–4.7·10⁵` раз по счёту;
-- современный Фортран — примерно в `10³–2.4·10³` раз по полному запуску;
+- современный Фортран — примерно в 950–2400 раз по полному запуску;
 - современный Фортран быстрее Python по полному запуску в 27–42 раза,
   а для MLP XOR — примерно в 5 раз по счётной части.
 
@@ -354,9 +366,12 @@ python3 tools/benchmark_ai_fortran.py
 ```
 
 Артефакты: `reports/ai-comparison.json`, `reports/ai-python-results.json`,
-`reports/ai-fortran-results.json`.
+`reports/ai-fortran-results.json`. Проверка структуры и данных:
+[ai-comparison-verification.md](ai-comparison-verification.md).
 
-## 7. Источники
+## 7. Литература
+
+### 7.1. Внутренние источники
 
 1. `book/fortran-1976/01-besm6.md` — архитектура и система команд БЭСМ-6,
    память, внешние устройства, пакет задачи.
@@ -370,74 +385,73 @@ python3 tools/benchmark_ai_fortran.py
 6. `tools/benchmark_ai.py`, `tools/benchmark_ai_fortran.py` — реализации
    и сценарии измерений.
 
-### 7.1. Внешние источники
+### 7.2. Внешние источники
 
-1. BESM-6 // Wikipedia. URL: <https://en.wikipedia.org/wiki/BESM-6>
+7. BESM-6 // Wikipedia. URL: <https://en.wikipedia.org/wiki/BESM-6>
    (дата обращения: 15.11.2026).
-2. BESM-6 Computer // Russian Virtual Computer Museum.
+8. BESM-6 Computer // Russian Virtual Computer Museum.
    URL: <https://www.computer-museum.ru/english/besm6.htm>
    (дата обращения: 15.11.2026).
-3. Curnow H. J., Wichmann B. A. A synthetic benchmark // The Computer
+9. Curnow H. J., Wichmann B. A. A synthetic benchmark // The Computer
    Journal. 1976. Vol. 19, No. 1. P. 43–49.
    DOI: <https://doi.org/10.1093/comjnl/19.1.43>.
-4. Weicker R. P. Dhrystone: a synthetic systems programming benchmark //
-   Communications of the ACM. 1984. Vol. 27, No. 10. P. 1013–1030.
-   DOI: <https://doi.org/10.1145/358274.358283>.
-5. GNU Fortran. URL: <https://gcc.gnu.org/fortran/>
-   (дата обращения: 15.11.2026).
-6. Python 3.12 documentation. URL: <https://docs.python.org/3.12/>
-   (дата обращения: 15.11.2026).
-7. SIMH BESM-6 simulator. URL: <https://github.com/besm6/simh>
-   (дата обращения: 15.11.2026).
-8. besm6.net — симулятор БЭСМ-6. URL: <https://github.com/EntityFX/besm6.net>
-   (дата обращения: 15.11.2026).
-9. Intel Xeon Processor E5-2680 v3 specifications.
-   URL: <https://www.intel.com/content/www/us/en/products/sku/81908/intel-xeon-processor-e52680-v3-30m-cache-2-50-ghz/specifications.html>
-   (дата обращения: 15.11.2026).
+10. Weicker R. P. Dhrystone: a synthetic systems programming benchmark //
+    Communications of the ACM. 1984. Vol. 27, No. 10. P. 1013–1030.
+    DOI: <https://doi.org/10.1145/358274.358283>.
+11. GNU Fortran. URL: <https://gcc.gnu.org/fortran/>
+    (дата обращения: 15.11.2026).
+12. Python 3.12 documentation. URL: <https://docs.python.org/3.12/>
+    (дата обращения: 15.11.2026).
+13. SIMH BESM-6 simulator. URL: <https://github.com/besm6/simh>
+    (дата обращения: 15.11.2026).
+14. besm6.net — симулятор БЭСМ-6. URL: <https://github.com/EntityFX/besm6.net>
+    (дата обращения: 15.11.2026).
+15. Intel Xeon Processor E5-2680 v3 specifications.
+    URL: <https://www.intel.com/content/www/us/en/products/sku/81908/intel-xeon-processor-e52680-v3-30m-cache-2-50-ghz/specifications.html>
+    (дата обращения: 15.11.2026).
 
-### 7.2. Советские книги и публикации
+### 7.3. Советские книги и публикации
 
 Библиографические описания приведены по списку литературы книги
 А. И. Салтыкова и Г. И. Макаренко «Программирование на Фортране» (1976),
 оцифрованной в [book/fortran-1976/06-bibliography.md](../book/fortran-1976/06-bibliography.md).
 
-10. Королев Л. Н. Структуры ЭВМ и их математическое обеспечение.
+16. Королев Л. Н. Структуры ЭВМ и их математическое обеспечение.
     М.: Наука, 1974.
-11. Салтыков А. И., Макаренко Г. И. Программирование на Фортране.
+17. Салтыков А. И., Макаренко Г. И. Программирование на Фортране.
     М.: Наука, 1976. 256 с.
-12. Макаренко Г. И., Ракитский А. В., Салтыков А. И. Фортран.
+18. Макаренко Г. И., Ракитский А. В., Салтыков А. И. Фортран.
     М.: Знание, 1973.
-13. Первин Ю. А. Основы Фортрана. М.: Наука, 1972.
-14. Ющенко Е. Л. и др. Фортран. Киев: Вища школа, 1976.
-15. Карначук В. И. Язык фортрана (Оптимизация и большие задачи).
+19. Первин Ю. А. Основы Фортрана. М.: Наука, 1972.
+20. Ющенко Е. Л. и др. Фортран. Киев: Вища школа, 1976.
+21. Карначук В. И. Язык фортрана (Оптимизация и большие задачи).
     Новосибирск: ВЦ СО АН СССР, 1974.
-16. Говорун Н. Н., Силин И. Н. и др. Мониторная система «Дубна»
+22. Говорун Н. Н., Силин И. Н. и др. Мониторная система «Дубна»
     для ЭВМ БЭСМ-6. Новосибирск, 1970.
-17. Задыхайло И. Б., Камынин С. С., Любимский Э. З., Шура-Бура М. Р.
+23. Задыхайло И. Б., Камынин С. С., Любимский Э. З., Шура-Бура М. Р.
     Операционная система ИПМ АН СССР для БЭСМ-6 (ОС ИПМ).
     Новосибирск, 1970.
-18. Березовский М. А. Многоязыковая система программирования //
+24. Березовский М. А. Многоязыковая система программирования //
     Развитие программного обеспечения БЭСМ-6. М.: ВЦ АН СССР, 1975.
-19. Инструкция по программированию на БЭСМ-6. М.: ИПМ АН СССР, 1967.
-20. Мак-Кракен Дж., Дорн У. Численные методы и программирование на
+25. Инструкция по программированию на БЭСМ-6. М.: ИПМ АН СССР, 1967.
+26. Мак-Кракен Дж., Дорн У. Численные методы и программирование на
     фортране. М.: Мир, 1969.
-21. Язык Фортран / под ред. В. П. Ширикова. Дубна: ОИЯИ, 1969.
+27. Язык Фортран / под ред. В. П. Ширикова. Дубна: ОИЯИ, 1969.
 
-### 7.3. Источники по алгоритмам
+### 7.4. Источники по алгоритмам
 
-Классические описания алгоритмов и доступные обзоры приведены ниже.
-Для статей указаны DOI; для книг — библиографическое описание.
+Позиции 28–38 содержат классические описания алгоритмов и доступные обзоры.
 
-| Алгоритм | Первоисточник | Обзор |
-|---|---|---|
-| Перцептрон | Rosenblatt F. The perceptron: a probabilistic model for information storage and organization in the brain // Psychological Review. 1958. Vol. 65, No. 6. P. 386–408. DOI: <https://doi.org/10.1037/h0042519> | [Wikipedia](https://en.wikipedia.org/wiki/Perceptron) |
-| k-NN | Cover T. M., Hart P. E. Nearest neighbor pattern classification // IEEE Transactions on Information Theory. 1967. Vol. 13, No. 1. P. 21–27. DOI: <https://doi.org/10.1109/TIT.1967.1053964> | [Wikipedia](https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm) |
-| k-means | Lloyd S. P. Least squares quantization in PCM // IEEE Transactions on Information Theory. 1982. Vol. 28, No. 2. P. 129–137. DOI: <https://doi.org/10.1109/TIT.1982.1056489> | [Wikipedia](https://en.wikipedia.org/wiki/K-means_clustering) |
-| Наивный Байес | Domingos P., Pazzani M. On the optimality of the simple Bayesian classifier under zero-one loss // Machine Learning. 1997. Vol. 29. P. 103–130. DOI: <https://doi.org/10.1023/A:1007413511361> | [Wikipedia](https://en.wikipedia.org/wiki/Naive_Bayes_classifier) |
-| Решающий пень | — | [Wikipedia](https://en.wikipedia.org/wiki/Decision_stump) |
-| Генетический алгоритм | Holland J. H. Adaptation in Natural and Artificial Systems. University of Michigan Press, 1975. | [Wikipedia](https://en.wikipedia.org/wiki/Genetic_algorithm) |
-| Имитация отжига | Kirkpatrick S., Gelatt C. D., Vecchi M. P. Optimization by simulated annealing // Science. 1983. Vol. 220, No. 4598. P. 671–680. DOI: <https://doi.org/10.1126/science.220.4598.671> | [Wikipedia](https://en.wikipedia.org/wiki/Simulated_annealing) |
-| Q-learning | Watkins C. J. C. H., Dayan P. Q-learning // Machine Learning. 1992. Vol. 8. P. 279–292. DOI: <https://doi.org/10.1007/BF00992698> | [Wikipedia](https://en.wikipedia.org/wiki/Q-learning) |
-| A* | Hart P. E., Nilsson N. J., Raphael B. A formal basis for the heuristic determination of minimum cost paths // IEEE Transactions on Systems Science and Cybernetics. 1968. Vol. 4, No. 2. P. 100–107. DOI: <https://doi.org/10.1109/TSSC.1968.300136> | [Wikipedia](https://en.wikipedia.org/wiki/A*_search_algorithm) |
-| MLP, backpropagation | Rumelhart D. E., Hinton G. E., Williams R. J. Learning representations by back-propagating errors // Nature. 1986. Vol. 323. P. 533–536. DOI: <https://doi.org/10.1038/323533a0> | [Wikipedia](https://en.wikipedia.org/wiki/Backpropagation) |
-| Шахматы, минимакс | Shannon C. E. Programming a computer for playing chess // Philosophical Magazine. 1950. Vol. 41, No. 314. P. 256–275. DOI: <https://doi.org/10.1080/14786445008521796> | [Wikipedia](https://en.wikipedia.org/wiki/Minimax) |
+| № | Алгоритм | Первоисточник | Обзор |
+|---:|---|---|---|
+| 28 | Перцептрон | Rosenblatt F. The perceptron: a probabilistic model for information storage and organization in the brain // Psychological Review. 1958. Vol. 65, No. 6. P. 386–408. DOI: <https://doi.org/10.1037/h0042519> | [Wikipedia](https://en.wikipedia.org/wiki/Perceptron) |
+| 29 | k-NN | Cover T. M., Hart P. E. Nearest neighbor pattern classification // IEEE Transactions on Information Theory. 1967. Vol. 13, No. 1. P. 21–27. DOI: <https://doi.org/10.1109/TIT.1967.1053964> | [Wikipedia](https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm) |
+| 30 | k-means | Lloyd S. P. Least squares quantization in PCM // IEEE Transactions on Information Theory. 1982. Vol. 28, No. 2. P. 129–137. DOI: <https://doi.org/10.1109/TIT.1982.1056489> | [Wikipedia](https://en.wikipedia.org/wiki/K-means_clustering) |
+| 31 | Наивный Байес | Domingos P., Pazzani M. On the optimality of the simple Bayesian classifier under zero-one loss // Machine Learning. 1997. Vol. 29. P. 103–130. DOI: <https://doi.org/10.1023/A:1007413511361> | [Wikipedia](https://en.wikipedia.org/wiki/Naive_Bayes_classifier) |
+| 32 | Решающий пень | — | [Wikipedia](https://en.wikipedia.org/wiki/Decision_stump) |
+| 33 | Генетический алгоритм | Holland J. H. Adaptation in Natural and Artificial Systems. University of Michigan Press, 1975. | [Wikipedia](https://en.wikipedia.org/wiki/Genetic_algorithm) |
+| 34 | Имитация отжига | Kirkpatrick S., Gelatt C. D., Vecchi M. P. Optimization by simulated annealing // Science. 1983. Vol. 220, No. 4598. P. 671–680. DOI: <https://doi.org/10.1126/science.220.4598.671> | [Wikipedia](https://en.wikipedia.org/wiki/Simulated_annealing) |
+| 35 | Q-learning | Watkins C. J. C. H., Dayan P. Q-learning // Machine Learning. 1992. Vol. 8. P. 279–292. DOI: <https://doi.org/10.1007/BF00992698> | [Wikipedia](https://en.wikipedia.org/wiki/Q-learning) |
+| 36 | A* | Hart P. E., Nilsson N. J., Raphael B. A formal basis for the heuristic determination of minimum cost paths // IEEE Transactions on Systems Science and Cybernetics. 1968. Vol. 4, No. 2. P. 100–107. DOI: <https://doi.org/10.1109/TSSC.1968.300136> | [Wikipedia](https://en.wikipedia.org/wiki/A*_search_algorithm) |
+| 37 | MLP, backpropagation | Rumelhart D. E., Hinton G. E., Williams R. J. Learning representations by back-propagating errors // Nature. 1986. Vol. 323. P. 533–536. DOI: <https://doi.org/10.1038/323533a0> | [Wikipedia](https://en.wikipedia.org/wiki/Backpropagation) |
+| 38 | Шахматы, минимакс | Shannon C. E. Programming a computer for playing chess // Philosophical Magazine. 1950. Vol. 41, No. 314. P. 256–275. DOI: <https://doi.org/10.1080/14786445008521796> | [Wikipedia](https://en.wikipedia.org/wiki/Minimax) |
