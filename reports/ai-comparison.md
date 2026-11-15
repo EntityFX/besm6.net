@@ -65,7 +65,9 @@ Python относительно модели БЭСМ-6 составляет о�
 Для машины характерны 48-битные слова, полусловные команды, развитая
 адресация и работа с лентами, барабанами и дисками. Именно эти свойства
 воспроизводит модель, использованная в эксперименте. Приведённые параметры
-согласуются с описаниями музея и Wikipedia [1, 2].
+согласуются с описаниями музея и Wikipedia [1, 2]. Более подробно
+архитектура и программное обеспечение БЭСМ-6 освещены в советских
+публикациях [10–21].
 
 ### 1.2. Симулятор `besm6`
 
@@ -107,6 +109,8 @@ Python относительно модели БЭСМ-6 составляет о�
 | 9 | A* на сетке 5×5 | `09_astar.dub` | `astar()` |
 | 10 | MLP 2-2-1, XOR | `10_mlp_xor.dub` | `mlp_xor()` |
 | 11 | Мини-шахматы, мат в 1 | `11_chess_mate.dub` | `chess_mate()` |
+
+Классические источники по алгоритмам приведены в разделе 7.3.
 
 ### 2.2. Модель БЭСМ-6
 
@@ -390,3 +394,50 @@ python3 tools/benchmark_ai_fortran.py
 9. Intel Xeon Processor E5-2680 v3 specifications.
    URL: <https://www.intel.com/content/www/us/en/products/sku/81908/intel-xeon-processor-e52680-v3-30m-cache-2-50-ghz/specifications.html>
    (дата обращения: 15.11.2026).
+
+### 7.2. Советские книги и публикации
+
+Библиографические описания приведены по списку литературы книги
+А. И. Салтыкова и Г. И. Макаренко «Программирование на Фортране» (1976),
+оцифрованной в [book/fortran-1976/06-bibliography.md](../book/fortran-1976/06-bibliography.md).
+
+10. Королев Л. Н. Структуры ЭВМ и их математическое обеспечение.
+    М.: Наука, 1974.
+11. Салтыков А. И., Макаренко Г. И. Программирование на Фортране.
+    М.: Наука, 1976. 256 с.
+12. Макаренко Г. И., Ракитский А. В., Салтыков А. И. Фортран.
+    М.: Знание, 1973.
+13. Первин Ю. А. Основы Фортрана. М.: Наука, 1972.
+14. Ющенко Е. Л. и др. Фортран. Киев: Вища школа, 1976.
+15. Карначук В. И. Язык фортрана (Оптимизация и большие задачи).
+    Новосибирск: ВЦ СО АН СССР, 1974.
+16. Говорун Н. Н., Силин И. Н. и др. Мониторная система «Дубна»
+    для ЭВМ БЭСМ-6. Новосибирск, 1970.
+17. Задыхайло И. Б., Камынин С. С., Любимский Э. З., Шура-Бура М. Р.
+    Операционная система ИПМ АН СССР для БЭСМ-6 (ОС ИПМ).
+    Новосибирск, 1970.
+18. Березовский М. А. Многоязыковая система программирования //
+    Развитие программного обеспечения БЭСМ-6. М.: ВЦ АН СССР, 1975.
+19. Инструкция по программированию на БЭСМ-6. М.: ИПМ АН СССР, 1967.
+20. Мак-Кракен Дж., Дорн У. Численные методы и программирование на
+    фортране. М.: Мир, 1969.
+21. Язык Фортран / под ред. В. П. Ширикова. Дубна: ОИЯИ, 1969.
+
+### 7.3. Источники по алгоритмам
+
+Классические описания алгоритмов и доступные обзоры приведены ниже.
+Для статей указаны DOI; для книг — библиографическое описание.
+
+| Алгоритм | Первоисточник | Обзор |
+|---|---|---|
+| Перцептрон | Rosenblatt F. The perceptron: a probabilistic model for information storage and organization in the brain // Psychological Review. 1958. Vol. 65, No. 6. P. 386–408. DOI: <https://doi.org/10.1037/h0042519> | [Wikipedia](https://en.wikipedia.org/wiki/Perceptron) |
+| k-NN | Cover T. M., Hart P. E. Nearest neighbor pattern classification // IEEE Transactions on Information Theory. 1967. Vol. 13, No. 1. P. 21–27. DOI: <https://doi.org/10.1109/TIT.1967.1053964> | [Wikipedia](https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm) |
+| k-means | Lloyd S. P. Least squares quantization in PCM // IEEE Transactions on Information Theory. 1982. Vol. 28, No. 2. P. 129–137. DOI: <https://doi.org/10.1109/TIT.1982.1056489> | [Wikipedia](https://en.wikipedia.org/wiki/K-means_clustering) |
+| Наивный Байес | Domingos P., Pazzani M. On the optimality of the simple Bayesian classifier under zero-one loss // Machine Learning. 1997. Vol. 29. P. 103–130. DOI: <https://doi.org/10.1023/A:1007413511361> | [Wikipedia](https://en.wikipedia.org/wiki/Naive_Bayes_classifier) |
+| Решающий пень | — | [Wikipedia](https://en.wikipedia.org/wiki/Decision_stump) |
+| Генетический алгоритм | Holland J. H. Adaptation in Natural and Artificial Systems. University of Michigan Press, 1975. | [Wikipedia](https://en.wikipedia.org/wiki/Genetic_algorithm) |
+| Имитация отжига | Kirkpatrick S., Gelatt C. D., Vecchi M. P. Optimization by simulated annealing // Science. 1983. Vol. 220, No. 4598. P. 671–680. DOI: <https://doi.org/10.1126/science.220.4598.671> | [Wikipedia](https://en.wikipedia.org/wiki/Simulated_annealing) |
+| Q-learning | Watkins C. J. C. H., Dayan P. Q-learning // Machine Learning. 1992. Vol. 8. P. 279–292. DOI: <https://doi.org/10.1007/BF00992698> | [Wikipedia](https://en.wikipedia.org/wiki/Q-learning) |
+| A* | Hart P. E., Nilsson N. J., Raphael B. A formal basis for the heuristic determination of minimum cost paths // IEEE Transactions on Systems Science and Cybernetics. 1968. Vol. 4, No. 2. P. 100–107. DOI: <https://doi.org/10.1109/TSSC.1968.300136> | [Wikipedia](https://en.wikipedia.org/wiki/A*_search_algorithm) |
+| MLP, backpropagation | Rumelhart D. E., Hinton G. E., Williams R. J. Learning representations by back-propagating errors // Nature. 1986. Vol. 323. P. 533–536. DOI: <https://doi.org/10.1038/323533a0> | [Wikipedia](https://en.wikipedia.org/wiki/Backpropagation) |
+| Шахматы, минимакс | Shannon C. E. Programming a computer for playing chess // Philosophical Magazine. 1950. Vol. 41, No. 314. P. 256–275. DOI: <https://doi.org/10.1080/14786445008521796> | [Wikipedia](https://en.wikipedia.org/wiki/Minimax) |
