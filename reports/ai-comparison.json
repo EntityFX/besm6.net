@@ -1,8 +1,9 @@
 {
-  "generated_at": "2026-11-15T13:40:54+03:00",
+  "generated_at": "2026-11-15T13:46:47+03:00",
   "host": {
     "cpu": "Intel Xeon E5-2680 v3 @ 2.50GHz",
     "python": "3.12.7",
+    "gfortran": "GNU Fortran (GCC) 13.2.1 20240128 (ALT Sisyphus 13.2.1-alt3)",
     "dotnet": "10.0.200"
   },
   "besm": {
@@ -10,17 +11,26 @@
     "baseline_program": "1.37M instructions, 0.711 s guest"
   },
   "python_startup_s": 0.06112760594987776,
-  "python_measurement": "median of 3 sessions; each session is an average over repeats",
+  "python_measurement": "median of 5 sessions; each session is an average over repeats",
+  "fortran_measurement": "median of 500 process runs (50 for MLP); flags: -O2 -std=legacy -ffixed-form",
+  "fortran_baseline_s": 0.0014380534994415939,
   "rows": [
     {
       "id": "01_perceptron",
       "besm_total_s": 1.463660818,
       "besm_solver_s": 0.7525539589999999,
       "besm_instructions": 2523927,
-      "python_solver_s": 1.669854050123831e-05,
-      "python_full_s": 0.061144304490379,
-      "speedup_solver": 45067.049958299816,
-      "speedup_full": 23.937811218873307,
+      "python_solver_s": 2.072169449820649e-05,
+      "python_full_s": 0.061148327644375965,
+      "python_min_s": 1.660244049708126e-05,
+      "python_max_s": 2.078604299458675e-05,
+      "fortran_full_s": 0.0014600384965888225,
+      "fortran_min_s": 0.001165111010777764,
+      "fortran_max_s": 0.0022430639946833253,
+      "speedup_besm_python_solver": 36317.20171654568,
+      "speedup_besm_python_full": 23.936236269817563,
+      "speedup_besm_fortran_full": 1002.4809766452327,
+      "speedup_fortran_python_full": 41.881311888173194,
       "accuracy": "exact: weights 0.2/0.1/-0.2, outputs 0,0,0,1",
       "python_result": {
         "weights": [
@@ -34,17 +44,25 @@
           0.0,
           1.0
         ]
-      }
+      },
+      "fortran_stdout_tail": "WEIGHTS    0.200   0.100  -0.200\nX1=0.0 X2=0.0 Y=0.0 OUT=0.0\nX1=0.0 X2=1.0 Y=0.0 OUT=0.0\nX1=1.0 X2=0.0 Y=0.0 OUT=0.0\nX1=1.0 X2=1.0 Y=1.0 OUT=1.0\n"
     },
     {
       "id": "02_knn",
       "besm_total_s": 1.457085375,
       "besm_solver_s": 0.7459785159999999,
       "besm_instructions": 2524427,
-      "python_solver_s": 5.116166197694838e-06,
-      "python_full_s": 0.061132722116075455,
-      "speedup_solver": 145808.1084887569,
-      "speedup_full": 23.834786421474348,
+      "python_solver_s": 5.3693794005084786e-06,
+      "python_full_s": 0.06113297532927827,
+      "python_min_s": 5.05537059798371e-06,
+      "python_max_s": 7.406213600188493e-06,
+      "fortran_full_s": 0.0015188725010375492,
+      "fortran_min_s": 0.0010954309982480481,
+      "fortran_max_s": 0.0026034869952127337,
+      "speedup_besm_python_solver": 138931.98084109236,
+      "speedup_besm_python_full": 23.83468769762563,
+      "speedup_besm_fortran_full": 959.3203998391292,
+      "speedup_fortran_python_full": 40.248918383549665,
       "accuracy": "exact: classes 0,1,1",
       "python_result": {
         "queries": [
@@ -57,17 +75,25 @@
           1,
           1
         ]
-      }
+      },
+      "fortran_stdout_tail": "QUERY=  2.5 CLASS= 0\nQUERY=  5.5 CLASS= 1\nQUERY=  7.5 CLASS= 1\n"
     },
     {
       "id": "03_kmeans",
       "besm_total_s": 1.48586528,
       "besm_solver_s": 0.774758421,
       "besm_instructions": 2570349,
-      "python_solver_s": 7.76624849822838e-06,
-      "python_full_s": 0.06113537219837599,
-      "speedup_solver": 99759.67433655211,
-      "speedup_full": 24.30451024618888,
+      "python_solver_s": 7.726915493549313e-06,
+      "python_full_s": 0.06113533286537131,
+      "python_min_s": 7.550445501692593e-06,
+      "python_max_s": 1.2000663002254441e-05,
+      "fortran_full_s": 0.0014872674946673214,
+      "fortran_min_s": 0.0011222689936403185,
+      "fortran_max_s": 0.0023469360021408647,
+      "speedup_besm_python_solver": 100267.48987313168,
+      "speedup_besm_python_full": 24.304525883126974,
+      "speedup_besm_fortran_full": 999.0571873100507,
+      "speedup_fortran_python_full": 41.10580852777014,
       "accuracy": "exact: centers 2/11, clusters 1,1,1,2,2,2",
       "python_result": {
         "centers": [
@@ -82,17 +108,25 @@
           2,
           2
         ]
-      }
+      },
+      "fortran_stdout_tail": "CENTERS    2.000  11.000\nX=   1.0 CLUSTER= 1\nX=   2.0 CLUSTER= 1\nX=   3.0 CLUSTER= 1\nX=  10.0 CLUSTER= 2\nX=  11.0 CLUSTER= 2\nX=  12.0 CLUSTER= 2\n"
     },
     {
       "id": "04_naive_bayes",
       "besm_total_s": 1.782088838,
       "besm_solver_s": 1.070981979,
       "besm_instructions": 3018329,
-      "python_solver_s": 2.3126806001528164e-06,
-      "python_full_s": 0.06112991863047791,
-      "speedup_solver": 463091.17607041454,
-      "speedup_full": 29.152481762203642,
+      "python_solver_s": 2.2984914496191776e-06,
+      "python_full_s": 0.06112990444132738,
+      "python_min_s": 2.2926250996533783e-06,
+      "python_max_s": 2.5917956998455338e-06,
+      "fortran_full_s": 0.001485895503719803,
+      "fortran_min_s": 0.0010974080068990588,
+      "fortran_max_s": 0.0023034649930195883,
+      "speedup_besm_python_solver": 465949.9512941169,
+      "speedup_besm_python_full": 29.152488528923723,
+      "speedup_besm_fortran_full": 1199.3365842609417,
+      "speedup_fortran_python_full": 41.140109979668345,
       "accuracy": "exact: scores 0.0556/0.2222, class 1",
       "python_result": {
         "counts": [
@@ -104,48 +138,72 @@
           0.2222222222222222
         ],
         "predicted": 1
-      }
+      },
+      "fortran_stdout_tail": "CLASS= 0 COUNT=  4 SCORE=  0.0556\nCLASS= 1 COUNT=  4 SCORE=  0.2222\nPREDICTED CLASS= 1\n"
     },
     {
       "id": "05_decision_stump",
       "besm_total_s": 1.413486703,
       "besm_solver_s": 0.702379844,
       "besm_instructions": 2453312,
-      "python_solver_s": 9.739119000732899e-06,
-      "python_full_s": 0.061137345068878496,
-      "speedup_solver": 72119.44365266958,
-      "speedup_full": 23.119857452225624,
+      "python_solver_s": 1.0013250200427138e-05,
+      "python_full_s": 0.06113761920007819,
+      "python_min_s": 9.726174600655213e-06,
+      "python_max_s": 1.2776255601784214e-05,
+      "fortran_full_s": 0.001494992000516504,
+      "fortran_min_s": 0.0011425370030337945,
+      "fortran_max_s": 0.0021558010048465803,
+      "speedup_besm_python_solver": 70145.04081502312,
+      "speedup_besm_python_full": 23.119753786522853,
+      "speedup_besm_fortran_full": 945.4811146224563,
+      "speedup_fortran_python_full": 40.894947383635355,
       "accuracy": "exact: threshold 4.5, direction 1, errors 0",
       "python_result": {
         "threshold": 4.5,
         "direction": 1,
         "errors": 0
-      }
+      },
+      "fortran_stdout_tail": "THRESHOLD=  4.5 DIRECTION= 1 ERRORS=  0\n"
     },
     {
       "id": "06_genetic",
       "besm_total_s": 1.667361748,
       "besm_solver_s": 0.956254889,
       "besm_instructions": 2848752,
-      "python_solver_s": 8.055589001742192e-06,
-      "python_full_s": 0.061135661538879504,
-      "speedup_solver": 118707.01059763471,
-      "speedup_full": 27.27314477393254,
+      "python_solver_s": 8.131878996209707e-06,
+      "python_full_s": 0.06113573782887397,
+      "python_min_s": 8.011532998352776e-06,
+      "python_max_s": 1.054709450545488e-05,
+      "fortran_full_s": 0.0015597754972986877,
+      "fortran_min_s": 0.0010696370009100065,
+      "fortran_max_s": 0.002127218001987785,
+      "speedup_besm_python_solver": 117593.34951315842,
+      "speedup_besm_python_full": 27.27311074035189,
+      "speedup_besm_fortran_full": 1068.9754717186138,
+      "speedup_fortran_python_full": 39.19521619281268,
       "accuracy": "exact: best x=31, fitness=961",
       "python_result": {
         "best_x": 31,
         "fitness": 961
-      }
+      },
+      "fortran_stdout_tail": "BEST X= 31 FITNESS=   961\n"
     },
     {
       "id": "07_annealing",
       "besm_total_s": 1.526628225,
       "besm_solver_s": 0.815521366,
       "besm_instructions": 2632145,
-      "python_solver_s": 2.289693399798125e-05,
-      "python_full_s": 0.061150502883875746,
-      "speedup_solver": 35617.055369592366,
-      "speedup_full": 24.965096818566696,
+      "python_solver_s": 2.2783138399245218e-05,
+      "python_full_s": 0.061150389088277,
+      "python_min_s": 2.2547746801865288e-05,
+      "python_max_s": 2.7515436001704074e-05,
+      "fortran_full_s": 0.0015114149937289767,
+      "fortran_min_s": 0.0011537929967744276,
+      "fortran_max_s": 0.0025137150078080595,
+      "speedup_besm_python_solver": 35794.952903723635,
+      "speedup_besm_python_full": 24.965143276458175,
+      "speedup_besm_fortran_full": 1010.0655553465757,
+      "speedup_fortran_python_full": 40.459032986966875,
       "accuracy": "exact: best x=3, f=9; final x=3, f=9",
       "python_result": {
         "best_x": 3,
@@ -153,17 +211,25 @@
         "final_x": 3,
         "final_f": 9.0,
         "temperature": 0.006189700196426911
-      }
+      },
+      "fortran_stdout_tail": "BEST X=  3 F=  9.000\nFINAL X=  3 F=  9.000 T= 0.006\n"
     },
     {
       "id": "08_qlearning",
       "besm_total_s": 1.946399853,
       "besm_solver_s": 1.235292994,
       "besm_instructions": 3273769,
-      "python_solver_s": 5.796390100294957e-05,
-      "python_full_s": 0.06118556985088071,
-      "speedup_solver": 21311.419221717675,
-      "speedup_full": 31.81141987798261,
+      "python_solver_s": 5.81371259977459e-05,
+      "python_full_s": 0.06118574307587551,
+      "python_min_s": 5.74128104999545e-05,
+      "python_max_s": 5.8511066497885624e-05,
+      "fortran_full_s": 0.0014508355016005225,
+      "fortran_min_s": 0.001089983998099342,
+      "fortran_max_s": 0.0022862170008011162,
+      "speedup_besm_python_solver": 21247.919858437705,
+      "speedup_besm_python_full": 31.811329815612424,
+      "speedup_besm_fortran_full": 1341.5717018592281,
+      "speedup_fortran_python_full": 42.172763906298854,
       "accuracy": "within 1e-3: Q table and policy 2,2,2",
       "python_result": {
         "q": [
@@ -189,17 +255,25 @@
           1,
           1
         ]
-      }
+      },
+      "fortran_stdout_tail": " STATE= 1 QLEFT=  0.740 QRIGHT=  0.883\n STATE= 2 QLEFT=  0.590 QRIGHT=  0.981\n STATE= 3 QLEFT=  0.818 QRIGHT=  1.090\n STATE= 4 QLEFT=  0.000 QRIGHT=  0.100\n POLICY STATE= 1 ACTION= 2\n POLICY STATE= 2 ACTION= 2\n POLICY STATE= 3 ACTION= 2\n"
     },
     {
       "id": "09_astar",
       "besm_total_s": 2.608519794,
       "besm_solver_s": 1.8974129349999997,
       "besm_instructions": 4314538,
-      "python_solver_s": 4.370433640142437e-05,
-      "python_full_s": 0.06117131028627919,
-      "speedup_solver": 43414.752201526644,
-      "speedup_full": 42.64286283540823,
+      "python_solver_s": 4.4040487799793483e-05,
+      "python_full_s": 0.06117164643767756,
+      "python_min_s": 4.3650251399958506e-05,
+      "python_max_s": 4.424746760050766e-05,
+      "fortran_full_s": 0.0014463934930972755,
+      "fortran_min_s": 0.0010820739989867434,
+      "fortran_max_s": 0.0022612189932260662,
+      "speedup_besm_python_solver": 43083.37690594102,
+      "speedup_besm_python_full": 42.64262850367437,
+      "speedup_besm_fortran_full": 1803.4648292105992,
+      "speedup_fortran_python_full": 42.29253431352621,
       "accuracy": "exact: path length 9 and same path",
       "python_result": {
         "path_length": 9,
@@ -241,17 +315,25 @@
             4
           ]
         ]
-      }
+      },
+      "fortran_stdout_tail": "PATH LENGTH=  9\nR= 1 C= 1\nR= 1 C= 2\nR= 1 C= 3\nR= 1 C= 4\nR= 1 C= 5\nR= 2 C= 5\nR= 3 C= 5\nR= 4 C= 5\nR= 5 C= 5\n"
     },
     {
       "id": "10_mlp_xor",
       "besm_total_s": 4.694144751,
       "besm_solver_s": 3.9830378919999996,
       "besm_instructions": 4663925,
-      "python_solver_s": 0.005767668600310571,
-      "python_full_s": 0.06689527455018833,
-      "speedup_solver": 690.5802271277385,
-      "speedup_full": 70.17154474010279,
+      "python_solver_s": 0.005769250600133091,
+      "python_full_s": 0.06689685655001085,
+      "python_min_s": 0.005747521649755072,
+      "python_max_s": 0.005946053149818909,
+      "fortran_full_s": 0.0024325475096702576,
+      "fortran_min_s": 0.001644949006731622,
+      "fortran_max_s": 0.0033101029985118657,
+      "speedup_besm_python_solver": 690.3908614938854,
+      "speedup_besm_python_full": 70.16988529933009,
+      "speedup_besm_fortran_full": 1929.7237699732784,
+      "speedup_fortran_python_full": 27.5007399790021,
       "accuracy": "within 1e-4: outputs ~0,1,1,0; loss 4.90e-5",
       "python_result": {
         "outputs": [
@@ -261,17 +343,25 @@
           0.004670123760595587
         ],
         "loss": 4.9034662487321076e-05
-      }
+      },
+      "fortran_stdout_tail": "X1=0.0 X2=0.0 Y=0.0 OUT= 0.0029\nX1=0.0 X2=1.0 Y=1.0 OUT= 0.9969\nX1=1.0 X2=0.0 Y=1.0 OUT= 0.9969\nX1=1.0 X2=1.0 Y=0.0 OUT= 0.0047\nLOSS= 0.00005\n"
     },
     {
       "id": "11_chess_mate",
       "besm_total_s": 3.539338299,
       "besm_solver_s": 2.82823144,
       "besm_instructions": 5936887,
-      "python_solver_s": 4.229174600186525e-05,
-      "python_full_s": 0.061169897695879626,
-      "speedup_solver": 66874.31254021205,
-      "speedup_full": 57.86078499912888,
+      "python_solver_s": 4.226857500179904e-05,
+      "python_full_s": 0.06116987452487956,
+      "python_min_s": 4.198786849883618e-05,
+      "python_max_s": 4.793610000342596e-05,
+      "fortran_full_s": 0.0015015764947747812,
+      "fortran_min_s": 0.001103709000744857,
+      "fortran_max_s": 0.002245807001600042,
+      "speedup_besm_python_solver": 66910.97203725521,
+      "speedup_besm_python_full": 57.860806916653864,
+      "speedup_besm_fortran_full": 2357.081581468721,
+      "speedup_fortran_python_full": 40.73710179783703,
       "accuracy": "exact: 14 rook moves, 1 mate, a1-a8",
       "python_result": {
         "rook_moves": 14,
@@ -280,7 +370,8 @@
           7,
           0
         ]
-      }
+      },
+      "fortran_stdout_tail": "ROOK MOVES= 14 MATES=  1\nMATE IN 1: ROOK 1 1 ->  8  1\n"
     }
   ]
 }
