@@ -1,0 +1,266 @@
+{
+  "generated_at": "2026-11-15T13:29:02+03:00",
+  "host": {
+    "cpu": "Intel Xeon E5-2680 v3 @ 2.50GHz",
+    "python": "3.12.7",
+    "dotnet": "10.0.200"
+  },
+  "besm": {
+    "mode": "original (statistical model)",
+    "baseline_program": "1.37M instructions, 0.711 s guest"
+  },
+  "python_startup_s": 0.06112760594987776,
+  "rows": [
+    {
+      "id": "01_perceptron",
+      "besm_total_s": 1.463660818,
+      "besm_solver_s": 0.7525539589999999,
+      "besm_instructions": 2523927,
+      "python_solver_s": 1.573084350093268e-05,
+      "python_full_s": 0.061143336793378696,
+      "speedup_solver": 47839.390109969696,
+      "speedup_full": 23.938190075332983,
+      "accuracy": "exact: weights 0.2/0.1/-0.2, outputs 0,0,0,1",
+      "python_result": {
+        "weights": [
+          0.2,
+          0.1,
+          -0.2
+        ],
+        "outputs": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "id": "02_knn",
+      "besm_total_s": 1.457085375,
+      "besm_solver_s": 0.7459785159999999,
+      "besm_instructions": 2524427,
+      "python_solver_s": 5.010957800550386e-06,
+      "python_full_s": 0.06113261690767831,
+      "speedup_solver": 148869.44685865528,
+      "speedup_full": 23.83482744081562,
+      "accuracy": "exact: classes 0,1,1",
+      "python_result": {
+        "queries": [
+          2.5,
+          5.5,
+          7.5
+        ],
+        "classes": [
+          0,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "id": "03_kmeans",
+      "besm_total_s": 1.48586528,
+      "besm_solver_s": 0.774758421,
+      "besm_instructions": 2570349,
+      "python_solver_s": 7.6141414974699726e-06,
+      "python_full_s": 0.06113522009137523,
+      "speedup_solver": 101752.56412787139,
+      "speedup_full": 24.304570716833346,
+      "accuracy": "exact: centers 2/11, clusters 1,1,1,2,2,2",
+      "python_result": {
+        "centers": [
+          2.0,
+          11.0
+        ],
+        "clusters": [
+          1,
+          1,
+          1,
+          2,
+          2,
+          2
+        ]
+      }
+    },
+    {
+      "id": "04_naive_bayes",
+      "besm_total_s": 1.782088838,
+      "besm_solver_s": 1.070981979,
+      "besm_instructions": 3018329,
+      "python_solver_s": 2.2920358504052274e-06,
+      "python_full_s": 0.06112989798572817,
+      "speedup_solver": 467262.31564425677,
+      "speedup_full": 29.15249160756099,
+      "accuracy": "exact: scores 0.0556/0.2222, class 1",
+      "python_result": {
+        "counts": [
+          4,
+          4
+        ],
+        "scores": [
+          0.05555555555555555,
+          0.2222222222222222
+        ],
+        "predicted": 1
+      }
+    },
+    {
+      "id": "05_decision_stump",
+      "besm_total_s": 1.413486703,
+      "besm_solver_s": 0.702379844,
+      "besm_instructions": 2453312,
+      "python_solver_s": 9.807258800719864e-06,
+      "python_full_s": 0.06113741320867848,
+      "speedup_solver": 71618.36536305583,
+      "speedup_full": 23.119831684330325,
+      "accuracy": "exact: threshold 4.5, direction 1, errors 0",
+      "python_result": {
+        "threshold": 4.5,
+        "direction": 1,
+        "errors": 0
+      }
+    },
+    {
+      "id": "06_genetic",
+      "besm_total_s": 1.667361748,
+      "besm_solver_s": 0.956254889,
+      "besm_instructions": 2848752,
+      "python_solver_s": 7.965381504618563e-06,
+      "python_full_s": 0.06113557133138238,
+      "speedup_solver": 120051.36080996688,
+      "speedup_full": 27.27318501633275,
+      "accuracy": "exact: best x=31, fitness=961",
+      "python_result": {
+        "best_x": 31,
+        "fitness": 961
+      }
+    },
+    {
+      "id": "07_annealing",
+      "besm_total_s": 1.526628225,
+      "besm_solver_s": 0.815521366,
+      "besm_instructions": 2632145,
+      "python_solver_s": 2.2409961200901308e-05,
+      "python_full_s": 0.061150015911078666,
+      "speedup_solver": 36391.02088080369,
+      "speedup_full": 24.96529563001173,
+      "accuracy": "exact: best x=3, f=9; final x=3, f=9",
+      "python_result": {
+        "best_x": 3,
+        "best_f": 9.0,
+        "final_x": 3,
+        "final_f": 9.0,
+        "temperature": 0.006189700196426911
+      }
+    },
+    {
+      "id": "08_qlearning",
+      "besm_total_s": 1.946399853,
+      "besm_solver_s": 1.235292994,
+      "besm_instructions": 3273769,
+      "python_solver_s": 5.697431100270478e-05,
+      "python_full_s": 0.061184580260880465,
+      "speedup_solver": 21681.57845632141,
+      "speedup_full": 31.81193439099995,
+      "accuracy": "within 1e-3: Q table and policy 2,2,2",
+      "python_result": {
+        "q": [
+          [
+            0.7398924015426638,
+            0.882840592339635
+          ],
+          [
+            0.5902680380630495,
+            0.9809906005263327
+          ],
+          [
+            0.8182810512542726,
+            1.0899990558624268
+          ],
+          [
+            0.0,
+            0.1
+          ]
+        ],
+        "policy": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "id": "09_astar",
+      "besm_total_s": 2.608519794,
+      "besm_solver_s": 1.8974129349999997,
+      "besm_instructions": 4314538,
+      "python_solver_s": 4.36930013995152e-05,
+      "python_full_s": 0.06117129895127728,
+      "speedup_solver": 43426.015018987746,
+      "speedup_full": 42.642870737102974,
+      "accuracy": "exact: path length 9 and same path",
+      "python_result": {
+        "path_length": 9,
+        "path": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            4
+          ],
+          [
+            1,
+            4
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            4,
+            4
+          ]
+        ]
+      }
+    },
+    {
+      "id": "10_mlp_xor",
+      "besm_total_s": 4.694144751,
+      "besm_solver_s": 3.9830378919999996,
+      "besm_instructions": 4663925,
+      "python_solver_s": 0.0057410477500525305,
+      "python_full_s": 0.0668686536999303,
+      "speedup_solver": 693.782400949993,
+      "speedup_full": 70.19948049297862,
+      "accuracy": "within 1e-4: outputs ~0,1,1,0; loss 4.90e-5",
+      "python_result": {
+        "outputs": [
+          0.002869720134720847,
+          0.996933611257373,
+          0.996903780857964,
+          0.004670123760595587
+        ],
+        "loss": 4.9034662487321076e-05
+      }
+    }
+  ]
+}
