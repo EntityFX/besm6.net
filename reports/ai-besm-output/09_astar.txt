@@ -1,0 +1,180 @@
+                                             04 ??? 24 23.45
+ ?OKCE?      ??CM-6/5     ???P-12
+ MOH?TOPHA? C?CTEMA  '? Y ? H A'  -  20/10/88
+
+
+
+
+
+
+
+             ???         ???  ?????  ???  ????
+            ?   ?       ?       ?   ?   ? ?   ?
+            ?   ?        ???    ?   ?   ? ?   ?
+            ?   ?           ?   ?   ?   ? ????
+            ?   ?           ?   ?   ?   ? ? ?
+            ?????       ?   ?   ?   ????? ?  ?
+            ?   ?        ???    ?   ?   ? ?   ?
+
+
+
+
+
+
+
+
+*NAME A STAR
+*FORTRAN                                             04 ??? 24 23.45
+ ? O P T P A H
+   /16.07.73/
+          C---- A* SEARCH ON A 5X5 GRID WITH OBSTACLES
+ 05003
+   ?YCTO? O?EPATOP.
+                PROGRAM ASTAR
+                INTEGER OBS(5,5),G(25),F(25),PAR(25),OP(25),CL(25)
+                INTEGER DR(4),DC(4),PATH(25)
+                INTEGER I,R,C,K,NR,NC,V,U,BEST,NG,L,RR,CC,IT,II
+                DO 10 I=1,25
+       2          G(I)=1000
+       3          F(I)=1000
+       4          PAR(I)=0
+       5          OP(I)=0
+       6          CL(I)=0
+       7     10 CONTINUE
+       8        DO 15 R=1,5
+       9          DO 15 C=1,5
+      10            OBS(R,C)=0
+      11     15 CONTINUE
+      12        OBS(2,2)=1
+      13        OBS(2,3)=1
+      14        OBS(3,3)=1
+      15        OBS(4,2)=1
+      16        DR(1)=-1
+      17        DC(1)=0
+      18        DR(2)=1
+      19        DC(2)=0
+      20        DR(3)=0
+      21        DC(3)=-1
+      22        DR(4)=0
+      23        DC(4)=1
+      24        G(1)=0
+      25        F(1)=8
+      26        OP(1)=1
+      27        DO 100 IT=1,25
+      28          U=0
+      29          BEST=1000
+      30          DO 20 V=1,25
+      31            IF (OP(V) .EQ. 0)
+      32       -                      GOTO 20
+      33            IF (F(V) .GE. BEST)
+      34       -                        GOTO 20
+      35            BEST=F(V)
+      36            U=V
+      37     20   CONTINUE
+      38          IF (U .EQ. 0)
+      39       -                GOTO 900
+      40          IF (U .EQ. 25)
+      41       -                 GOTO 200
+      42          OP(U)=0
+      43          CL(U)=1
+      44          R=(U-1)/5+1
+      45          C=(U-1)-5*((U-1)/5)+1
+      46          DO 30 K=1,4
+      47            NR=R+DR(K)
+      48            NC=C+DC(K)
+      49            IF (NR .LT. 1)
+      50       -                   GOTO 30
+      51            IF (NR .GT. 5)
+      52       -                   GOTO 30
+      53            IF (NC .LT. 1)
+      54       -                   GOTO 30
+      55            IF (NC .GT. 5)
+      56       -                   GOTO 30
+      57            IF (OBS(NR,NC) .NE. 0)
+      58       -                           GOTO 30
+      59            V=(NR-1)*5+NC
+      60            IF (CL(V) .NE. 0)
+      61       -                      GOTO 30
+      62            NG=G(U)+1
+      63            IF (NG .GE. G(V))
+      64       -                      GOTO 30
+      65            G(V)=NG
+      66            F(V)=NG+IABS(NR-5)+IABS(NC-5)
+      67            PAR(V)=U
+      68            OP(V)=1
+      69     30   CONTINUE
+      70    100 CONTINUE
+      71        GOTO 900
+      72    200 CONTINUE
+      73        L=0
+      74        V=25
+      75    210 CONTINUE
+      76        L=L+1
+      77        PATH(L)=V
+      78        IF (V .EQ. 1)
+      79       -              GOTO 220
+      80        V=PAR(V)
+      81        GOTO 210
+      82    220 CONTINUE
+      83        PRINT 300, L
+      84        DO 230 II=1,L
+      85          I=L+1-II
+      86          RR=(PATH(I)-1)/5+1
+      87          CC=(PATH(I)-1)-5*((PATH(I)-1)/5)+1
+      88          PRINT 310, RR, CC
+      89    230 CONTINUE
+      90        GOTO 999
+      91    900 CONTINUE
+      92        PRINT 320
+      93    999 CONTINUE
+      94        STOP
+           300  FORMAT('PATH LENGTH=',I3)
+           310  FORMAT('R=',I2,' C=',I2)
+           320  FORMAT('NO PATH')
+                END
+
+
+                    B???BAEM?E ?YHK??? ? ?O??PO?PAMM?
+
+
+       IABS
+                                      TA????A  OTHOC?TE??H?X A?PECOB
+         1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20
+ 000  :00001:00003 00005:00010 00011:00013 00014 00020:00024:00027 00031 00042 00043 00044 00045 00046 00050 00051 00052 00053
+ 020   00054:00056:00057:00060:00061:00062:00063:00065 00066 00067:00071:00076:00077:00104:00105:00110:00111 00115:00121:00122
+ 040  :00125:00126 00130:00132 00136:00147:00151:00155 00160:00164:00165:00171:00172:00175:00176:00202:00203:00210:00211:00215
+ 060  :00222:00223 00226:00232:00233 00235 00250:00252 00253 00257 00263:00264:00264 00265 00266:00267:00271 00273:00277:00300
+ 080  :00303:00304:00304 00311:00315 00317:00324 00333 00344:00351 00351:00352 00354:00355
+*EXECUTE
+?
+         ASTAR      01000                FD*642   E 02620                SQRT     E 03660                EBCDPUN  E 04607
+         PROGRAM  E 01000                FD*722   E 02620                SIN      E 03661                ISOTCOSY   04772
+         BCDWRIT*   01750                FC*722   E 02620                COS      E 03662                ISOTCOS1 E 05043
+         FT*621   E 01750                FC*642   E 02620                ATAN     E 03663                FMRTAPE    05063
+         BCDENC*  E 01754                FC*002   E 02620                ALOG     E 03664                OCTTDEC    06012
+         FT*611   E 01754                IOEND*   E 02625                EXP      E 03665                LUNMUN   C 06045
+         FT*571   E 01756                FT*643   E 02625                ALOG10   E 03671                JERRIO*  C 06046
+         FT*561   E 01761                FT*723   E 02625                I*MUI*     03675                R*TO*INT   06047
+         NEXTLET* E 01766                FT*003   E 02625                I*DI*I     03703                R*TO*I   E 06050
+         RK*      E 02030                STOP*      03613                I*ST*L   E 03713                CARD2    C 06062
+         WSY*     E 02266                EXIT     E 03614                I*MU*I   E 03714                ISOICTTR   06107
+         I/O*ERR  E 02526                FLOAT      03642                BCDBEG*    03727                REVCARD    06144
+         IOCONT*    02553                ABS      E 03645                FT2*     E 04234                *ICHECK* C 06171
+         IOAC*    E 02604                IABS     E 03650                KONV1*   E 04247                *?EP?OPA   06177
+         FT*722   E 02617                IFIX     E 03652                PRINT8     04343                KO?*CDC  E 06200
+         FT*642   E 02617                AINT     E 03654                TTPRINT    04524                CBO?O?HO   06240
+         FT*002   E 02617                INT      E 03656                BCDPUN     04563
+?
+PATH LENGTH=  9
+R= 1 C= 1
+R= 1 C= 2
+R= 1 C= 3
+R= 1 C= 4
+R= 1 C= 5
+R= 2 C= 5
+R= 3 C= 5
+R= 4 C= 5
+R= 5 C= 5
+Halted by STOP at 0118 after 4314537 instructions
+Execution stats: {"statistics":{"speed":"original","completedInstructions":4314538,"modelCycles":7548884,"elapsedSeconds":2.6087256,"allocatedBytes":2277040,"gen0Collections":1,"hardwareModelSeconds":null,"statisticalModelSeconds":2.608519794,"modelSeconds":2.608519794,"instructionsPerSecond":1653887.2467077412,"modelToWallRatio":0.9999211086056731,"originalTempoMet":true},"finalState":{"k":280,"isRightHalf":false,"a":0,"y":0,"r":6,"c":741,"applyC":false,"effectiveAddress":0,"interceptCount":1,"interceptAddress":16,"m":[0,1,25,0,8336,8420,15885,788,1848,0,513,1651,1931,279,0,22273],"clockTicks":4314537},"memorySha256":"42580F743EC3913ED11424883F0DCEAB1981429460866888717750499CC261A7"}
+

@@ -1,0 +1,220 @@
+                                             04 ??? 24 23.45
+ ?OKCE?      ??CM-6/5     ???P-12
+ MOH?TOPHA? C?CTEMA  '? Y ? H A'  -  20/10/88
+
+
+
+
+
+
+
+             ???? ?   ? ????   ???   ???        ?   ?  ???  ????? ????
+            ?     ?   ? ?     ?     ?           ?? ?? ?   ?   ?   ?
+            ?     ????? ???    ???   ???        ? ? ? ?   ?   ?   ???
+            ?     ?   ? ?         ?     ?       ? ? ? ?   ?   ?   ?
+            ?     ?   ? ?         ?     ?       ?   ? ?   ?   ?   ?
+            ?     ?   ? ?     ?   ? ?   ?       ?   ? ?????   ?   ?
+             ???? ?   ? ?????  ???   ???        ?   ? ?   ?   ?   ?????
+
+
+
+
+
+
+
+
+*NAME CHESS MATE
+*FORTRAN                                             04 ??? 24 23.45
+ ? O P T P A H
+   /16.07.73/
+          C---- MINI CHESS: WHITE KING AND ROOK FIND MATE IN ONE
+ 05003
+   ?YCTO? O?EPATOP.
+                PROGRAM CHESS
+                INTEGER B(8,8),DR(4),DC(4)
+                INTEGER I,J,K,D,NR,NC,RR,RC,RES,RES2,LEGAL,SAV
+                INTEGER NMOVE,MATE,MR,MC
+                DO 10 I=1,8
+       2          DO 10 J=1,8
+       3            B(I,J)=0
+       4     10 CONTINUE
+       5        B(6,7)=1
+       6        B(1,1)=2
+       7        B(8,8)=-1
+       8        DR(1)=-1
+       9        DC(1)=0
+      10        DR(2)=1
+      11        DC(2)=0
+      12        DR(3)=0
+      13        DC(3)=-1
+      14        DR(4)=0
+      15        DC(4)=1
+      16        RR=1
+      17        RC=1
+      18        NMOVE=0
+      19        MATE=0
+      20        MR=0
+      21        MC=0
+      22        DO 100 D=1,4
+      23          NR=RR+DR(D)
+      24          NC=RC+DC(D)
+      25     40   CONTINUE
+      26          IF (NR .LT. 1)
+      27       -                 GOTO 100
+      28          IF (NR .GT. 8)
+      29       -                 GOTO 100
+      30          IF (NC .LT. 1)
+      31       -                 GOTO 100
+      32          IF (NC .GT. 8)
+      33       -                 GOTO 100
+      34          IF (B(NR,NC) .EQ. 1)
+      35       -                       GOTO 100
+      36          IF (B(NR,NC) .EQ. -1)
+      37       -                        GOTO 100
+      38          B(RR,RC)=0
+      39          B(NR,NC)=2
+      40          NMOVE=NMOVE+1
+      41          CALL CHK(B,8,8,RES)
+      42          IF (RES .EQ. 0)
+      43       -                  GOTO 80
+      44          LEGAL=0
+      45          DO 50 K=1,4
+      46            I=8+DR(K)
+      47            J=8+DC(K)
+      48            IF (I .LT. 1)
+      49       -                  GOTO 50
+      50            IF (I .GT. 8)
+      51       -                  GOTO 50
+      52            IF (J .LT. 1)
+      53       -                  GOTO 50
+      54            IF (J .GT. 8)
+      55       -                  GOTO 50
+      56            IF (B(I,J) .EQ. 1)
+      57       -                       GOTO 50
+      58            SAV=B(I,J)
+      59            B(8,8)=0
+      60            B(I,J)=-1
+      61            CALL CHK(B,I,J,RES2)
+      62            IF (RES2 .EQ. 0)
+      63       -                     LEGAL=1
+      64            B(I,J)=SAV
+      65            B(8,8)=-1
+      66            IF (LEGAL .EQ. 1)
+      67       -                      GOTO 60
+      68     50   CONTINUE
+      69     60   CONTINUE
+      70          IF (LEGAL .EQ. 0)
+      71       -                    GOTO 70
+      72          GOTO 80
+      73     70   CONTINUE
+      74          MATE=MATE+1
+      75          MR=NR
+      76          MC=NC
+      77     80   CONTINUE
+      78          B(NR,NC)=0
+      79          B(RR,RC)=2
+      80          NR=NR+DR(D)
+      81          NC=NC+DC(D)
+      82          GOTO 40
+      83    100 CONTINUE
+      84        PRINT 200, NMOVE, MATE
+      85        IF (MATE .GT. 0)
+      86       -                 PRINT 210, MR, MC
+      87        STOP
+           200  FORMAT('ROOK MOVES=',I3,' MATES=',I3)
+           210  FORMAT('MATE IN 1: ROOK 1 1 -> ',I2,1X,I2)
+                END
+
+
+                    B???BAEM?E ?YHK??? ? ?O??PO?PAMM?
+
+
+       CHK
+                                      TA????A  OTHOC?TE??H?X A?PECOB
+         1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20
+ 000  :00001:00004:00007 00011 00022 00023:00025 00026:00030:00031:00032:00033:00034 00035 00036 00037:00041 00042:00044:00045
+ 020  :00046:00047:00051:00055 00060:00062:00065:00066:00072:00073:00076:00077:00103:00104:00111:00112:00120:00121 00123:00126
+ 040  :00130:00136:00141:00142 00143:00145:00151 00154:00160:00161:00165:00166:00171:00172:00176:00177:00204:00205:00210:00211
+ 060  :00213 00223:00227:00231 00233 00235:00241:00242 00245:00246:00251:00252 00252:00253:00255:00256:00257:00260 00262:00265
+ 080  :00271 00273:00275 00300 00310:00315:00326                                             04 ??? 24 23.45
+ ? O P T P A H
+   /16.07.73/
+                SUBROUTINE CHK(B,KR,KC,RES)
+                INTEGER B(8,8),DR(4),DC(4)
+                INTEGER KR,KC,RES,I,J,D,I1,I2,J1,J2
+                DR(1)=-1
+       2        DC(1)=0
+       3        DR(2)=1
+       4        DC(2)=0
+       5        DR(3)=0
+       6        DC(3)=-1
+       7        DR(4)=0
+       8        DC(4)=1
+       9        RES=0
+      10        I1=KR-1
+      11        I2=KR+1
+      12        J1=KC-1
+      13        J2=KC+1
+      14        DO 20 I=I1,I2
+      15          DO 20 J=J1,J2
+      16            IF (I .LT. 1)
+      17       -                  GOTO 20
+      18            IF (I .GT. 8)
+      19       -                  GOTO 20
+      20            IF (J .LT. 1)
+      21       -                  GOTO 20
+      22            IF (J .GT. 8)
+      23       -                  GOTO 20
+      24            IF (B(I,J) .EQ. 1)
+      25       -                       RES=1
+      26     20 CONTINUE
+      27        DO 30 D=1,4
+      28          I=KR
+      29          J=KC
+      30     31   I=I+DR(D)
+      31          J=J+DC(D)
+      32          IF (I .LT. 1)
+      33       -                GOTO 30
+      34          IF (I .GT. 8)
+      35       -                GOTO 30
+      36          IF (J .LT. 1)
+      37       -                GOTO 30
+      38          IF (J .GT. 8)
+      39       -                GOTO 30
+      40          IF (B(I,J) .EQ. 0)
+      41       -                     GOTO 31
+      42          IF (B(I,J) .EQ. 2)
+      43       -                     RES=1
+      44          GOTO 30
+      45     30 CONTINUE
+      46        RETURN
+                END
+
+
+
+                                      TA????A  OTHOC?TE??H?X A?PECOB
+         1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20
+ 000  :00001:00003:00004:00005:00006:00007 00010 00011 00012:00014:00016:00020:00022:00024:00027:00032:00035:00036:00042:00043
+ 020  :00046:00047:00053:00054:00061:00064:00076:00100 00102:00105:00112 00114:00120:00121:00125:00126:00131:00132:00136:00137
+ 040  :00144:00145:00152:00155:00155 00160
+*EXECUTE
+?
+         CHESS      01000                IOAC*    E 02417                STOP*      03426                FMRTAPE    05063
+         PROGRAM  E 01000                FT*722   E 02432                EXIT     E 03427                OCTTDEC    06012
+         BCDWRIT*   01563                FT*642   E 02432                CHK        03455                LUNMUN   C 06045
+         FT*621   E 01563                FT*002   E 02432                I*MUI*     03721                JERRIO*  C 06046
+         BCDENC*  E 01567                FD*642   E 02433                BCDBEG*    03727                CARD2    C 06047
+         FT*611   E 01567                FD*722   E 02433                FT2*     E 04234                ISOICTTR   06074
+         FT*571   E 01571                FC*722   E 02433                KONV1*   E 04247                REVCARD    06131
+         FT*561   E 01574                FC*642   E 02433                PRINT8     04343                *ICHECK* C 06156
+         NEXTLET* E 01601                FC*002   E 02433                TTPRINT    04524                *?EP?OPA   06164
+         RK*      E 01643                IOEND*   E 02440                BCDPUN     04563                KO?*CDC  E 06165
+         WSY*     E 02101                FT*643   E 02440                EBCDPUN  E 04607                CBO?O?HO   06225
+         I/O*ERR  E 02341                FT*723   E 02440                ISOTCOSY   04772
+         IOCONT*    02366                FT*003   E 02440                ISOTCOS1 E 05043
+?
+ROOK MOVES= 14 MATES=  1
+MATE IN 1: ROOK 1 1 ->  8  1
+Halted by STOP at 0118 after 5936886 instructions
+Execution stats: {"statistics":{"speed":"original","completedInstructions":5936887,"modelCycles":10325303,"elapsedSeconds":3.5395744,"allocatedBytes":2299280,"gen0Collections":1,"hardwareModelSeconds":null,"statisticalModelSeconds":3.539338299,"modelSeconds":3.539338299,"instructionsPerSecond":1677288.3768172807,"modelToWallRatio":0.9999332967827997,"originalTempoMet":true},"finalState":{"k":280,"isRightHalf":false,"a":0,"y":0,"r":6,"c":726,"applyC":false,"effectiveAddress":0,"interceptCount":1,"interceptAddress":16,"m":[0,65,9,4,8336,8370,15885,784,1731,0,1838,1534,1814,279,0,22273],"clockTicks":5936886},"memorySha256":"6D6E46D4E3B91EDB0C4F11EC3ADFAD9F5418CBC00D717A01A600CF208A647884"}
+

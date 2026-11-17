@@ -1,0 +1,103 @@
+                                             04 ??? 24 23.45
+ ?OKCE?      ??CM-6/5     ???P-12
+ MOH?TOPHA? C?CTEMA  '? Y ? H A'  -  20/10/88
+
+
+
+
+
+
+
+            ???   ????   ????  ???   ???   ???   ???  ?   ?        ???  ????? ?   ? ?   ? ????
+            ?  ?  ?     ?       ?   ?       ?   ?   ? ??  ?       ?       ?   ?   ? ?? ?? ?   ?
+            ?   ? ???   ?       ?    ???    ?   ?   ? ? ? ?        ???    ?   ?   ? ? ? ? ?   ?
+            ?   ? ?     ?       ?       ?   ?   ?   ? ?  ??           ?   ?   ?   ? ? ? ? ?   ?
+            ?   ? ?     ?       ?       ?   ?   ?   ? ?   ?           ?   ?   ?   ? ?   ? ????
+            ?   ? ?     ?       ?   ?   ?   ?   ?   ? ?   ?       ?   ?   ?   ?   ? ?   ? ?
+            ????  ?????  ????  ???   ???   ???   ???  ?   ?        ???    ?    ???  ?   ? ?
+
+
+
+
+
+
+
+
+*NAME DECISION STUMP
+*FORTRAN                                             04 ??? 24 23.45
+ ? O P T P A H
+   /16.07.73/
+          C---- DECISION STUMP: BEST THRESHOLD ON ONE FEATURE
+ 05003
+   ?YCTO? O?EPATOP.
+                PROGRAM STUMP
+                REAL X(8),TH
+                INTEGER Y(8),I,T,D,E,BEST,BT,BD,P
+                X(1)=1.
+       2        X(2)=2.
+       3        X(3)=3.
+       4        X(4)=4.
+       5        X(5)=5.
+       6        X(6)=6.
+       7        X(7)=7.
+       8        X(8)=8.
+       9        DO 5 I=1,4
+      10          Y(I)=0
+      11      5 CONTINUE
+      12        DO 6 I=5,8
+      13          Y(I)=1
+      14      6 CONTINUE
+      15        BEST=100
+      16        BT=0
+      17        BD=0
+      18        DO 10 T=1,7
+      19          TH=T+0.5
+      20          DO 20 D=1,2
+      21            E=0
+      22            DO 30 I=1,8
+      23              P=0
+      24              IF (X(I) .GE. TH)
+      25       -                        P=1
+      26              IF (D .EQ. 2)
+      27       -                    P=1-P
+      28              IF (P .NE. Y(I))
+      29       -                       E=E+1
+      30     30     CONTINUE
+      31            IF (E .GE. BEST)
+      32       -                     GOTO 20
+      33            BEST=E
+      34            BT=T
+      35            BD=D
+      36     20   CONTINUE
+      37     10 CONTINUE
+      38        TH=BT+0.5
+      39        PRINT 100, TH, BD, BEST
+      40        STOP
+           100  FORMAT('THRESHOLD=',F5.1,' DIRECTION=',I2,' ERRORS=',I3)
+                END
+
+
+
+                                      TA????A  OTHOC?TE??H?X A?PECOB
+         1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20
+ 000  :00001:00002:00003:00004:00005:00006:00007:00010:00011:00013 00015 00021:00024 00026 00032:00034:00035:00036:00040:00042
+ 020  :00044 00045:00047 00050:00055:00057:00062:00065:00072:00075 00100:00104:00105 00106 00107 00110 00114 00120 00122 00134
+*EXECUTE
+?
+         STUMP      01000                IOCONT*    02034                FT*723   E 02106                ISOTCOS1 E 04237
+         PROGRAM  E 01000                IOAC*    E 02065                FT*003   E 02106                FMRTAPE    04257
+         BCDWRIT*   01231                FT*722   E 02100                STOP*      03074                OCTTDEC    05206
+         FT*621   E 01231                FT*642   E 02100                EXIT     E 03075                LUNMUN   C 05241
+         BCDENC*  E 01235                FT*002   E 02100                BCDBEG*    03123                JERRIO*  C 05242
+         FT*611   E 01235                FD*642   E 02101                FT2*     E 03430                CARD2    C 05243
+         FT*571   E 01237                FD*722   E 02101                KONV1*   E 03443                ISOICTTR   05270
+         FT*561   E 01242                FC*722   E 02101                PRINT8     03537                REVCARD    05325
+         NEXTLET* E 01247                FC*642   E 02101                TTPRINT    03720                *ICHECK* C 05352
+         RK*      E 01311                FC*002   E 02101                BCDPUN     03757                *?EP?OPA   05360
+         WSY*     E 01547                IOEND*   E 02106                EBCDPUN  E 04003                KO?*CDC  E 05361
+         I/O*ERR  E 02007                FT*643   E 02106                ISOTCOSY   04166                CBO?O?HO   05421
+?
+THRESHOLD=  4.5 DIRECTION= 1 ERRORS=  0
+Halted by STOP at 0118 after 2453311 instructions
+Execution stats: {"statistics":{"speed":"original","completedInstructions":2453312,"modelCycles":4273364,"elapsedSeconds":1.4135997,"allocatedBytes":2259312,"gen0Collections":1,"hardwareModelSeconds":null,"statisticalModelSeconds":1.413486703,"modelSeconds":1.413486703,"instructionsPerSecond":1735506.8765223988,"modelToWallRatio":0.999920064357682,"originalTempoMet":true},"finalState":{"k":280,"isRightHalf":false,"a":0,"y":0,"r":6,"c":605,"applyC":false,"effectiveAddress":0,"interceptCount":1,"interceptAddress":16,"m":[0,8,8336,0,8336,8370,15885,623,1513,0,1,1316,1596,279,0,22273],"clockTicks":2453311},"memorySha256":"FAD4A07964DE1384AB132E498EE91AC66222BDDD4E6329070FD105E4D15487BB"}
+

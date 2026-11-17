@@ -1,0 +1,136 @@
+                                             04 ??? 24 23.45
+ ?OKCE?      ??CM-6/5     ???P-12
+ MOH?TOPHA? C?CTEMA  '? Y ? H A'  -  20/10/88
+
+
+
+
+
+
+
+            ?   ? ?     ????        ?   ?  ???  ????
+            ?? ?? ?     ?   ?        ? ?  ?   ? ?   ?
+            ? ? ? ?     ?   ?         ?   ?   ? ?   ?
+            ? ? ? ?     ?   ?        ? ?  ?   ? ????
+            ?   ? ?     ????        ?   ? ?   ? ? ?
+            ?   ? ?     ?           ?   ? ?   ? ?  ?
+            ?   ? ????? ?           ?   ?  ???  ?   ?
+
+
+
+
+
+
+
+
+*NAME MLP XOR
+*FORTRAN                                             04 ??? 24 23.45
+ ? O P T P A H
+   /16.07.73/
+          C---- TWO-LAYER PERCEPTRON (2-2-1) LEARNS XOR BY BACKPROPAGATION
+ 05003
+   ?YCTO? O?EPATOP.
+                PROGRAM MLP
+                REAL W11,W12,W21,W22,V1,V2,B1,B2,B3,ETA
+                REAL X1(4),X2(4),Y(4)
+                REAL Z1,H1,Z2,H2,Z3,O,D3,D1,D2,LOSS,SE
+                INTEGER I,EP
+                X1(1)=0.
+       2        X1(2)=0.
+       3        X1(3)=1.
+       4        X1(4)=1.
+       5        X2(1)=0.
+       6        X2(2)=1.
+       7        X2(3)=0.
+       8        X2(4)=1.
+       9        Y(1)=0.
+      10        Y(2)=1.
+      11        Y(3)=1.
+      12        Y(4)=0.
+      13        W11=0.5
+      14        W12=0.1
+      15        W21=0.3
+      16        W22=0.7
+      17        V1=0.2
+      18        V2=0.4
+      19        B1=-0.1
+      20        B2=0.2
+      21        B3=-0.3
+      22        ETA=0.5
+      23        DO 20 EP=1,2000
+      24          DO 10 I=1,4
+      25            Z1=W11*X1(I)+W12*X2(I)+B1
+      26            H1=1.0/(1.0+EXP(-Z1))
+      27            Z2=W21*X1(I)+W22*X2(I)+B2
+      28            H2=1.0/(1.0+EXP(-Z2))
+      29            Z3=V1*H1+V2*H2+B3
+      30            O=1.0/(1.0+EXP(-Z3))
+      31            D3=O-Y(I)
+      32            D1=D3*V1*H1*(1.0-H1)
+      33            D2=D3*V2*H2*(1.0-H2)
+      34            V1=V1-ETA*D3*H1
+      35            V2=V2-ETA*D3*H2
+      36            B3=B3-ETA*D3
+      37            W11=W11-ETA*D1*X1(I)
+      38            W12=W12-ETA*D1*X2(I)
+      39            W21=W21-ETA*D2*X1(I)
+      40            W22=W22-ETA*D2*X2(I)
+      41            B1=B1-ETA*D1
+      42            B2=B2-ETA*D2
+      43     10   CONTINUE
+      44     20 CONTINUE
+      45        LOSS=0.
+      46        DO 30 I=1,4
+      47          Z1=W11*X1(I)+W12*X2(I)+B1
+      48          H1=1.0/(1.0+EXP(-Z1))
+      49          Z2=W21*X1(I)+W22*X2(I)+B2
+      50          H2=1.0/(1.0+EXP(-Z2))
+      51          Z3=V1*H1+V2*H2+B3
+      52          O=1.0/(1.0+EXP(-Z3))
+      53          SE=O-Y(I)
+      54          LOSS=LOSS+SE*SE
+      55          PRINT 100, X1(I), X2(I), Y(I), O
+      56     30 CONTINUE
+      57        PRINT 110, LOSS
+      58        STOP
+           100  FORMAT('X1=',F3.1,' X2=',F3.1,' Y=',F3.1,' OUT=',F7.4)
+           110  FORMAT('LOSS=',F8.5)
+                END
+
+
+                    B???BAEM?E ?YHK??? ? ?O??PO?PAMM?
+
+
+       EXP
+                                      TA????A  OTHOC?TE??H?X A?PECOB
+         1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20
+ 000  :00001:00002:00003:00004:00005:00006:00007:00010:00011:00012:00013:00014:00015:00016:00017:00020:00021:00022:00023 00024
+ 020   00025:00027:00030:00032:00034:00042 00047 00055 00063 00067 00075:00077:00102:00105:00110:00113 00115:00121 00124:00130
+ 040   00133:00136 00140 00144 00150 00151:00154:00162 00167 00175 00203 00207 00215:00217 00220 00232 00236 00242
+*EXECUTE
+?
+         MLP        01000                FT*002   E 02215                AINT     E 03252                ISOTCOSY   04336
+         PROGRAM  E 01000                FD*642   E 02216                INT      E 03254                ISOTCOS1 E 04407
+         BCDWRIT*   01346                FD*722   E 02216                SQRT     E 03256                FMRTAPE    04427
+         FT*621   E 01346                FC*722   E 02216                SIN      E 03257                OCTTDEC    05356
+         BCDENC*  E 01352                FC*642   E 02216                COS      E 03260                LUNMUN   C 05411
+         FT*611   E 01352                FC*002   E 02216                ATAN     E 03261                JERRIO*  C 05412
+         FT*571   E 01354                IOEND*   E 02223                ALOG     E 03262                R*TO*INT   05413
+         FT*561   E 01357                FT*643   E 02223                EXP      E 03263                R*TO*I   E 05414
+         NEXTLET* E 01364                FT*723   E 02223                ALOG10   E 03267                CARD2    C 05426
+         RK*      E 01426                FT*003   E 02223                BCDBEG*    03273                ISOICTTR   05453
+         WSY*     E 01664                STOP*      03211                FT2*     E 03600                REVCARD    05510
+         I/O*ERR  E 02124                EXIT     E 03212                KONV1*   E 03613                *ICHECK* C 05535
+         IOCONT*    02151                FLOAT      03240                PRINT8     03707                *?EP?OPA   05543
+         IOAC*    E 02202                ABS      E 03243                TTPRINT    04070                KO?*CDC  E 05544
+         FT*722   E 02215                IABS     E 03246                BCDPUN     04127                CBO?O?HO   05604
+         FT*642   E 02215                IFIX     E 03250                EBCDPUN  E 04153
+?
+X1=0.0 X2=0.0 Y=0.0 OUT= 0.0029
+X1=0.0 X2=1.0 Y=1.0 OUT= 0.9969
+X1=1.0 X2=0.0 Y=1.0 OUT= 0.9969
+X1=1.0 X2=1.0 Y=0.0 OUT= 0.0047
+LOSS= 0.00005
+Halted by STOP at 0118 after 4663924 instructions
+Execution stats: {"statistics":{"speed":"original","completedInstructions":4663925,"modelCycles":10696940,"elapsedSeconds":4.6947492,"allocatedBytes":2279776,"gen0Collections":1,"hardwareModelSeconds":null,"statisticalModelSeconds":4.694144751,"modelSeconds":4.694144751,"instructionsPerSecond":993434.3244576302,"modelToWallRatio":0.9998712499913732,"originalTempoMet":true},"finalState":{"k":280,"isRightHalf":false,"a":0,"y":0,"r":6,"c":675,"applyC":false,"effectiveAddress":0,"interceptCount":1,"interceptAddress":16,"m":[0,4,8336,0,8336,8406,15885,695,1590,0,1,1393,1673,279,0,22273],"clockTicks":4663924},"memorySha256":"F729A21A9C46AB83CC0F56760BA38A3F501A11C84B53A50E4A392E0E22D683C4"}
+

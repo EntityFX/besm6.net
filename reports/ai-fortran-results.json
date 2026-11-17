@@ -1,106 +1,233 @@
 {
-  "gfortran": "GNU Fortran (GCC) 13.2.1 20240128 (ALT Sisyphus 13.2.1-alt3)",
+  "gfortran": "GNU Fortran (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r3) 16.2.0",
   "flags": "-O2 -std=legacy -ffixed-form",
-  "baseline_seconds": 0.0014380534994415939,
+  "baseline": {
+    "median_s": 0.008343550027348101,
+    "min_s": 0.006835900014266372,
+    "max_s": 0.07104720000643283,
+    "samples": 200
+  },
+  "measurement": "solve: external subroutine called repeatedly, system_clock, no output; process: unchanged executable",
   "rows": [
     {
       "id": "01_perceptron",
-      "full_seconds": 0.0014600384965888225,
-      "min_seconds": 0.001165111010777764,
-      "max_seconds": 0.0022430639946833253,
-      "repeats": 500,
+      "process": {
+        "median_s": 0.008731800015084445,
+        "min_s": 0.007968899968545884,
+        "max_s": 0.06535859999712557,
+        "samples": 200
+      },
+      "solve": {
+        "median_s": 5.533652e-07,
+        "min_s": 5.453651e-07,
+        "max_s": 5.638945e-07,
+        "samples": 7
+      },
+      "solve_scale": 1000000,
+      "repeats": 200,
       "returncode": 0,
-      "stdout_tail": "WEIGHTS    0.200   0.100  -0.200\nX1=0.0 X2=0.0 Y=0.0 OUT=0.0\nX1=0.0 X2=1.0 Y=0.0 OUT=0.0\nX1=1.0 X2=0.0 Y=0.0 OUT=0.0\nX1=1.0 X2=1.0 Y=1.0 OUT=1.0\n"
+      "stdout_tail": "WEIGHTS    0.200   0.100  -0.200\nX1=0.0 X2=0.0 Y=0.0 OUT=0.0\nX1=0.0 X2=1.0 Y=0.0 OUT=0.0\nX1=1.0 X2=0.0 Y=0.0 OUT=0.0\nX1=1.0 X2=1.0 Y=1.0 OUT=1.0\n",
+      "output_file": "01_perceptron.txt"
     },
     {
       "id": "02_knn",
-      "full_seconds": 0.0015188725010375492,
-      "min_seconds": 0.0010954309982480481,
-      "max_seconds": 0.0026034869952127337,
-      "repeats": 500,
+      "process": {
+        "median_s": 0.008674299984704703,
+        "min_s": 0.006805699958931655,
+        "max_s": 0.0675088000134565,
+        "samples": 200
+      },
+      "solve": {
+        "median_s": 1.8426281e-07,
+        "min_s": 1.8327958e-07,
+        "max_s": 1.9357552e-07,
+        "samples": 7
+      },
+      "solve_scale": 10000000,
+      "repeats": 200,
       "returncode": 0,
-      "stdout_tail": "QUERY=  2.5 CLASS= 0\nQUERY=  5.5 CLASS= 1\nQUERY=  7.5 CLASS= 1\n"
+      "stdout_tail": "QUERY=  2.5 CLASS= 0\nQUERY=  5.5 CLASS= 1\nQUERY=  7.5 CLASS= 1\n",
+      "output_file": "02_knn.txt"
     },
     {
       "id": "03_kmeans",
-      "full_seconds": 0.0014872674946673214,
-      "min_seconds": 0.0011222689936403185,
-      "max_seconds": 0.0023469360021408647,
-      "repeats": 500,
+      "process": {
+        "median_s": 0.008461550023639575,
+        "min_s": 0.0075113000348210335,
+        "max_s": 0.0838697999715805,
+        "samples": 200
+      },
+      "solve": {
+        "median_s": 4.70008e-05,
+        "min_s": 4.620571e-05,
+        "max_s": 6.936601e-05,
+        "samples": 7
+      },
+      "solve_scale": 10000,
+      "repeats": 200,
       "returncode": 0,
-      "stdout_tail": "CENTERS    2.000  11.000\nX=   1.0 CLUSTER= 1\nX=   2.0 CLUSTER= 1\nX=   3.0 CLUSTER= 1\nX=  10.0 CLUSTER= 2\nX=  11.0 CLUSTER= 2\nX=  12.0 CLUSTER= 2\n"
+      "stdout_tail": "CENTERS    2.000  11.000\nX=   1.0 CLUSTER= 1\nX=   2.0 CLUSTER= 1\nX=   3.0 CLUSTER= 1\nX=  10.0 CLUSTER= 2\nX=  11.0 CLUSTER= 2\nX=  12.0 CLUSTER= 2\n",
+      "output_file": "03_kmeans.txt"
     },
     {
       "id": "04_naive_bayes",
-      "full_seconds": 0.001485895503719803,
-      "min_seconds": 0.0010974080068990588,
-      "max_seconds": 0.0023034649930195883,
-      "repeats": 500,
+      "process": {
+        "median_s": 0.008786199992755428,
+        "min_s": 0.008078799990471452,
+        "max_s": 0.06441319995792583,
+        "samples": 200
+      },
+      "solve": {
+        "median_s": 7.005004e-06,
+        "min_s": 6.871328e-06,
+        "max_s": 7.673023e-06,
+        "samples": 7
+      },
+      "solve_scale": 100000,
+      "repeats": 200,
       "returncode": 0,
-      "stdout_tail": "CLASS= 0 COUNT=  4 SCORE=  0.0556\nCLASS= 1 COUNT=  4 SCORE=  0.2222\nPREDICTED CLASS= 1\n"
+      "stdout_tail": "CLASS= 0 COUNT=  4 SCORE=  0.0556\nCLASS= 1 COUNT=  4 SCORE=  0.2222\nPREDICTED CLASS= 1\n",
+      "output_file": "04_naive_bayes.txt"
     },
     {
       "id": "05_decision_stump",
-      "full_seconds": 0.001494992000516504,
-      "min_seconds": 0.0011425370030337945,
-      "max_seconds": 0.0021558010048465803,
-      "repeats": 500,
+      "process": {
+        "median_s": 0.008442450023721904,
+        "min_s": 0.007154499995522201,
+        "max_s": 0.0640875999815762,
+        "samples": 200
+      },
+      "solve": {
+        "median_s": 2.8622267e-07,
+        "min_s": 2.8311035e-07,
+        "max_s": 3.1571163e-07,
+        "samples": 7
+      },
+      "solve_scale": 10000000,
+      "repeats": 200,
       "returncode": 0,
-      "stdout_tail": "THRESHOLD=  4.5 DIRECTION= 1 ERRORS=  0\n"
+      "stdout_tail": "THRESHOLD=  4.5 DIRECTION= 1 ERRORS=  0\n",
+      "output_file": "05_decision_stump.txt"
     },
     {
       "id": "06_genetic",
-      "full_seconds": 0.0015597754972986877,
-      "min_seconds": 0.0010696370009100065,
-      "max_seconds": 0.002127218001987785,
-      "repeats": 500,
+      "process": {
+        "median_s": 0.008235199988121167,
+        "min_s": 0.007435899984557182,
+        "max_s": 0.06307249999372289,
+        "samples": 200
+      },
+      "solve": {
+        "median_s": 2.4933687e-07,
+        "min_s": 2.4046265e-07,
+        "max_s": 2.6626627e-07,
+        "samples": 7
+      },
+      "solve_scale": 10000000,
+      "repeats": 200,
       "returncode": 0,
-      "stdout_tail": "BEST X= 31 FITNESS=   961\n"
+      "stdout_tail": "BEST X= 31 FITNESS=   961\n",
+      "output_file": "06_genetic.txt"
     },
     {
       "id": "07_annealing",
-      "full_seconds": 0.0015114149937289767,
-      "min_seconds": 0.0011537929967744276,
-      "max_seconds": 0.0025137150078080595,
-      "repeats": 500,
+      "process": {
+        "median_s": 0.00825399998575449,
+        "min_s": 0.007297900039702654,
+        "max_s": 0.06798930000513792,
+        "samples": 200
+      },
+      "solve": {
+        "median_s": 5.770073e-07,
+        "min_s": 5.607421e-07,
+        "max_s": 5.872149e-07,
+        "samples": 7
+      },
+      "solve_scale": 1000000,
+      "repeats": 200,
       "returncode": 0,
-      "stdout_tail": "BEST X=  3 F=  9.000\nFINAL X=  3 F=  9.000 T= 0.006\n"
+      "stdout_tail": "BEST X=  3 F=  9.000\nFINAL X=  3 F=  9.000 T= 0.006\n",
+      "output_file": "07_annealing.txt"
     },
     {
       "id": "08_qlearning",
-      "full_seconds": 0.0014508355016005225,
-      "min_seconds": 0.001089983998099342,
-      "max_seconds": 0.0022862170008011162,
-      "repeats": 500,
+      "process": {
+        "median_s": 0.008865200012223795,
+        "min_s": 0.007734699989669025,
+        "max_s": 0.0636170000070706,
+        "samples": 200
+      },
+      "solve": {
+        "median_s": 8.717369e-07,
+        "min_s": 8.501183e-07,
+        "max_s": 1.0148269e-06,
+        "samples": 7
+      },
+      "solve_scale": 1000000,
+      "repeats": 200,
       "returncode": 0,
-      "stdout_tail": " STATE= 1 QLEFT=  0.740 QRIGHT=  0.883\n STATE= 2 QLEFT=  0.590 QRIGHT=  0.981\n STATE= 3 QLEFT=  0.818 QRIGHT=  1.090\n STATE= 4 QLEFT=  0.000 QRIGHT=  0.100\n POLICY STATE= 1 ACTION= 2\n POLICY STATE= 2 ACTION= 2\n POLICY STATE= 3 ACTION= 2\n"
+      "stdout_tail": " STATE= 1 QLEFT=  0.740 QRIGHT=  0.883\n STATE= 2 QLEFT=  0.590 QRIGHT=  0.981\n STATE= 3 QLEFT=  0.818 QRIGHT=  1.090\n STATE= 4 QLEFT=  0.000 QRIGHT=  0.100\n POLICY STATE= 1 ACTION= 2\n POLICY STATE= 2 ACTION= 2\n POLICY STATE= 3 ACTION= 2\n",
+      "output_file": "08_qlearning.txt"
     },
     {
       "id": "09_astar",
-      "full_seconds": 0.0014463934930972755,
-      "min_seconds": 0.0010820739989867434,
-      "max_seconds": 0.0022612189932260662,
-      "repeats": 500,
+      "process": {
+        "median_s": 0.008535650005796924,
+        "min_s": 0.007222500047646463,
+        "max_s": 0.07069540000520647,
+        "samples": 200
+      },
+      "solve": {
+        "median_s": 1.7040426e-06,
+        "min_s": 1.6362532e-06,
+        "max_s": 1.8648723e-06,
+        "samples": 7
+      },
+      "solve_scale": 1000000,
+      "repeats": 200,
       "returncode": 0,
-      "stdout_tail": "PATH LENGTH=  9\nR= 1 C= 1\nR= 1 C= 2\nR= 1 C= 3\nR= 1 C= 4\nR= 1 C= 5\nR= 2 C= 5\nR= 3 C= 5\nR= 4 C= 5\nR= 5 C= 5\n"
+      "stdout_tail": "PATH LENGTH=  9\nR= 1 C= 1\nR= 1 C= 2\nR= 1 C= 3\nR= 1 C= 4\nR= 1 C= 5\nR= 2 C= 5\nR= 3 C= 5\nR= 4 C= 5\nR= 5 C= 5\n",
+      "output_file": "09_astar.txt"
     },
     {
       "id": "10_mlp_xor",
-      "full_seconds": 0.0024325475096702576,
-      "min_seconds": 0.001644949006731622,
-      "max_seconds": 0.0033101029985118657,
+      "process": {
+        "median_s": 0.009321349993115291,
+        "min_s": 0.008643199980724603,
+        "max_s": 0.06358879996696487,
+        "samples": 50
+      },
+      "solve": {
+        "median_s": 0.0005284789,
+        "min_s": 0.0005229586,
+        "max_s": 0.0005623772,
+        "samples": 7
+      },
+      "solve_scale": 1000,
       "repeats": 50,
       "returncode": 0,
-      "stdout_tail": "X1=0.0 X2=0.0 Y=0.0 OUT= 0.0029\nX1=0.0 X2=1.0 Y=1.0 OUT= 0.9969\nX1=1.0 X2=0.0 Y=1.0 OUT= 0.9969\nX1=1.0 X2=1.0 Y=0.0 OUT= 0.0047\nLOSS= 0.00005\n"
+      "stdout_tail": "X1=0.0 X2=0.0 Y=0.0 OUT= 0.0029\nX1=0.0 X2=1.0 Y=1.0 OUT= 0.9969\nX1=1.0 X2=0.0 Y=1.0 OUT= 0.9969\nX1=1.0 X2=1.0 Y=0.0 OUT= 0.0047\nLOSS= 0.00005\n",
+      "output_file": "10_mlp_xor.txt"
     },
     {
       "id": "11_chess_mate",
-      "full_seconds": 0.0015015764947747812,
-      "min_seconds": 0.001103709000744857,
-      "max_seconds": 0.002245807001600042,
-      "repeats": 500,
+      "process": {
+        "median_s": 0.008143199986079708,
+        "min_s": 0.006992999988142401,
+        "max_s": 0.09434939996572211,
+        "samples": 200
+      },
+      "solve": {
+        "median_s": 1.788019e-06,
+        "min_s": 1.7288575e-06,
+        "max_s": 1.8559819e-06,
+        "samples": 7
+      },
+      "solve_scale": 1000000,
+      "repeats": 200,
       "returncode": 0,
-      "stdout_tail": "ROOK MOVES= 14 MATES=  1\nMATE IN 1: ROOK 1 1 ->  8  1\n"
+      "stdout_tail": "ROOK MOVES= 14 MATES=  1\nMATE IN 1: ROOK 1 1 ->  8  1\n",
+      "output_file": "11_chess_mate.txt"
     }
   ]
 }

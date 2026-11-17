@@ -1,0 +1,108 @@
+                                             04 ??? 24 23.45
+ ?OKCE?      ??CM-6/5     ???P-12
+ MOH?TOPHA? C?CTEMA  '? Y ? H A'  -  20/10/88
+
+
+
+
+
+
+
+            ????  ????  ????   ???? ????  ????  ????? ????   ???  ?   ?
+            ?   ? ?     ?   ? ?     ?     ?   ?   ?   ?   ? ?   ? ??  ?
+            ?   ? ???   ?   ? ?     ???   ?   ?   ?   ?   ? ?   ? ? ? ?
+            ?   ? ?     ????  ?     ?     ?   ?   ?   ????  ?   ? ?  ??
+            ????  ?     ? ?   ?     ?     ????    ?   ? ?   ?   ? ?   ?
+            ?     ?     ?  ?  ?     ?     ?       ?   ?  ?  ?   ? ?   ?
+            ?     ????? ?   ?  ???? ????? ?       ?   ?   ?  ???  ?   ?
+
+
+
+
+
+
+
+
+*NAME PERCEPTRON
+*FORTRAN                                             04 ??? 24 23.45
+ ? O P T P A H
+   /16.07.73/
+          C---- PERCEPTRON: LOGICAL AND
+ 05003
+   ?YCTO? O?EPATOP.
+                PROGRAM PERC
+                REAL W1,W2,B,ETA,OUT,ERR
+                REAL X1(4),X2(4),Y(4)
+                INTEGER I,EP
+                X1(1)=0.
+       2        X1(2)=0.
+       3        X1(3)=1.
+       4        X1(4)=1.
+       5        X2(1)=0.
+       6        X2(2)=1.
+       7        X2(3)=0.
+       8        X2(4)=1.
+       9        Y(1)=0.
+      10        Y(2)=0.
+      11        Y(3)=0.
+      12        Y(4)=1.
+      13        W1=0.
+      14        W2=0.
+      15        B=0.
+      16        ETA=0.1
+      17        DO 20 EP=1,20
+      18          DO 10 I=1,4
+      19            OUT=W1*X1(I)+W2*X2(I)+B
+      20            IF (OUT .GT. 0.)
+      21       -                     OUT=1.
+      22            IF (OUT .LE. 0.)
+      23       -                     OUT=0.
+      24            ERR=Y(I)-OUT
+      25            W1=W1+ETA*ERR*X1(I)
+      26            W2=W2+ETA*ERR*X2(I)
+      27            B=B+ETA*ERR
+      28     10   CONTINUE
+      29     20 CONTINUE
+      30        PRINT 100, W1, W2, B
+      31        DO 30 I=1,4
+      32          OUT=W1*X1(I)+W2*X2(I)+B
+      33          IF (OUT .GT. 0.)
+      34       -                   OUT=1.
+      35          IF (OUT .LE. 0.)
+      36       -                   OUT=0.
+      37          PRINT 110, X1(I), X2(I), Y(I), OUT
+      38     30 CONTINUE
+      39        STOP
+           100  FORMAT('WEIGHTS ',3F8.3)
+           110  FORMAT('X1=',F3.1,' X2=',F3.1,' Y=',F3.1,' OUT=',F3.1)
+                END
+
+
+
+                                      TA????A  OTHOC?TE??H?X A?PECOB
+         1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20
+ 000  :00001:00002:00003:00004:00005:00006:00007:00010:00011:00012:00013:00014:00015:00016:00017:00020:00021:00023:00025:00033
+ 020  :00036:00037:00042:00043:00046:00051:00054:00056 00061 00065 00075:00100:00106:00111:00112:00115:00116 00131 00135
+*EXECUTE
+?
+         PERC       01000                IOCONT*    02017                FT*723   E 02071                ISOTCOS1 E 04222
+         PROGRAM  E 01000                IOAC*    E 02050                FT*003   E 02071                FMRTAPE    04242
+         BCDWRIT*   01214                FT*722   E 02063                STOP*      03057                OCTTDEC    05171
+         FT*621   E 01214                FT*642   E 02063                EXIT     E 03060                LUNMUN   C 05224
+         BCDENC*  E 01220                FT*002   E 02063                BCDBEG*    03106                JERRIO*  C 05225
+         FT*611   E 01220                FD*642   E 02064                FT2*     E 03413                CARD2    C 05226
+         FT*571   E 01222                FD*722   E 02064                KONV1*   E 03426                ISOICTTR   05253
+         FT*561   E 01225                FC*722   E 02064                PRINT8     03522                REVCARD    05310
+         NEXTLET* E 01232                FC*642   E 02064                TTPRINT    03703                *ICHECK* C 05335
+         RK*      E 01274                FC*002   E 02064                BCDPUN     03742                *?EP?OPA   05343
+         WSY*     E 01532                IOEND*   E 02071                EBCDPUN  E 03766                KO?*CDC  E 05344
+         I/O*ERR  E 01772                FT*643   E 02071                ISOTCOSY   04151                CBO?O?HO   05404
+?
+WEIGHTS    0.200   0.100  -0.200
+X1=0.0 X2=0.0 Y=0.0 OUT=0.0
+X1=0.0 X2=1.0 Y=0.0 OUT=0.0
+X1=1.0 X2=0.0 Y=0.0 OUT=0.0
+X1=1.0 X2=1.0 Y=1.0 OUT=1.0
+Halted by STOP at 0118 after 2523926 instructions
+Execution stats: {"statistics":{"speed":"original","completedInstructions":2523927,"modelCycles":4400739,"elapsedSeconds":1.4637645,"allocatedBytes":2259896,"gen0Collections":1,"hardwareModelSeconds":null,"statisticalModelSeconds":1.463660818,"modelSeconds":1.463660818,"instructionsPerSecond":1724271.2198581125,"modelToWallRatio":0.9999291675675971,"originalTempoMet":true},"finalState":{"k":280,"isRightHalf":false,"a":0,"y":0,"r":6,"c":602,"applyC":false,"effectiveAddress":0,"interceptCount":1,"interceptAddress":16,"m":[0,4,8336,0,8336,8376,15885,625,1500,0,1,1303,1583,279,0,22273],"clockTicks":2523926},"memorySha256":"5C1E340B530310993E147CD1D89E10FBED16C2606EC830EBA83EEE1DE7898545"}
+

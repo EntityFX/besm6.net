@@ -1,0 +1,113 @@
+                                             04 ??? 24 23.45
+ ?OKCE?      ??CM-6/5     ???P-12
+ MOH?TOPHA? C?CTEMA  '? Y ? H A'  -  20/10/88
+
+
+
+
+
+
+
+            ?  ?        ?   ? ????   ???  ?   ?  ???
+            ? ?         ?? ?? ?     ?   ? ??  ? ?
+            ??          ? ? ? ???   ?   ? ? ? ?  ???
+            ? ?         ? ? ? ?     ?   ? ?  ??     ?
+            ?  ?        ?   ? ?     ?   ? ?   ?     ?
+            ?   ?       ?   ? ?     ????? ?   ? ?   ?
+            ?   ?       ?   ? ????? ?   ? ?   ?  ???
+
+
+
+
+
+
+
+
+*NAME K MEANS
+*FORTRAN                                             04 ??? 24 23.45
+ ? O P T P A H
+   /16.07.73/
+          C---- K-MEANS, ONE FEATURE, TWO CLUSTERS
+ 05003
+   ?YCTO? O?EPATOP.
+                PROGRAM KMEANS
+                REAL X(6),C1,C2,S1,S2
+                INTEGER N1,N2,I,IT
+                X(1)=1.
+       2        X(2)=2.
+       3        X(3)=3.
+       4        X(4)=10.
+       5        X(5)=11.
+       6        X(6)=12.
+       7        C1=1.
+       8        C2=12.
+       9        DO 20 IT=1,10
+      10          S1=0.
+      11          S2=0.
+      12          N1=0
+      13          N2=0
+      14          DO 10 I=1,6
+      15            IF (ABS(X(I)-C1) .GT. ABS(X(I)-C2))
+      16       -                                        GOTO 11
+      17            S1=S1+X(I)
+      18            N1=N1+1
+      19            GOTO 10
+      20     11     S2=S2+X(I)
+      21            N2=N2+1
+      22     10   CONTINUE
+      23          IF (N1 .GT. 0)
+      24       -                 C1=S1/N1
+      25          IF (N2 .GT. 0)
+      26       -                 C2=S2/N2
+      27     20 CONTINUE
+      28        PRINT 100, C1, C2
+      29        DO 30 I=1,6
+      30          IF (ABS(X(I)-C1) .LE. ABS(X(I)-C2))
+      31       -                                      PRINT 110, X(I), 1
+      32          IF (ABS(X(I)-C1) .GT. ABS(X(I)-C2))
+      33       -                                      PRINT 110, X(I), 2
+      34     30 CONTINUE
+      35        STOP
+           100  FORMAT('CENTERS ',2F8.3)
+           110  FORMAT('X=',F6.1,' CLUSTER=',I2)
+                END
+
+
+                    B???BAEM?E ?YHK??? ? ?O??PO?PAMM?
+
+
+       ABS
+                                      TA????A  OTHOC?TE??H?X A?PECOB
+         1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20
+ 000  :00001:00002:00003:00004:00005:00006:00007:00010:00011:00013:00014:00015 00016 00017:00021:00035:00036:00041:00043:00044
+ 020  :00047:00051 00055:00061:00064:00070:00073 00076 00104:00107:00123:00133:00147:00157 00162
+*EXECUTE
+?
+         KMEANS     01000                FD*642   E 02107                SQRT     E 03147                ISOTCOS1 E 04313
+         PROGRAM  E 01000                FD*722   E 02107                SIN      E 03150                FMRTAPE    04333
+         BCDWRIT*   01237                FC*722   E 02107                COS      E 03151                OCTTDEC    05262
+         FT*621   E 01237                FC*642   E 02107                ATAN     E 03152                LUNMUN   C 05315
+         BCDENC*  E 01243                FC*002   E 02107                ALOG     E 03153                JERRIO*  C 05316
+         FT*611   E 01243                IOEND*   E 02114                EXP      E 03154                R*TO*INT   05317
+         FT*571   E 01245                FT*643   E 02114                ALOG10   E 03160                R*TO*I   E 05320
+         FT*561   E 01250                FT*723   E 02114                I*DI*R     03164                CARD2    C 05332
+         NEXTLET* E 01255                FT*003   E 02114                R*DI*I   E 03171                ISOICTTR   05357
+         RK*      E 01317                STOP*      03102                BCDBEG*    03177                REVCARD    05414
+         WSY*     E 01555                EXIT     E 03103                FT2*     E 03504                *ICHECK* C 05441
+         I/O*ERR  E 02015                FLOAT      03131                KONV1*   E 03517                *?EP?OPA   05447
+         IOCONT*    02042                ABS      E 03134                PRINT8     03613                KO?*CDC  E 05450
+         IOAC*    E 02073                IABS     E 03137                TTPRINT    03774                CBO?O?HO   05510
+         FT*722   E 02106                IFIX     E 03141                BCDPUN     04033
+         FT*642   E 02106                AINT     E 03143                EBCDPUN  E 04057
+         FT*002   E 02106                INT      E 03145                ISOTCOSY   04242
+?
+CENTERS    2.000  11.000
+X=   1.0 CLUSTER= 1
+X=   2.0 CLUSTER= 1
+X=   3.0 CLUSTER= 1
+X=  10.0 CLUSTER= 2
+X=  11.0 CLUSTER= 2
+X=  12.0 CLUSTER= 2
+Halted by STOP at 0118 after 2570348 instructions
+Execution stats: {"statistics":{"speed":"original","completedInstructions":2570349,"modelCycles":4482673,"elapsedSeconds":1.4860317,"allocatedBytes":2261704,"gen0Collections":1,"hardwareModelSeconds":null,"statisticalModelSeconds":1.48586528,"modelSeconds":1.48586528,"instructionsPerSecond":1729673.0614831434,"modelToWallRatio":0.9998880104643797,"originalTempoMet":true},"finalState":{"k":280,"isRightHalf":false,"a":0,"y":0,"r":6,"c":623,"applyC":false,"effectiveAddress":0,"interceptCount":1,"interceptAddress":16,"m":[0,6,8336,0,8336,8371,15885,643,1519,0,1,1322,1602,279,0,22273],"clockTicks":2570348},"memorySha256":"9BA8C85DCD365AC7568C26F7D96C5E6E74D0FE1D621B0C027EA192EB5E2900B2"}
+

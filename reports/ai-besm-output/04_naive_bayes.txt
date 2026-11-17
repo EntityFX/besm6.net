@@ -1,0 +1,120 @@
+                                             04 ??? 24 23.45
+ ?OKCE?      ??CM-6/5     ???P-12
+ MOH?TOPHA? C?CTEMA  '? Y ? H A'  -  20/10/88
+
+
+
+
+
+
+
+            ?   ?  ???   ???  ?   ? ????        ????   ???  ?   ? ????   ???
+            ??  ? ?   ?   ?   ?   ? ?           ?  ?  ?   ? ?   ? ?     ?
+            ? ? ? ?   ?   ?   ?   ? ???         ???   ?   ? ?   ? ???    ???
+            ?  ?? ?   ?   ?   ?   ? ?           ?  ?  ?   ?  ? ?  ?         ?
+            ?   ? ?   ?   ?   ?   ? ?           ?   ? ?   ?   ?   ?         ?
+            ?   ? ?????   ?    ? ?  ?           ?   ? ?????   ?   ?     ?   ?
+            ?   ? ?   ?  ???    ?   ?????       ????  ?   ?   ?   ?????  ???
+
+
+
+
+
+
+
+
+*NAME NAIVE BAYES
+*FORTRAN                                             04 ??? 24 23.45
+ ? O P T P A H
+   /16.07.73/
+          C---- NAIVE BAYES WITH TWO BINARY FEATURES AND LAPLACE SMOOTHING
+ 05003
+   ?YCTO? O?EPATOP.
+                PROGRAM NB
+                INTEGER A(8),B(8),Y(8),N(2),NA(2,2),NBF(2,2)
+                INTEGER I,C,CA,CB,PA,PB,CC
+                REAL S(2),P1,P2
+                A(1)=0
+       2        A(2)=0
+       3        A(3)=0
+       4        A(4)=1
+       5        A(5)=1
+       6        A(6)=1
+       7        A(7)=1
+       8        A(8)=0
+       9        B(1)=0
+      10        B(2)=1
+      11        B(3)=0
+      12        B(4)=0
+      13        B(5)=1
+      14        B(6)=1
+      15        B(7)=0
+      16        B(8)=1
+      17        Y(1)=0
+      18        Y(2)=0
+      19        Y(3)=0
+      20        Y(4)=0
+      21        Y(5)=1
+      22        Y(6)=1
+      23        Y(7)=1
+      24        Y(8)=1
+      25        DO 10 C=1,2
+      26          N(C)=0
+      27          DO 11 CA=1,2
+      28            NA(C,CA)=0
+      29            NBF(C,CA)=0
+      30     11   CONTINUE
+      31     10 CONTINUE
+      32        DO 20 I=1,8
+      33          C=Y(I)+1
+      34          CA=A(I)+1
+      35          CB=B(I)+1
+      36          N(C)=N(C)+1
+      37          NA(C,CA)=NA(C,CA)+1
+      38          NBF(C,CB)=NBF(C,CB)+1
+      39     20 CONTINUE
+      40        DO 30 C=1,2
+      41          P1=(NA(C,2)+1.0)/(N(C)+2.0)
+      42          P2=(NBF(C,2)+1.0)/(N(C)+2.0)
+      43          S(C)=0.5*P1*P2
+      44          CC=C-1
+      45          PRINT 100, CC, N(C), S(C)
+      46     30 CONTINUE
+      47        IF (S(1) .GT. S(2))
+      48       -                    PRINT 110, 0
+      49        IF (S(1) .LE. S(2))
+      50       -                    PRINT 110, 1
+      51        STOP
+           100  FORMAT('CLASS=',I2,' COUNT=',I3,' SCORE=',F8.4)
+           110  FORMAT('PREDICTED CLASS=',I2)
+                END
+
+
+
+                                      TA????A  OTHOC?TE??H?X A?PECOB
+         1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20
+ 000  :00001 00002 00003 00004 00005 00006 00007 00010 00011 00012 00013 00014 00015 00016 00017 00020 00021 00022 00023 00024
+ 020   00025 00026 00027 00030 00031:00034 00036:00042 00044:00047 00053 00060:00063:00067 00072 00075 00101:00105 00110 00114
+ 040  :00120 00127:00137 00141 00143 00155 00162:00165:00172:00175:00202
+*EXECUTE
+?
+         NB         01000                IOAC*    E 02203                STOP*      03212                OCTTDEC    05332
+         PROGRAM  E 01000                FT*722   E 02216                EXIT     E 03213                LUNMUN   C 05365
+         BCDWRIT*   01347                FT*642   E 02216                I*MUI*     03241                JERRIO*  C 05366
+         FT*621   E 01347                FT*002   E 02216                BCDBEG*    03247                CARD2    C 05367
+         BCDENC*  E 01353                FD*642   E 02217                FT2*     E 03554                ISOICTTR   05414
+         FT*611   E 01353                FD*722   E 02217                KONV1*   E 03567                REVCARD    05451
+         FT*571   E 01355                FC*722   E 02217                PRINT8     03663                *ICHECK* C 05476
+         FT*561   E 01360                FC*642   E 02217                TTPRINT    04044                *?EP?OPA   05504
+         NEXTLET* E 01365                FC*002   E 02217                BCDPUN     04103                KO?*CDC  E 05505
+         RK*      E 01427                IOEND*   E 02224                EBCDPUN  E 04127                CBO?O?HO   05545
+         WSY*     E 01665                FT*643   E 02224                ISOTCOSY   04312
+         I/O*ERR  E 02125                FT*723   E 02224                ISOTCOS1 E 04363
+         IOCONT*    02152                FT*003   E 02224                FMRTAPE    04403
+?
+CLASS= 0 COUNT=  4 SCORE=  0.0556
+CLASS= 1 COUNT=  4 SCORE=  0.2222
+PREDICTED CLASS= 1
+Halted by STOP at 0118 after 3018328 instructions
+Execution stats: {"statistics":{"speed":"original","completedInstructions":3018329,"modelCycles":5271751,"elapsedSeconds":1.7822404,"allocatedBytes":2262680,"gen0Collections":1,"hardwareModelSeconds":null,"statisticalModelSeconds":1.782088838,"modelSeconds":1.782088838,"instructionsPerSecond":1693558.8487389244,"modelToWallRatio":0.9999149598449232,"originalTempoMet":true},"finalState":{"k":280,"isRightHalf":false,"a":0,"y":0,"r":6,"c":642,"applyC":false,"effectiveAddress":0,"interceptCount":1,"interceptAddress":16,"m":[0,2,2,4,6,8396,15885,688,1591,0,1,1394,1674,279,0,22273],"clockTicks":3018328},"memorySha256":"CED6B3FB3CD839CCDEC86DB10247778A1B0D2203CC0F148E87358DFB3D019FF1"}
+

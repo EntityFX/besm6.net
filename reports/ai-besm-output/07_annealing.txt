@@ -1,0 +1,115 @@
+                                             04 ??? 24 23.45
+ ?OKCE?      ??CM-6/5     ???P-12
+ MOH?TOPHA? C?CTEMA  '? Y ? H A'  -  20/10/88
+
+
+
+
+
+
+
+             ???  ?   ? ?   ? ????   ???  ?      ???  ?   ?  ???
+            ?   ? ??  ? ??  ? ?     ?   ? ?       ?   ??  ? ?   ?
+            ?   ? ? ? ? ? ? ? ???   ?   ? ?       ?   ? ? ? ?
+            ?   ? ?  ?? ?  ?? ?     ?   ? ?       ?   ?  ?? ?
+            ?   ? ?   ? ?   ? ?     ?   ? ?       ?   ?   ? ?  ??
+            ????? ?   ? ?   ? ?     ????? ?       ?   ?   ? ?   ?
+            ?   ? ?   ? ?   ? ????? ?   ? ?????  ???  ?   ?  ???
+
+
+
+
+
+
+
+
+*NAME ANNEALING
+*FORTRAN                                             04 ??? 24 23.45
+ ? O P T P A H
+   /16.07.73/
+          C---- SIMULATED ANNEALING: MAXIMIZE 9-(X-3)?2 ON 0..10
+ 05003
+   ?YCTO? O?EPATOP.
+                PROGRAM ANNEAL
+                REAL FX,FN,T,R1,R2,FB
+                INTEGER X,BEST,XN,IT,ISEED
+                ISEED=12345
+       2        X=0
+       3        FX=9.0-(X-3.0)**2
+       4        BEST=X
+       5        FB=FX
+       6        T=5.0
+       7        DO 40 IT=1,30
+       8          ISEED=ISEED*75+74
+       9          ISEED=ISEED-65537*(ISEED/65537)
+      10          R1=ISEED/65537.0
+      11          XN=X
+      12          IF (R1 .LT. 0.5)
+      13       -                   XN=X-1
+      14          IF (R1 .GE. 0.5)
+      15       -                   XN=X+1
+      16          IF (XN .LT. 0)
+      17       -                 XN=0
+      18          IF (XN .GT. 10)
+      19       -                  XN=10
+      20          FN=9.0-(XN-3.0)**2
+      21          IF (FN .GE. FX)
+      22       -                  GOTO 30
+      23          ISEED=ISEED*75+74
+      24          ISEED=ISEED-65537*(ISEED/65537)
+      25          R2=ISEED/65537.0
+      26          IF (R2 .LT. EXP((FN-FX)/T))
+      27       -                              GOTO 30
+      28          GOTO 35
+      29     30   CONTINUE
+      30          X=XN
+      31          FX=FN
+      32          IF (FX .GT. FB)
+      33       -                  BEST=X
+      34          IF (FX .GT. FB)
+      35       -                  FB=FX
+      36     35   CONTINUE
+      37          T=T*0.8
+      38     40 CONTINUE
+      39        PRINT 100, BEST, FB
+      40        PRINT 110, X, FX, T
+      41        STOP
+           100  FORMAT('BEST X=',I3,' F=',F7.3)
+           110  FORMAT('FINAL X=',I3,' F=',F7.3,' T=',F6.3)
+                END
+
+
+                    B???BAEM?E ?YHK??? ? ?O??PO?PAMM?
+
+
+       EXP
+                                      TA????A  OTHOC?TE??H?X A?PECOB
+         1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20
+ 000  :00001 00002 00003:00010 00011 00012 00013:00015 00020:00026 00030:00032:00035:00040:00042:00045:00050:00052:00056:00060
+ 020  :00064:00066:00067 00072:00100 00102:00110:00111 00111:00112 00113 00114:00120:00122:00125:00126:00126 00127 00133 00142
+ 040   00154
+*EXECUTE
+?
+         ANNEAL     01000                FD*642   E 02103                SQRT     E 03143                ISOTCOSY   04247
+         PROGRAM  E 01000                FD*722   E 02103                SIN      E 03144                ISOTCOS1 E 04320
+         BCDWRIT*   01233                FC*722   E 02103                COS      E 03145                FMRTAPE    04340
+         FT*621   E 01233                FC*642   E 02103                ATAN     E 03146                OCTTDEC    05267
+         BCDENC*  E 01237                FC*002   E 02103                ALOG     E 03147                LUNMUN   C 05322
+         FT*611   E 01237                IOEND*   E 02110                EXP      E 03150                JERRIO*  C 05323
+         FT*571   E 01241                FT*643   E 02110                ALOG10   E 03154                R*TO*INT   05324
+         FT*561   E 01244                FT*723   E 02110                I*DI*I     03160                R*TO*I   E 05325
+         NEXTLET* E 01251                FT*003   E 02110                I*ST*L   E 03170                CARD2    C 05337
+         RK*      E 01313                STOP*      03076                I*MU*I   E 03171                ISOICTTR   05364
+         WSY*     E 01551                EXIT     E 03077                BCDBEG*    03204                REVCARD    05421
+         I/O*ERR  E 02011                FLOAT      03125                FT2*     E 03511                *ICHECK* C 05446
+         IOCONT*    02036                ABS      E 03130                KONV1*   E 03524                *?EP?OPA   05454
+         IOAC*    E 02067                IABS     E 03133                PRINT8     03620                KO?*CDC  E 05455
+         FT*722   E 02102                IFIX     E 03135                TTPRINT    04001                CBO?O?HO   05515
+         FT*642   E 02102                AINT     E 03137                BCDPUN     04040
+         FT*002   E 02102                INT      E 03141                EBCDPUN  E 04064
+?
+BEST X=  3 F=  9.000
+FINAL X=  3 F=  9.000 T= 0.006
+Halted by STOP at 0118 after 2632144 instructions
+Execution stats: {"statistics":{"speed":"original","completedInstructions":2632145,"modelCycles":4599728,"elapsedSeconds":1.5268158,"allocatedBytes":2263160,"gen0Collections":1,"hardwareModelSeconds":null,"statisticalModelSeconds":1.526628225,"modelSeconds":1.526628225,"instructionsPerSecond":1723944.0409249105,"modelToWallRatio":0.999877146280514,"originalTempoMet":true},"finalState":{"k":280,"isRightHalf":false,"a":0,"y":0,"r":6,"c":621,"applyC":false,"effectiveAddress":0,"interceptCount":1,"interceptAddress":16,"m":[0,1213,8336,0,8336,8377,15885,641,1515,0,1,1318,1598,279,0,22273],"clockTicks":2632144},"memorySha256":"1548180429F627E844FF07F914D993D28FCA9F3D5DDCBEF7EDEF004DCDA6E9D7"}
+

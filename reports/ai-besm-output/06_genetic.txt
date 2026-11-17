@@ -1,0 +1,111 @@
+                                             04 ??? 24 23.45
+ ?OKCE?      ??CM-6/5     ???P-12
+ MOH?TOPHA? C?CTEMA  '? Y ? H A'  -  20/10/88
+
+
+
+
+
+
+
+             ???  ????  ?   ? ????  ?????  ???   ????        ???  ?      ???   ???  ????   ???  ????? ?   ? ?   ?
+            ?   ? ?     ??  ? ?       ?     ?   ?           ?   ? ?     ?   ? ?   ? ?   ?   ?     ?   ?   ? ?? ??
+            ?     ???   ? ? ? ???     ?     ?   ?           ?   ? ?     ?     ?   ? ?   ?   ?     ?   ????? ? ? ?
+            ?     ?     ?  ?? ?       ?     ?   ?           ?   ? ?     ?     ?   ? ????    ?     ?   ?   ? ? ? ?
+            ?  ?? ?     ?   ? ?       ?     ?   ?           ?   ? ?     ?  ?? ?   ? ? ?     ?     ?   ?   ? ?   ?
+            ?   ? ?     ?   ? ?       ?     ?   ?           ????? ?     ?   ? ?   ? ?  ?    ?     ?   ?   ? ?   ?
+             ???  ????? ?   ? ?????   ?    ???   ????       ?   ? ?????  ???   ???  ?   ?  ???    ?   ?   ? ?   ?
+
+
+
+
+
+
+
+
+*NAME GENETIC ALGORITHM
+*FORTRAN                                             04 ??? 24 23.45
+ ? O P T P A H
+   /16.07.73/
+          C---- SIMPLE GENETIC ALGORITHM: MAXIMIZE X*X ON 0..31
+ 05003
+   ?YCTO? O?EPATOP.
+                PROGRAM GA
+                INTEGER P(4),FIT(4),I,GEN,I1,I2,P1,P2,C1,C2,BX,BF
+                P(1)=3
+       2        P(2)=12
+       3        P(3)=21
+       4        P(4)=30
+       5        DO 100 GEN=1,8
+       6          DO 10 I=1,4
+       7            FIT(I)=P(I)*P(I)
+       8     10   CONTINUE
+       9          I1=1
+      10          DO 20 I=2,4
+      11            IF (FIT(I) .GT. FIT(I1))
+      12       -                             I1=I
+      13     20   CONTINUE
+      14          I2=0
+      15          DO 30 I=1,4
+      16            IF (I .EQ. I1)
+      17       -                   GOTO 30
+      18            IF (I2 .EQ. 0)
+      19       -                   I2=I
+      20            IF (FIT(I) .GT. FIT(I2))
+      21       -                             I2=I
+      22     30   CONTINUE
+      23          P1=P(I1)
+      24          P2=P(I2)
+      25          C1=(P1/4)*4+(P2-4*(P2/4))
+      26          C2=(P2/4)*4+(P1-4*(P1/4))
+      27          C1=C1+3
+      28          IF (C1 .GT. 31)
+      29       -                  C1=C1-32
+      30          C2=C2+5
+      31          IF (C2 .GT. 31)
+      32       -                  C2=C2-32
+      33          P(1)=P1
+      34          P(2)=P2
+      35          P(3)=C1
+      36          P(4)=C2
+      37    100 CONTINUE
+      38        BX=P(1)
+      39        BF=FIT(1)
+      40        DO 110 I=2,4
+      41          IF (P(I)*P(I) .GT. BF)
+      42       -                         BX=P(I)
+      43          IF (P(I)*P(I) .GT. BF)
+      44       -                         BF=P(I)*P(I)
+      45    110 CONTINUE
+      46        PRINT 200, BX, BF
+      47        STOP
+           200  FORMAT('BEST X=',I3,' FITNESS=',I6)
+                END
+
+
+
+                                      TA????A  OTHOC?TE??H?X A?PECOB
+         1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20
+ 000  :00001 00002 00003 00004 00005:00007:00011:00016 00021:00023:00025:00034:00036 00041:00043:00045:00050:00051:00054:00056
+ 020  :00065:00067 00072 00075:00100:00113:00126 00127:00133:00136:00140:00143:00146 00147 00150 00151 00152 00156:00160:00161
+ 040  :00163:00172:00176:00205:00213 00216 00226
+*EXECUTE
+?
+         GA         01000                IOAC*    E 02142                STOP*      03151                ISOTCOS1 E 04340
+         PROGRAM  E 01000                FT*722   E 02155                EXIT     E 03152                FMRTAPE    04360
+         BCDWRIT*   01306                FT*642   E 02155                I*DI*I     03200                OCTTDEC    05307
+         FT*621   E 01306                FT*002   E 02155                I*ST*L   E 03210                LUNMUN   C 05342
+         BCDENC*  E 01312                FD*642   E 02156                I*MU*I   E 03211                JERRIO*  C 05343
+         FT*611   E 01312                FD*722   E 02156                BCDBEG*    03224                CARD2    C 05344
+         FT*571   E 01314                FC*722   E 02156                FT2*     E 03531                ISOICTTR   05371
+         FT*561   E 01317                FC*642   E 02156                KONV1*   E 03544                REVCARD    05426
+         NEXTLET* E 01324                FC*002   E 02156                PRINT8     03640                *ICHECK* C 05453
+         RK*      E 01366                IOEND*   E 02163                TTPRINT    04021                *?EP?OPA   05461
+         WSY*     E 01624                FT*643   E 02163                BCDPUN     04060                KO?*CDC  E 05462
+         I/O*ERR  E 02064                FT*723   E 02163                EBCDPUN  E 04104                CBO?O?HO   05522
+         IOCONT*    02111                FT*003   E 02163                ISOTCOSY   04267
+?
+BEST X= 31 FITNESS=   961
+Halted by STOP at 0118 after 2848751 instructions
+Execution stats: {"statistics":{"speed":"original","completedInstructions":2848752,"modelCycles":4972346,"elapsedSeconds":1.6675487,"allocatedBytes":2262616,"gen0Collections":1,"hardwareModelSeconds":null,"statisticalModelSeconds":1.667361748,"modelSeconds":1.667361748,"instructionsPerSecond":1708347.1085432167,"modelToWallRatio":0.9998878881318429,"originalTempoMet":true},"finalState":{"k":280,"isRightHalf":false,"a":0,"y":0,"r":6,"c":663,"applyC":false,"effectiveAddress":0,"interceptCount":1,"interceptAddress":16,"m":[0,4,2,0,8336,8372,15885,678,1558,0,513,1361,1641,279,0,22273],"clockTicks":2848751},"memorySha256":"3AB97DDD6672FA8683EEFCD88FE704BE3ADEA73B0698578DE83DE1E20B5ED6C1"}
+
