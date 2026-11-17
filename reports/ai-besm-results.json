@@ -1,214 +1,302 @@
 {
-  "method": "differential guest model time, DO-loop repeat, translation/loading cancelled",
-  "pass_differences": 2,
+  "method": "differential guest model time, DO-loop repeat, translation/loading cancelled; per-pass time is the least-squares slope over N=1..passes",
+  "passes": 6,
   "rows": [
     {
       "id": "01_perceptron",
-      "exec_seconds": 0.033904716,
-      "compute_seconds": 0.0033502269999999834,
-      "io_seconds": 0.030554489000000018,
+      "exec_seconds": 0.03362932677142856,
+      "exec_se": 9.68643458721097e-05,
+      "compute_seconds": 0.003306987028571459,
+      "compute_se": 3.970027708805434e-05,
+      "io_seconds": 0.030322339742857102,
       "exec_differences": [
         0.03409351700000007,
-        0.03371591499999993
+        0.03371591499999993,
+        0.03264345200000007,
+        0.03437876799999984,
+        0.0336020640000001
       ],
       "compute_differences": [
         0.003421903000000004,
-        0.003278550999999963
+        0.003278550999999963,
+        0.0029471470000002054,
+        0.0036840799999999785,
+        0.003281931999999932
       ],
       "total_seconds_n1": 1.513314265,
       "original_total_seconds": 1.463660818,
       "instructions_n1": 2601674,
-      "instructions_per_pass": 47075,
+      "instructions_per_pass": 47002.4,
       "output_file": "01_perceptron.txt"
     },
     {
       "id": "02_knn",
-      "exec_seconds": 0.013666137500000008,
-      "compute_seconds": 0.0015059024999999338,
-      "io_seconds": 0.012160235000000075,
+      "exec_seconds": 0.013691453942857151,
+      "exec_se": 6.557706867966489e-05,
+      "compute_seconds": 0.0015022289714285478,
+      "compute_se": 1.4586937531733949e-05,
+      "io_seconds": 0.012189224971428603,
       "exec_differences": [
         0.01401447999999994,
-        0.013317795000000077
+        0.013317795000000077,
+        0.014118866000000008,
+        0.013732273000000017,
+        0.01313162999999995
       ],
       "compute_differences": [
         0.0016239359999998815,
-        0.001387868999999986
+        0.001387868999999986,
+        0.001585853000000137,
+        0.0015005499999998229,
+        0.0014156610000000125
       ],
       "total_seconds_n1": 1.502440706,
       "original_total_seconds": 1.457085375,
       "instructions_n1": 2596350,
-      "instructions_per_pass": 19975,
+      "instructions_per_pass": 19741.2,
       "output_file": "02_knn.txt"
     },
     {
       "id": "03_kmeans",
-      "exec_seconds": 0.029354284499999994,
-      "compute_seconds": 0.02596612499999995,
-      "io_seconds": 0.003388159500000043,
+      "exec_seconds": 0.029332211628571407,
+      "exec_se": 4.3820288556524667e-05,
+      "compute_seconds": 0.002171379971428568,
+      "compute_se": 5.273692167255091e-05,
+      "io_seconds": 0.02716083165714284,
       "exec_differences": [
         0.029391999000000002,
-        0.029316569999999986
+        0.029316569999999986,
+        0.029178453999999965,
+        0.02918179199999993,
+        0.02981488600000004
       ],
       "compute_differences": [
-        0.02586459699999999,
-        0.026067652999999913
+        0.0021997150000001575,
+        0.0019828959999999007,
+        0.002094905999999952,
+        0.0020934340000000606,
+        0.002706985999999967
       ],
       "total_seconds_n1": 1.531468553,
       "original_total_seconds": 1.48586528,
       "instructions_n1": 2642215,
-      "instructions_per_pass": 41986,
+      "instructions_per_pass": 41956.2,
       "output_file": "03_kmeans.txt"
     },
     {
       "id": "04_naive_bayes",
-      "exec_seconds": 0.016031787500000005,
-      "compute_seconds": 0.0039038974999999754,
-      "io_seconds": 0.01212789000000003,
+      "exec_seconds": 0.015992546057142867,
+      "exec_se": 2.0178110260258994e-05,
+      "compute_seconds": 0.0006746307142857003,
+      "compute_se": 2.635887344673451e-06,
+      "io_seconds": 0.015317915342857166,
       "exec_differences": [
         0.015850235000000046,
-        0.016213339999999965
+        0.016213339999999965,
+        0.015938345999999992,
+        0.015940161000000064,
+        0.015962962999999997
       ],
       "compute_differences": [
-        0.0038901180000001645,
-        0.003917676999999786
+        0.0006459340000000147,
+        0.000698674999999982,
+        0.0006717149999999616,
+        0.0006704799999999178,
+        0.0006767460000001169
       ],
       "total_seconds_n1": 1.827652787,
       "original_total_seconds": 1.782088838,
       "instructions_n1": 3090536,
-      "instructions_per_pass": 22126,
+      "instructions_per_pass": 22174.4,
       "output_file": "04_naive_bayes.txt"
     },
     {
       "id": "05_decision_stump",
-      "exec_seconds": 0.010421213499999915,
-      "compute_seconds": 0.003407509999999947,
-      "io_seconds": 0.007013703499999968,
+      "exec_seconds": 0.010147410228571413,
+      "exec_se": 0.00012993602393217906,
+      "compute_seconds": 0.003146546085714265,
+      "compute_se": 7.893665575298272e-05,
+      "io_seconds": 0.007000864142857147,
       "exec_differences": [
         0.010012248000000001,
-        0.010830178999999829
+        0.010830178999999829,
+        0.009113439000000056,
+        0.01001297000000001,
+        0.01126639500000004
       ],
       "compute_differences": [
         0.0030920909999998525,
-        0.0037229290000000415
+        0.0037229290000000415,
+        0.002416324999999997,
+        0.003107281999999989,
+        0.00365600899999996
       ],
       "total_seconds_n1": 1.463413282,
       "original_total_seconds": 1.413486703,
       "instructions_n1": 2531471,
-      "instructions_per_pass": 14483,
+      "instructions_per_pass": 14526.4,
       "output_file": "05_decision_stump.txt"
     },
     {
       "id": "06_genetic",
-      "exec_seconds": 0.006705633000000044,
-      "compute_seconds": 0.002293477499999974,
-      "io_seconds": 0.00441215550000007,
+      "exec_seconds": 0.006565649971428592,
+      "exec_se": 9.34555538114856e-05,
+      "compute_seconds": 0.002245814400000017,
+      "compute_se": 4.07263800973588e-05,
+      "io_seconds": 0.004319835571428575,
       "exec_differences": [
         0.006800257999999948,
-        0.00661100800000014
+        0.00661100800000014,
+        0.006907974999999844,
+        0.006541840000000132,
+        0.00568038000000004
       ],
       "compute_differences": [
         0.00231278800000001,
-        0.002274166999999938
+        0.002274166999999938,
+        0.002477016000000054,
+        0.0021034829999999616,
+        0.0019450440000001734
       ],
       "total_seconds_n1": 1.713365461,
       "original_total_seconds": 1.667361748,
       "instructions_n1": 2921195,
-      "instructions_per_pass": 10578,
+      "instructions_per_pass": 10488.0,
       "output_file": "06_genetic.txt"
     },
     {
       "id": "07_annealing",
-      "exec_seconds": 0.01498682149999997,
-      "compute_seconds": 0.005389751999999914,
-      "io_seconds": 0.009597069500000055,
+      "exec_seconds": 0.014696805800000025,
+      "exec_se": 5.9137229529052774e-05,
+      "compute_seconds": 0.0052448499999999615,
+      "compute_se": 3.299402129289134e-05,
+      "io_seconds": 0.009451955800000064,
       "exec_differences": [
         0.015265864000000073,
-        0.014707778999999865
+        0.014707778999999865,
+        0.014465885000000123,
+        0.014648977000000007,
+        0.014602374000000085
       ],
       "compute_differences": [
         0.005596812999999923,
-        0.005182690999999906
+        0.005182690999999906,
+        0.005145944999999985,
+        0.005214508999999978,
+        0.005218916000000018
       ],
       "total_seconds_n1": 1.57175859,
       "original_total_seconds": 1.526628225,
       "instructions_n1": 2704155,
-      "instructions_per_pass": 19579,
+      "instructions_per_pass": 19011.6,
       "output_file": "07_annealing.txt"
     },
     {
       "id": "08_qlearning",
-      "exec_seconds": 0.053013949500000046,
-      "compute_seconds": 0.010728033999999997,
-      "io_seconds": 0.04228591550000005,
+      "exec_seconds": 0.05195634571428572,
+      "exec_se": 0.0003240564643939083,
+      "compute_seconds": 0.010156513742857134,
+      "compute_se": 0.00017684681382058293,
+      "io_seconds": 0.041799831971428586,
       "exec_differences": [
         0.053176083000000096,
-        0.052851815999999996
+        0.052851815999999996,
+        0.052890881999999806,
+        0.049055678000000214,
+        0.05226275899999999
       ],
       "compute_differences": [
         0.010881118999999995,
-        0.010574949
+        0.010574949,
+        0.010686085999999984,
+        0.008548339999999932,
+        0.010382260000000088
       ],
       "total_seconds_n1": 1.992905223,
       "original_total_seconds": 1.946399853,
       "instructions_n1": 3347435,
-      "instructions_per_pass": 76507,
+      "instructions_per_pass": 76157.6,
       "output_file": "08_qlearning.txt"
     },
     {
       "id": "09_astar",
-      "exec_seconds": 0.04031747399999985,
-      "compute_seconds": 0.012994809000000052,
-      "io_seconds": 0.0273226649999998,
+      "exec_seconds": 0.04034921928571429,
+      "exec_se": 6.717673659107437e-05,
+      "compute_seconds": 0.012778219057142909,
+      "compute_se": 7.369924269907885e-05,
+      "io_seconds": 0.027571000228571382,
       "exec_differences": [
         0.040405997999999776,
-        0.04022894999999993
+        0.04022894999999993,
+        0.04006118400000025,
+        0.040351632999999776,
+        0.040999473000000286
       ],
       "compute_differences": [
         0.013069145000000226,
-        0.012920472999999877
+        0.012920472999999877,
+        0.012667668000000187,
+        0.013041952000000023,
+        0.012036705999999953
       ],
       "total_seconds_n1": 2.654714187,
       "original_total_seconds": 2.608519794,
       "instructions_n1": 4388578,
-      "instructions_per_pass": 62056,
+      "instructions_per_pass": 62000.6,
       "output_file": "09_astar.txt"
     },
     {
       "id": "10_mlp_xor",
-      "exec_seconds": 2.8062661104999997,
-      "compute_seconds": 2.6924677244999997,
-      "io_seconds": 0.11379838600000003,
+      "exec_seconds": 2.7852634457428573,
+      "exec_se": 0.019050734660438523,
+      "compute_seconds": 2.699405274228571,
+      "compute_se": 0.006315927152320697,
+      "io_seconds": 0.08585817151428632,
       "exec_differences": [
         2.8285809309999994,
-        2.78395129
+        2.78395129,
+        2.6059326800000004,
+        2.962072601999999,
+        2.783946138000001
       ],
       "compute_differences": [
         2.685124147,
-        2.6998113019999996
+        2.6998113019999996,
+        2.758860328000001,
+        2.6407841749999985,
+        2.6998114190000013
       ],
       "total_seconds_n1": 4.733181013,
       "original_total_seconds": 4.694144751,
       "instructions_n1": 4736617,
-      "instructions_per_pass": 1378117,
+      "instructions_per_pass": 1378012.0,
       "output_file": "10_mlp_xor.txt"
     },
     {
       "id": "11_chess_mate",
-      "exec_seconds": 0.0343622385000002,
-      "compute_seconds": 0.025402890499999886,
-      "io_seconds": 0.008959348000000311,
+      "exec_seconds": 0.033968750571428605,
+      "exec_se": 0.0005042133321947663,
+      "compute_seconds": 0.025024548142857168,
+      "compute_se": 0.000525997438989631,
+      "io_seconds": 0.008944202428571437,
       "exec_differences": [
         0.03252091200000029,
-        0.036203565000000104
+        0.036203565000000104,
+        0.028879179000000033,
+        0.03867808799999972,
+        0.03346717500000018
       ],
       "compute_differences": [
         0.02349464000000001,
-        0.02731114099999976
+        0.02731114099999976,
+        0.019742998999999983,
+        0.02993373200000038,
+        0.024548001999999958
       ],
       "total_seconds_n1": 3.569782389,
       "original_total_seconds": 3.539338299,
       "instructions_n1": 5986298,
-      "instructions_per_pass": 53382,
+      "instructions_per_pass": 53411.6,
       "output_file": "11_chess_mate.txt"
     }
   ]

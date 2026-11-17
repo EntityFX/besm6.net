@@ -27,7 +27,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import statistics
 import subprocess
 import tempfile
 from pathlib import Path
@@ -37,6 +36,9 @@ DECLARATION = re.compile(
     r"common|external|implicit|data|save|equivalence|subroutine|function)\b",
     re.IGNORECASE,
 )
+# A PRINT statement, optionally guarded by a logical IF whose condition may
+# contain nested parentheses (e.g. ``if (abs(x(i)-c1) .le. abs(x(i)-c2)) print``).
+PRINT_STMT = re.compile(r"^\s*(if\s*\(.*\)\s*)?print\b", re.IGNORECASE)
 STATS = re.compile(r"Execution stats:\s*")
 
 
@@ -87,7 +89,7 @@ def instrument(lines: list[str], start: int, end: int, repeat: int, quiet: bool)
             out.append(f"      do 9000 irep=1,{repeat}")
         if i == stop:
             out.append(" 9000 continue")
-        if quiet and re.match(r"^\s*(if\s*\([^)]*\)\s*)?print\b", line, re.IGNORECASE):
+        if quiet and PRINT_STMT.match(line):
             # Keep the line length identical: comments do not affect translation
             # in the differential pair, but identical lengths keep the job image
             # as close as possible.
@@ -95,6 +97,23 @@ def instrument(lines: list[str], start: int, end: int, repeat: int, quiet: bool)
             continue
         out.append(line)
     return "\n".join(out) + "\n"
+
+
+def assert_no_prints_remain(source: str, job_name: str) -> None:
+    """Guard the differential method: the quiet variant must print nothing.
+
+    The first version of the PRINT regex missed ``if (...) print`` statements
+    whose condition contained nested parentheses, which silently left output in
+    the "quiet" timing for k-means and naive Bayes.  Fail loudly instead.
+    """
+    for i, line in enumerate(source.splitlines(), 1):
+        stripped = line.strip()
+        if not stripped or stripped[0] in ("c", "C", "*"):
+            continue
+        if re.search(r"\bprint\b", line, re.IGNORECASE):
+            raise AssertionError(
+                f"{job_name}: quiet variant still contains PRINT (line {i}): {line!r}"
+            )
 
 
 def run_job(dotnet: str, dll: Path, job: Path, timeout: float) -> tuple[float, int, str]:
@@ -129,8 +148,8 @@ def main() -> int:
     parser.add_argument("--dotnet", default="dotnet")
     parser.add_argument("--dll", type=Path,
                         default=root / "src" / "Besm6.Cli" / "bin" / "Release" / "net8.0" / "besm6.dll")
-    parser.add_argument("--passes", type=int, default=3,
-                        help="run N=1..passes and report first differences")
+    parser.add_argument("--passes", type=int, default=6,
+                        help="run N=1..passes; per-pass time is the least-squares slope")
     parser.add_argument("--timeout", type=float, default=600.0)
     args = parser.parse_args()
 
@@ -150,35 +169,51 @@ def main() -> int:
             for repeat in range(1, args.passes + 1):
                 for name, is_quiet, sink in (("full", False, full), ("quiet", True, quiet)):
                     job = work / f"{dub.stem}-{name}-{repeat}.dub"
-                    job.write_text(instrument(lines, start, end, repeat, is_quiet), encoding="utf-8")
+                    source = instrument(lines, start, end, repeat, is_quiet)
+                    if is_quiet:
+                        assert_no_prints_remain(source, dub.stem)
+                    job.write_text(source, encoding="utf-8")
                     seconds, count, _ = run_job(args.dotnet, args.dll, job, args.timeout)
                     sink[repeat] = seconds
                     if not is_quiet:
                         instructions[repeat] = count
                     print(f"{dub.stem:20s} {name:5s} N={repeat}  {seconds:9.6f} s")
 
-            def first_difference(values: dict[int, float]) -> float:
-                diffs = [values[n + 1] - values[n] for n in range(1, args.passes)]
-                return statistics.fmean(diffs)
+            def slope(values: dict[int, float]) -> tuple[float, float]:
+                xs = sorted(values)
+                ys = [values[x] for x in xs]
+                n = len(xs)
+                xm = sum(xs) / n
+                ym = sum(ys) / n
+                sxx = sum((x - xm) ** 2 for x in xs)
+                if sxx == 0:
+                    return 0.0, 0.0
+                sxy = sum((x - xm) * (y - ym) for x, y in zip(xs, ys))
+                s = sxy / sxx
+                sse = sum((y - (ym + s * (x - xm))) ** 2 for x, y in zip(xs, ys))
+                se = (sse / (n - 2) / sxx) ** 0.5 if n > 2 else 0.0
+                return s, se
 
-            exec_s = first_difference(full)
-            compute_s = first_difference(quiet)
+            exec_s, exec_se = slope(full)
+            compute_s, compute_se = slope(quiet)
             exec_diffs = [full[n + 1] - full[n] for n in range(1, args.passes)]
             compute_diffs = [quiet[n + 1] - quiet[n] for n in range(1, args.passes)]
             rows.append({
                 "id": dub.stem,
                 "exec_seconds": exec_s,
+                "exec_se": exec_se,
                 "compute_seconds": compute_s,
+                "compute_se": compute_se,
                 "io_seconds": exec_s - compute_s,
                 "exec_differences": exec_diffs,
                 "compute_differences": compute_diffs,
                 "total_seconds_n1": full[1],
                 "original_total_seconds": None,
                 "instructions_n1": instructions[1],
-                "instructions_per_pass": instructions[2] - instructions[1],
+                "instructions_per_pass": (instructions[args.passes] - instructions[1]) / (args.passes - 1),
                 "output_file": f"{dub.stem}.txt",
             })
-            print(f"{dub.stem:20s} exec={exec_s:.6f}  compute={compute_s:.6f}  io={exec_s-compute_s:.6f}")
+            print(f"{dub.stem:20s} exec={exec_s:.6f}±{exec_se:.6f}  compute={compute_s:.6f}±{compute_se:.6f}  io={exec_s-compute_s:.6f}")
 
             # Keep the unmodified program output for the accuracy table.
             original = work / f"{dub.stem}-original.dub"
@@ -189,8 +224,8 @@ def main() -> int:
             print()
 
     data = {
-        "method": "differential guest model time, DO-loop repeat, translation/loading cancelled",
-        "pass_differences": args.passes - 1,
+        "method": "differential guest model time, DO-loop repeat, translation/loading cancelled; per-pass time is the least-squares slope over N=1..passes",
+        "passes": args.passes,
         "rows": rows,
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

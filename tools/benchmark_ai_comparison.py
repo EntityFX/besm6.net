@@ -70,10 +70,13 @@ def main() -> int:
         row = {
             "id": name,
             "besm_compute_s": solve,
+            "besm_compute_se_s": b.get("compute_se", 0.0),
             "besm_exec_s": b["exec_seconds"],
+            "besm_exec_se_s": b.get("exec_se", 0.0),
             "besm_io_s": b["io_seconds"],
             "besm_total_s": total,
             "besm_instructions_per_pass": b["instructions_per_pass"],
+            "besm_instructions_per_second_exec": b["instructions_per_pass"] / b["exec_seconds"],
             "python_solve_s": p_solve,
             "python_solve_ci95_s": [p["solve"]["ci95_low_s"], p["solve"]["ci95_high_s"]],
             "python_process_s": p_process,

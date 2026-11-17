@@ -54,6 +54,9 @@ RESULT_EXPR = {
 }
 
 PER_PASS = re.compile(r"PER_PASS\s+([0-9.Ee+\-]+)")
+# A PRINT statement, optionally guarded by a logical IF with a nested-paren
+# condition, e.g. ``if (abs(x(i)-c1) .le. abs(x(i)-c2)) print``.
+PRINT_STMT = re.compile(r"^\s*(if\s*\(.*\)\s*)?print\b", re.IGNORECASE)
 
 
 def extract_source(dub: Path) -> str:
@@ -96,7 +99,7 @@ def to_subroutine(source: str, stem: str) -> tuple[str, str]:
             main.append(f"      subroutine {name}(aiout)")
             main.append("      real*8 aiout")
             continue
-        if re.match(r"^\s*(if\s*\([^)]*\)\s*)?print\b", line, re.IGNORECASE):
+        if PRINT_STMT.match(line):
             main.append("c" + " " * max(0, len(line) - 1))
             continue
         if re.match(r"^\s*stop\b", line, re.IGNORECASE):
@@ -108,7 +111,11 @@ def to_subroutine(source: str, stem: str) -> tuple[str, str]:
             continue
         main.append(line)
     # Keep any subroutines that follow the main program (chess has CHK).
-    return "\n".join(main + lines[end + 1:]) + "\n", name
+    body = "\n".join(main + lines[end + 1:]) + "\n"
+    for i, line in enumerate(body.splitlines(), 1):
+        if re.search(r"\bprint\b", line, re.IGNORECASE):
+            raise AssertionError(f"{stem}: timed subroutine still prints (line {i}): {line!r}")
+    return body, name
 
 
 def driver_source(name: str) -> str:
