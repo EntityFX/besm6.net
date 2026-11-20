@@ -1,0 +1,498 @@
+\documentclass[a4paper,12pt]{article}
+% --- добавлено для сборки в стандартном TeX Live (pdfLaTeX); при сборке средствами редакции эти три строки можно удалить ---
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[english,russian]{babel}
+% ---
+\usepackage{graphicx}
+\graphicspath{{../docs/articles/besm6-performance/images/}{docs/articles/besm6-performance/images/}}
+\usepackage[unicode,hidelinks]{hyperref}
+
+\setlength{\textwidth}{167mm}      
+\setlength{\textheight}{658pt}
+
+\renewcommand{\refname}{\protect\rmfamily Литература}
+
+\newcounter{razdel}
+\setcounter{razdel}{0}
+
+\newcommand{\titel}[4]{
+\ifodd\therazdel {\raggedright\noindent\Large\textrm\textbf
+ \lineskip .75em
+  \baselineskip=3.2ex #1 \par}
+\vskip 1em {\noindent\large\textrm\textbf #2 \par}
+\addcontentsline{toc}{subsection}{{\textrm\textbf #1}\protect\newline #2}
+\def\rightheadline{\underline{\noindent\hbox to \textwidth{\hfill\small\textrm{#4}
+}}}
+\def\leftheadline{\underline{\noindent\parbox{\textwidth}{
+\small\textit{#3}\hfill}}}
+\def\leftfootline{\small{\textbf{\thepage}
+\hfill ИНФОРМАТИКА И ЕЁ ПРИМЕНЕНИЯ\ \ \ том~\tom\ \ \ выпуск~\vyp\ \ \ \god}
+}%
+ \def\rightfootline{\small{ИНФОРМАТИКА И ЕЁ ПРИМЕНЕНИЯ\ \ \ том~\tom\ \ \ выпуск~\vyp\ \ \ \god
+\hfill \textbf{\thepage}}}
+\vskip 2em \setcounter{figure}{0}
+\setcounter{table}{0}
+\setcounter{equation}{0}
+\setcounter{section}{0}
+\setcounter{subsection}{0}
+\setcounter{subsubsection}{0}
+\setcounter{footnote}{0}
+\setcounter{razdel}{0}
+\else {
+ \raggedright\noindent\Large\textrm\textbf
+ \lineskip .75em
+\baselineskip=3.2ex #1 \par} \vskip 1em
+{\noindent\large\textrm\textbf #2 \par}
+\addcontentsline{toc}{subsection}{{\textrm\textbf #1}\protect\newline #2}
+\def\rightheadline{\underline{\noindent\hbox to \textwidth{\hfill\small\textrm{#4}
+}}}
+\def\leftheadline{\underline{\noindent\parbox{\textwidth}{
+\small\textit{#3}\hfill}}}
+\def\leftfootline{\small{\textbf{\thepage}
+\hfill ИНФОРМАТИКА И ЕЁ ПРИМЕНЕНИЯ\ \ \ том~\tom\ \ \ выпуск~\vyp\ \ \ \god}
+}%
+ \def\rightfootline{\small{ИНФОРМАТИКА И ЕЁ ПРИМЕНЕНИЯ\ \ \ том~17\ \ \ выпуск~4\ \ \ 2023
+\hfill \textbf{\thepage}}} \vskip 2em \setcounter{figure}{0}
+\setcounter{table}{0} \setcounter{equation}{0} \setcounter{section}{0}
+\setcounter{subsection}{0} \setcounter{subsubsection}{0}
+\setcounter{footnote}{0}
+\fi}
+
+\newcommand{\titelr}[2]{
+\ifodd\therazdel {\raggedright\noindent
+ \lineskip .75em
+  \baselineskip=3.2ex #1 \par}
+\vskip 1em {\noindent\normalsize\textrm\textbf #2 \par}
+\else {
+ \raggedright\noindent\Large\textrm\textbf
+ \lineskip .75em
+\baselineskip=3.2ex #1 \par} \vskip 1em
+{\noindent\large\textrm\textbf #2 \par
+} \fi}
+
+\newcommand{\titele}[5]{%
+\ifodd\therazdel {\raggedright\noindent\large
+\textrm\textbf
+ \lineskip .75em
+#1 \par}
+\vskip .5em {\noindent\large\textrm\textbf #2 \par}
+\vskip .5em
+ {\noindent\textrm #3 \par}
+\addcontentsline{toc}{subsection}{{\textrm\textbf #1}\protect\newline #2}
+\def\rightheadline{\underline{\noindent\hbox to \textwidth{\hfill\small\textrm{#4}
+}}}
+\def\leftheadline{\underline{\noindent\parbox{\textwidth}{
+\small\textrm{#5}\hfill}}}
+\def\leftfootline{\small{\textbf{\thepage}
+\hfill ИНФОРМАТИКА И ЕЁ ПРИМЕНЕНИЯ\ \ \ том~17\ \ \ выпуск~4\ \ \ 2023}
+}%
+ \def\rightfootline{\small{ИНФОРМАТИКА И ЕЁ ПРИМЕНЕНИЯ\ \ \ том~17\ \ \ выпуск~4\ \ \ 2023
+\hfill \textbf{\thepage}}} \vskip 1em \setcounter{figure}{0}
+\setcounter{table}{0} \setcounter{equation}{0} \setcounter{section}{0}
+\setcounter{subsection}{0} \setcounter{subsubsection}{0}
+\setcounter{footnote}{0} \setcounter{razdel}{0}
+\else {
+ \raggedright\noindent\large
+ \textrm\textbf
+ \lineskip .75em
+#1 \par} \vskip .5em
+{\noindent\large\textrm\textbf #2 \par} \vskip .5em
+ {\noindent\textrm #3 \par}
+\addcontentsline{toc}{subsection}{{\textrm\textbf #1}\protect\newline #2}
+\def\rightheadline{\underline{\noindent\hbox to \textwidth{\hfill\small\textrm{#4}
+}}}
+\def\leftheadline{\underline{\noindent\parbox{\textwidth}{
+\small\textrm{#5}\hfill}}}
+\def\leftfootline{\small{\textbf{\thepage}
+\hfill ИНФОРМАТИКА И ЕЁ ПРИМЕНЕНИЯ\ \ \ том~17\ \ \ выпуск~4\ \ \ 2023}
+}%
+ \def\rightfootline{\small{ИНФОРМАТИКА И ЕЁ ПРИМЕНЕНИЯ\ \ \ том~17\ \ \ выпуск~4\ \ \ 2023
+\hfill \textbf{\thepage}}} \vskip 1em \setcounter{figure}{0}
+\setcounter{table}{0} \setcounter{equation}{0} \setcounter{section}{0}
+\setcounter{subsection}{0} \setcounter{subsubsection}{0}
+\setcounter{footnote}{0}
+\fi}
+
+\def\Abst#1{
+\begin{center}\small
+\parbox{150mm}{\textbf{Аннотация:}\ \
+#1}
+\end{center}}
+\def\Abste#1{
+\begin{center}\small
+\parbox{150mm}{\textbf{Abstract:}\ \
+#1}
+\end{center}}
+
+\def\Abstend#1{
+\begin{center}\small
+\parbox{150mm}{#1}
+\end{center}}
+
+
+
+\def\KW#1{
+\begin{center}\small
+\parbox{150mm}{
+\textbf{Ключевые слова:}\ \ #1}
+\end{center}}
+
+\def\KWE#1{
+\begin{center}\small
+\parbox{150mm}{
+\textbf{Keywords:}\ \ #1}
+\end{center}}
+
+
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}\hspace*{-5pt}}
+\renewcommand{\thesubsubsection}{\thesubsection\hspace*{5pt}.\arabic{subsubsection}\hspace*{-3pt}}
+
+\newcommand{\Ack}{\section*{\protect\rmfamily Acknowledgments}\noindent}
+\newcommand{\Contr}{\section*{\protect\rmfamily Contributors}\noindent}
+\newcommand{\Contrl}{\section*{\protect\rmfamily Contributor}\noindent}
+
+\makeindex
+
+\begin{document}
+
+\renewcommand{\refname}{\protect\rmfamily Литература}
+\emergencystretch=1.5em
+\newcommand{\hd}[1]{\begin{tabular}[c]{@{}c@{}}#1\end{tabular}}
+\newcommand{\hl}[1]{\begin{tabular}[c]{@{}l@{}}#1\end{tabular}}
+
+\def\stat{solopiy} % фамилия первого автора на английском
+
+\def\tit{РАЗДЕЛЬНОЕ ИЗМЕРЕНИЕ ВРЕМЕНИ ТРАНСЛЯЦИИ, СЧЁТА И~ВЫВОДА В~ПРОГРАММНОЙ МОДЕЛИ МАШИНЫ БЭСМ-6 НА~ПРИМЕРЕ АЛГОРИТМОВ ИСКУССТВЕННОГО ИНТЕЛЛЕКТА}
+
+\def\titkol{Раздельное измерение времени трансляции, счёта и вывода в программной модели машины БЭСМ-6}
+
+\def\aut{А.\,В.~Солопий$^1$, Р.\,Ф.~Гибадуллин$^2$}
+
+\def\autkol{А.\,В.~Солопий, Р.\,Ф.~Гибадуллин}
+
+\titel{\tit}{\aut}{\autkol}{\titkol}
+
+\index{Солопий А.\,В.}
+\index{Solopiy A.\,V.}
+\index{Гибадуллин Р.\,Ф.}
+\index{Gibadullin R.\,F.}
+
+\renewcommand{\thefootnote}{\arabic{footnote}}
+\footnotetext[1]{Казанский национальный исследовательский технический университет им.\ А.\,Н.~Туполева--КАИ, Казань, Россия, \mbox{artem.solopiy@gmail.com}}
+\footnotetext[2]{Казанский национальный исследовательский технический университет им.\ А.\,Н.~Туполева--КАИ, Казань, Россия, \mbox{RFGibadullin@kai.ru}}
+
+\Abst{Рассматривается исполнение одиннадцати небольших программ, реализующих классические алгоритмы искусственного интеллекта, на трёх платформах: программной модели электронной вычислительной машины БЭСМ-6 с~калиброванной моделью времени, интерпретаторе CPython и современном компиляторе GNU Fortran, которому подаётся тот же исходный текст на Фортране. Предложена методика раздельного измерения времени трансляции, счёта и вывода пакетного задания: тело программы повторяется заданное число раз, а время одного прохода оценивается наклоном линейной регрессии; время вывода определяется по варианту программы без печати. Показано, что оценка времени счёта вычитанием времени пустого задания некорректна, поскольку в полном времени задания преобладает трансляция. Дискретные результаты совпадают на всех платформах, вещественные~--- в~пределах точности печати. По времени счёта модель БЭСМ-6 уступает интерпретатору CPython в~140--400~раз, а~скомпилированному коду~--- в~5--14~тысяч раз. Отношение полных времён процессов CPython и Фортрана, близкое к~восьми, отражает стоимость запуска, а~не скорость вычислений. Результаты перекрёстно проверены на независимом эмуляторе.}
+
+\KW{БЭСМ-6; эмуляция вычислительных машин; модель времени; измерение производительности; Фортран; Python; алгоритмы искусственного интеллекта}
+
+
+\section{Введение}
+
+Программные модели исторических вычислительных машин позволяют сохранять программное наследие и количественно сопоставлять технологические уровни вычислительной техники. Для машины БЭСМ-6, созданной под руководством С.\,А.~Лебедева и выпускавшейся серийно с~1968 по 1987~г.~\cite{bre}, сохранились мониторная система <<Дубна>>~\cite{dubna} и её трансляторы с~языка Фортран~\cite{saltykov}. Поэтому на модели машины можно исполнять программы на языке, который поддерживают и современные компиляторы.
+
+Цель работы~--- проверить, что набор классических алгоритмов искусственного интеллекта корректно исполняется на модели БЭСМ-6, и оценить, как соотносятся время исполнения и точность одной и той же программы на этой модели и на современных средствах: интерпретаторе CPython и компиляторе GNU Fortran. Современный компилятор получает тот же исходный текст, что и транслятор системы <<Дубна>>, так что сопоставляется один язык на двух технологических уровнях. Интерпретатор добавлен как распространённое средство разработки.
+
+Основная методическая трудность состоит в~том, что пакетное задание БЭСМ-6 включает трансляцию исходного текста, загрузку, счёт и печать, а~вычислительное ядро рассматриваемых программ занимает от долей миллисекунды до нескольких секунд модельного времени. Вклад работы составляют: методика раздельного измерения времени трансляции, счёта и вывода в~модели машины; согласованные оценки времени счёта и полного времени на трёх платформах; перекрёстная проверка результатов на независимом эмуляторе.
+
+\section{Объект и методика исследования}
+
+\subsection{Модель БЭСМ-6}
+
+Использован эмулятор besm6.net~\cite{besm6net}~--- функциональная модель процессора, памяти, супервизора и внешних устройств БЭСМ-6, исполняющая задания мониторной системы <<Дубна>>. Слово машины содержит 48~разрядов, мантисса вещественного числа~--- 40~разрядов (около 12~десятичных знаков), быстродействие составляет около 1~млн одноадресных операций в~секунду~\cite{saltykov}.
+
+\begin{figure}[!ht]
+\centering
+\href{https://github.com/EntityFX/besm6.net/blob/main/docs/articles/besm6-performance/images/48-bit.svg}{%
+\includegraphics[width=0.85\textwidth]{48-bit.png}}
+\caption{Формат 48-разрядного машинного слова: знак порядка, шесть разрядов порядка, знак мантиссы и 40~разрядов мантиссы~\cite{saltykov}.}
+\end{figure}
+
+В~режиме \textit{original} эмулятор переводит команды и обращения к~устройствам в~модельное время по таблицам длительностей операций из~\cite{saltykov}. Модельное время детерминировано и не зависит от быстродействия хоста. Модель калибрована по тесту Whetstone~\cite{whetstone}: два коэффициента подобраны по одному опорному значению, которое само получено симуляцией, а~не измерением на машине~\cite{se}. Длительности математических функций, в~частности 60~мкс для экспоненты, приняты как допущения. Поэтому абсолютные значения модельного времени следует рассматривать как оценки порядка величины.
+
+Дополнительно проверены исполнение заданий с~буферной памятью (\texttt{--buffered-memory}) и отдельный режим, приближённый к~аппаратуре (<<к~железу>>),~--- \texttt{machine --execution hardware}. Эти варианты различаются по способу загрузки программ и модели времени; условия и результаты проверок приведены в~разделе~\ref{subsec:hardware}.
+
+\subsection{Тестовые программы}
+
+Набор включает одиннадцать программ (табл.~1): перцептрон~\cite{rosenblatt}, метод $k$ ближайших соседей~\cite{cover}, метод $k$-средних~\cite{lloyd}, наивный байесовский классификатор~\cite{domingos}, решающий пень~\cite{holte}, генетический алгоритм~\cite{holland}, имитацию отжига~\cite{kirkpatrick}, Q-обучение~\cite{watkins}, поиск A$^*$~\cite{hart}, многослойный перцептрон с~обратным распространением ошибки~\cite{rumelhart} и поиск мата в~один ход~\cite{shannon}. Данные и параметры обучения заданы в~исходном тексте.
+
+Все программы детерминированы. В~генетическом алгоритме скрещивание и приращения заданы однозначно, а~имитация отжига и Q-обучение используют линейный конгруэнтный генератор $x \leftarrow (75x + 74) \bmod 65\,537$ с~начальным значением 12~345, одинаковый на всех платформах. Реализации на языке Python повторяют логику программ на Фортране и используют только стандартную библиотеку.
+
+\begin{table}[!ht]\small\tabcolsep=4pt
+\noindent\textbf{Таблица~1}\ \ Тестовые программы\par\vspace{4pt}
+\centering
+\begin{tabular}{|c|l|l|c|}
+\hline
+\textnumero & \multicolumn{1}{c|}{Программа} & \multicolumn{1}{c|}{Размер экземпляра задачи} & \hd{Команд\\за проход, тыс.} \\
+\hline
+1 & Перцептрон & 20 эпох, 4 примера, 2 признака & 47,0 \\ \hline
+2 & Метод $k$ ближайших соседей & 3 запроса, 6 примеров, $k = 3$ & 19,7 \\ \hline
+3 & Метод $k$-средних & 10 итераций, 6 точек, 2 кластера & 42,0 \\ \hline
+4 & Наивный байесовский классификатор & 8 примеров, 2 признака, 2 класса & 22,2 \\ \hline
+5 & Решающий пень & 7 порогов $\times$ 2 направления, 8 примеров & 14,5 \\ \hline
+6 & Генетический алгоритм & 8 поколений, популяция 4 & 10,5 \\ \hline
+7 & Имитация отжига & 30 итераций & 19,0 \\ \hline
+8 & Q-обучение & 20 эпизодов, до 10 шагов, 2 действия & 76,2 \\ \hline
+9 & Поиск A$^*$ & сетка $5\times5$ клеток & 62,0 \\ \hline
+10 & Многослойный перцептрон & структура 2--2--1, 2000 эпох, 4 примера & 1378 \\ \hline
+11 & Поиск мата в один ход & до 14 ходов ладьи, 4 хода короля & 53,4 \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Измерение времени в модели БЭСМ-6}
+
+Полное время задания включает трансляцию, загрузку, счёт и печать. Оценивать время счёта вычитанием времени пустого задания (0,711~с) нельзя: объём работы транслятора растёт с~длиной исходного текста, и число исполненных команд задания почти не зависит от алгоритма (2~523~927 для перцептрона и 2~524~427 для метода $k$ ближайших соседей).
+
+Использован дифференциальный метод. Исполняемая часть программы, включая инициализацию данных, заключается в~цикл с~числом повторений~$N$. Длина исходного текста при изменении~$N$ не меняется, поэтому время трансляции и загрузки постоянно. Задание исполняется при $N = 1, \ldots, 6$, и по точкам $T(N)$ методом наименьших квадратов строится прямая. Её наклон равен времени одного прохода. Те же измерения выполняются для варианта программы, в~котором операторы печати заменены комментариями той же длины: наклон для этого варианта даёт время счёта, а~разность наклонов~--- время вывода. Время трансляции и загрузки оценивается как разность полного времени исходного задания и времени одного прохода. Стандартная ошибка наклона для времени счёта не превышает 2,51\,\%.
+
+\subsection{Измерение времени на современных платформах}
+
+Измерения выполнены на одном хосте: процессор Intel Xeon E3-1230 v6 (3,5~ГГц), Windows~10, CPython 3.14.10, GNU Fortran 16.2.0. Время вызова функции Python измерялось в~пяти сериях по пять замеров со случайным порядком алгоритмов; приводится медиана 25~значений. Полное время процесса (запуск интерпретатора, импорт модулей, счёт и вывод) измерялось прямым запуском 50~раз.
+
+Исходный текст на Фортране извлекался из задания без изменений и компилировался с~оптимизацией \mbox{\textit{-O2}}; полное время процесса определялось как медиана 200~запусков (50~для многослойного перцептрона). Для измерения времени счёта главная программа преобразуется во внешнюю подпрограмму без операторов печати, которую отдельно скомпилированная управляющая программа вызывает многократно между двумя отсчётами системного таймера. Эта подпрограмма компилируется без оптимизации (\mbox{\textit{-O0}}), так как при \mbox{\textit{-O2}} часть программ с~постоянными исходными данными свёртывается компилятором до константы. Приводимое время счёта является поэтому оценкой сверху.
+
+\subsection{Критерии совпадения результатов}
+
+Для дискретных результатов (классы, кластеры, порог, найденный путь, ход) требовалось точное совпадение. Вещественные результаты сравнивались по напечатанным значениям: программы печатают три-четыре знака после запятой, поэтому совпадением считалось расхождение меньше половины единицы последнего разряда. Разрядность мантиссы на платформах различна: 40~двоичных разрядов в~БЭСМ-6, 53~в~CPython и 24~для типа REAL в~GNU Fortran.
+
+\section{Результаты}
+
+\subsection{Время исполнения}
+
+Результаты измерений приведены в~табл.~2. В~модели БЭСМ-6 трансляция и загрузка занимают 1,4--3,5~с, тогда как счёт~--- от 0,67 до 25~мс для десяти программ и 2,7~с для многослойного перцептрона. Печать нескольких строк результата (4--86~мс) для девяти программ продолжительнее счёта. Таким образом, время, получаемое вычитанием пустого задания, характеризует главным образом транслятор.
+
+В~CPython полный процесс занимает 65--75~мс, из которых 31~мс приходится на запуск интерпретатора; полный процесс программы на Фортране~--- 8,2--9,4~мс. Для всех программ, кроме многослойного перцептрона, эти величины на порядки превышают время счёта.
+
+\begin{table}[!ht]\small\tabcolsep=3.5pt
+\noindent\textbf{Таблица~2}\ \ Время исполнения программ\par\vspace{4pt}
+\centering
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|}
+\hline
+ & \multicolumn{4}{c|}{Модель БЭСМ-6} & \multicolumn{2}{c|}{CPython} & \multicolumn{2}{c|}{GNU Fortran} \\
+\cline{2-9}
+\multicolumn{1}{|c|}{Программа} & \hd{задание,\\с} & \hd{трансляция\\и загрузка, с} & \hd{счёт,\\мс} & \hd{вывод,\\мс} & \hd{счёт,\\мкс} & \hd{процесс,\\мс} & \hd{счёт,\\мкс} & \hd{процесс,\\мс} \\
+\hline
+Перцептрон & 1,464 & 1,430 & 3,31 & 30,3 & 23,8 & 67,1 & 0,567 & 8,20 \\ \hline
+\hl{Метод $k$ ближайших\\соседей} & 1,457 & 1,443 & 1,50 & 12,2 & 7,01 & 65,3 & 0,190 & 8,21 \\ \hline
+Метод $k$-средних & 1,486 & 1,457 & 2,17 & 27,2 & 10,9 & 65,9 & 0,266 & 8,21 \\ \hline
+\hl{Наивный байесовский\\классификатор} & 1,782 & 1,766 & 0,67 & 15,3 & 3,24 & 65,5 & 0,086 & 8,46 \\ \hline
+Решающий пень & 1,413 & 1,403 & 3,15 & 7,00 & 12,0 & 66,1 & 0,298 & 8,32 \\ \hline
+Генетический алгоритм & 1,667 & 1,661 & 2,25 & 4,32 & 10,3 & 66,5 & 0,258 & 8,38 \\ \hline
+Имитация отжига & 1,527 & 1,512 & 5,24 & 9,45 & 20,4 & 66,7 & 0,571 & 8,35 \\ \hline
+Q-обучение & 1,946 & 1,894 & 10,2 & 41,8 & 47,1 & 67,6 & 0,932 & 8,42 \\ \hline
+Поиск A$^*$ & 2,609 & 2,568 & 12,8 & 27,6 & 52,2 & 66,6 & 1,77 & 8,24 \\ \hline
+\hl{Многослойный\\перцептрон} & 4,694 & 1,909 & 2699 & 85,9 & 9691 & 75,2 & 530 & 9,38 \\ \hline
+Поиск мата в один ход & 3,539 & 3,505 & 25,0 & 8,94 & 63,1 & 66,7 & 1,81 & 8,65 \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Отношения времён}
+
+Отношения времён приведены в~табл.~3. По времени счёта модель БЭСМ-6 медленнее CPython в~139--397~раз (медиана~219) и медленнее скомпилированного кода в~$5{,}1\cdot10^{3}$--$1{,}4\cdot10^{4}$~раза (медиана~$8{,}2\cdot10^{3}$). Код, скомпилированный без оптимизации, быстрее CPython в~18--51~раз (медиана~38).
+
+\begin{table}[!ht]\small\tabcolsep=4pt
+\noindent\textbf{Таблица~3}\ \ Отношения времён исполнения\par\vspace{4pt}
+\centering
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+ & \multicolumn{3}{c|}{Отношение времён счёта} & \multicolumn{3}{c|}{Отношение полных времён} \\
+\cline{2-7}
+\multicolumn{1}{|c|}{Программа} & \hd{БЭСМ-6 /\\CPython} & \hd{БЭСМ-6 /\\Fortran} & \hd{CPython /\\Fortran} & \hd{БЭСМ-6 /\\CPython} & \hd{БЭСМ-6 /\\Fortran} & \hd{CPython /\\Fortran} \\
+\hline
+Перцептрон & 139 & 5~829 & 42,0 & 21,8 & 178 & 8,2 \\ \hline
+\hl{Метод $k$ ближайших\\соседей} & 214 & 7~910 & 36,9 & 22,3 & 177 & 8,0 \\ \hline
+Метод $k$-средних & 199 & 8~176 & 41,1 & 22,6 & 181 & 8,0 \\ \hline
+\hl{Наивный байесовский\\классификатор} & 208 & 7~842 & 37,7 & 27,2 & 211 & 7,7 \\ \hline
+Решающий пень & 262 & 10~558 & 40,3 & 21,4 & 170 & 7,9 \\ \hline
+Генетический алгоритм & 219 & 8~695 & 39,7 & 25,1 & 199 & 7,9 \\ \hline
+Имитация отжига & 257 & 9~179 & 35,7 & 22,9 & 183 & 8,0 \\ \hline
+Q-обучение & 215 & 10~894 & 50,6 & 28,8 & 231 & 8,0 \\ \hline
+Поиск A$^*$ & 245 & 7~216 & 29,5 & 39,2 & 317 & 8,1 \\ \hline
+\hl{Многослойный\\перцептрон} & 279 & 5~091 & 18,3 & 62,4 & 501 & 8,0 \\ \hline
+Поиск мата в один ход & 397 & 13~807 & 34,8 & 53,0 & 409 & 7,7 \\ \hline
+\end{tabular}
+\end{table}
+
+Отношения полных времён существенно меньше: 21--62 для CPython и 170--501 для Фортрана, поскольку в~них входят трансляция в~модели БЭСМ-6 и запуск процесса на хосте. Отношение полных времён процессов CPython и Фортрана (7,7--8,2) практически одинаково для всех программ и характеризует стоимость запуска интерпретатора, а~не скорость вычислений.
+
+\subsection{Совпадение результатов}
+
+Дискретные результаты всех одиннадцати программ на трёх платформах совпали: веса и выходы перцептрона, классы трёх запросов, центры и состав кластеров, оценки и предсказанный класс байесовского классификатора, порог и направление решающего пня, найденные максимумы, стратегия Q-обучения, путь из девяти клеток на сетке и матующий ход. Элементы таблицы Q-обучения совпадают после округления до трёх знаков. Выходы многослойного перцептрона совпадают в~пределах $3{,}4\cdot10^{-5}$ при пределе точности печати $5\cdot10^{-5}$: модель БЭСМ-6 и GNU Fortran печатают 0,0029; 0,9969; 0,9969; 0,0047, а~CPython даёт 0,00287; 0,99693; 0,99690; 0,00467.
+
+\subsection{Перекрёстная проверка}
+
+Те же программы исполнены на независимом эмуляторе SIMH~\cite{simh} под управлением операционной системы <<Диспак>> с~транслятором <<Фортран-ГДР>>. Результаты десяти программ из одиннадцати совпали с~результатами besm6.net. Семь программ исполнены без изменений, три (метод $k$-средних, байесовский классификатор, поиск мата)~--- после правок исходного текста, не затрагивающих алгоритм: в~частности, этот транслятор не допускает константы в~списке вывода оператора печати. Для поиска A$^*$ транслятор <<Фортран-ГДР>> версии 1984~г.\ в~SIMH сообщает, что путь не найден, тогда как версия 1981~г.\ в~besm6.net, транслятор системы <<Дубна>>, GNU Fortran и CPython находят один и тот же путь. Причина расхождения не установлена; предположительно она связана с~транслятором.
+
+\section{Обсуждение}
+
+Отношение времён счёта модели БЭСМ-6 и скомпилированного кода ($10^{3}$--$10^{4}$) можно рассматривать как оценку совокупного прогресса аппаратуры и трансляторов при неизменном исходном тексте. Меньший разрыв с~CPython объясняется накладными расходами интерпретации.
+
+Результат для многослойного перцептрона существенно зависит от допущения о~длительности экспоненты: 24~012 обращений при принятых 60~мкс и коэффициентах калибровки 1,769 и 0,671 дают около 1,71~с, то есть примерно две трети времени счёта (2,70~с). Средний темп исполнения команд, вычисленный по числу команд и времени одного прохода с~выводом, составляет 1,3--1,6~млн команд в~секунду для десяти программ и 0,49~млн для многослойного перцептрона, что по порядку величины согласуется с~быстродействием машины~\cite{saltykov}.
+
+Работа имеет следующие ограничения. Модель времени является калиброванной статистической моделью, а~не физической машиной. Экземпляры задач малы, и полученные отношения не переносятся на задачи практического размера. Время счёта программ на Фортране получено без оптимизации. Измерения выполнены на одном хосте и с~одним компилятором. Вещественные результаты сравниваются с~точностью печати.
+
+\subsection{Режим исполнения, приближённый к аппаратуре}
+\label{subsec:hardware}
+
+Режим, приближённый к~аппаратуре (<<к~железу>>), реализован в~автономной супервизорной машине \texttt{machine --execution hardware}. В~ней явно моделируются память, буферы команд, буферы операндов и буфер записи, временная шкала в~наносекундах и арбитраж банков. Полные задания \texttt{.dub} в~этом режиме не исполняются: команда \texttt{machine} принимает конфигурацию машины в~формате JSON с~явно перечисленными 50-разрядными словами памяти (\texttt{memoryWords[].raw50}) и временными параметрами; загрузчик мониторной системы <<Дубна>> и экстракоды, выполняемые средствами хоста, в~супервизорной машине отсутствуют.
+
+Поэтому все одиннадцать алгоритмов повторно проверены в~варианте исполнения заданий с~поддержкой хоста (hosted) с~включённой буферной памятью. Это дополнительная структурная проверка, а~не запуск заданий в~режиме \texttt{hardware}:
+
+\begin{verbatim}
+dotnet src/Besm6.Cli/bin/Release/net8.0/besm6.dll run <job> \
+  --speed original --buffered-memory --stats --guest-clock --no-wall-clock
+\end{verbatim}
+
+Все одиннадцать заданий завершились по~\texttt{STOP}. Печатные результаты построчно совпали с~обычным прогоном без~\texttt{--buffered-memory}, а~модельное время точно совпало с~исходными неокруглёнными данными таблицы~2: буферная память относится к~функциональному пути, тогда как время в~\textit{original} вычисляется отдельной статистической моделью. Суммарно одиннадцать заданий исполнили 36~760~360 команд за 23,585~с модельного времени; отношение суммарного модельного времени к~суммарному времени исполнения, измеренному эмулятором, составило 0,9999. Последнее характеризует выдерживание заданного темпа исполнения, а~не точность воспроизведения исторических задержек.
+
+\begin{table}[!ht]\small\tabcolsep=4pt
+\noindent\textbf{Таблица~4}\ \ Повторный прогон одиннадцати программ с буферной памятью\par\vspace{4pt}
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\multicolumn{1}{|c|}{Программа} & \hd{Команд} & \hd{Модельное время,\\с} \\
+\hline
+Перцептрон & 2~523~927 & 1,464 \\ \hline
+\hl{Метод $k$ ближайших\\соседей} & 2~524~427 & 1,457 \\ \hline
+Метод $k$-средних & 2~570~349 & 1,486 \\ \hline
+\hl{Наивный байесовский\\классификатор} & 3~018~329 & 1,782 \\ \hline
+Решающий пень & 2~453~312 & 1,413 \\ \hline
+Генетический алгоритм & 2~848~752 & 1,667 \\ \hline
+Имитация отжига & 2~632~145 & 1,527 \\ \hline
+Q-обучение & 3~273~769 & 1,946 \\ \hline
+Поиск A$^*$ & 4~314~538 & 2,609 \\ \hline
+\hl{Многослойный\\перцептрон} & 4~663~925 & 4,694 \\ \hline
+Поиск мата в один ход & 5~936~887 & 3,539 \\ \hline
+\end{tabular}
+\end{table}
+
+Для непосредственной проверки режима \texttt{hardware} была собрана машина с~явными командами \texttt{VTM}, \texttt{UTM}, \texttt{VLM} и~\texttt{STOP}, выполняющая 1001 проход счётного цикла. Программа исполнила 2005 команд, в~ячейке \texttt{M[2]} получено значение 1001; время аппаратной модели составило 804~400~нс (0,8044~мс), то есть около 2,49~млн команд в~секунду в~модели. Тот же образ в~функциональном исполнении дал 2005 команд и 3007 модельных тактов. Структура аппаратной модели подробнее функциональной, но её задержки заданы конфигурацией (\texttt{bankCycleNs}, \texttt{readLatencyNs}, \texttt{bufferHitNs} и другие): это явная логическая модель, а~не измеренные характеристики машины. Проверка короткого цикла не переносится на время исполнения полного набора алгоритмов и не доказывает историческую точность времени.
+
+\section{Заключение}
+
+Модель БЭСМ-6 корректно исполняет все одиннадцать программ: результаты совпадают с~результатами современных платформ и, за одним исключением, с~результатами независимого эмулятора. Предложенный дифференциальный метод позволяет отделить время счёта от времени трансляции и вывода со стандартной ошибкой не более 2,51\,\%; без такого разделения время задания характеризует транслятор, а~не алгоритм. По времени счёта модель БЭСМ-6 медленнее CPython в~139--397~раз и медленнее скомпилированного кода в~$5{,}1\cdot10^{3}$--$1{,}4\cdot10^{4}$~раза. Исходные тексты программ, сценарии измерений и первичные данные доступны в~репозитории~\cite{besm6net}.
+
+Сравнение с~GNU Fortran особенно существенно, поскольку исторический и современный трансляторы получают один и тот же исходный текст на Фортране. Время счёта современного кода составило 0,086--530~мкс, а~полное время запуска скомпилированных программ~--- 8,2--9,4~мс против 1,4--4,7~с для полного задания в~модели БЭСМ-6. Время счёта измерялось без оптимизации (\texttt{-O0}), а~время полного процесса~--- для программы, собранной с~\texttt{-O2}. Разделение этих показателей позволяет не смешивать ускорение вычислений со стоимостью трансляции и запуска.
+
+Повторный прогон всех одиннадцати заданий с~буферной памятью подтвердил неизменность печатных результатов и модельного времени. Режим, приближённый к~аппаратуре, проверен отдельно на счётном цикле; его результаты не заменяют измерения алгоритмов в~режиме \textit{original}.
+
+{\small\frenchspacing
+  \begin{thebibliography}{99}
+\bibitem{bre}
+БЭСМ-6~// Большая российская энциклопедия. \texttt{https://bigenc.ru/c/besm-6-4f8e4d} (дата обращения: 18.11.2026).
+\bibitem{dubna}
+{\it Говорун Н.\,Н., Силин И.\,Н. и~др.} Мониторная система <<Дубна>> для ЭВМ БЭСМ-6~// Тр. второй Всесоюзной конф. по программированию.~--- Новосибирск: ВЦ СО АН СССР, 1970.
+\bibitem{saltykov}
+{\it Салтыков А.\,И., Макаренко Г.\,И.} Программирование на языке фортран~/ Под ред. Н.\,Н.~Говоруна.~--- М.: Наука, 1976. 256~с.
+\bibitem{besm6net}
+besm6.net~--- симулятор ЭВМ БЭСМ-6. \texttt{https://github.com/EntityFX/besm6.net} (дата обращения: 18.11.2026).
+\bibitem{whetstone}
+{\it Curnow H.\,J., Wichmann B.\,A.} A~synthetic benchmark~// Comput.~J., 1976. Vol.~19. No.\,1. P.~43--49. doi: 10.1093/comjnl/19.1.43.
+\bibitem{se}
+How to compute performance of a CPU in FLOPS~// Retrocomputing Stack Exchange, 2017. \texttt{https://retrocomputing.stackexchange.com/\allowbreak questions/3267/\allowbreak how-to-compute-performance-of-a-cpu-in-flops} (дата обращения: 18.11.2026).
+\bibitem{rosenblatt}
+{\it Rosenblatt F.} The perceptron: A~probabilistic model for information storage and organization in the brain~// Psychol. Rev., 1958. Vol.~65. No.\,6. P.~386--408. doi: 10.1037/h0042519.
+\bibitem{cover}
+{\it Cover T.\,M., Hart P.\,E.} Nearest neighbor pattern classification~// IEEE T. Inform. Theory, 1967. Vol.~13. No.\,1. P.~21--27. doi: 10.1109/TIT.1967.1053964.
+\bibitem{lloyd}
+{\it Lloyd S.\,P.} Least squares quantization in PCM~// IEEE T. Inform. Theory, 1982. Vol.~28. No.\,2. P.~129--137. doi: 10.1109/TIT.1982.1056489.
+\bibitem{domingos}
+{\it Domingos P., Pazzani M.} On the optimality of the simple Bayesian classifier under zero-one loss~// Mach. Learn., 1997. Vol.~29. P.~103--130. doi: 10.1023/A:1007413511361.
+\bibitem{holte}
+{\it Holte R.\,C.} Very simple classification rules perform well on most commonly used datasets~// Mach. Learn., 1993. Vol.~11. P.~63--90. doi: 10.1023/A:1022631118932.
+\bibitem{holland}
+{\it Holland J.\,H.} Adaptation in natural and artificial systems.~--- Ann Arbor, MI, USA: University of Michigan Press, 1975.
+\bibitem{kirkpatrick}
+{\it Kirkpatrick S., Gelatt C.\,D., Vecchi M.\,P.} Optimization by simulated annealing~// Science, 1983. Vol.~220. No.\,4598. P.~671--680. doi: 10.1126/science.220.4598.671.
+\bibitem{watkins}
+{\it Watkins C.\,J.\,C.\,H., Dayan P.} Q-learning~// Mach. Learn., 1992. Vol.~8. P.~279--292. doi: 10.1007/BF00992698.
+\bibitem{hart}
+{\it Hart P.\,E., Nilsson N.\,J., Raphael B.} A~formal basis for the heuristic determination of minimum cost paths~// IEEE T. Syst. Sci. Cyb., 1968. Vol.~4. No.\,2. P.~100--107. doi: 10.1109/TSSC.1968.300136.
+\bibitem{rumelhart}
+{\it Rumelhart D.\,E., Hinton G.\,E., Williams R.\,J.} Learning representations by back-propagating errors~// Nature, 1986. Vol.~323. P.~533--536. doi: 10.1038/323533a0.
+\bibitem{shannon}
+{\it Shannon C.\,E.} Programming a computer for playing chess~// Philos. Mag., 1950. Vol.~41. No.\,314. P.~256--275. doi: 10.1080/14786445008521796.
+\bibitem{simh}
+SIMH. \texttt{https://github.com/simh/simh} (дата обращения: 18.11.2026).
+\end{thebibliography}
+}
+
+\newpage
+\selectlanguage{english}
+
+\def\tit{SEPARATE MEASUREMENT OF~TRANSLATION, COMPUTATION, AND~OUTPUT TIMES IN~A~SOFTWARE MODEL OF~THE~BESM-6 COMPUTER: A~CASE STUDY OF~ARTIFICIAL INTELLIGENCE ALGORITHMS}
+
+\def\titkol{Separate measurement of translation, computation, and output times in a software model of the BESM-6 computer}
+
+\def\aut{A.\,V.~Solopiy and R.\,F.~Gibadullin}
+
+\def\autkol{A.\,V.~Solopiy and R.\,F.~Gibadullin}
+
+\titel{\tit}{\aut}{\autkol}{\titkol}
+
+\noindent
+Kazan National Research Technical University named after A.N.~Tupolev-KAI, 10~K.~Marx Str., Kazan 420111, Russian Federation
+
+\Abste{The paper studies how eleven small programs implementing classical artificial intelligence algorithms run on three platforms: a~software model of the BESM-6 mainframe with a~calibrated timing model, the CPython interpreter, and the GNU Fortran compiler, which is given the same Fortran source text as the historical translator. A~procedure is proposed for measuring the translation, computation, and output times of a~batch job separately: the program body is repeated a~given number of times and the time of one pass is estimated as the slope of a~linear regression; the output time is obtained from a~variant of the program without print statements. Subtracting the time of an empty job is shown to be misleading because translation dominates the total job time. Discrete results coincide on all platforms and real-valued results agree to within the printed precision. In computation time, the BESM-6 model is 140--400 times slower than CPython and 5--14 thousand times slower than compiled code. The ratio of full process times of CPython and Fortran, close to eight, reflects start-up cost rather than computation speed. The results were cross-checked on an independent emulator.}
+
+\KWE{BESM-6; computer emulation; timing model; performance measurement; Fortran; Python; artificial intelligence algorithms}
+
+\renewcommand{\refname}{\protect\rmfamily References}
+
+{\small\frenchspacing
+  \begin{thebibliography}{99}
+\bibitem{bre-e}
+BESM-6. \textit{Bol'shaya rossiyskaya entsiklopediya} [Great Russian Encyclopedia]. Available at: \texttt{https://bigenc.ru/c/besm-6-4f8e4d} (accessed November~18, 2026).
+\bibitem{dubna-e}
+Govorun, N.\,N., I.\,N.~Silin, et~al. 1970. Monitornaya sistema <<Dubna>> dlya EVM BESM-6 [The Dubna monitor system for the BESM-6 computer]. \textit{Trudy vtoroy Vsesoyuznoy konferentsii po programmirovaniyu} [2nd All-Union Conference on Programming Proceedings]. Novosibirsk.
+\bibitem{saltykov-e}
+Saltykov, A.\,I., and G.\,I.~Makarenko. 1976. \textit{Programmirovanie na yazyke fortran} [Programming in Fortran]. Ed. N.\,N.~Govorun. Moscow: Nauka. 256~p.
+\bibitem{besm6net-e}
+besm6.net~--- simulyator EVM BESM-6 [besm6.net: A~simulator of the BESM-6 computer]. Available at: \texttt{https://github.com/EntityFX/besm6.net} (accessed November~18, 2026).
+\bibitem{whetstone-e}
+Curnow, H.\,J., and B.\,A.~Wichmann. 1976. A~synthetic benchmark. \textit{Comput.~J.} 19(1):43--49. doi: 10.1093/comjnl/19.1.43.
+\bibitem{se-e}
+How to compute performance of a CPU in FLOPS. 2017. \textit{Retrocomputing Stack Exchange}. Available at: \texttt{https://retrocomputing.stackexchange.com/\allowbreak questions/3267/\allowbreak how-to-compute-performance-of-a-cpu-in-flops} (accessed November~18, 2026).
+\bibitem{rosenblatt-e}
+Rosenblatt, F. 1958. The perceptron: A~probabilistic model for information storage and organization in the brain. \textit{Psychol. Rev.} 65(6):386--408. doi: 10.1037/h0042519.
+\bibitem{cover-e}
+Cover, T.\,M., and P.\,E.~Hart. 1967. Nearest neighbor pattern classification. \textit{IEEE T. Inform. Theory} 13(1):21--27. doi: 10.1109/TIT.1967.1053964.
+\bibitem{lloyd-e}
+Lloyd, S.\,P. 1982. Least squares quantization in PCM. \textit{IEEE T. Inform. Theory} 28(2):129--137. doi: 10.1109/TIT.1982.1056489.
+\bibitem{domingos-e}
+Domingos, P., and M.~Pazzani. 1997. On the optimality of the simple Bayesian classifier under zero-one loss. \textit{Mach. Learn.} 29:103--130. doi: 10.1023/A:1007413511361.
+\bibitem{holte-e}
+Holte, R.\,C. 1993. Very simple classification rules perform well on most commonly used datasets. \textit{Mach. Learn.} 11:63--90. doi: 10.1023/A:1022631118932.
+\bibitem{holland-e}
+Holland, J.\,H. 1975. \textit{Adaptation in natural and artificial systems}. Ann Arbor, MI: University of Michigan Press.
+\bibitem{kirkpatrick-e}
+Kirkpatrick, S., C.\,D.~Gelatt, and M.\,P.~Vecchi. 1983. Optimization by simulated annealing. \textit{Science} 220(4598):671--680. doi: 10.1126/science.220.4598.671.
+\bibitem{watkins-e}
+Watkins, C.\,J.\,C.\,H., and P.~Dayan. 1992. Q-learning. \textit{Mach. Learn.} 8:279--292. doi: 10.1007/BF00992698.
+\bibitem{hart-e}
+Hart, P.\,E., N.\,J.~Nilsson, and B.~Raphael. 1968. A~formal basis for the heuristic determination of minimum cost paths. \textit{IEEE T. Syst. Sci. Cyb.} 4(2):100--107. doi: 10.1109/TSSC.1968.300136.
+\bibitem{rumelhart-e}
+Rumelhart, D.\,E., G.\,E.~Hinton, and R.\,J.~Williams. 1986. Learning representations by back-propagating errors. \textit{Nature} 323:533--536. doi: 10.1038/323533a0.
+\bibitem{shannon-e}
+Shannon, C.\,E. 1950. Programming a computer for playing chess. \textit{Philos. Mag.} 41(314):256--275. doi: 10.1080/14786445008521796.
+\bibitem{simh-e}
+SIMH. Available at: \texttt{https://github.com/simh/simh} (accessed November~18, 2026).
+\end{thebibliography}
+}
+
+\Contr
+\textbf{Solopiy Artem V.} (b.~1989)~--- assistant lecturer, Department of Computer Systems, Kazan National Research Technical University named after A.N.~Tupolev-KAI, 10~K.~Marx Str., Kazan 420111, Russian Federation; \mbox{artem.solopiy@gmail.com}
+
+\smallskip
+\noindent
+\textbf{Gibadullin Ruslan F.} (b.~1984)~--- Candidate of Science (PhD) in technology, associate professor, Department of Computer Systems, Kazan National Research Technical University named after A.N.~Tupolev-KAI, 10~K.~Marx Str., Kazan 420111, Russian Federation; \mbox{RFGibadullin@kai.ru}
+
+\selectlanguage{russian}
+\section*{\protect\rmfamily Сведения об авторах}\noindent
+\textbf{Солопий Артём Валерьевич} (р.~1989)~--- ассистент кафедры компьютерных систем Казанского национального исследовательского технического университета им.\ А.\,Н.~Туполева--КАИ; \mbox{artem.solopiy@gmail.com}
+
+\smallskip
+\noindent
+\textbf{Гибадуллин Руслан Фаршатович} (р.~1984)~--- кандидат технических наук, доцент кафедры компьютерных систем Казанского национального исследовательского технического университета им.\ А.\,Н.~Туполева--КАИ; \mbox{RFGibadullin@kai.ru}
+
+\end{document}
