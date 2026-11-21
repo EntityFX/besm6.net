@@ -1,0 +1,244 @@
+*name 2048
+*no list
+*no load list
+*forex
+      program game2048
+c     ******************************************************************
+c
+c     2048 for BESM-6 / Dubna.
+c     Line-oriented mainframe control: print board, read one command.
+c
+c     ******************************************************************
+      integer board(4,4)
+      integer score, moves
+      logical alive, won
+      character cmd
+c
+      call rndm1(jextra(0, 40, 55))
+      call init(board, score, moves, won)
+c
+      write (54, 100)
+   10 continue
+      call draw(board, score, moves)
+      if (won) then
+        write (54, 110)
+        won = .false.
+      end if
+      call canmov(board, alive)
+      if (.not. alive) then
+        write (54, 120)
+        goto 90
+      end if
+c
+      write (54, 130)
+      call readc(cmd)
+      if (cmd .eq. 'q' .or. cmd .eq. 'Q') goto 90
+      call domove(board, cmd, score, moves, won)
+      goto 10
+c
+   90 continue
+      write (54, 140) score, moves
+c
+  100 format (' 2048 for BESM-6',/,
+     &' Commands: W=up A=left S=down D=right Q=quit',/,
+     &' Type a letter and press Enter.',/)
+  110 format (' You made 2048! Keep playing or press Q to quit.',/)
+  120 format (' No moves left. Game over.',/)
+  130 format (' Move (W/A/S/D/Q): ')
+  140 format (' Final score: ',i6,'  moves: ',i6)
+      end
+c     ******************************************************************
+      subroutine init(board, score, moves, won)
+      integer board(4,4), score, moves, i, j
+      logical won
+      score = 0
+      moves = 0
+      won = .false.
+      do 20 i = 1, 4
+        do 10 j = 1, 4
+          board(i,j) = 0
+   10   continue
+   20 continue
+      call addnew(board)
+      call addnew(board)
+      end
+c     ******************************************************************
+      subroutine addnew(board)
+      integer board(4,4), empty(16), n, k, i, j, r, val
+      n = 0
+      do 20 i = 1, 4
+        do 10 j = 1, 4
+          if (board(i,j) .eq. 0) then
+            n = n + 1
+            empty(n) = (i - 1) * 4 + j
+          end if
+   10   continue
+   20 continue
+      if (n .eq. 0) return
+      r = 1 + int(rndm(-1) * n)
+      k = empty(r)
+      i = (k - 1) / 4 + 1
+      j = k - (i - 1) * 4
+      val = 2
+      if (rndm(-1) .lt. 0.1) val = 4
+      board(i,j) = val
+      end
+c     ******************************************************************
+      subroutine draw(board, score, moves)
+      integer board(4,4), score, moves, i, j
+      write (54, 100) score, moves
+      write (54, 110)
+      do 10 i = 1, 4
+        write (54, 120) (board(i,j), j = 1, 4)
+        write (54, 110)
+   10 continue
+  100 format (/,' Score: ',i6,'  Moves: ',i4)
+  110 format (' +------+------+------+------+')
+  120 format (' |',i5,' |',i5,' |',i5,' |',i5,' |')
+      end
+c     ******************************************************************
+      subroutine readc(cmd)
+      character cmd
+   10 continue
+      cmd = ' '
+      rewind 54
+      read (54, 100) cmd
+  100 format (a1)
+      if (cmd .eq. ' ') goto 10
+      end
+c     ******************************************************************
+      subroutine domove(board, cmd, score, moves, won)
+      integer board(4,4), score, moves
+      character cmd
+      logical won, moved
+      moved = .false.
+      if (cmd .eq. 'a' .or. cmd .eq. 'A') then
+        call move(board, 1, score, moved, won)
+      end if
+      if (cmd .eq. 'd' .or. cmd .eq. 'D') then
+        call move(board, 2, score, moved, won)
+      end if
+      if (cmd .eq. 'w' .or. cmd .eq. 'W') then
+        call move(board, 3, score, moved, won)
+      end if
+      if (cmd .eq. 's' .or. cmd .eq. 'S') then
+        call move(board, 4, score, moved, won)
+      end if
+      if (moved) then
+        moves = moves + 1
+        call addnew(board)
+      else
+        if (cmd .eq. 'a' .or. cmd .eq. 'A' .or.
+     &      cmd .eq. 'd' .or. cmd .eq. 'D' .or.
+     &      cmd .eq. 'w' .or. cmd .eq. 'W' .or.
+     &      cmd .eq. 's' .or. cmd .eq. 'S') then
+          write (54, 100)
+        else
+          write (54, 110)
+        end if
+      end if
+  100 format (' Move has no effect. Try another direction.')
+  110 format (' Unknown command. Use W/A/S/D or Q.')
+      end
+c     ******************************************************************
+      subroutine move(board, dir, score, moved, won)
+c     dir: 1=left, 2=right, 3=up, 4=down
+      integer board(4,4), dir, score
+      logical moved, won
+      integer i, j, k, p, line(4), out(4)
+      integer before(4,4)
+c
+      do 20 i = 1, 4
+        do 10 j = 1, 4
+          before(i,j) = board(i,j)
+   10   continue
+   20 continue
+c
+      do 60 k = 1, 4
+        do 30 p = 1, 4
+          if (dir .eq. 1) line(p) = board(k,p)
+          if (dir .eq. 2) line(p) = board(k,5-p)
+          if (dir .eq. 3) line(p) = board(p,k)
+          if (dir .eq. 4) line(p) = board(5-p,k)
+   30   continue
+c
+        call pack(line, out, score, won)
+c
+        do 40 p = 1, 4
+          if (dir .eq. 1) board(k,p) = out(p)
+          if (dir .eq. 2) board(k,5-p) = out(p)
+          if (dir .eq. 3) board(p,k) = out(p)
+          if (dir .eq. 4) board(5-p,k) = out(p)
+   40   continue
+   60 continue
+c
+      moved = .false.
+      do 80 i = 1, 4
+        do 70 j = 1, 4
+          if (board(i,j) .ne. before(i,j)) moved = .true.
+   70   continue
+   80 continue
+      end
+c     ******************************************************************
+      subroutine pack(line, out, score, won)
+      integer line(4), out(4), tmp(4), score, n, i
+      logical won
+      n = 0
+      do 10 i = 1, 4
+        tmp(i) = 0
+        out(i) = 0
+        if (line(i) .ne. 0) then
+          n = n + 1
+          tmp(n) = line(i)
+        end if
+   10 continue
+c
+      i = 1
+      n = 0
+   20 continue
+      if (i .gt. 4) goto 30
+      if (tmp(i) .eq. 0) goto 30
+      if (i .lt. 4) then
+        if (tmp(i) .ne. 0 .and. tmp(i) .eq. tmp(i+1)) then
+          n = n + 1
+          out(n) = tmp(i) * 2
+          score = score + out(n)
+          if (out(n) .ge. 2048) won = .true.
+          i = i + 2
+          goto 20
+        end if
+      end if
+      n = n + 1
+      out(n) = tmp(i)
+      i = i + 1
+      goto 20
+   30 continue
+      end
+c     ******************************************************************
+      subroutine canmov(board, alive)
+      integer board(4,4), i, j
+      logical alive
+      alive = .false.
+      do 20 i = 1, 4
+        do 10 j = 1, 4
+          if (board(i,j) .eq. 0) then
+            alive = .true.
+            return
+          end if
+   10   continue
+   20 continue
+      do 40 i = 1, 4
+        do 30 j = 1, 4
+          if (j .lt. 4) then
+            if (board(i,j) .eq. board(i,j+1)) alive = .true.
+          end if
+          if (i .lt. 4) then
+            if (board(i,j) .eq. board(i+1,j)) alive = .true.
+          end if
+          if (alive) return
+   30   continue
+   40 continue
+      end
+*library:1,23
+*execute
+*end file
