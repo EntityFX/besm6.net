@@ -69,7 +69,7 @@ class Canvas:
 def plots(data, all_sizes, directory):
     rows = data["rows"]; blue, orange, green = "#267CC0", "#E56C2F", "#15966A"
     c = Canvas()
-    for i,(label,color) in enumerate((("подготовка",blue),("счёт",orange),("вывод и завершение",green))):
+    for i,(label,color) in enumerate((("подготовка",blue),("счёт",orange),("заключительный этап",green))):
         x = (67,102,128)[i]; c.rect(x,5,3,2,color); c.text(x+4,7.1,label,size=8)
     x0,scale = 67,1.08
     for tick in range(0,101,20):
@@ -142,6 +142,7 @@ def markdown(tex,data,destination):
             text=text[:match.start()]+fn(content)+text[end:]
         return text
     def plain(text):
+        text=re.sub(r"\\allowbreak(?:\{\})?\s*","",text)
         text=unwrap(text,"texttt",lambda value:"`"+value.replace(r"\_","_").replace("~"," ")+"`")
         text=unwrap(text,"textbf",lambda value:"**"+plain(value)+"**")
         text=unwrap(text,"textit",lambda value:"*"+plain(value)+"*")
@@ -150,33 +151,42 @@ def markdown(tex,data,destination):
         text=re.sub(r"\\ref\{([^}]+)\}",lambda m:str(labels.get(m[1],"?")),text)
         text=re.sub(r"\{\\it\s+([^{}]+)\}",r"*\1*",text)
         text=re.sub(r"\\(?:protect|rmfamily|noindent|smallskip|frenchspacing|small|allowbreak)\b","",text)
-        text=text.replace(r"\%","%").replace(r"\#","#").replace(r"\_","_").replace(r"\,"," ").replace("~"," ").replace("<<","«").replace(">>","»").replace("---","—")
-        return re.sub(r"(?<=\d)--(?=\d)","–",text).strip()
+        text=text.replace(r"\%","%").replace(r"\#","#").replace(r"\_","_").replace(r"\,"," ").replace(r"\ "," ").replace("~"," ").replace("<<","«").replace(">>","»").replace("---","—")
+        text=re.sub(r"(?<=\d)--(?=\d)","–",text)
+        return text.replace("$--$","$–$").strip()
     main=tex[tex.index(r"\section{Введение}"):tex.index(r"{\small\frenchspacing",tex.index(r"\section{Введение}"))]
+    main=re.sub(r"(?m)^\s*%[^\n]*$","",main)
     main=re.sub(r"(?s)\\begin\{verbatim\}\n(.*?)\\end\{verbatim\}",lambda m:keep("```bash\n"+m[1].rstrip()+"\n```"),main)
     main=re.sub(r"(?m)^\{\\small\s*$|^\}\s*$","",main)
     figures=re.findall(r"(?s)\\begin\{figure\}.*?\\end\{figure\}",main)
     for number,block in enumerate(figures,1):
         label=re.search(r"\\label\{([^}]+)\}",block)
         if label:labels[label[1]]=number
+    figure_number=0
     def figure(match):
+        nonlocal figure_number
+        figure_number+=1
         block=match[0];caption_match=re.search(r"\\caption\{",block);caption,_=group(block,caption_match.end()-1)
         filename=re.search(r"fig-[a-z-]+\.pdf|48-bit\.png",block)[0]
         image=filename.replace(".pdf",".svg")
-        return keep(f"![{plain(caption)}]({image})\n\n*{plain(caption)}*")
+        return keep(f"![{plain(caption)}]({image})\n\n*Рис. {figure_number}. {plain(caption)}*")
     main=re.sub(r"(?s)\\begin\{figure\}.*?\\end\{figure\}",figure,main)
-    headers=[['№','Программа','Размер задачи','Команд счёта, млн'],['Программа','Подготовка БЭСМ-6, с','Счёт БЭСМ-6, с','Вывод и завершение, мс','CPython: счёт, мс','GNU Fortran: счёт, мс','Доля счёта, %'],['Программа','БЭСМ-6/CPython','БЭСМ-6/Fortran','CPython/Fortran','Процесс CPython, мс','Процесс Fortran, мс','Компиляция Fortran, мс']]
+    headers=[['№','Программа','Размер задачи','Команд счёта, млн'],['Программа','Подготовка БЭСМ-6, с','Счёт БЭСМ-6, с','Заключительный этап, мс','CPython: счёт, мс','GNU Fortran: счёт, мс','Доля счёта, %'],['Программа','БЭСМ-6/CPython','БЭСМ-6/Fortran','CPython/Fortran','Процесс CPython, мс','Процесс Fortran, мс','Компиляция Fortran, мс']]
     tables=re.findall(r"(?s)\\begin\{table\}.*?\\end\{table\}",main)
     for i,block in enumerate(tables):
         rows=table_rows(block)
         if len(rows)!=11:raise ValueError(f"Table {i+1}: expected 11 rows, got {len(rows)}")
-        rendered="**Таблица "+str(i+1)+".**\n\n| "+" | ".join(headers[i])+" |\n|"+"---|"*len(headers[i])+"\n"
+        caption=re.search(r"\\textbf\{Таблица~\d+\}(.*?)\\par",block,re.S)
+        if caption is None:raise ValueError(f"Table {i+1}: caption not found")
+        rendered=f"**Таблица {i+1}. {plain(caption[1])}**\n\n| "+" | ".join(headers[i])+" |\n|"+"---|"*len(headers[i])+"\n"
         rendered+="\n".join("| "+" | ".join(plain(cell) for cell in row)+" |" for row in rows)
+        note=re.search(r"\\footnotesize\s+(.*?)\}\s*\\end\{table\}",block,re.S)
+        if note:rendered+="\n\n"+plain(note[1])
         main=main.replace(block,keep(rendered))
     section=0;subsection=0
     def heading(match):
         nonlocal section,subsection
-        command,star,value=match.groups();value=plain(value)
+        command,star,value=match.groups();value=re.sub(r"[ \t]+"," ",plain(value))
         if command=="section":
             if not star:section+=1;subsection=0;value=str(section)+". "+value
             return "\n## "+value+"\n"
@@ -187,13 +197,18 @@ def markdown(tex,data,destination):
     main=re.sub(r"\\begin\{itemize\}[^\n]*|\\end\{itemize\}","",main)
     main=main.replace(r"\item ","- ")
     main=plain(main)
+    main=re.sub(r"(?m)^ +(?=\S)","",main)
     for i,value in enumerate(blocks):main=main.replace(f"@@BLOCK{i}@@",value)
     abstract_match=re.search(r"\\Abst\{",tex);abstract,_=group(tex,abstract_match.end()-1)
     english_match=re.search(r"\\Abste\{",tex);english,_=group(tex,english_match.end()-1)
-    title="Раздельное измерение времени трансляции, счёта и вывода в программной модели машины БЭСМ-6 на примере алгоритмов искусственного интеллекта"
-    result="# "+title+"\n\n**А. В. Солопий, Р. Ф. Гибадуллин**\n\nКазанский национальный исследовательский технический университет им. А. Н. Туполева — КАИ, Казань, Россия\n\n## Аннотация\n\n"+plain(abstract)+"\n\n"+main+"\n\n## Литература\n\n"
+    titles=[plain(group(tex,match.end()-1)[0]) for match in re.finditer(r"\\def\\tit\{",tex)]
+    if len(titles)!=2:raise ValueError("Expected Russian and English article titles")
+    title,english_title=titles
+    keywords_match=re.search(r"\\KW\{",tex);keywords,_=group(tex,keywords_match.end()-1)
+    english_keywords_match=re.search(r"\\KWE\{",tex);english_keywords,_=group(tex,english_keywords_match.end()-1)
+    result="# "+title+"\n\n**А. В. Солопий, Р. Ф. Гибадуллин**\n\nКазанский национальный исследовательский технический университет им. А. Н. Туполева — КАИ, Казань, Россия\n\n## Аннотация\n\n"+plain(abstract)+"\n\n**Ключевые слова:** "+plain(keywords)+"\n\n"+main+"\n\n## Литература\n\n"
     result+="\n".join(f"{i+1}. {plain(entry)}" for i,(_,entry) in enumerate(bibliography[:18]))
-    result+="\n\n## Abstract\n\n"+plain(english)+"\n\n## References\n\n"
+    result+="\n\n# "+english_title+"\n\n## Abstract\n\n"+plain(english)+"\n\n**Keywords:** "+plain(english_keywords)+"\n\n## References\n\n"
     result+="\n".join(f"{i+1}. {plain(entry)}" for i,(_,entry) in enumerate(bibliography[18:]))
     destination.write_text(re.sub(r"\n{3,}","\n\n",result)+"\n",encoding="utf-8")
 
