@@ -1,0 +1,51 @@
+*name scale anneal
+*fortran
+      program anneal
+      integer x(64),i,j,it,old,new,seed,cs
+      real fx,fn,fb,t,r1,r2,delta
+      do 10 j=1,64
+        x(j)=0
+   10 continue
+      fx=0.
+      fb=fx
+      seed=12345
+      do 50 it=1,30000
+c---- Hyperbolic schedule: T stays positive and ends at 0.1.
+        t=5./(1.+49.*it/30000)
+        i=1+(it-1)-64*((it-1)/64)
+        seed=seed*75+74
+        seed=seed-65537*(seed/65537)
+        r1=seed/65537.
+        old=x(i)
+        new=old-1
+        if (r1 .ge. 0.5) new=old+1
+        if (new .lt. 0) new=0
+        if (new .gt. 10) new=10
+        x(i)=new
+        fn=0.
+        do 20 j=1,64
+          delta=x(j)-3.
+          fn=fn+9.-delta*delta
+   20   continue
+        if (fn .ge. fx) goto 30
+        seed=seed*75+74
+        seed=seed-65537*(seed/65537)
+        r2=seed/65537.
+        if (r2 .lt. exp((fn-fx)/t)) goto 30
+        x(i)=old
+        goto 50
+   30   fx=fn
+        if (fx .gt. fb) fb=fx
+   50 continue
+      cs=0
+      do 60 j=1,64
+        cs=cs+j*x(j)
+   60 continue
+      iz001=64
+      iz002=30000
+      print 100,iz001,iz002,cs,fb,fx,t
+      stop
+  100 format('RESULT',3i12,3f18.6)
+      end
+*execute
+*end file

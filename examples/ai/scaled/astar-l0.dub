@@ -1,0 +1,90 @@
+*name scale astar
+*fortran
+      program astar
+      integer obs(5,5),g(25),f(25)
+      integer par(25),op(25),cl(25)
+      integer path(25),dr(4),dc(4)
+      integer i,r,c,k,nr,nc,v,u,best,ng,l,it,ii,cs,found
+      do 10 i=1,25
+        g(i)=32760
+        f(i)=32760
+        par(i)=0
+        op(i)=0
+        cl(i)=0
+   10 continue
+      do 15 r=1,5
+        do 14 c=1,5
+          obs(r,c)=0
+   14   continue
+   15 continue
+      obs(2,2)=1
+      obs(2,3)=1
+      obs(3,3)=1
+      obs(4,2)=1
+      dr(1)=-1
+      dc(1)=0
+      dr(2)=1
+      dc(2)=0
+      dr(3)=0
+      dc(3)=-1
+      dr(4)=0
+      dc(4)=1
+      g(1)=0
+      f(1)=8
+      op(1)=1
+      found=0
+      l=0
+      cs=0
+      do 100 it=1,25
+        u=0
+        best=32760
+        do 20 v=1,25
+          if (op(v) .eq. 0) goto 20
+          if (f(v) .ge. best) goto 20
+          best=f(v)
+          u=v
+   20   continue
+        if (u .eq. 0) goto 300
+        if (u .eq. 25) goto 200
+        op(u)=0
+        cl(u)=1
+        r=(u-1)/5+1
+        c=(u-1)-5*((u-1)/5)+1
+        do 30 k=1,4
+          nr=r+dr(k)
+          nc=c+dc(k)
+          if (nr .lt. 1) goto 30
+          if (nr .gt. 5) goto 30
+          if (nc .lt. 1) goto 30
+          if (nc .gt. 5) goto 30
+          if (obs(nr,nc) .ne. 0) goto 30
+          v=(nr-1)*5+nc
+          if (cl(v) .ne. 0) goto 30
+          ng=g(u)+1
+          if (ng .ge. g(v)) goto 30
+          g(v)=ng
+          f(v)=ng+iabs(nr-5)+iabs(nc-5)
+          par(v)=u
+          op(v)=1
+   30   continue
+  100 continue
+      goto 300
+  200 found=1
+      v=25
+  210 l=l+1
+      path(l)=v
+      if (v .eq. 1) goto 220
+      v=par(v)
+      goto 210
+  220 do 230 ii=1,l
+        i=l+1-ii
+        cs=cs+ii*path(i)
+  230 continue
+  300 continue
+      iz001=5
+      print 400,iz001,found,l,cs
+      stop
+  400 format('RESULT',4i12)
+      end
+*execute
+*end file

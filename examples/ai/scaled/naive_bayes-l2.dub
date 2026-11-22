@@ -1,0 +1,73 @@
+*name scale bayes
+*fortran
+      program bayes
+      integer x(128,12),y(128),cnt(8)
+      integer hits(8,12),q(12)
+      real prob(8,12),score,best
+      integer i,j,c,bit,code,flip,iq,pred,cs,ps
+      do 10 i=1,128
+        c=1+(i-1)-8*((i-1)/8)
+        y(i)=c
+        do 11 j=1,12
+          bit=(j-1)-3*((j-1)/3)
+          code=(c-1)/(2**bit)
+          x(i,j)=code-2*(code/2)
+          flip=(i-1)/8+j*3
+          flip=flip-4*(flip/4)
+          if (flip .eq. 0) x(i,j)=1-x(i,j)
+   11   continue
+   10 continue
+      do 20 c=1,8
+        cnt(c)=0
+        do 21 j=1,12
+          hits(c,j)=0
+   21   continue
+   20 continue
+      do 30 i=1,128
+        c=y(i)
+        cnt(c)=cnt(c)+1
+        do 31 j=1,12
+          hits(c,j)=hits(c,j)+x(i,j)
+   31   continue
+   30 continue
+      do 40 c=1,8
+        do 41 j=1,12
+          prob(c,j)=(hits(c,j)+1.)/(cnt(c)+2.)
+   41   continue
+   40 continue
+      cs=0
+      ps=0
+      do 70 iq=1,512
+        code=iq-1
+        do 50 j=1,12
+          q(j)=code-2*(code/2)
+          code=code/2
+   50   continue
+        best=-1.
+        pred=1
+        do 60 c=1,8
+          score=1./8
+          do 61 j=1,12
+            if (q(j) .eq. 0) goto 62
+            score=score*prob(c,j)
+            goto 61
+   62       score=score*(1.-prob(c,j))
+   61     continue
+c---- Explicit tolerance makes equal-likelihood tie handling portable.
+          if (score .le. best*(1.+1.e-5)) goto 60
+          best=score
+          pred=c
+   60   continue
+        ps=ps+pred
+        cs=cs+iq*pred
+   70 continue
+      iz001=128
+      iz002=12
+      iz003=8
+      iz004=512
+      print 100,iz001,iz002,iz003,iz004,ps,cs
+      stop
+  100 format('RESULT',6i12)
+      end
+*execute
+*end file

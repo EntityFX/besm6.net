@@ -1,0 +1,942 @@
+{
+  "metadata": {
+    "python": "3.12.7 (main, Oct  2 2024, 04:23:59) [GCC 13.2.1 20240128 (ALT Sisyphus 13.2.1-alt3)]",
+    "compiler": "GNU Fortran (GCC) 13.2.1 20240128 (ALT Sisyphus 13.2.1-alt3)",
+    "platform": "Linux-6.12.85-6.12-alt1-x86_64-with-glibc2.38",
+    "processor": "Intel(R) Xeon(R) CPU E5-2680 v3 @ 2.50GHz",
+    "cpuAffinity": [
+      0
+    ],
+    "kernelClock": "process CPU time: process_time_ns / CPU_TIME",
+    "nativeOptimization": "-O0, separate compilation, no LTO",
+    "concurrency": 1
+  },
+  "rows": [
+    {
+      "algorithm": "perceptron",
+      "level": 3,
+      "parameters": {
+        "samples": 512,
+        "features": 24,
+        "epochs": 100
+      },
+      "id": "perceptron-l3",
+      "sourceSha256": "170b7f3d9cb8b14326cf431206188e0a94011b95aa9bd67f1a4b0160483ff8db",
+      "expected": [
+        512,
+        24,
+        100,
+        512,
+        7.125
+      ],
+      "sourceLines": 58,
+      "referenceSeconds": 0.16082983000023887,
+      "pythonObserved": [
+        512,
+        24,
+        100,
+        512,
+        7.125
+      ],
+      "fortranObserved": [
+        512.0,
+        24.0,
+        100.0,
+        512.0,
+        7.125
+      ],
+      "verified": true,
+      "pythonComputeSeconds": 0.126706768,
+      "pythonComputeSamples": [
+        0.126706768,
+        0.1268759615,
+        0.12636698,
+        0.1267083845,
+        0.1267051605
+      ],
+      "pythonRepetitions": 2,
+      "fortranComputeSeconds": 0.0076525,
+      "fortranComputeSamples": [
+        0.00766225,
+        0.0076525,
+        0.007644099999999999,
+        0.0076435,
+        0.007659399999999999
+      ],
+      "fortranRepetitions": 20,
+      "pythonProcessSeconds": 0.171773597,
+      "pythonProcessSamples": [
+        0.173143624,
+        0.171640163,
+        0.171939169,
+        0.171156226,
+        0.171907031,
+        0.177837782,
+        0.17503255,
+        0.171181306,
+        0.170700223,
+        0.17140445
+      ],
+      "fortranProcessSeconds": 0.0086253905,
+      "fortranProcessSamples": [
+        0.008615406,
+        0.00864339,
+        0.008646668,
+        0.008629022,
+        0.008584512,
+        0.008628048,
+        0.008610754,
+        0.008597927,
+        0.008629641,
+        0.008622733
+      ],
+      "fortranCompilationSeconds": 0.048008291,
+      "fortranCompilationSamples": [
+        0.049673592,
+        0.047568292,
+        0.048008291
+      ]
+    },
+    {
+      "algorithm": "knn",
+      "level": 3,
+      "parameters": {
+        "samples": 1024,
+        "features": 12,
+        "queries": 128
+      },
+      "id": "knn-l3",
+      "sourceSha256": "b324bc65347a9d14799a36b0124339a5558757f2f909556e4d9cadb35b87eb7e",
+      "expected": [
+        1024,
+        12,
+        128,
+        55,
+        3610
+      ],
+      "sourceLines": 57,
+      "referenceSeconds": 0.20741547800025728,
+      "pythonObserved": [
+        1024,
+        12,
+        128,
+        55,
+        3610
+      ],
+      "fortranObserved": [
+        1024.0,
+        12.0,
+        128.0,
+        55.0,
+        3610.0
+      ],
+      "verified": true,
+      "pythonComputeSeconds": 0.126652652,
+      "pythonComputeSamples": [
+        0.1268566685,
+        0.126652652,
+        0.126535711,
+        0.126409067,
+        0.1267779105
+      ],
+      "pythonRepetitions": 2,
+      "fortranComputeSeconds": 0.008015105263157893,
+      "fortranComputeSamples": [
+        0.00801478947368421,
+        0.008013842105263158,
+        0.00801536842105263,
+        0.008015105263157893,
+        0.008021157894736841
+      ],
+      "fortranRepetitions": 19,
+      "pythonProcessSeconds": 0.1722032705,
+      "pythonProcessSamples": [
+        0.1717536,
+        0.171435859,
+        0.172072236,
+        0.17286416,
+        0.171690194,
+        0.173447506,
+        0.172334305,
+        0.170900279,
+        0.178817163,
+        0.172569825
+      ],
+      "fortranProcessSeconds": 0.00894296,
+      "fortranProcessSamples": [
+        0.008987073,
+        0.008997204,
+        0.008945015,
+        0.008940905,
+        0.009246728,
+        0.008925182,
+        0.008913293,
+        0.00893451,
+        0.008940647,
+        0.008953939
+      ],
+      "fortranCompilationSeconds": 0.048002956,
+      "fortranCompilationSamples": [
+        0.04977747,
+        0.048002956,
+        0.047805313
+      ]
+    },
+    {
+      "algorithm": "kmeans",
+      "level": 3,
+      "parameters": {
+        "samples": 512,
+        "features": 16,
+        "clusters": 8,
+        "iterations": 20
+      },
+      "id": "kmeans-l3",
+      "sourceSha256": "550475180477bc437fd81b55bc3242f956dcfefcfa1ed39383066d9b8d14137c",
+      "expected": [
+        512,
+        16,
+        8,
+        2304,
+        0.375,
+        70.25
+      ],
+      "sourceLines": 66,
+      "referenceSeconds": 0.2200729119999778,
+      "pythonObserved": [
+        512,
+        16,
+        8,
+        2304,
+        0.375,
+        70.25
+      ],
+      "fortranObserved": [
+        512.0,
+        16.0,
+        8.0,
+        2304.0,
+        0.375,
+        70.25
+      ],
+      "verified": true,
+      "pythonComputeSeconds": 0.1021789385,
+      "pythonComputeSamples": [
+        0.1021789385,
+        0.102064425,
+        0.102077087,
+        0.1021904915,
+        0.102330206
+      ],
+      "pythonRepetitions": 2,
+      "fortranComputeSeconds": 0.00529148275862069,
+      "fortranComputeSamples": [
+        0.00529148275862069,
+        0.005292310344827586,
+        0.005291689655172413,
+        0.005288999999999999,
+        0.005291310344827585
+      ],
+      "fortranRepetitions": 29,
+      "pythonProcessSeconds": 0.147591501,
+      "pythonProcessSamples": [
+        0.147550217,
+        0.147571837,
+        0.146677181,
+        0.147978479,
+        0.147611165,
+        0.14694136,
+        0.147743909,
+        0.147250613,
+        0.151020156,
+        0.147802674
+      ],
+      "fortranProcessSeconds": 0.006213224999999999,
+      "fortranProcessSamples": [
+        0.006217817,
+        0.006181655,
+        0.006179729,
+        0.00622168,
+        0.006208633,
+        0.006200192,
+        0.0061887,
+        0.006231377,
+        0.006225973,
+        0.006218247
+      ],
+      "fortranCompilationSeconds": 0.049136074,
+      "fortranCompilationSamples": [
+        0.050487729,
+        0.049136074,
+        0.048970792
+      ]
+    },
+    {
+      "algorithm": "naive_bayes",
+      "level": 3,
+      "parameters": {
+        "samples": 256,
+        "features": 16,
+        "classes": 8,
+        "queries": 8192
+      },
+      "id": "naive_bayes-l3",
+      "sourceSha256": "15445aaf541fec71fe56bbadbbb1838e33c8946e68864e23954a2631ac5227b3",
+      "expected": [
+        256,
+        16,
+        8,
+        8192,
+        25088,
+        114155264
+      ],
+      "sourceLines": 73,
+      "referenceSeconds": 0.0893815330000507,
+      "pythonObserved": [
+        256,
+        16,
+        8,
+        8192,
+        25088,
+        114155264
+      ],
+      "fortranObserved": [
+        256.0,
+        16.0,
+        8.0,
+        8192.0,
+        25088.0,
+        114155264.0
+      ],
+      "verified": true,
+      "pythonComputeSeconds": 0.094207797,
+      "pythonComputeSamples": [
+        0.094297846,
+        0.0941944565,
+        0.094207797,
+        0.0941994315,
+        0.0943193265
+      ],
+      "pythonRepetitions": 2,
+      "fortranComputeSeconds": 0.005763076923076922,
+      "fortranComputeSamples": [
+        0.005763346153846153,
+        0.005761846153846154,
+        0.005762115384615384,
+        0.005767769230769231,
+        0.005763076923076922
+      ],
+      "fortranRepetitions": 26,
+      "pythonProcessSeconds": 0.136649637,
+      "pythonProcessSamples": [
+        0.136999961,
+        0.137571164,
+        0.137422213,
+        0.135985347,
+        0.138491415,
+        0.136391551,
+        0.135743898,
+        0.136528281,
+        0.136770993,
+        0.136465664
+      ],
+      "fortranProcessSeconds": 0.0067922585,
+      "fortranProcessSamples": [
+        0.00678286,
+        0.006778271,
+        0.006791625,
+        0.006968304,
+        0.006774259,
+        0.006792892,
+        0.00680075,
+        0.006829427,
+        0.006869579,
+        0.006775157
+      ],
+      "fortranCompilationSeconds": 0.050116414,
+      "fortranCompilationSamples": [
+        0.051406868,
+        0.049452608,
+        0.050116414
+      ]
+    },
+    {
+      "algorithm": "decision_stump",
+      "level": 3,
+      "parameters": {
+        "samples": 1024
+      },
+      "id": "decision_stump-l3",
+      "sourceSha256": "63121f287a24a34e840ac68bad44e8173f05b7fb90f7d82745f696abadfb4f71",
+      "expected": [
+        1024,
+        1,
+        0,
+        512.5
+      ],
+      "sourceLines": 37,
+      "referenceSeconds": 0.24775345199986987,
+      "pythonObserved": [
+        1024,
+        1,
+        0,
+        512.5
+      ],
+      "fortranObserved": [
+        1024.0,
+        1.0,
+        0.0,
+        512.5
+      ],
+      "verified": true,
+      "pythonComputeSeconds": 0.242144982,
+      "pythonComputeSamples": [
+        0.241973769,
+        0.242144982,
+        0.242151867,
+        0.242019957,
+        0.242439081
+      ],
+      "pythonRepetitions": 1,
+      "fortranComputeSeconds": 0.005870730769230769,
+      "fortranComputeSamples": [
+        0.005866961538461539,
+        0.005839846153846154,
+        0.005870730769230769,
+        0.005879615384615384,
+        0.005885769230769231
+      ],
+      "fortranRepetitions": 26,
+      "pythonProcessSeconds": 0.29255616549999997,
+      "pythonProcessSamples": [
+        0.293281682,
+        0.291662111,
+        0.292853779,
+        0.292838177,
+        0.292274154,
+        0.29316919,
+        0.290948613,
+        0.290697433,
+        0.293565906,
+        0.291534173
+      ],
+      "fortranProcessSeconds": 0.0067292105,
+      "fortranProcessSamples": [
+        0.006731339,
+        0.006719171,
+        0.00673035,
+        0.006767806,
+        0.006713389,
+        0.006729619,
+        0.006719589,
+        0.006728802,
+        0.006753994,
+        0.006719694
+      ],
+      "fortranCompilationSeconds": 0.045646276,
+      "fortranCompilationSamples": [
+        0.046384823,
+        0.045028156,
+        0.045646276
+      ]
+    },
+    {
+      "algorithm": "genetic",
+      "level": 3,
+      "parameters": {
+        "population": 512,
+        "generations": 1024
+      },
+      "id": "genetic-l3",
+      "sourceSha256": "baf537ee090f388990c7eaef37cfbffdfbb03dd44d231490cf8bc6084e7cd512",
+      "expected": [
+        512,
+        1024,
+        1023,
+        1046529,
+        264186
+      ],
+      "sourceLines": 52,
+      "referenceSeconds": 0.20679131399992912,
+      "pythonObserved": [
+        512,
+        1024,
+        1023,
+        1046529,
+        264186
+      ],
+      "fortranObserved": [
+        512.0,
+        1024.0,
+        1023.0,
+        1046529.0,
+        264186.0
+      ],
+      "verified": true,
+      "pythonComputeSeconds": 0.196456563,
+      "pythonComputeSamples": [
+        0.19622525,
+        0.196516763,
+        0.196486329,
+        0.196449141,
+        0.196456563
+      ],
+      "pythonRepetitions": 1,
+      "fortranComputeSeconds": 0.007002636363636363,
+      "fortranComputeSamples": [
+        0.007015954545454547,
+        0.007003045454545454,
+        0.006998136363636363,
+        0.00699790909090909,
+        0.007002636363636363
+      ],
+      "fortranRepetitions": 22,
+      "pythonProcessSeconds": 0.2496450795,
+      "pythonProcessSamples": [
+        0.249290156,
+        0.248859707,
+        0.252174637,
+        0.247671658,
+        0.249608552,
+        0.249681607,
+        0.250690899,
+        0.252033039,
+        0.249917407,
+        0.248576064
+      ],
+      "fortranProcessSeconds": 0.009461376,
+      "fortranProcessSamples": [
+        0.009478991,
+        0.009524439,
+        0.009486238,
+        0.009426298,
+        0.009495552,
+        0.00934672,
+        0.00946525,
+        0.009280047,
+        0.009409196,
+        0.009457502
+      ],
+      "fortranCompilationSeconds": 0.048229288,
+      "fortranCompilationSamples": [
+        0.048229288,
+        0.048253742,
+        0.047541098
+      ]
+    },
+    {
+      "algorithm": "annealing",
+      "level": 3,
+      "parameters": {
+        "dimensions": 64,
+        "iterations": 30000
+      },
+      "id": "annealing-l3",
+      "sourceSha256": "bc263f8dc393a8db68b4711574e27f74621f5d96e2caa5e7ccad5e608640bc23",
+      "expected": [
+        64,
+        30000,
+        6240,
+        576.0,
+        576.0,
+        0.1
+      ],
+      "sourceLines": 51,
+      "referenceSeconds": 0.17210354100006953,
+      "pythonObserved": [
+        64,
+        30000,
+        6240,
+        576.0,
+        576.0,
+        0.1
+      ],
+      "fortranObserved": [
+        64.0,
+        30000.0,
+        6240.0,
+        576.0,
+        576.0,
+        0.1
+      ],
+      "verified": true,
+      "pythonComputeSeconds": 0.152403593,
+      "pythonComputeSamples": [
+        0.152307561,
+        0.152343124,
+        0.152403593,
+        0.152428349,
+        0.152530451
+      ],
+      "pythonRepetitions": 1,
+      "fortranComputeSeconds": 0.007897263157894737,
+      "fortranComputeSamples": [
+        0.007898473684210526,
+        0.007897263157894737,
+        0.007899315789473685,
+        0.007897105263157895,
+        0.007896842105263157
+      ],
+      "fortranRepetitions": 19,
+      "pythonProcessSeconds": 0.20265885849999998,
+      "pythonProcessSamples": [
+        0.203581215,
+        0.202824658,
+        0.202089484,
+        0.208516601,
+        0.201820406,
+        0.201980442,
+        0.203149569,
+        0.202493059,
+        0.201455674,
+        0.203962499
+      ],
+      "fortranProcessSeconds": 0.00880968,
+      "fortranProcessSamples": [
+        0.008848452,
+        0.00880601,
+        0.00878596,
+        0.00881239,
+        0.008791699,
+        0.008777896,
+        0.00880697,
+        0.008833458,
+        0.008847036,
+        0.008818608
+      ],
+      "fortranCompilationSeconds": 0.047250582,
+      "fortranCompilationSamples": [
+        0.047876483,
+        0.047250582,
+        0.047069351
+      ]
+    },
+    {
+      "algorithm": "qlearning",
+      "level": 3,
+      "parameters": {
+        "states": 128,
+        "episodes": 4000
+      },
+      "id": "qlearning-l3",
+      "sourceSha256": "a99a3e92682a1de0f8855a79def819ad58c515053ecb4c06f3027173eca2926d",
+      "expected": [
+        128,
+        4000,
+        650509,
+        127,
+        15.669921204761849
+      ],
+      "sourceLines": 54,
+      "referenceSeconds": 0.5705876029996944,
+      "pythonObserved": [
+        128,
+        4000,
+        650509,
+        127,
+        15.669921204761849
+      ],
+      "fortranObserved": [
+        128.0,
+        4000.0,
+        650509.0,
+        127.0,
+        15.66992
+      ],
+      "verified": true,
+      "pythonComputeSeconds": 0.571014587,
+      "pythonComputeSamples": [
+        0.573624819,
+        0.570878701,
+        0.571087469,
+        0.570956513,
+        0.571014587
+      ],
+      "pythonRepetitions": 1,
+      "fortranComputeSeconds": 0.01211353846153846,
+      "fortranComputeSamples": [
+        0.012116307692307694,
+        0.012113461538461538,
+        0.01211353846153846,
+        0.012112307692307693,
+        0.012115538461538459
+      ],
+      "fortranRepetitions": 13,
+      "pythonProcessSeconds": 0.6161475265,
+      "pythonProcessSamples": [
+        0.613355517,
+        0.615603258,
+        0.610678798,
+        0.623202069,
+        0.621941866,
+        0.618061523,
+        0.615415836,
+        0.616691795,
+        0.620150472,
+        0.612907936
+      ],
+      "fortranProcessSeconds": 0.0130702995,
+      "fortranProcessSamples": [
+        0.013067111,
+        0.013084587,
+        0.013047973,
+        0.013099041,
+        0.0130753,
+        0.013060622,
+        0.013076367,
+        0.013073488,
+        0.013056611,
+        0.01305992
+      ],
+      "fortranCompilationSeconds": 0.047814548,
+      "fortranCompilationSamples": [
+        0.049746165,
+        0.047814548,
+        0.047072319
+      ]
+    },
+    {
+      "algorithm": "astar",
+      "level": 3,
+      "parameters": {
+        "side": 45
+      },
+      "id": "astar-l3",
+      "sourceSha256": "14d6e83035f8e88219107488aaa8fac28bb6e354a0ecc2070adde8c5d00bdf72",
+      "expected": [
+        45,
+        1,
+        89,
+        3491445
+      ],
+      "sourceLines": 90,
+      "referenceSeconds": 0.11335544199982905,
+      "pythonObserved": [
+        45,
+        1,
+        89,
+        3491445
+      ],
+      "fortranObserved": [
+        45.0,
+        1.0,
+        89.0,
+        3491445.0
+      ],
+      "verified": true,
+      "pythonComputeSeconds": 0.111003967,
+      "pythonComputeSamples": [
+        0.111003967,
+        0.1110083755,
+        0.111067643,
+        0.110871942,
+        0.110955378
+      ],
+      "pythonRepetitions": 2,
+      "fortranComputeSeconds": 0.009271176470588234,
+      "fortranComputeSamples": [
+        0.009273117647058824,
+        0.009269117647058824,
+        0.009270764705882353,
+        0.009272235294117647,
+        0.009271176470588234
+      ],
+      "fortranRepetitions": 17,
+      "pythonProcessSeconds": 0.15889894100000002,
+      "pythonProcessSamples": [
+        0.158828928,
+        0.158831888,
+        0.160433368,
+        0.157315312,
+        0.161400358,
+        0.158479512,
+        0.159162753,
+        0.158965994,
+        0.157588833,
+        0.159013415
+      ],
+      "fortranProcessSeconds": 0.010161654999999999,
+      "fortranProcessSamples": [
+        0.010167755,
+        0.010183046,
+        0.010144059,
+        0.010164049,
+        0.010159261,
+        0.01016707,
+        0.010146636,
+        0.010179784,
+        0.010138156,
+        0.01014832
+      ],
+      "fortranCompilationSeconds": 0.048433639,
+      "fortranCompilationSamples": [
+        0.050502048,
+        0.048433639,
+        0.048227522
+      ]
+    },
+    {
+      "algorithm": "chess_mate",
+      "level": 3,
+      "parameters": {
+        "positions": 2048
+      },
+      "id": "chess_mate-l3",
+      "sourceSha256": "01aacc2dbd351e20beaf9fa2e3a19a79c308234131b4a383f02dca81a66afcb9",
+      "expected": [
+        2048,
+        27142,
+        168,
+        7651
+      ],
+      "sourceLines": 144,
+      "referenceSeconds": 0.09948492700004863,
+      "pythonObserved": [
+        2048,
+        27142,
+        168,
+        7651
+      ],
+      "fortranObserved": [
+        2048.0,
+        27142.0,
+        168.0,
+        7651.0
+      ],
+      "verified": true,
+      "pythonComputeSeconds": 0.098526968,
+      "pythonComputeSamples": [
+        0.0986894675,
+        0.0985260605,
+        0.098558457,
+        0.098526968,
+        0.0985203185
+      ],
+      "pythonRepetitions": 2,
+      "fortranComputeSeconds": 0.004078837837837837,
+      "fortranComputeSamples": [
+        0.004080432432432432,
+        0.004080108108108108,
+        0.004076918918918918,
+        0.0040765405405405394,
+        0.004078837837837837
+      ],
+      "fortranRepetitions": 37,
+      "pythonProcessSeconds": 0.147761892,
+      "pythonProcessSamples": [
+        0.147789248,
+        0.147316818,
+        0.147917905,
+        0.148011631,
+        0.147985234,
+        0.148307849,
+        0.147531563,
+        0.147665918,
+        0.147734536,
+        0.147251042
+      ],
+      "fortranProcessSeconds": 0.004965441,
+      "fortranProcessSamples": [
+        0.0049763,
+        0.004959433,
+        0.004965899,
+        0.004964983,
+        0.00497125,
+        0.004962977,
+        0.004985313,
+        0.004972622,
+        0.00495782,
+        0.004962533
+      ],
+      "fortranCompilationSeconds": 0.055025424,
+      "fortranCompilationSamples": [
+        0.056193468,
+        0.055025424,
+        0.054330754
+      ]
+    },
+    {
+      "algorithm": "mlp",
+      "level": 0,
+      "parameters": {
+        "epochs": 2000
+      },
+      "id": "mlp-l0",
+      "sourceSha256": "503881d8155f2464484740be204feea9fc4d54045c01e9db7dd8e43158a67e6e",
+      "expected": [
+        0.002869720134720847,
+        0.996933611257373,
+        0.996903780857964,
+        0.004670123760595587,
+        4.9034662487321076e-05
+      ],
+      "sourceLines": 73,
+      "referenceSeconds": 0.006375628999649052,
+      "pythonObserved": [
+        0.002869720134720847,
+        0.996933611257373,
+        0.996903780857964,
+        0.004670123760595587,
+        4.9034662487321076e-05
+      ],
+      "fortranObserved": [
+        0.00287,
+        0.996934,
+        0.996904,
+        0.00467,
+        4.9e-05
+      ],
+      "verified": true,
+      "pythonComputeSeconds": 0.005684954851851852,
+      "pythonComputeSamples": [
+        0.005680002962962964,
+        0.005681533259259259,
+        0.005685101666666666,
+        0.0056880655555555555,
+        0.005684954851851852
+      ],
+      "pythonRepetitions": 27,
+      "fortranComputeSeconds": 0.0005226338028169013,
+      "fortranComputeSamples": [
+        0.0005226478873239437,
+        0.0005240915492957745,
+        0.0005225985915492958,
+        0.0005225739436619718,
+        0.0005226338028169013
+      ],
+      "fortranRepetitions": 284,
+      "pythonProcessSeconds": 0.0548956075,
+      "pythonProcessSamples": [
+        0.055396232,
+        0.054798603,
+        0.055007577,
+        0.054914953,
+        0.055189284,
+        0.05480668,
+        0.054876262,
+        0.054929754,
+        0.054777323,
+        0.054695082
+      ],
+      "fortranProcessSeconds": 0.0014288785,
+      "fortranProcessSamples": [
+        0.001429956,
+        0.001408116,
+        0.001427801,
+        0.001431536,
+        0.001448818,
+        0.001538651,
+        0.001419899,
+        0.001423336,
+        0.001425411,
+        0.001436081
+      ],
+      "fortranCompilationSeconds": 0.047834092,
+      "fortranCompilationSamples": [
+        0.049716217,
+        0.047834092,
+        0.047731459
+      ]
+    }
+  ]
+}

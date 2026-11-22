@@ -1,0 +1,57 @@
+*name scale knn
+*fortran
+      program knn
+      real x(128,4),q(4),dist(128),delta
+      integer y(128),used(128),i,j,iq,k,best,seed,vote
+      integer pos,cs,pred
+      seed=12345
+      do 10 i=1,128
+        do 11 j=1,4
+          seed=seed*75+74
+          seed=seed-65537*(seed/65537)
+          x(i,j)=seed-16*(seed/16)
+   11   continue
+        y(i)=0
+        if (x(i,1) .ge. 8.) y(i)=1
+   10 continue
+      pos=0
+      cs=0
+      do 50 iq=1,8
+        do 12 j=1,4
+          seed=seed*75+74
+          seed=seed-65537*(seed/65537)
+          q(j)=seed-16*(seed/16)
+   12   continue
+        do 20 i=1,128
+          dist(i)=0.
+          used(i)=0
+          do 21 j=1,4
+            delta=x(i,j)-q(j)
+            dist(i)=dist(i)+delta*delta
+   21     continue
+   20   continue
+        vote=0
+        do 30 k=1,3
+          best=0
+          do 31 i=1,128
+            if (used(i) .ne. 0) goto 31
+            if (best .eq. 0) best=i
+            if (dist(i) .lt. dist(best)) best=i
+   31     continue
+          used(best)=1
+          vote=vote+y(best)
+   30   continue
+        pred=0
+        if (vote .gt. 1) pred=1
+        pos=pos+pred
+        cs=cs+iq*pred
+   50 continue
+      iz001=128
+      iz002=4
+      iz003=8
+      print 100,iz001,iz002,iz003,pos,cs
+      stop
+  100 format('RESULT',5i12)
+      end
+*execute
+*end file

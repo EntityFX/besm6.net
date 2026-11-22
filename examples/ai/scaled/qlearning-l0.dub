@@ -1,0 +1,54 @@
+*name scale qlearn
+*fortran
+      program qlearn
+      real q(4,2),r,r2,mq,cs
+      integer s,a,ns,ep,st,reward,seed,moves,nright
+      seed=12345
+      moves=0
+      do 10 s=1,4
+        q(s,1)=0.
+        q(s,2)=0.125
+   10 continue
+      do 100 ep=1,20
+        s=1
+        do 90 st=1,16
+          seed=seed*75+74
+          seed=seed-65537*(seed/65537)
+          r=seed/65537.
+          if (r .lt. 0.2) goto 20
+          a=1
+          if (q(s,2) .gt. q(s,1)) a=2
+          goto 30
+   20     seed=seed*75+74
+          seed=seed-65537*(seed/65537)
+          r2=seed/65537.
+          a=1
+          if (r2 .ge. 0.5) a=2
+   30     ns=s-1
+          if (a .eq. 2) ns=s+1
+          if (ns .lt. 1) ns=1
+          if (ns .gt. 4) ns=4
+          reward=0
+          if (ns .eq. 4) reward=1
+          mq=q(ns,1)
+          if (q(ns,2) .gt. mq) mq=q(ns,2)
+          q(s,a)=q(s,a)+0.5*(reward+0.875*mq-q(s,a))
+          moves=moves+1
+          s=ns
+          if (s .eq. 4) goto 100
+   90   continue
+  100 continue
+      cs=0.
+      nright=0
+      do 110 s=1,3
+        cs=cs+q(s,1)+q(s,2)
+        if (q(s,2) .gt. q(s,1)) nright=nright+1
+  110 continue
+      iz001=4
+      iz002=20
+      print 200,iz001,iz002,moves,nright,cs
+      stop
+  200 format('RESULT',4i12,f18.6)
+      end
+*execute
+*end file

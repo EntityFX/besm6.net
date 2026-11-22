@@ -1,0 +1,66 @@
+*name scale kmeans
+*fortran
+      program kmeans
+      real x(12,1),cent(2,1)
+      real sums(2,1),dist,best,delta
+      integer count(2),labels(12),i,j,k,it,c,cs
+      do 10 i=1,12
+        c=i-1-2*((i-1)/2)
+        do 11 j=1,1
+          k=i*7+j*3
+          x(i,j)=10.*c+(k-16*(k/16))*0.0625
+   11   continue
+   10 continue
+      do 12 k=1,2
+        do 13 j=1,1
+          cent(k,j)=x(k,j)
+   13   continue
+   12 continue
+      do 50 it=1,10
+        do 20 k=1,2
+          count(k)=0
+          do 21 j=1,1
+            sums(k,j)=0.
+   21     continue
+   20   continue
+        do 30 i=1,12
+          c=1
+          best=1.e10
+          do 31 k=1,2
+            dist=0.
+            do 32 j=1,1
+              delta=x(i,j)-cent(k,j)
+              dist=dist+delta*delta
+   32       continue
+            if (dist .ge. best) goto 31
+            best=dist
+            c=k
+   31     continue
+          labels(i)=c
+          count(c)=count(c)+1
+          do 33 j=1,1
+            sums(c,j)=sums(c,j)+x(i,j)
+   33     continue
+   30   continue
+        do 40 k=1,2
+          if (count(k) .eq. 0) goto 40
+          do 41 j=1,1
+            cent(k,j)=sums(k,j)/count(k)
+   41     continue
+   40   continue
+   50 continue
+      cs=0
+      do 60 i=1,12
+        cs=cs+labels(i)
+   60 continue
+      iz001=12
+      iz002=1
+      iz003=2
+      print 100,iz001,iz002,iz003,cs,cent(1,1)
+      print 110, cent(2,1)
+      stop
+  100 format('RESULT',4i12,f18.6)
+  110 format('EXTRA',f18.6)
+      end
+*execute
+*end file

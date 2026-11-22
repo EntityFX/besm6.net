@@ -1,0 +1,37 @@
+*name scale stump
+*fortran
+      program stump
+      real x(256),th
+      integer y(256),i,t,d,e,best,bt,bd,pred
+      do 10 i=1,256
+        x(i)=i
+        y(i)=0
+        if (i .gt. 128) y(i)=1
+   10 continue
+      best=257
+      bt=0
+      bd=0
+      do 40 t=1,255
+        th=t+0.5
+        do 30 d=1,2
+          e=0
+          do 20 i=1,256
+            pred=0
+            if (x(i) .ge. th) pred=1
+            if (d .eq. 2) pred=1-pred
+            if (pred .ne. y(i)) e=e+1
+   20     continue
+          if (e .ge. best) goto 30
+          best=e
+          bt=t
+          bd=d
+   30   continue
+   40 continue
+      th=bt+0.5
+      iz001=256
+      print 100,iz001,bd,best,th
+      stop
+  100 format('RESULT',3i12,f18.6)
+      end
+*execute
+*end file

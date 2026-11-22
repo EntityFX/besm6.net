@@ -1,0 +1,52 @@
+*name scale genetic
+*fortran
+      program genalg
+      integer pop(32),fit(32)
+      integer i,gen,i1,i2,p1,p2,child,bx,bf,cs
+      do 10 i=1,32
+        child=37*i+7
+        pop(i)=child-1024*(child/1024)
+   10 continue
+      do 50 gen=1,64
+        do 20 i=1,32
+          fit(i)=pop(i)*pop(i)
+   20   continue
+        i1=1
+        do 21 i=2,32
+          if (fit(i) .gt. fit(i1)) i1=i
+   21   continue
+        i2=0
+        do 22 i=1,32
+          if (i .eq. i1) goto 22
+          if (i2 .eq. 0) i2=i
+          if (fit(i) .gt. fit(i2)) i2=i
+   22   continue
+        p1=pop(i1)
+        p2=pop(i2)
+        pop(1)=p1
+        pop(2)=p2
+        do 30 i=3,32
+          child=(p1/32)*32+p2-32*(p2/32)
+          if (i-2*(i/2) .eq. 0) goto 31
+          child=(p2/32)*32+p1-32*(p1/32)
+   31     child=child+2*i+gen
+          pop(i)=child-1024*(child/1024)
+   30   continue
+   50 continue
+      bx=pop(1)
+      bf=bx*bx
+      cs=0
+      do 60 i=1,32
+        cs=cs+pop(i)
+        if (pop(i)*pop(i) .le. bf) goto 60
+        bx=pop(i)
+        bf=bx*bx
+   60 continue
+      iz001=32
+      iz002=64
+      print 100,iz001,iz002,bx,bf,cs
+      stop
+  100 format('RESULT',5i12)
+      end
+*execute
+*end file
