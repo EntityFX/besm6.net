@@ -1,0 +1,583 @@
+*name startrek
+*no list
+*no load list
+*fortran
+      subroutine rdinp(a, b)
+      integer a, b
+      read(54, 10) a
+   10 format(a6)
+      b = a
+      return
+      end
+*pascal
+program startrek(output, input);
+type
+  iarr8 = array [1..8] of integer;
+  iarr9 = array [1..9] of integer;
+  map8  = array [1..8, 1..8] of integer;
+var
+  gal: map8;
+  sec: map8;
+  kx, ky, ke: iarr9;
+  dam: iarr8;
+  qx, qy, sx, sy: integer;
+  nk, nb, ns: integer;
+  totk, totb: integer;
+  days, sd0: integer;
+  energy, shield, torp: integer;
+  alive, won: boolean;
+  cmd: char;
+  seed: integer;
+  i: integer;
+
+procedure rdinp(var a, b: alfa); fortran;
+
+function irand(n: integer): integer;
+var r: integer;
+begin
+  seed := (seed * 25173 + 13849) mod 65536;
+  r := (seed mod n) + 1;
+  if r < 1 then r := 1;
+  if r > n then r := n;
+  irand := r
+end;
+
+procedure readc(var c: char);
+var s: alfa;
+    t: integer;
+begin
+  c := ' ';
+  t := 0;
+  while (c = ' ') and (t < 100) do
+  begin
+    rdinp(s, s);
+    c := s[1];
+    t := t + 1
+  end;
+  if c = ' ' then c := 'Q';
+  if (c <> 'N') and (c <> 'n') and (c <> 'S') and (c <> 's') and
+     (c <> 'L') and (c <> 'l') and (c <> 'P') and (c <> 'p') and
+     (c <> 'T') and (c <> 't') and (c <> 'R') and (c <> 'r') and
+     (c <> 'D') and (c <> 'd') and (c <> 'H') and (c <> 'h') and
+     (c <> 'Q') and (c <> 'q') then
+    if (t > 5) or (ord(c) < ord('A')) or (ord(c) > ord('z')) or
+       ((ord(c) > ord('Z')) and (ord(c) < ord('a'))) then
+      c := 'Q'
+end;
+
+procedure readi(var v: integer);
+var s: alfa;
+    i, sign, n: integer;
+    ch: char;
+    done: boolean;
+begin
+  rdinp(s, s);
+  v := 0;
+  sign := 1;
+  n := 0;
+  done := false;
+  for i := 1 to 10 do
+  begin
+    if not done then
+    begin
+      ch := s[i];
+      if (ch = '-') and (n = 0) then sign := -1
+      else if (ch >= '0') and (ch <= '9') then
+      begin
+        v := v * 10 + (ord(ch) - ord('0'));
+        n := n + 1
+      end
+      else if n > 0 then done := true
+    end
+  end;
+  v := v * sign
+end;
+
+procedure place(var r, c: integer);
+var t, i, j: integer;
+    found: boolean;
+begin
+  t := 0;
+  repeat
+    r := irand(8);
+    c := irand(8);
+    t := t + 1
+  until (sec[r,c] = 0) or (t > 200);
+  if sec[r,c] <> 0 then
+  begin
+    found := false;
+    for i := 1 to 8 do
+      for j := 1 to 8 do
+        if (not found) and (sec[i,j] = 0) then
+        begin
+          r := i; c := j; found := true
+        end;
+    if not found then begin r := 1; c := 1 end
+  end
+end;
+
+procedure initgal;
+var i, j, k, b, st, r: integer;
+begin
+  seed := 12345;
+  totk := 0; totb := 0;
+  for i := 1 to 8 do
+    for j := 1 to 8 do
+    begin
+      k := 0;
+      r := irand(100);
+      if r > 98 then k := 3
+      else if r > 95 then k := 2
+      else if r > 80 then k := 1;
+      b := 0;
+      if irand(100) > 96 then b := 1;
+      st := irand(8);
+      gal[i,j] := k * 100 + b * 10 + st;
+      totk := totk + k;
+      totb := totb + b
+    end;
+  if totb = 0 then
+  begin
+    i := irand(8); j := irand(8);
+    gal[i,j] := gal[i,j] - (gal[i,j] mod 100) div 10 * 10 + 10;
+    totb := 1
+  end;
+  if totk < 8 then
+  begin
+    i := irand(8); j := irand(8);
+    gal[i,j] := gal[i,j] + 100;
+    totk := totk + 1
+  end;
+  qx := irand(8); qy := irand(8);
+  sx := irand(8); sy := irand(8);
+  days := 30 + totk * 2;
+  sd0 := 2000 + irand(1000);
+  energy := 3000; shield := 0; torp := 10;
+  for i := 1 to 8 do dam[i] := 0
+end;
+
+procedure enterq;
+var i, j, v, r, c: integer;
+begin
+  for i := 1 to 8 do
+    for j := 1 to 8 do sec[i,j] := 0;
+  v := gal[qx,qy];
+  nk := v div 100;
+  nb := (v mod 100) div 10;
+  ns := v mod 10;
+  if (sx < 1) or (sx > 8) then sx := irand(8);
+  if (sy < 1) or (sy > 8) then sy := irand(8);
+  sec[sx,sy] := 1;
+  for i := 1 to 9 do begin kx[i] := 0; ky[i] := 0; ke[i] := 0 end;
+  for i := 1 to nk do
+  begin
+    place(r, c);
+    sec[r,c] := 2;
+    kx[i] := r; ky[i] := c;
+    ke[i] := 200 + irand(100)
+  end;
+  if nb > 0 then
+  begin
+    place(r, c);
+    sec[r,c] := 3
+  end;
+  for i := 1 to ns do
+  begin
+    place(r, c);
+    sec[r,c] := 4
+  end
+end;
+
+function docked: boolean;
+var i, j, x, y: integer;
+begin
+  docked := false;
+  for i := -1 to 1 do
+    for j := -1 to 1 do
+    begin
+      x := sx + i; y := sy + j;
+      if (x >= 1) and (x <= 8) and (y >= 1) and (y <= 8) then
+        if sec[x,y] = 3 then docked := true
+    end
+end;
+
+procedure repair;
+var i, fixed: integer;
+begin
+  if docked then
+  begin
+    fixed := 0;
+    for i := 1 to 8 do
+      if dam[i] > 0 then
+      begin
+        dam[i] := dam[i] - 1;
+        if dam[i] = 0 then fixed := 1
+      end;
+    energy := 3000; shield := 0; torp := 10;
+    if fixed = 1 then writeln(' Starbase repairs completed.')
+  end
+end;
+
+procedure srs;
+var i, j, v, sd: integer;
+    c: char;
+begin
+  sd := sd0 + (30 + totk * 2 - days);
+  if docked then
+    writeln(' Stardate ', sd:4, ' Q', qx:1, ',', qy:1,
+            ' S', sx:1, ',', sy:1, ' DOCKED')
+  else
+    writeln(' Stardate ', sd:4, ' Q', qx:1, ',', qy:1,
+            ' S', sx:1, ',', sy:1);
+  writeln(' Energy ', energy:4, ' Shields ', shield:4,
+          ' Torps ', torp:2, ' Klingons ', totk:2, ' Days ', days:2);
+  writeln('   +---+---+---+---+---+---+---+---+');
+  for i := 1 to 8 do
+  begin
+    write(i:2, ' |');
+    for j := 1 to 8 do
+    begin
+      v := sec[i,j];
+      c := '.';
+      if v = 1 then c := 'E';
+      if v = 2 then c := 'K';
+      if v = 3 then c := 'B';
+      if v = 4 then c := '*';
+      write(' ', c, ' |')
+    end;
+    writeln
+  end;
+  writeln('   +---+---+---+---+---+---+---+---+');
+  if dam[2] > 0 then writeln(' S.R. sensors damaged.')
+end;
+
+procedure lrs;
+var i, j, x, y, v: integer;
+begin
+  if dam[3] > 0 then
+    writeln(' L.R. sensors damaged.')
+  else
+  begin
+    writeln(' Long range scan for quadrant ', qx:1, ',', qy:1);
+    for i := -1 to 1 do
+    begin
+      x := qx + i;
+      for j := -1 to 1 do
+      begin
+        y := qy + j;
+        if (x < 1) or (x > 8) or (y < 1) or (y > 8) then v := -1
+        else v := gal[x,y];
+        if v < 0 then write('  ***')
+        else write(v:5)
+      end;
+      writeln
+    end
+  end
+end;
+
+procedure damrep;
+var i: integer;
+begin
+  writeln(' Device        Damage');
+  writeln(' Warp Engines  ', dam[1]:3);
+  writeln(' S.R. Sensors  ', dam[2]:3);
+  writeln(' L.R. Sensors  ', dam[3]:3);
+  writeln(' Phasers       ', dam[4]:3);
+  writeln(' Torpedoes     ', dam[5]:3);
+  writeln(' Damage Ctrl   ', dam[6]:3);
+  writeln(' Shields       ', dam[7]:3);
+  writeln(' Computer      ', dam[8]:3)
+end;
+
+procedure help;
+begin
+  writeln(' Commands:');
+  writeln('  N - Navigate (warp)');
+  writeln('  S - Short range scan');
+  writeln('  L - Long range scan');
+  writeln('  P - Fire phasers');
+  writeln('  T - Fire torpedo');
+  writeln('  R - Shields');
+  writeln('  D - Damage report');
+  writeln('  H - Help');
+  writeln('  Q - Quit');
+  writeln(' Course: 1=up 2=up-right 3=right 4=down-right');
+  writeln('         5=down 6=down-left 7=left 8=up-left')
+end;
+
+procedure kattack;
+var i, dx, dy, dist, hit: integer;
+begin
+  if docked then
+    writeln(' Starbase shields protect Enterprise.')
+  else
+    for i := 1 to nk do
+      if alive and (ke[i] > 0) then
+      begin
+        dx := kx[i] - sx; dy := ky[i] - sy;
+        dist := 1 + dx*dx + dy*dy;
+        hit := ke[i] div dist;
+        if hit < 1 then hit := 1;
+        shield := shield - hit;
+        writeln(' Klingon hits for ', hit:4, ' from ', kx[i]:1, ',',
+                ky[i]:1, ' shields=', shield:4);
+        if shield < 0 then
+        begin
+          energy := energy + shield;
+          shield := 0;
+          writeln(' Shields down! Energy=', energy:4)
+        end;
+        if energy <= 0 then alive := false
+      end
+end;
+
+procedure pha;
+var amt, i, hit, dx, dy, dist: integer;
+begin
+  if dam[4] > 0 then writeln(' Phasers damaged.')
+  else if nk <= 0 then writeln(' No Klingons here.')
+  else
+  begin
+    writeln(' Phasers. Energy available=', energy:4, '. Amount:');
+    readi(amt);
+    if (amt <= 0) or (amt > energy) then
+      writeln(' Invalid phaser energy.')
+    else
+    begin
+      energy := energy - amt;
+      for i := 1 to nk do
+        if ke[i] > 0 then
+        begin
+          dx := kx[i] - sx; dy := ky[i] - sy;
+          dist := 1 + dx*dx + dy*dy;
+          hit := amt div dist;
+          if hit < 1 then hit := 1;
+          ke[i] := ke[i] - hit;
+          writeln(' Hit ', hit:4, ' on K at ', kx[i]:1, ',', ky[i]:1,
+                  ' remaining=', ke[i]:4);
+          if ke[i] <= 0 then
+          begin
+            writeln(' Klingon destroyed at ', kx[i]:1, ',', ky[i]:1);
+            sec[kx[i], ky[i]] := 0;
+            nk := nk - 1;
+            totk := totk - 1;
+            gal[qx,qy] := gal[qx,qy] - 100
+          end
+        end;
+      if totk <= 0 then won := true
+    end
+  end
+end;
+
+procedure tor;
+var dir, i, x, y, dx, dy, step: integer;
+    done: boolean;
+begin
+  if dam[5] > 0 then writeln(' Torpedo tubes damaged.')
+  else if torp <= 0 then writeln(' No torpedoes left.')
+  else
+  begin
+    writeln(' Torpedo course (1-8):');
+    readi(dir);
+    if (dir < 1) or (dir > 8) then
+      writeln(' Invalid course.')
+    else
+    begin
+      torp := torp - 1;
+      dx := 0; dy := 0;
+      if (dir = 1) or (dir = 2) or (dir = 8) then dx := -1;
+      if (dir = 4) or (dir = 5) or (dir = 6) then dx := 1;
+      if (dir = 2) or (dir = 3) or (dir = 4) then dy := 1;
+      if (dir = 6) or (dir = 7) or (dir = 8) then dy := -1;
+      x := sx; y := sy;
+      writeln(' Torpedo track:');
+      done := false;
+      for step := 1 to 8 do
+      begin
+        if not done then
+        begin
+          x := x + dx; y := y + dy;
+          if (x < 1) or (x > 8) or (y < 1) or (y > 8) then
+          begin
+            writeln(' Torpedo missed.');
+            done := true
+          end
+          else
+          begin
+            writeln('  ', x:1, ',', y:1);
+            if sec[x,y] = 2 then
+            begin
+              writeln(' Klingon destroyed at ', x:1, ',', y:1);
+              sec[x,y] := 0;
+              for i := 1 to 9 do
+                if (kx[i] = x) and (ky[i] = y) then ke[i] := 0;
+              nk := nk - 1; totk := totk - 1;
+              gal[qx,qy] := gal[qx,qy] - 100;
+              if totk <= 0 then won := true;
+              done := true
+            end
+            else if sec[x,y] = 3 then
+            begin
+              writeln(' Starbase destroyed! You monster.');
+              sec[x,y] := 0; totb := totb - 1;
+              gal[qx,qy] := gal[qx,qy] - 10;
+              done := true
+            end
+            else if sec[x,y] = 4 then
+            begin
+              writeln(' Star at ', x:1, ',', y:1, ' absorbed torpedo.');
+              sec[x,y] := 0;
+              gal[qx,qy] := gal[qx,qy] - 1;
+              done := true
+            end
+          end
+        end
+      end;
+      if not done then writeln(' Torpedo missed.')
+    end
+  end
+end;
+
+procedure nav;
+var dir, warp, i, x, y, dx, dy, step, nq, nsx, nsy: integer;
+    ok, stopped: boolean;
+begin
+  ok := true;
+  if dam[1] > 0 then
+  begin
+    writeln(' Warp engines damaged.');
+    ok := false
+  end;
+  if ok then
+  begin
+    writeln(' Course (1-8):');
+    readi(dir);
+    if (dir < 1) or (dir > 8) then
+    begin
+      writeln(' Invalid course.');
+      ok := false
+    end
+  end;
+  if ok then
+  begin
+    writeln(' Warp factor (1-8):');
+    readi(warp);
+    if (warp < 1) or (warp > 8) then
+    begin
+      writeln(' Invalid warp.');
+      ok := false
+    end
+  end;
+  if ok then
+    if warp * 8 > energy then
+    begin
+      writeln(' Insufficient energy.');
+      ok := false
+    end;
+  if ok then
+  begin
+    dx := 0; dy := 0;
+    if (dir = 1) or (dir = 2) or (dir = 8) then dx := -1;
+    if (dir = 4) or (dir = 5) or (dir = 6) then dx := 1;
+    if (dir = 2) or (dir = 3) or (dir = 4) then dy := 1;
+    if (dir = 6) or (dir = 7) or (dir = 8) then dy := -1;
+    sec[sx,sy] := 0;
+    x := (qx - 1) * 8 + sx - 1;
+    y := (qy - 1) * 8 + sy - 1;
+    stopped := false;
+    for step := 1 to warp * 8 do
+    begin
+      if not stopped then
+      begin
+        x := x + dx; y := y + dy;
+        if (x < 0) or (x > 63) or (y < 0) or (y > 63) then
+        begin
+          writeln(' Edge of galaxy. Maneuver stopped.');
+          x := x - dx; y := y - dy;
+          stopped := true
+        end
+        else
+        begin
+          nsx := (x mod 8) + 1;
+          nsy := (y mod 8) + 1;
+          nq := 0;
+          if (x div 8 + 1 <> qx) or (y div 8 + 1 <> qy) then nq := 1;
+          if (nq = 0) and (sec[nsx,nsy] <> 0) and (step > 1) then
+          begin
+            x := x - dx; y := y - dy;
+            nsx := (x mod 8) + 1; nsy := (y mod 8) + 1;
+            writeln(' Blocked at ', nsx:1, ',', nsy:1);
+            stopped := true
+          end
+        end
+      end
+    end;
+    energy := energy - warp * 8;
+    days := days - 1;
+    nsx := (x mod 8) + 1; nsy := (y mod 8) + 1;
+    nq := 0;
+    if (x div 8 + 1 <> qx) or (y div 8 + 1 <> qy) then nq := 1;
+    qx := x div 8 + 1; qy := y div 8 + 1;
+    sx := nsx; sy := nsy;
+    if nq = 1 then enterq
+    else sec[sx,sy] := 1;
+    for i := 1 to 8 do if dam[i] > 0 then dam[i] := dam[i] - 1
+  end
+end;
+
+begin
+  initgal;
+  enterq;
+  alive := true; won := false;
+  writeln(' MICRO STAR TREK FOR BESM-6');
+  write(' Mission: destroy ', totk:1, ' Klingons in ');
+  writeln(days:1, ' stardates.');
+  writeln(' Starbases: ', totb:1, '. Type H for help.');
+  repair;
+  srs;
+  while alive and (not won) do
+  begin
+    repair;
+    write(' Command (N/S/L/P/T/R/D/H/Q): ');
+    readc(cmd);
+    if (cmd = 'q') or (cmd = 'Q') then alive := false
+    else if (cmd = 'h') or (cmd = 'H') then help
+    else if (cmd = 's') or (cmd = 'S') then srs
+    else if (cmd = 'l') or (cmd = 'L') then lrs
+    else if (cmd = 'd') or (cmd = 'D') then damrep
+    else if (cmd = 'r') or (cmd = 'R') then
+    begin
+      if dam[7] > 0 then writeln(' Shields damaged.')
+      else begin
+        write(' Energy=', energy:4, ' Shields=', shield:4);
+        writeln('. New value:');
+        readi(i);
+        if (i >= 0) and (i <= energy + shield) then
+        begin
+          energy := energy + shield - i;
+          shield := i;
+          writeln(' Shields=', shield:4, ' Energy=', energy:4)
+        end else writeln(' Invalid.')
+      end
+    end
+    else if (cmd = 'p') or (cmd = 'P') then
+    begin
+      pha; kattack; if totk <= 0 then won := true
+    end
+    else if (cmd = 't') or (cmd = 'T') then
+    begin
+      tor; kattack; if totk <= 0 then won := true
+    end
+    else if (cmd = 'n') or (cmd = 'N') then
+    begin
+      nav; if days <= 0 then alive := false
+    end
+    else writeln(' Unknown command. H for help.');
+  end;
+  if won then writeln(' MISSION ACCOMPLISHED!')
+  else writeln(' Mission ended. Klingons left: ', totk:1);
+  writeln(' Final: E=', energy:1, ' Sh=', shield:1, ' T=', torp:1)
+end.
+*library:22
+*execute
+*end file
