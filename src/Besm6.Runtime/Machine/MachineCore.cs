@@ -33,6 +33,7 @@ namespace Besm6.Runtime
         public IHostMemory Memory { get; }
         public ICommandMemory CommandMemory { get; }
         public MemoryModel MemoryModel { get; }
+        public bool UsesHostedSupervisorServices { get; }
         /// <summary>Present only for the opt-in functional buffered memory backend.</summary>
         public BufferedMemoryBackend? BufferedMemory { get; }
         /// <summary>Mathematical memory, optionally coupled to the supervisor CPU profile.</summary>
@@ -117,6 +118,12 @@ namespace Besm6.Runtime
             : this(profile == ProcessorProfile.Supervisor ? MemoryModel.Mapped : MemoryModel.Dubna,
                 profile, ConfigurationSize(configuration), puncherOutputDir, configuration) { }
 
+        /// <summary>Functional supervisor CPU with a separate mathematical job space and
+        /// explicit host-serviced Dubna extracodes. Not a booted guest dispatcher or hardware mode.</summary>
+        public static MachineCore CreateHostedSupervisor(string? puncherOutputDir = null) =>
+            new(MemoryModel.Mapped, ProcessorProfile.Supervisor, ConfigurationSize(MemoryConfiguration.Simh512K),
+                puncherOutputDir, MemoryConfiguration.Simh512K, hostedSupervisorServices: true);
+
         private static uint ConfigurationSize(MemoryConfiguration configuration) => configuration switch
         {
             MemoryConfiguration.Classical32K => ArchitectureConstants.WordCount,
@@ -127,7 +134,8 @@ namespace Besm6.Runtime
         public SupervisorIoController? SupervisorIo { get; }
 
         private MachineCore(MemoryModel memoryModel, ProcessorProfile profile, uint memorySize, string? puncherOutputDir,
-            MemoryConfiguration configuration = MemoryConfiguration.Classical32K, bool hostedBufferedMemory = false)
+            MemoryConfiguration configuration = MemoryConfiguration.Classical32K, bool hostedBufferedMemory = false,
+            bool hostedSupervisorServices = false)
         {
             if (!Enum.IsDefined(profile)) throw new ArgumentOutOfRangeException(nameof(profile));
             if (configuration != MemoryConfiguration.Classical32K && profile != ProcessorProfile.Supervisor)
@@ -136,6 +144,7 @@ namespace Besm6.Runtime
             IHostMemory hostMemory;
             ICommandMemory commandMemory;
             MemoryModel = memoryModel;
+            UsesHostedSupervisorServices = hostedSupervisorServices;
             switch (memoryModel)
             {
                 case MemoryModel.Dubna:
@@ -156,8 +165,18 @@ namespace Besm6.Runtime
                     if (memorySize != ConfigurationSize(configuration))
                         throw new ArgumentOutOfRangeException(nameof(memorySize), "Mapped capacity must match its explicit configuration.");
                     MappedMemory = new MappedMemoryBackend(configuration);
+                    if (hostedSupervisorServices)
+                    {
+                        // Mathematical page zero must not alias the privileged panel or the
+                        // closed-command page. Reserve physical pages 1..32 in explicit expanded storage.
+                        for (uint page = 0; page < PageAssignment.PageCount; page++)
+                            MappedMemory.SetPhysicalPage(page, page + 1);
+                    }
                     cpuMemory = MappedMemory;
-                    hostMemory = MappedMemory.HostMemory;
+                    hostMemory = hostedSupervisorServices ? new HostedSupervisorMemory(MappedMemory) : MappedMemory.HostMemory;
+                    if (hostedSupervisorServices)
+                        for (uint address = 0; address < ArchitectureConstants.WordCount; address++)
+                            hostMemory.Write(address, Word48.Zero);
                     commandMemory = MappedMemory;
                     break;
                 default:

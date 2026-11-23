@@ -34,6 +34,8 @@ public partial class MachineCore
         EnsureOwnerSwitchAllowed();
         if (Cpu.Profile != ProcessorProfile.Supervisor || MappedMemory is null || SupervisorIo is null)
             throw new InvalidOperationException("Hardware execution requires the supervisor machine profile.");
+        if (UsesHostedSupervisorServices)
+            throw new InvalidOperationException("Hosted supervisor services support functional execution only; use a native machine JSON for hardware execution.");
         if (_hardwareConfiguration is not null && !ReferenceEquals(_hardwareConfiguration, configuration))
             throw new InvalidOperationException("Reuse this machine's selected hardware configuration.");
         SupervisorIo.EnsureCalendarSwitchAllowed();

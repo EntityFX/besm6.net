@@ -11,10 +11,9 @@
     jobFormat = format;
     const supervisor = $('machineModel').value.startsWith('supervisor-');
     if (format === 'json' && !supervisor) $('machineModel').value = 'supervisor-functional';
-    else if (format === 'dub' && supervisor) $('machineModel').value = 'dubna';
   };
   let terminalPending = false;
-  let activeMode = 'debug', state = 'Idle';
+  let activeMode = 'full', state = 'Idle';
   let memoryAddress = -1, snapshotPending = false, snapshotStarted = 0, plotterFrame = 0;
   let plotterPage = 0;
   let numberBase = 8, lastRegisters = null, lastMemory = [], lastMounts = [];
@@ -39,7 +38,7 @@
     $('file').disabled = !ready || uploading || active;
     $('dropzone').setAttribute('aria-disabled', String($('file').disabled));
     document.querySelectorAll('input[name=mode], #speed, #machineModel, #instructionLimit, #wallClockLimit, #guestClock, #statistics')
-      .forEach(input => { input.disabled = active; });
+      .forEach(input => { input.disabled = active || uploading; });
     $('inspect').disabled = !ready || ['Loading', 'WaitingInput'].includes(state) || (!hasSnapshot && !['Running', 'Paused'].includes(state));
   };
   const showError = e => { ui('error', e?.message || String(e)); };
@@ -94,7 +93,9 @@
     $('memory').textContent = lastMemory.map(w => `${formatNumber(w.address, 8).padStart(addressWidth(), '0')}  ${formatNumber(w.hex, 16, 48)}${$('decodeMemory').checked && w.disassembly != null ? '  ' + Besm6Source.disassembly(w.disassembly, numberBase) : ''}`).join('\n');
   };
   const renderDetailedState = d => {
-    ui('machineStateInfo', d ? `${d.memoryModel} / ${d.executionModel}` + (d.hardwareNanoseconds == null ? ' · ' + t('Read buffers require hardware mode') : ` · ${d.hardwareNanoseconds} ns`) : 'Состояние появится после загрузки машины.');
+    ui('machineStateInfo', d ? `${d.memoryModel} / ${d.executionModel}`
+      + (d.serviceRuntime === 'HostedDubna' ? ' · ' + t('Hosted Dubna services') : '')
+      + (d.hardwareNanoseconds == null ? ' · ' + t('Read buffers require hardware mode') : ` · ${d.hardwareNanoseconds} ns`) : 'Состояние появится после загрузки машины.');
     $('machineRegisters').textContent = d ? [
       ...[...d.buffers.filter(b => b.name === 'БРЧ'), ...d.buffers.filter(b => b.name !== 'БРЧ')].map(b => `${b.name}[${b.slot}] ${formatNumber(String(b.value), 10, 48)}${b.address == null ? '' : ' @' + formatNumber(String(b.address), 10, 16)}${b.active == null ? '' : ' · active=' + Number(b.active)}${b.ready == null ? '' : ' ready=' + Number(b.ready)}${b.pendingWrite == null ? '' : ' pendingWrite=' + Number(b.pendingWrite)}`),
       ...(d.controlFlags == null ? [] : [`УУ ${formatNumber(String(d.controlFlags),10)} · ${t('interrupts')} ${formatNumber(String(d.interrupts),10,48)}`]),
@@ -162,6 +163,7 @@
       if (options[id] != null) $(id).checked = options[id];
     if (options.mode != null) document.querySelector(`input[name=mode][value="${options.mode}"]`).checked = true;
     if (options.speed != null) $('wallClockLimit').value = '0';
+    window.dispatchEvent(new Event('exampleSelectionChanged'));
   });
   connection.on('mediaUploaded', data => media.uploaded(data));
   connection.on('workerEvent', event => {
@@ -243,7 +245,7 @@
   $('file').addEventListener('change', e => upload(e.target.files[0]));
   $('machineModel').addEventListener('change', async () => {
     const model = $('machineModel').value;
-    if (!ready || uploading || activeStates.has(state) || !model.startsWith('supervisor-') || (uploaded && jobFormat === 'json')) return;
+    if (!ready || uploading || activeStates.has(state) || model !== 'supervisor-hardware' || uploaded) return;
     uploading = true; refreshButtons();
     try {
       await connection.invoke('LoadExample', `machines/${model}.json`);
@@ -294,9 +296,10 @@
   drop.addEventListener('drop', e => upload(e.dataTransfer.files[0]));
   $('run').addEventListener('click', async () => {
     if ($('run').disabled) return;
-    if ((jobFormat === 'json') !== $('machineModel').value.startsWith('supervisor-')) {
+    if ((jobFormat === 'json' && !$('machineModel').value.startsWith('supervisor-'))
+      || (jobFormat === 'dub' && $('machineModel').value === 'supervisor-hardware')) {
       showError({message: jobFormat === 'dub'
-        ? 'Supervisor требует конфигурацию машины .json. Для задания .dub выберите Dubna; пример JSON доступен в Editor → Machine JSON template.'
+        ? 'Hardware Supervisor cannot run .dub jobs yet. Select Supervisor — functional to run this job; the selected model has not been changed.'
         : 'Загружена конфигурация машины .json. Выберите Supervisor — functional или hardware.'});
       return;
     }
@@ -365,14 +368,11 @@
     const { id, text } = e.detail;
     $('sourceText').value = text;
     $('sourceText').dispatchEvent(new Event('input'));
-    const isJson = id.endsWith('.json');
-    const supervisor = $('machineModel').value.startsWith('supervisor-');
-    if (isJson && !supervisor) $('machineModel').value = 'supervisor-functional';
-    else if (!isJson && supervisor) $('machineModel').value = 'dubna';
+    selectJobFormat(id.endsWith('.json') ? 'json' : 'dub');
     if (ready && !uploading && !activeStates.has(state)) {
       try {
         uploading = true; refreshButtons();
-        await connection.invoke('UploadText', text);
+        await connection.invoke('LoadExample', id);
         $('file').value = ''; $('error').textContent = '';
       } catch (error) { showError(error); }
       finally { uploading = false; refreshButtons(); }
@@ -382,16 +382,6 @@
   // При смене профиля машины — перефильтровать примеры и сбросить несовместимое состояние
   $('machineModel').addEventListener('change', () => {
     window.dispatchEvent(new Event('exampleSelectionChanged'));
-    const supervisor = $('machineModel').value.startsWith('supervisor-');
-    const current = $('exampleSelect').value;
-    if (current && ((supervisor && !current.endsWith('.json')) || (!supervisor && current.endsWith('.json')))) {
-      $('exampleSelect').value = '';
-      $('exampleSource').textContent = 'Выберите пример для просмотра.';
-      $('sourceText').value = '';
-      $('sourceText').dispatchEvent(new Event('input'));
-      uploaded = false;
-      refreshButtons();
-    }
   });
 
   const refreshTimer = setInterval(() => {

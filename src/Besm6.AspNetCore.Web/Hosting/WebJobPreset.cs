@@ -38,7 +38,7 @@ public sealed class WebJobPreset
         if (kind.ValueKind != JsonValueKind.String || kind.GetString() != "web-job") throw new ArgumentException("Unknown job preset kind.");
         var preset = JsonSerializer.Deserialize<WebJobPreset>(document.RootElement.GetRawText(), new JsonSerializerOptions {
             PropertyNameCaseInsensitive = true, UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow })!;
-        if (preset.MachineModel is not ("dubna" or "buffered") || preset.Speed is not ("max" or "original" or "virtual")
+        if (preset.MachineModel is not ("dubna" or "buffered" or "supervisor-functional") || preset.Speed is not ("max" or "original" or "virtual")
             || preset.Mode is not ("full" or "debug") || preset.InstructionLimit is < 0 or > 1_000_000_000)
             throw new ArgumentException("Invalid preset machine, speed, mode or instruction limit.");
         if (!catalog.TryGetPath(preset.Example, out string path) || Path.GetExtension(path) != ".dub")

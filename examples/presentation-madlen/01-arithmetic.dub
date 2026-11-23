@@ -1,0 +1,37 @@
+*name arithmetic
+*madlen
+ PROGRAM: ,NAME,
+C BEGIN CODE
+          ,NTR,0
+          ,XTA,X
+          ,A+X,Y
+          ,ATX,RESULT
+C END CODE
+          ,XTA,RESULT
+          ,AEX,EXPECT
+          ,U1A,FAIL
+          ,*64,OKINFO
+          ,*74,
+ FAIL:    ,*64,BADINFO
+          ,*74,
+C BEGIN DATA
+ X:       ,REAL,2.
+ Y:       ,REAL,3.
+ RESULT:  ,REAL,0.
+C END DATA
+ EXPECT:  ,REAL,5.
+ OKINFO:  ,    ,OKTEXT
+          ,    ,OKTEXT
+          ,001,
+         8,    ,
+ BADINFO: ,    ,BADTEXT
+          ,    ,BADTEXT
+          ,001,
+         8,    ,
+ OKTEXT:  ,GOST,6HOK 01
+          ,GOST,6H'231'
+ BADTEXT: ,GOST,6HFAIL01
+          ,GOST,6H'231'
+          ,END,
+*execute
+*end file

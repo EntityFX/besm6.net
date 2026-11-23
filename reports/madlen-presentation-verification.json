@@ -1,0 +1,748 @@
+{
+  "method": "historical MADLEN translation, guest execution, exact runtime marker after *EXECUTE, STOP and stats",
+  "command": "dotnet <release-besm6.dll> run <job.dub> --speed <max|original> --stats --guest-clock --no-wall-clock",
+  "dllSha256": "869d6e06febbf54c479680dc29cd23f4ef7f6d0461c03a5ac82e4e3e80a642ea",
+  "summary": {
+    "presentationExamples": 8,
+    "baseRuns": 16,
+    "boundaryCases": 7,
+    "boundaryRuns": 14,
+    "negativeControls": 8,
+    "existingLearningExamples": 5,
+    "totalRuns": 43,
+    "passed": 43
+  },
+  "runs": [
+    {
+      "case": "01-arithmetic",
+      "source": "examples/presentation-madlen/01-arithmetic.dub",
+      "mode": "max",
+      "sourceSha256": "63ea903576c6dac19f1d5f13faa5d204003405333ff8aaa90164d4974f74755b",
+      "expectedMarker": "OK 01",
+      "observedMarkers": [
+        "OK 01"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 4973360,
+      "modelSeconds": 0.9041748,
+      "memorySha256": "5834DF00F2E1A14A37B5185B1E6E45C186387BD7D0A2C8043C7F7A13B6B1E08E",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01023\n?\n OK 01\nHalted by STOP at 0205 after 4973359 instructions"
+    },
+    {
+      "case": "01-arithmetic",
+      "source": "examples/presentation-madlen/01-arithmetic.dub",
+      "mode": "original",
+      "sourceSha256": "63ea903576c6dac19f1d5f13faa5d204003405333ff8aaa90164d4974f74755b",
+      "expectedMarker": "OK 01",
+      "observedMarkers": [
+        "OK 01"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 4973360,
+      "modelSeconds": 3.153826138,
+      "memorySha256": "B2D87337B83DEF4FD234F39AB5097980B6081F0E302D7B3F92990D97FCD86421",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01023\n?\n OK 01\nHalted by STOP at 0205 after 4973359 instructions"
+    },
+    {
+      "case": "02-logic",
+      "source": "examples/presentation-madlen/02-logic.dub",
+      "mode": "max",
+      "sourceSha256": "3a4bd5c794033aded3b5a18626ab7cef309749231c723a5c3da9d8ff7dcd3fff",
+      "expectedMarker": "OK 02",
+      "observedMarkers": [
+        "OK 02"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 4974787,
+      "modelSeconds": 0.9044239,
+      "memorySha256": "8AD4F38D05F454C6201DD72B42F05056FFC7930F527DE4BDFBB0E7C45CBA3885",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01023\n?\n OK 02\nHalted by STOP at 0205 after 4974786 instructions"
+    },
+    {
+      "case": "02-logic",
+      "source": "examples/presentation-madlen/02-logic.dub",
+      "mode": "original",
+      "sourceSha256": "3a4bd5c794033aded3b5a18626ab7cef309749231c723a5c3da9d8ff7dcd3fff",
+      "expectedMarker": "OK 02",
+      "observedMarkers": [
+        "OK 02"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 4974787,
+      "modelSeconds": 3.154718186,
+      "memorySha256": "1DC2610FC80B4D09058ED77F91CD7ABEAB17DD8981A3B1E64E03538220613F93",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01023\n?\n OK 02\nHalted by STOP at 0205 after 4974786 instructions"
+    },
+    {
+      "case": "03-branches",
+      "source": "examples/presentation-madlen/03-branches.dub",
+      "mode": "max",
+      "sourceSha256": "acccb2c60b473c68531fba932255e7754cbef1c290f0cee347dfdf67a63bb42e",
+      "expectedMarker": "OK 03",
+      "observedMarkers": [
+        "OK 03"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5009497,
+      "modelSeconds": 0.9099982999999999,
+      "memorySha256": "EB5D8832A7E32CD78B8BA5DF1B9FD969305467F322D507905953A6DD37EFC986",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01026\n?\n OK 03\nHalted by STOP at 0208 after 5009496 instructions"
+    },
+    {
+      "case": "03-branches",
+      "source": "examples/presentation-madlen/03-branches.dub",
+      "mode": "original",
+      "sourceSha256": "acccb2c60b473c68531fba932255e7754cbef1c290f0cee347dfdf67a63bb42e",
+      "expectedMarker": "OK 03",
+      "observedMarkers": [
+        "OK 03"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5009497,
+      "modelSeconds": 3.173134786,
+      "memorySha256": "19FF41F8C6E382CC6A1840D69838608756238E75EEF9EF6C1A5538C444F5FBFA",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01026\n?\n OK 03\nHalted by STOP at 0208 after 5009496 instructions"
+    },
+    {
+      "case": "04-index-registers",
+      "source": "examples/presentation-madlen/04-index-registers.dub",
+      "mode": "max",
+      "sourceSha256": "c6aba2a323d284448cbff124967d165ba9fccaecf84ec4ede54f40bdeeb1556e",
+      "expectedMarker": "OK 04",
+      "observedMarkers": [
+        "OK 04"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5043546,
+      "modelSeconds": 0.9154346999999999,
+      "memorySha256": "AEC057F770AAFB211F6EF7353C1EBE2AEF33164D21DFF015E3DAF40BF9E4B96A",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01030\n?\n OK 04\nHalted by STOP at 0208 after 5043545 instructions"
+    },
+    {
+      "case": "04-index-registers",
+      "source": "examples/presentation-madlen/04-index-registers.dub",
+      "mode": "original",
+      "sourceSha256": "c6aba2a323d284448cbff124967d165ba9fccaecf84ec4ede54f40bdeeb1556e",
+      "expectedMarker": "OK 04",
+      "observedMarkers": [
+        "OK 04"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5043546,
+      "modelSeconds": 3.19096792,
+      "memorySha256": "A1C5305D0A20CE6A87A31AD3775B72D9D16CE9C3DD56FB47E85651E01C410472",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01030\n?\n OK 04\nHalted by STOP at 0208 after 5043545 instructions"
+    },
+    {
+      "case": "05-arrays",
+      "source": "examples/presentation-madlen/05-arrays.dub",
+      "mode": "max",
+      "sourceSha256": "53667896b68ebee6611c9ccdc052acd35a177c5475c7696db2c06ecbd1856479",
+      "expectedMarker": "OK 05",
+      "observedMarkers": [
+        "OK 05"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5106631,
+      "modelSeconds": 0.9256055,
+      "memorySha256": "9F5B3B3002023C583E6AF757CD576DB57CD59E45529A99FD89CE266D43FAE0EF",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01035\n?\n OK 05\nHalted by STOP at 020A after 5106630 instructions"
+    },
+    {
+      "case": "05-arrays",
+      "source": "examples/presentation-madlen/05-arrays.dub",
+      "mode": "original",
+      "sourceSha256": "53667896b68ebee6611c9ccdc052acd35a177c5475c7696db2c06ecbd1856479",
+      "expectedMarker": "OK 05",
+      "observedMarkers": [
+        "OK 05"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5106631,
+      "modelSeconds": 3.224410724,
+      "memorySha256": "0D4FE215443E122AAF219B57DB2D1F7393DFBDB3F5CE880C0A45A5A0FCE4AB85",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01035\n?\n OK 05\nHalted by STOP at 020A after 5106630 instructions"
+    },
+    {
+      "case": "06-loops",
+      "source": "examples/presentation-madlen/06-loops.dub",
+      "mode": "max",
+      "sourceSha256": "ddb6b7584826568e26344205bc2ce378ae0be539f5c5dd4e8282ede16b5cc66c",
+      "expectedMarker": "OK 06",
+      "observedMarkers": [
+        "OK 06"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5097081,
+      "modelSeconds": 0.9240461,
+      "memorySha256": "100FE85CB6D53DCFC4B25A32C731F6EDBC6475C90003AC13710B1B59F6BCC227",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01034\n?\n OK 06\nHalted by STOP at 020B after 5097080 instructions"
+    },
+    {
+      "case": "06-loops",
+      "source": "examples/presentation-madlen/06-loops.dub",
+      "mode": "original",
+      "sourceSha256": "ddb6b7584826568e26344205bc2ce378ae0be539f5c5dd4e8282ede16b5cc66c",
+      "expectedMarker": "OK 06",
+      "observedMarkers": [
+        "OK 06"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5097081,
+      "modelSeconds": 3.219528317,
+      "memorySha256": "4C127D1F60DB6A0AF29B0CAE97697B801B14BB42A293E867A081F286DCF3E041",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01034\n?\n OK 06\nHalted by STOP at 020B after 5097080 instructions"
+    },
+    {
+      "case": "07-functions",
+      "source": "examples/presentation-madlen/07-functions.dub",
+      "mode": "max",
+      "sourceSha256": "ebb44c4f571ca158ce590c7ebc11a8c99edc7d795e13528ca82fb6a4b16c095f",
+      "expectedMarker": "OK 07",
+      "observedMarkers": [
+        "OK 07"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 4997722,
+      "modelSeconds": 0.9081425999999999,
+      "memorySha256": "86BA364360CAE8CC92AE923E681EC7723F921CF3F565F07D2CF86DECB1D43221",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01025\n?\n OK 07\nHalted by STOP at 0206 after 4997721 instructions"
+    },
+    {
+      "case": "07-functions",
+      "source": "examples/presentation-madlen/07-functions.dub",
+      "mode": "original",
+      "sourceSha256": "ebb44c4f571ca158ce590c7ebc11a8c99edc7d795e13528ca82fb6a4b16c095f",
+      "expectedMarker": "OK 07",
+      "observedMarkers": [
+        "OK 07"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 4997722,
+      "modelSeconds": 3.167020739,
+      "memorySha256": "26C23166F2009932468F65A64CAFF35E9233329141AAD6EBD81F7B1D2A678A51",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01025\n?\n OK 07\nHalted by STOP at 0206 after 4997721 instructions"
+    },
+    {
+      "case": "08-devices",
+      "source": "examples/presentation-madlen/08-devices.dub",
+      "mode": "max",
+      "sourceSha256": "49985c2fda0473d493e3aac8540add52ef8a7b9070618e2f0b1ad7bf4020f2bf",
+      "expectedMarker": "OK 08",
+      "observedMarkers": [
+        "OK 08"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5086049,
+      "modelSeconds": 0.922358,
+      "memorySha256": "C8F012E90F636C3B9E368AA173E72A1C74F19365FFDBE6DA1725B741ED4F6BCC",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01033\n?\n RESULT\n +600000?+02\n OK 08\nHalted by STOP at 0207 after 5086048 instructions"
+    },
+    {
+      "case": "08-devices",
+      "source": "examples/presentation-madlen/08-devices.dub",
+      "mode": "original",
+      "sourceSha256": "49985c2fda0473d493e3aac8540add52ef8a7b9070618e2f0b1ad7bf4020f2bf",
+      "expectedMarker": "OK 08",
+      "observedMarkers": [
+        "OK 08"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5086049,
+      "modelSeconds": 3.214127832,
+      "memorySha256": "02CDD762205563588550F8640A9B9A532F4845AA9691DC71D770BB65709B3321",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01033\n?\n RESULT\n +600000?+02\n OK 08\nHalted by STOP at 0207 after 5086048 instructions"
+    },
+    {
+      "case": "03-swapped",
+      "source": "03-swapped.dub",
+      "mode": "max",
+      "sourceSha256": "6ab3889b4753f8f4cc9ebb04d6b0e4db711bdb9f01d0c79cc78da04e37f896e0",
+      "expectedMarker": "OK 03",
+      "observedMarkers": [
+        "OK 03"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5009497,
+      "modelSeconds": 0.9099982,
+      "memorySha256": "55F64B08660DCBF50C2ADC183882325E1F8ECF2DCFA9AFC3EB69C453C8013993",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01026\n?\n OK 03\nHalted by STOP at 0208 after 5009496 instructions"
+    },
+    {
+      "case": "03-swapped",
+      "source": "03-swapped.dub",
+      "mode": "original",
+      "sourceSha256": "6ab3889b4753f8f4cc9ebb04d6b0e4db711bdb9f01d0c79cc78da04e37f896e0",
+      "expectedMarker": "OK 03",
+      "observedMarkers": [
+        "OK 03"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5009497,
+      "modelSeconds": 3.173134786,
+      "memorySha256": "1B78E3FCF81FA481A91190A3C92A2B7170A8B8794BAB9DCB528B9B2BB7AB003E",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01026\n?\n OK 03\nHalted by STOP at 0208 after 5009496 instructions"
+    },
+    {
+      "case": "03-equal",
+      "source": "03-equal.dub",
+      "mode": "max",
+      "sourceSha256": "4d8e82d9d2724052f8ea552f950e9f6829a40b2b73baa3c0a76ea786f77068fb",
+      "expectedMarker": "OK 03",
+      "observedMarkers": [
+        "OK 03"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5009497,
+      "modelSeconds": 0.9099982999999999,
+      "memorySha256": "E57A5024836CD0F4DC61F8F610F4982F7F52E7BB0FE8F3C1048B897D628FF8D6",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01026\n?\n OK 03\nHalted by STOP at 0208 after 5009496 instructions"
+    },
+    {
+      "case": "03-equal",
+      "source": "03-equal.dub",
+      "mode": "original",
+      "sourceSha256": "4d8e82d9d2724052f8ea552f950e9f6829a40b2b73baa3c0a76ea786f77068fb",
+      "expectedMarker": "OK 03",
+      "observedMarkers": [
+        "OK 03"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5009497,
+      "modelSeconds": 3.173134591,
+      "memorySha256": "0E1FBE01D11672B7DF6B722381F7BCE7B6109E84A91C1A8DEA5FDBE81D1CC8E5",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01026\n?\n OK 03\nHalted by STOP at 0208 after 5009496 instructions"
+    },
+    {
+      "case": "03-negative",
+      "source": "03-negative.dub",
+      "mode": "max",
+      "sourceSha256": "daab05bab02896604e783915514ecb38f7f3b9fef1e90454a23b682323e78561",
+      "expectedMarker": "OK 03",
+      "observedMarkers": [
+        "OK 03"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5009782,
+      "modelSeconds": 0.9100496,
+      "memorySha256": "B2B1731A7A000DFE4FC78BF63EE7E2498CB9FF6B28B66195906705B9C819ABDD",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01026\n?\n OK 03\nHalted by STOP at 0208 after 5009781 instructions"
+    },
+    {
+      "case": "03-negative",
+      "source": "03-negative.dub",
+      "mode": "original",
+      "sourceSha256": "daab05bab02896604e783915514ecb38f7f3b9fef1e90454a23b682323e78561",
+      "expectedMarker": "OK 03",
+      "observedMarkers": [
+        "OK 03"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5009782,
+      "modelSeconds": 3.173269333,
+      "memorySha256": "072F8281F72243DE200B4D02B7E4076045D0C5EA969F96761BF63F3C5F7EEB52",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01026\n?\n OK 03\nHalted by STOP at 0208 after 5009781 instructions"
+    },
+    {
+      "case": "06-empty",
+      "source": "06-empty.dub",
+      "mode": "max",
+      "sourceSha256": "e9cbfce4273a4e789e2b9c6c144920348b7098d01520e31e149a7f78a523ee77",
+      "expectedMarker": "OK 06",
+      "observedMarkers": [
+        "OK 06"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5096713,
+      "modelSeconds": 0.9239803,
+      "memorySha256": "D58FF369E5D21B924972588CD872F4DDC727EFF1DA3ECFB839A63F03155E46CD",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01034\n?\n OK 06\nHalted by STOP at 020B after 5096712 instructions"
+    },
+    {
+      "case": "06-empty",
+      "source": "06-empty.dub",
+      "mode": "original",
+      "sourceSha256": "e9cbfce4273a4e789e2b9c6c144920348b7098d01520e31e149a7f78a523ee77",
+      "expectedMarker": "OK 06",
+      "observedMarkers": [
+        "OK 06"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5096713,
+      "modelSeconds": 3.21931447,
+      "memorySha256": "C1ADB32C9DB965CDDDE25BA0023D5E965C157EC2919C0F51A99FAE5839A840E9",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01034\n?\n OK 06\nHalted by STOP at 020B after 5096712 instructions"
+    },
+    {
+      "case": "06-single",
+      "source": "06-single.dub",
+      "mode": "max",
+      "sourceSha256": "ae21c23a19ac1f564e0483635d9febdd6f6a3c7b36fcf86ce8f2deaf15b8f05d",
+      "expectedMarker": "OK 06",
+      "observedMarkers": [
+        "OK 06"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5096998,
+      "modelSeconds": 0.9240330999999999,
+      "memorySha256": "88F408125F0FE573B69081B033888A795FA5101A2BACDE596E0A4584BD2ACD72",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01034\n?\n OK 06\nHalted by STOP at 020B after 5096997 instructions"
+    },
+    {
+      "case": "06-single",
+      "source": "06-single.dub",
+      "mode": "original",
+      "sourceSha256": "ae21c23a19ac1f564e0483635d9febdd6f6a3c7b36fcf86ce8f2deaf15b8f05d",
+      "expectedMarker": "OK 06",
+      "observedMarkers": [
+        "OK 06"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5096998,
+      "modelSeconds": 3.219470776,
+      "memorySha256": "04EE1C52942E3393C1C352716CC135C3C32D31D1B59F69A2E3BF6133601AB16A",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01034\n?\n OK 06\nHalted by STOP at 020B after 5096997 instructions"
+    },
+    {
+      "case": "07-zero",
+      "source": "07-zero.dub",
+      "mode": "max",
+      "sourceSha256": "8214ceb584f04663d659dcea1e3211dc0414795fbc73e273fcc5f8f56db59962",
+      "expectedMarker": "OK 07",
+      "observedMarkers": [
+        "OK 07"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 4997472,
+      "modelSeconds": 0.9080956,
+      "memorySha256": "658964455F5F09B74ADE9AB0065E71366172FE64F7A309FDBD29D46C8BBD82D7",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01025\n?\n OK 07\nHalted by STOP at 0206 after 4997471 instructions"
+    },
+    {
+      "case": "07-zero",
+      "source": "07-zero.dub",
+      "mode": "original",
+      "sourceSha256": "8214ceb584f04663d659dcea1e3211dc0414795fbc73e273fcc5f8f56db59962",
+      "expectedMarker": "OK 07",
+      "observedMarkers": [
+        "OK 07"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 4997472,
+      "modelSeconds": 3.166852486,
+      "memorySha256": "2386A7641011DF62CB59E97C16884C132ADE4155098A91E833055ADA9A4B7D4B",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01025\n?\n OK 07\nHalted by STOP at 0206 after 4997471 instructions"
+    },
+    {
+      "case": "07-negative",
+      "source": "07-negative.dub",
+      "mode": "max",
+      "sourceSha256": "e6c6c45f81a384f5a67bbd9c2c576fbc292a365905b49eed9bd2ffd2b82e9dae",
+      "expectedMarker": "OK 07",
+      "observedMarkers": [
+        "OK 07"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 4997912,
+      "modelSeconds": 0.9081768,
+      "memorySha256": "CF06898E05BCCD0D06329FA4FCBEEE8C12A646BF36D03012DD783AD568ED0AD9",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01025\n?\n OK 07\nHalted by STOP at 0206 after 4997911 instructions"
+    },
+    {
+      "case": "07-negative",
+      "source": "07-negative.dub",
+      "mode": "original",
+      "sourceSha256": "e6c6c45f81a384f5a67bbd9c2c576fbc292a365905b49eed9bd2ffd2b82e9dae",
+      "expectedMarker": "OK 07",
+      "observedMarkers": [
+        "OK 07"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 4997912,
+      "modelSeconds": 3.16710931,
+      "memorySha256": "ABF9A1735661B9E5CE284C83379D234E6D95BBC14CF9DA948146BCD6967249BD",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01025\n?\n OK 07\nHalted by STOP at 0206 after 4997911 instructions"
+    },
+    {
+      "case": "01-arithmetic-bad-expectation",
+      "source": "01-arithmetic-bad-expectation.dub",
+      "mode": "max",
+      "sourceSha256": "78ac826c13e8b445adb7c0fbebe0b17b8a1d964d3b0fe421ac3cc74b61370e09",
+      "expectedMarker": "FAIL01",
+      "observedMarkers": [
+        "FAIL01"
+      ],
+      "negativeControl": true,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 4973677,
+      "modelSeconds": 0.9042313,
+      "memorySha256": "EFECB97C9AFBD4783C6D3B7A3AE4024935B60E03808F9FB5111FF0D871B45BC7",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01023\n?\n FAIL01\nHalted by STOP at 0207 after 4973676 instructions"
+    },
+    {
+      "case": "02-logic-bad-expectation",
+      "source": "02-logic-bad-expectation.dub",
+      "mode": "max",
+      "sourceSha256": "1be86054fd8638d578c3f8f987116627f47e55db3b5af823e2351bce1dd118ef",
+      "expectedMarker": "FAIL02",
+      "observedMarkers": [
+        "FAIL02"
+      ],
+      "negativeControl": true,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 4974787,
+      "modelSeconds": 0.9044239,
+      "memorySha256": "9CB5618CF790FE9C8BE9E0C17FB6514994987B23F704A37D8C4562CED9EDF40F",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01023\n?\n FAIL02\nHalted by STOP at 0207 after 4974786 instructions"
+    },
+    {
+      "case": "03-branches-bad-expectation",
+      "source": "03-branches-bad-expectation.dub",
+      "mode": "max",
+      "sourceSha256": "f08c78680d45b1244924684cc06251e353ede942d54b33c19c30e1267a2761a9",
+      "expectedMarker": "FAIL03",
+      "observedMarkers": [
+        "FAIL03"
+      ],
+      "negativeControl": true,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5009814,
+      "modelSeconds": 0.9100547999999999,
+      "memorySha256": "B3082E67B1954FAC1AD9237E2C06FEA062B4D940719801D4A5076871B3B44C46",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01026\n?\n FAIL03\nHalted by STOP at 020A after 5009813 instructions"
+    },
+    {
+      "case": "04-index-registers-bad-expectation",
+      "source": "04-index-registers-bad-expectation.dub",
+      "mode": "max",
+      "sourceSha256": "caf4a6c78f0128a877d7c087d5972800c9b03d9e2d13caa348afce6568fd2f98",
+      "expectedMarker": "FAIL04",
+      "observedMarkers": [
+        "FAIL04"
+      ],
+      "negativeControl": true,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5043721,
+      "modelSeconds": 0.9154650999999999,
+      "memorySha256": "A62C3243445133F9C6BC4C0DBE518D7B4896102D976DE136D985D5ADC633FC27",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01030\n?\n FAIL04\nHalted by STOP at 020A after 5043720 instructions"
+    },
+    {
+      "case": "05-arrays-bad-expectation",
+      "source": "05-arrays-bad-expectation.dub",
+      "mode": "max",
+      "sourceSha256": "7c33d1bdaeaac240748107e70f7fd287feb13dac00cecc92d9d058527d66f949",
+      "expectedMarker": "FAIL05",
+      "observedMarkers": [
+        "FAIL05"
+      ],
+      "negativeControl": true,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5106807,
+      "modelSeconds": 0.9256359,
+      "memorySha256": "0E9518825DCAF4A40D5D13EB7BCD1324045A869E5668BCB286F6FD66ECDCA5D3",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01035\n?\n FAIL05\nHalted by STOP at 020C after 5106806 instructions"
+    },
+    {
+      "case": "06-loops-bad-expectation",
+      "source": "06-loops-bad-expectation.dub",
+      "mode": "max",
+      "sourceSha256": "0f31af2f6c123257e75a3ab6f637bc0813c925262cdfedca35a686dc7839af34",
+      "expectedMarker": "FAIL06",
+      "observedMarkers": [
+        "FAIL06"
+      ],
+      "negativeControl": true,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5097213,
+      "modelSeconds": 0.9240695999999999,
+      "memorySha256": "4BEDF7604156CC5595C244011B123E2D7F530AFA642C675D2DFE1949533A3E51",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01034\n?\n FAIL06\nHalted by STOP at 020D after 5097212 instructions"
+    },
+    {
+      "case": "07-functions-bad-expectation",
+      "source": "07-functions-bad-expectation.dub",
+      "mode": "max",
+      "sourceSha256": "573a1a24511b7baca7be783ed14538a7c2343c807e23ab39f7ea5f53cc668841",
+      "expectedMarker": "FAIL07",
+      "observedMarkers": [
+        "FAIL07"
+      ],
+      "negativeControl": true,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 4998039,
+      "modelSeconds": 0.9081990999999999,
+      "memorySha256": "D6C8A0E37E7C271AEE7E4C538BE1EB2E4F0AA63882C5A94F3855E6077BA9C759",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01025\n?\n FAIL07\nHalted by STOP at 0208 after 4998038 instructions"
+    },
+    {
+      "case": "08-devices-bad-expectation",
+      "source": "08-devices-bad-expectation.dub",
+      "mode": "max",
+      "sourceSha256": "4f3dc55e28185676e8e0bc3e638b544e6adc06ede38a23778eed343557bc1c11",
+      "expectedMarker": "FAIL08",
+      "observedMarkers": [
+        "FAIL08"
+      ],
+      "negativeControl": true,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5086051,
+      "modelSeconds": 0.9223585,
+      "memorySha256": "EA1208585BD04F96A8C0DA8C65225EF5A945D20BF245E15A9E46A127EF3DDC25",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01033\n?\n RESULT\n +600000?+02\n FAIL08\nHalted by STOP at 0209 after 5086050 instructions"
+    },
+    {
+      "case": "learning-01-arithmetic",
+      "source": "examples/learning-madlen/01-arithmetic.dub",
+      "mode": "max",
+      "sourceSha256": "3199ec921d6ec2b91897aa9bf9ccf83d779f4336249f1e34d8f88c5edb984922",
+      "expectedMarker": "OK 01",
+      "observedMarkers": [
+        "OK 01"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5007202,
+      "modelSeconds": 0.9093311,
+      "memorySha256": "5EDAA23BF22C5C371C75B47BA6D90465402C2D027C1256C26F0DF50AFCCE726B",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01026\n?\n OK 01\nHalted by STOP at 0206 after 5007201 instructions"
+    },
+    {
+      "case": "learning-02-branches",
+      "source": "examples/learning-madlen/02-branches.dub",
+      "mode": "max",
+      "sourceSha256": "2eb508764f86cc4c3c1cb0565362713de90b8b8489bec6d36a15647333a27bf0",
+      "expectedMarker": "OK 02",
+      "observedMarkers": [
+        "OK 02"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5149538,
+      "modelSeconds": 0.9323148,
+      "memorySha256": "5C876625AF410EFA8BC4D0BA9831E02BBA95FBBC81E69BC6017AB3164C050ED8",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01036\n?\n OK 02\nHalted by STOP at 020F after 5149537 instructions"
+    },
+    {
+      "case": "learning-03-loop",
+      "source": "examples/learning-madlen/03-loop.dub",
+      "mode": "max",
+      "sourceSha256": "5aaa02faa368ee25e579dc3cfdbc71d1703dbcd3a6c74f5c4242a75bdce8e342",
+      "expectedMarker": "OK 03",
+      "observedMarkers": [
+        "OK 03"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5369054,
+      "modelSeconds": 0.9693153,
+      "memorySha256": "53BAC197642DB8CDD0E9CD9A392F5F86D9B48D49C4DA22AEEBCA1F3B617C4EA4",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01040\n?\n OK 03\nHalted by STOP at 020E after 5369053 instructions"
+    },
+    {
+      "case": "learning-04-nested-loops",
+      "source": "examples/learning-madlen/04-nested-loops.dub",
+      "mode": "max",
+      "sourceSha256": "e9935f4cd8606b7f22bff498ec3ea8beed1befd4c0dbf561a5b9306a8c260e93",
+      "expectedMarker": "OK 04",
+      "observedMarkers": [
+        "OK 04"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5117471,
+      "modelSeconds": 0.9269628,
+      "memorySha256": "D97C85E6742A01E11A7298BB409598B2F8A79CD3D7CCF481117B9A4BBA92DCD6",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01040\n?\n OK 04\nHalted by STOP at 020C after 5117470 instructions"
+    },
+    {
+      "case": "learning-05-functions",
+      "source": "examples/learning-madlen/05-functions.dub",
+      "mode": "max",
+      "sourceSha256": "0cdcc15fcf42fffc4079f649b20cca0fce3194e6ba18225329463e1d75f28308",
+      "expectedMarker": "OK 05",
+      "observedMarkers": [
+        "OK 05"
+      ],
+      "negativeControl": false,
+      "exitCode": 0,
+      "haltedByStop": true,
+      "completedInstructions": 5077418,
+      "modelSeconds": 0.9207449999999999,
+      "memorySha256": "378C163DE0148A7CC36AB0EA6E0CAAD1FE0799600620FA5F2DB6FABC7492B4D4",
+      "runtimeOutput": "?\n         PROGRAM    01000                CBO?O?HO   01036\n?\n OK 05\nHalted by STOP at 0208 after 5077417 instructions"
+    }
+  ]
+}

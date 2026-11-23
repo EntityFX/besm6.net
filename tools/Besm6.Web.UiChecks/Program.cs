@@ -176,6 +176,7 @@ await Check("deployment-smoke", async (first, _) =>
     if (await first.EvaluateAsync<string>("window.__sessionId") == await second.EvaluateAsync<string>("window.__sessionId"))
         throw new Exception("Two browsers share a session");
     await Upload(second);
+    await second.CheckAsync("input[value=debug]");
     await second.ClickAsync("#run"); await Status(second, "Paused");
     await first.ClickAsync("#examplesTab");
     await first.WaitForFunctionAsync("[...document.getElementById('exampleSelect').options].some(o => o.value === 'fortran.dub')");
@@ -256,6 +257,7 @@ await Check("languages-and-guide", async (page, _) =>
 await Check("debug", async (page, _) =>
 {
     await Upload(page);
+    await page.CheckAsync("input[value=debug]");
     await page.ClickAsync("#run"); await Status(page, "Paused");
     await page.ClickAsync("#step");
     await page.WaitForFunctionAsync("/^1 instructions?$/.test(document.getElementById('instructionCount').textContent)");
@@ -280,8 +282,20 @@ foreach (var (path, expected) in new[] { ("examples/fortran.dub", "HELLO, WORLD!
         if (!text.Split('\n').Any(line => line.Trim().Equals(expected, StringComparison.OrdinalIgnoreCase)))
             throw new Exception("Expected printed line: " + expected);
     });
+await Check("default-full", async (page, _) =>
+{
+    if (!await page.Locator("input[value=full]").IsCheckedAsync()) throw new Exception("Full run must be selected by default");
+    await Upload(page); await page.ClickAsync("#run"); await Status(page, "Completed");
+});
+await Check("original-label", async (page, _) =>
+{
+    await page.SelectOptionAsync("#languageSelect", "ru");
+    if (await page.Locator("#speed option[value=original]").TextContentAsync() != "Оригинальная")
+        throw new Exception("Original must be translated as Оригинальная");
+});
 await Check("pause-step-stop", async (page, _) =>
 {
+    await page.CheckAsync("input[value=debug]");
     await Upload(page, loop); await page.ClickAsync("#run"); await Status(page, "Paused");
     await page.ClickAsync("#resume"); await Status(page, "Running");
     await page.ClickAsync("#pause"); await Status(page, "Paused");
@@ -290,6 +304,7 @@ await Check("pause-step-stop", async (page, _) =>
 });
 await Check("invalid-job", async (page, _) =>
 {
+    await page.CheckAsync("input[value=debug]");
     await Upload(page, "`9999\n"); await page.ClickAsync("#run"); await Status(page, "Failed");
     if (string.IsNullOrWhiteSpace(await page.Locator("#error").InnerTextAsync())) throw new Exception("Missing error");
     await Upload(page); await page.ClickAsync("#run"); await Status(page, "Paused");
@@ -308,12 +323,14 @@ await Check("instruction-limit-zero", async (page, _) =>
 });
 await Check("invalid-options", async (page, _) =>
 {
+    await page.CheckAsync("input[value=debug]");
     await Upload(page); await page.FillAsync("#instructionLimit", "1000000001"); await page.ClickAsync("#run");
     await page.WaitForFunctionAsync("document.getElementById('error').textContent.length > 0");
     await page.FillAsync("#instructionLimit", "20"); await page.ClickAsync("#run"); await Status(page, "Paused");
 });
 await Check("reconnect", async (page, context) =>
 {
+    await page.CheckAsync("input[value=debug]");
     await Upload(page);
     await page.EvaluateAsync("window.__sockets[0].close(1000, 'Browser reconnect check')");
     await page.WaitForFunctionAsync("window.__sockets.length > 1 && document.getElementById('connection').textContent === 'Connected' && !document.getElementById('file').disabled", null, new() { Timeout = 15000 });
@@ -325,6 +342,8 @@ await Check("multiple-sessions", async (first, _) =>
     await using var thirdContext = await browser.NewContextAsync(new() { Locale = "en-US" });
     var others = await Task.WhenAll(Open(secondContext), Open(thirdContext));
     var second = others[0]; var third = others[1];
+    await first.CheckAsync("input[value=debug]");
+    await second.CheckAsync("input[value=debug]");
     string Marker(int value) => "*trans-main:1000\n`0010100200000000\n`0330000000000000\n`000000000000000" + value + "\n*end file\n";
     await Task.WhenAll(Upload(first, Marker(1), "first.dub"), Upload(second, Marker(2), "second.dub"),
         Upload(third, File.ReadAllText("tests/Besm6.Integration.Tests/raw/hello.dub"), "third.dub"));
@@ -349,6 +368,7 @@ await Check("multiple-sessions", async (first, _) =>
 });
 await Check("drop-upload-and-tabs", async (page, _) =>
 {
+    await page.CheckAsync("input[value=debug]");
     await page.EvaluateAsync("""
     text => {const data=new DataTransfer(); data.items.add(new File([text], 'dropped.dub', {type:'text/plain'})); document.getElementById('dropzone').dispatchEvent(new DragEvent('drop',{bubbles:true,dataTransfer:data}));}
     """, tiny);
@@ -427,6 +447,7 @@ await Check("running-session-isolation", async (first, _) =>
 });
 await Check("large-upload", async (page, _) =>
 {
+    await page.CheckAsync("input[value=debug]");
     string text = new string(' ', 10_000_000 - tiny.Length - 1) + "\n" + tiny;
     await Upload(page, text, "large.dub");
     string id = await page.EvaluateAsync<string>("window.__sessionId");
@@ -610,6 +631,7 @@ await Check("punch-device", async (page, _) =>
 });
 await Check("upload-validation", async (page, _) =>
 {
+    await page.CheckAsync("input[value=debug]");
     foreach (var (name, content) in new[] { ("bad.txt", new byte[] { 1 }), ("empty.dub", Array.Empty<byte>()), ("too-large.dub", new byte[10_000_001]) })
     {
         await page.Locator("#file").SetInputFilesAsync(new FilePayload { Name = name, MimeType = "text/plain", Buffer = content });
@@ -642,6 +664,7 @@ await Check("reset-button", async (page, _) =>
 });
 await Check("number-bases", async (page, _) =>
 {
+    await page.CheckAsync("input[value=debug]");
     const ulong value = 0xFEDCBA987654;
     await Upload(page, Raw([Asm("xta 1002"), Asm("stop"), value])); await page.ClickAsync("#run"); await Status(page, "Paused");
     await page.ClickAsync("#step"); await Status(page, "Paused");
@@ -845,7 +868,8 @@ await Check("json-preset-upload", async (page, _) =>
 await Check("json-machine-examples", async (page, _) =>
 {
     foreach(string model in new[]{"functional","hardware"}) {
-        await page.ClickAsync("#examplesTab"); await page.WaitForFunctionAsync("document.getElementById('exampleSelect').options.length>100");
+        await page.SelectOptionAsync("#machineModel", "supervisor-" + model);
+        await page.ClickAsync("#examplesTab"); await page.WaitForFunctionAsync("document.getElementById('exampleSelect').options.length>1");
         await page.SelectOptionAsync("#exampleSelect","machines/supervisor-"+model+".json"); await page.ClickAsync("#exampleLoad");
         await page.WaitForFunctionAsync("name=>document.getElementById('fileName').textContent===name","machines/supervisor-"+model+".json");
         if(await page.Locator("#machineModel").InputValueAsync()!="supervisor-"+model) throw new Exception("Machine JSON did not select its execution model");
@@ -854,9 +878,58 @@ await Check("json-machine-examples", async (page, _) =>
         await page.ClickAsync("#reset"); await Status(page,"Idle");
     }
 });
+await Check("supervisor-hardware-dub-selection", async (page, _) =>
+{
+    await Upload(page);
+    await page.SelectOptionAsync("#machineModel", "supervisor-hardware");
+    if (await page.Locator("#fileName").InnerTextAsync() != "smoke.dub") throw new Exception("Changing model replaced the uploaded .dub");
+    await page.ClickAsync("#examplesTab");
+    await page.WaitForFunctionAsync("document.querySelector('#exampleSelect option[value=\"fortran.dub\"]')");
+    await page.SelectOptionAsync("#exampleSelect", "fortran.dub");
+    await page.WaitForFunctionAsync("document.getElementById('fileName').textContent==='fortran.dub' && !document.getElementById('run').disabled");
+    if (await page.Locator("#machineModel").InputValueAsync() != "supervisor-hardware") throw new Exception("Selecting .dub silently changed the model");
+    await page.ClickAsync("#exampleRun");
+    await page.WaitForFunctionAsync("document.getElementById('error').textContent.includes('Supervisor — functional')");
+    if (await page.Locator("#machineModel").InputValueAsync() != "supervisor-hardware" || await page.Locator("#status").InnerTextAsync() != "Idle")
+        throw new Exception("Unsupported hardware .dub started or changed the model");
+    await page.ClickAsync("#editorTab");
+    if (!(await page.Locator("#sourceText").InputValueAsync()).Contains("Hello, World!")) throw new Exception("Selected .dub is not available in the editor");
+    await page.SelectOptionAsync("#machineModel", "supervisor-functional");
+    await page.ClickAsync("#run"); await Status(page, "Completed");
+    if (!(await GuestOutput(page)).Contains("HELLO, WORLD!", StringComparison.OrdinalIgnoreCase)) throw new Exception("The same selected .dub did not run after explicit model selection");
+});
+await Check("supervisor-hosted-simple", async (page, _) =>
+{
+    if (!await page.Locator("input[value=full]").IsCheckedAsync()) throw new Exception("Full run is not the default");
+    await page.SelectOptionAsync("#machineModel", "supervisor-functional");
+    await page.ClickAsync("#examplesTab");
+    await page.WaitForFunctionAsync("document.querySelector('#exampleSelect option[value=\"fortran.dub\"]')");
+    await page.SelectOptionAsync("#exampleSelect", "fortran.dub");
+    await page.WaitForFunctionAsync("document.getElementById('fileName').textContent==='fortran.dub' && !document.getElementById('run').disabled");
+    await page.ClickAsync("#exampleRun"); await Status(page, "Completed");
+    if (await page.Locator("#machineModel").InputValueAsync() != "supervisor-functional") throw new Exception("Selected supervisor fell back to Dubna");
+    if (!(await GuestOutput(page)).Contains("HELLO, WORLD!", StringComparison.OrdinalIgnoreCase)) throw new Exception("Hosted supervisor Fortran failed");
+    await page.WaitForFunctionAsync("window.__events.some(e=>e.type==='machineRegisters' && e.data.processorProfile==='Supervisor' && e.data.serviceRuntime==='HostedDubna' && e.data.memoryModel==='Mapped')");
+    if (!(await page.Locator("#machineStateInfo").InnerTextAsync()).Contains("Hosted Dubna services")) throw new Exception("Hosted services are not disclosed");
+    await page.ClickAsync("#editorTab");
+    await page.FillAsync("#sourceText", File.ReadAllText("examples/fortran.dub").Replace("Hello, World!", "SUPERVISOR EDITOR OK"));
+    await page.ClickAsync("#sourceRun"); await Status(page, "Completed");
+    await page.WaitForFunctionAsync("document.getElementById('printOutput').textContent.includes('SUPERVISOR EDITOR OK')");
+    if (await page.Locator("#machineModel").InputValueAsync() != "supervisor-functional") throw new Exception("Editor changed the supervisor profile");
+});
+await Check("supervisor-hosted-debug", async (page, _) =>
+{
+    await Upload(page);
+    await page.SelectOptionAsync("#machineModel", "supervisor-functional");
+    if (await page.Locator("#fileName").InnerTextAsync() != "smoke.dub") throw new Exception("Selecting supervisor replaced the existing job with a JSON template");
+    await page.CheckAsync("input[value=debug]"); await page.ClickAsync("#run"); await Status(page, "Paused");
+    await page.ClickAsync("#step");
+    await page.WaitForFunctionAsync("document.getElementById('instructionCount').textContent==='1 instruction'");
+    await page.ClickAsync("#resume"); await Status(page, "Completed");
+});
 await Check("examples-browser", async (page, _) =>
 {
-    await page.SelectOptionAsync("#machineModel", "supervisor-hardware");
+    await page.SelectOptionAsync("#machineModel", "supervisor-functional");
     await page.ClickAsync("#examplesTab"); await page.Locator("#examplesPane.show").WaitForAsync();
     await page.WaitForFunctionAsync("document.getElementById('exampleSelect').options.length>100");
     await page.FillAsync("#exampleFilter","fortran");
@@ -864,7 +937,7 @@ await Check("examples-browser", async (page, _) =>
     await page.WaitForFunctionAsync("document.getElementById('exampleSource').textContent.includes('Hello, World!')");
     await page.ClickAsync("#exampleLoad");
     await page.WaitForFunctionAsync("document.getElementById('fileName').textContent==='fortran.dub'");
-    await page.WaitForFunctionAsync("document.getElementById('machineModel').value==='dubna'");
+    await page.WaitForFunctionAsync("document.getElementById('machineModel').value==='supervisor-functional'");
     if (await page.Locator("#status").TextContentAsync()!="Idle") throw new Exception("Loading an example executed it");
     await page.SelectOptionAsync("#machineModel", "supervisor-functional");
     await page.CheckAsync("input[value=full]"); await page.ClickAsync("#exampleRun"); await Status(page,"Completed");
@@ -1064,6 +1137,7 @@ await Check("supervisor-default-template", async (page, _) =>
 });
 await Check("memory-decode", async (page, _) =>
 {
+    await page.CheckAsync("input[value=debug]");
     await Upload(page); await page.ClickAsync("#run"); await Status(page,"Paused");
     await page.FillAsync("#address","1000"); await page.ClickAsync("#inspect");
     await page.WaitForFunctionAsync("document.getElementById('memory').textContent.startsWith('01000  ') && document.getElementById('memory').textContent.includes('atx 1234')");
@@ -1075,6 +1149,7 @@ await Check("memory-decode", async (page, _) =>
 });
 await Check("layout", async (page, _) =>
 {
+    await page.CheckAsync("input[value=debug]");
     await Upload(page); await page.ClickAsync("#run"); await Status(page, "Paused");
     foreach (var (width, height) in new[] { (1440,900), (1280,720), (1024,768), (768,1024), (390,844), (320,740) })
     {
@@ -1120,6 +1195,7 @@ await Check("layout", async (page, _) =>
 });
 await Check("accessibility", async (page, _) =>
 {
+    await page.CheckAsync("input[value=debug]");
     await Upload(page); await page.ClickAsync("#run"); await Status(page, "Paused");
     string axePath = Path.Combine(output, "axe.min.js");
     if (!File.Exists(axePath))

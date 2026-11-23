@@ -21,6 +21,7 @@ namespace Besm6.Runtime.Execution
         private readonly Action<string>? _verboseLog;
         private readonly Action<string>? _output;
         private readonly Action<string>? _progressOutput;
+        private readonly HostedSupervisorBridge? _hostedSupervisor;
 
         public long InstructionLimit { get; set; } = 1_000_000_000L;
         /// <summary>Optional host safety bound, independent of successfully completed guest commands.</summary>
@@ -86,6 +87,7 @@ namespace Besm6.Runtime.Execution
             _output = output;
             _progressOutput = progressOutput;
             _extracode.GuestTimeSeconds = ReadGuestTimeSeconds;
+            if (machine.UsesHostedSupervisorServices) _hostedSupervisor = new(machine, extracode);
         }
 
         // STIME/CTIME (счетное время): the documented resolution is 0.02 s.
@@ -102,8 +104,12 @@ namespace Besm6.Runtime.Execution
 
         internal ExecutionLoop(MachineCore machine) => _machine = machine;
 
-        public void InstallHook() => _machine.Cpu.ExtracodeDispatch =
-            (_extracode ?? throw new InvalidOperationException("No hosted extracode handler.")).Handle;
+        public void InstallHook()
+        {
+            _machine.Cpu.ExtracodeDispatch =
+                (_extracode ?? throw new InvalidOperationException("No hosted extracode handler.")).Handle;
+            _hostedSupervisor?.Prepare();
+        }
 
         public LoadResult Run()
         {
@@ -126,7 +132,7 @@ namespace Besm6.Runtime.Execution
                         Timing.HostedTimingParameters.Default with { ModelTimeFactor = OriginalTimeFactor, MathFactor = OriginalMathFactor });
                 _machine.Cpu.InstructionCacheEnabled = true;
                 diagnostics.AttachFileTraceWriters();
-                diagnostics.AttachInstructionObservers(null, observer);
+                diagnostics.AttachInstructionObservers(null, _hostedSupervisor is null ? observer : null);
                 return RunCore(stopwatch, diagnostics);
             }
             finally
@@ -164,7 +170,7 @@ namespace Besm6.Runtime.Execution
             var progressOutput = ProgressEnabled ? _progressOutput : null;
             long? attemptLimit = StepAttemptLimit;
             long stepAttempts = 0;
-            bool executeBlocks = !LoopDetect && progressOutput is null && attemptLimit is null && _originalTiming is null;
+            bool executeBlocks = !LoopDetect && progressOutput is null && attemptLimit is null && _originalTiming is null && _hostedSupervisor is null;
 
             const int LoopWindow = 20_000;
             const int LoopRange = 16;
@@ -198,7 +204,9 @@ namespace Besm6.Runtime.Execution
                     else
                     {
                         stepAttempts++;
-                        stopped = _machine.Step(ref _instructionsExecuted);
+                        stopped = _hostedSupervisor is null ? _machine.Step(ref _instructionsExecuted) : _hostedSupervisor.Step(ref _instructionsExecuted);
+                        if (_hostedSupervisor is not null && _machine.Cpu.LastStepCompleted)
+                            InstructionExecuted?.Invoke(_hostedSupervisor.LastOpcode);
                     }
                     if (pacer is not null && (stopped || PacingCycles >= nextCheckpoint))
                     {
@@ -255,7 +263,7 @@ namespace Besm6.Runtime.Execution
                 }
                 catch (ProcessorException ex)
                 {
-                    if (_machine.Cpu.Profile == ProcessorProfile.Supervisor) throw;
+                    if (_machine.Cpu.Profile == ProcessorProfile.Supervisor && _hostedSupervisor is null) throw;
                     _machine.Cpu.StackCorrection();
                     _extracode?.FinishOutput();
 

@@ -15,6 +15,14 @@ namespace Besm6.Runtime.Machine
         {
             cfg ??= Config.Load();
             int memSize = cfg.MemorySize;
+            if (cfg.SupervisorHostedServices)
+            {
+                if (cfg.BufferedMemory || memSize != 32768)
+                    throw new ArgumentException("Hosted supervisor jobs require a 32768-word mathematical space and cannot select the Dubna buffered backend.");
+                var hosted = MachineCore.CreateHostedSupervisor();
+                hosted.Cpu.MemoryWatchpointBatchingEnabled = cfg.MemoryWatchpointBatching;
+                return hosted;
+            }
             var machine = new MachineCore(cfg.BufferedMemory ? MemoryModel.Buffered : MemoryModel.Dubna, (uint)memSize,
                 hostedBufferedMemory: cfg.BufferedMemory);
             machine.Cpu.MemoryWatchpointBatchingEnabled = cfg.MemoryWatchpointBatching;

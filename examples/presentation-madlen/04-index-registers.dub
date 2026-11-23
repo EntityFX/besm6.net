@@ -1,0 +1,45 @@
+*name indexes
+*madlen
+ PROGRAM: ,NAME,
+C BEGIN CODE
+          ,NTR,0
+         1,VTM,DATA
+         1,XTA,
+          ,ATX,FIRST
+         1,UTM,1
+         1,XTA,
+          ,ATX,SECOND
+C END CODE
+          ,XTA,FIRST
+          ,AEX,EXPECT1
+          ,U1A,FAIL
+          ,XTA,SECOND
+          ,AEX,EXPECT2
+          ,U1A,FAIL
+          ,*64,OKINFO
+          ,*74,
+ FAIL:    ,*64,BADINFO
+          ,*74,
+C BEGIN DATA
+ DATA:    ,REAL,10.
+          ,REAL,20.
+ FIRST:   ,REAL,0.
+ SECOND:  ,REAL,0.
+C END DATA
+ EXPECT1: ,REAL,10.
+ EXPECT2: ,REAL,20.
+ OKINFO:  ,    ,OKTEXT
+          ,    ,OKTEXT
+          ,001,
+         8,    ,
+ BADINFO: ,    ,BADTEXT
+          ,    ,BADTEXT
+          ,001,
+         8,    ,
+ OKTEXT:  ,GOST,6HOK 04
+          ,GOST,6H'231'
+ BADTEXT: ,GOST,6HFAIL04
+          ,GOST,6H'231'
+          ,END,
+*execute
+*end file

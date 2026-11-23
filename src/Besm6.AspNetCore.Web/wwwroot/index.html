@@ -13,14 +13,14 @@
     <div class="row g-2 workspace">
       <section class="col-12 col-md-5 col-lg-4 control-panel" aria-label="Job and machine state" tabindex="0">
         <div class="card mb-2 job-panel"><div class="card-body px-2 py-1">
-          <div class="job-heading mb-1"><h2 class="h6 mb-0" id="jobHeading">Job</h2><label for="machineModel" class="visually-hidden">Machine</label><select id="machineModel" class="form-select form-select-sm"><option value="dubna">Dubna (.dub)</option><option value="buffered">Dubna + write/instruction buffers (.dub)</option><option value="supervisor-functional">Supervisor — functional (.json)</option><option value="supervisor-hardware">Supervisor — hardware (.json)</option></select></div>
+          <div class="job-heading mb-1"><h2 class="h6 mb-0" id="jobHeading">Job</h2><label for="machineModel" class="visually-hidden">Machine</label><select id="machineModel" class="form-select form-select-sm"><option value="dubna">Dubna (.dub)</option><option value="buffered">Dubna + write/instruction buffers (.dub)</option><option value="supervisor-functional">Supervisor — functional (.dub / .json)</option><option value="supervisor-hardware">Supervisor — hardware (.json)</option></select></div>
           <label id="dropzone" class="dropzone d-block text-center p-1 mb-1" for="file">Drop .dub / .json or browse</label>
           <input id="file" type="file" accept=".dub,.json" class="visually-hidden" aria-describedby="fileName" disabled>
           <div id="fileName" class="small text-muted mb-1">No file selected</div>
           <div class="job-options mb-1">
             <fieldset class="mode-row"><legend class="visually-hidden">Mode</legend><span class="mode-label" aria-hidden="true">Mode</span>
-              <label class="form-check"><input class="form-check-input" type="radio" name="mode" value="debug" checked> Debug</label>
-              <label class="form-check"><input class="form-check-input" type="radio" name="mode" value="full"> Full run</label>
+              <label class="form-check"><input class="form-check-input" type="radio" name="mode" value="debug"> Debug</label>
+              <label class="form-check"><input class="form-check-input" type="radio" name="mode" value="full" checked> Full run</label>
             </fieldset>
             <div><label for="speed" class="form-label">Speed</label>
               <select id="speed" class="form-select form-select-sm"><option value="max">Maximum</option><option value="original">Original</option><option value="virtual">Virtual</option></select></div>
@@ -76,11 +76,11 @@
               <h3>Инструкция пользователя</h3>
               <p>Веб-консоль запускает программы БЭСМ-6 на сервере. Для каждого подключения создаётся отдельная машина; устанавливать симулятор на свой компьютер не нужно.</p>
               <h4>Первый запуск</h4>
-              <ol><li>Дождитесь надписи «Подключено» в верхней панели.</li><li>Откройте <button type="button" class="btn btn-sm btn-outline-primary" data-show-tab="examplesTab">Примеры</button>, найдите <code>fortran.dub</code> и нажмите «Загрузить в машину».</li><li>Выберите «Полный запуск» и нажмите «Пуск». Результат программы смотрите во вкладке «Печать».</li></ol>
+              <ol><li>Дождитесь надписи «Подключено» в верхней панели.</li><li>Откройте <button type="button" class="btn btn-sm btn-outline-primary" data-show-tab="examplesTab">Примеры</button>, найдите <code>fortran.dub</code> и нажмите «Загрузить в машину».</li><li>Нажмите «Пуск»: по умолчанию выбран «Полный запуск». Результат программы смотрите во вкладке «Печать».</li></ol>
               <h4>Своя программа</h4>
               <p>Перетащите файл <code>.dub</code> в область задания или выберите его с диска. Лимит файла — 10 MB. Во вкладке «Редактор» можно изменить копию примера или ввести программу (до 1 MB), затем загрузить её в машину. Правка текста не меняет уже загруженную программу.</p>
               <h4>Режимы машины и скорость</h4>
-              <p>Для Фортрана, Алгола и ассемблерных заданий <code>.dub</code> выберите Dubna. Для Supervisor нужна конфигурация машины <code>.json</code>; шаблон доступен в редакторе. Максимальная скорость предназначена для быстрого запуска, историческая использует модель времени БЭСМ-6, виртуальная — таймер хоста. Лимит времени 0 означает отсутствие ограничения.</p>
+              <p>Задания Фортрана, Алгола и ассемблера <code>.dub</code> работают в Dubna и Supervisor — functional. Для Supervisor выберите тот же пример и нажмите «Запустить пример»: процессор и память — супервизорные, услуги «Дубны» выполняет хост. Это гибрид, не загрузка гостевой ОС. Supervisor — hardware пока принимает только машинные <code>.json</code>. Максимальная скорость запускает без замедления, оригинальная использует статистическую модель времени, виртуальная — таймер хоста. Значение 0 отключает соответствующий лимит команд или времени.</p>
               <h4>Отладка</h4>
               <p>В режиме «Отладка» запуск останавливается на паузе. «Шаг» выполняет одну команду, «Продолжить» возобновляет выполнение, «Пауза» приостанавливает его. Регистры и память показаны слева. OCT, DEC и HEX переключают систему счисления; адрес вводится в выбранной системе. Автообновление показывает состояние во время работы, но может замедлять исполнение.</p>
               <h4>Результаты и устройства</h4>
@@ -94,11 +94,11 @@
               <h3>User guide</h3>
               <p>The web console runs BESM-6 programs on the server. Each connection gets its own machine; no simulator installation is needed on your computer.</p>
               <h4>First run</h4>
-              <ol><li>Wait for Connected in the top bar.</li><li>Open <button type="button" class="btn btn-sm btn-outline-primary" data-show-tab="examplesTab">Examples</button>, select <code>fortran.dub</code> and click Load into machine.</li><li>Select Full run and click Run. Open Printer to see the program output.</li></ol>
+              <ol><li>Wait for Connected in the top bar.</li><li>Open <button type="button" class="btn btn-sm btn-outline-primary" data-show-tab="examplesTab">Examples</button>, select <code>fortran.dub</code> and click Load into machine.</li><li>Click Run: Full run is selected by default. Open Printer to see the program output.</li></ol>
               <h4>Your own program</h4>
               <p>Drop a <code>.dub</code> file onto the job area or browse for it (up to 10 MB). In Editor you can edit a copy of an example or enter a program (up to 1 MB), then load it into the machine. Editing does not change the program already loaded.</p>
               <h4>Machine models and speed</h4>
-              <p>Choose Dubna for Fortran, Algol and assembly <code>.dub</code> jobs. Supervisor needs a <code>.json</code> machine configuration; a template is available in Editor. Maximum runs as fast as possible, Original uses the BESM-6 timing model, and Virtual uses the host clock. A time limit of 0 means unlimited.</p>
+              <p>Fortran, Algol and assembly <code>.dub</code> jobs run in Dubna and Supervisor — functional. Select the same example and click Run example: the supervisor CPU and mapped memory execute it with host-serviced Dubna services. This hybrid does not boot a guest OS. Supervisor — hardware currently accepts native machine <code>.json</code> files only. Maximum runs without pacing, Original uses a statistical timing model, and Virtual uses the host clock. A limit of 0 disables the corresponding instruction or time limit.</p>
               <h4>Debugging</h4>
               <p>Debug mode starts paused. Step executes one instruction, Resume continues, and Pause suspends execution. Registers and memory are on the left. OCT, DEC and HEX change the number base; enter addresses in the selected base. Auto-refresh updates state during execution and can reduce performance.</p>
               <h4>Output and devices</h4>
@@ -133,7 +133,7 @@
           <div id="examplesPane" class="tab-pane fade" role="tabpanel" aria-labelledby="examplesTab"><div class="device-view p-2 examples-view">
             <h3 class="h6">Programs from the example catalog</h3><div class="example-controls mb-2"><label for="exampleFilter">Search</label><input id="exampleFilter" type="search" class="form-control form-control-sm" placeholder="Name or directory"><label for="exampleSelect">Example</label><select id="exampleSelect" class="form-select form-select-sm" disabled><option value="">Loading…</option></select></div>
             <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><button id="exampleLoad" class="btn btn-sm btn-outline-primary" disabled>Load into machine</button><button id="exampleRun" class="btn btn-sm btn-primary" disabled>Run example</button><button id="exampleEdit" class="btn btn-sm btn-outline-secondary" disabled>Edit copy</button><span id="exampleMessage" class="small text-muted" role="status" aria-live="polite"></span></div>
-            <p class="small text-muted mb-2">.dub programs use the Job settings. JSON presets in web-jobs set the program, mode, speed and toggles; machines contains Supervisor images. Select JSON here, upload a file, or edit it in Editor. Debug starts paused.</p>
+            <p class="small text-muted mb-2">.dub examples run in Dubna or Supervisor — functional with hosted Dubna services. Select an example, then Run example. Full run is the default; Debug starts paused. Hardware mode accepts machine JSON only.</p>
             <pre id="exampleSource" class="example-source font-monospace small p-2 mb-0" tabindex="0" role="region" aria-label="Example source">Выберите пример для просмотра.</pre>
           </div></div>
           <div id="editorPane" class="tab-pane fade" role="tabpanel" aria-labelledby="editorTab"><div class="device-view p-2 editor-view">

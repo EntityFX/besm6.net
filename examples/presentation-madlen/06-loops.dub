@@ -1,0 +1,51 @@
+*name loops
+*madlen
+ PROGRAM: ,NAME,
+C BEGIN CODE
+          ,NTR,0
+         1,VTM,0
+         2,VTM,COUNT
+          ,XTA,ZERO
+ LOOP:   2,VZM,DONE
+         1,A+X,ARRAY
+         1,UTM,1
+         2,UTM,-1
+          ,UJ,LOOP
+ DONE:    ,ATX,SUM
+C END CODE
+          ,XTA,SUM
+          ,AEX,EXPECT
+          ,U1A,FAIL
+          ,ITA,1
+          ,AEX,RAWCOUNT
+          ,U1A,FAIL
+         2,V1M,FAIL
+          ,*64,OKINFO
+          ,*74,
+ FAIL:    ,*64,BADINFO
+          ,*74,
+C BEGIN DATA
+ COUNT:   ,EQU,3
+ ZERO:    ,REAL,0.
+ ARRAY:   ,REAL,10.
+          ,REAL,20.
+          ,REAL,30.
+ SUM:     ,REAL,0.
+C END DATA
+ EXPECT:  ,REAL,60.
+ RAWCOUNT:,LOG,3
+ OKINFO:  ,    ,OKTEXT
+          ,    ,OKTEXT
+          ,001,
+         8,    ,
+ BADINFO: ,    ,BADTEXT
+          ,    ,BADTEXT
+          ,001,
+         8,    ,
+ OKTEXT:  ,GOST,6HOK 06
+          ,GOST,6H'231'
+ BADTEXT: ,GOST,6HFAIL06
+          ,GOST,6H'231'
+          ,END,
+*execute
+*end file

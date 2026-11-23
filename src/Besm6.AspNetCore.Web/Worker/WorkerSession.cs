@@ -98,7 +98,8 @@ public sealed partial class WorkerSession : IDisposable
                 if (_waitingForInput) { await SendAsync("commandError", new ErrorData("Send terminal input to continue.", null)); return; }
                 EnsureLoaded();
                 _stepBudget = -1;
-                if (_stepObserver is not null) _machine!.Cpu.InstructionExecuted -= _stepObserver;
+                if (_machine!.UsesHostedSupervisorServices) _loader!.InstructionExecuted = null;
+                else if (_stepObserver is not null) _machine.Cpu.InstructionExecuted -= _stepObserver;
                 await SendStateAsync("Running");
                 _resume.Set();
                 StartExecution();
@@ -110,8 +111,12 @@ public sealed partial class WorkerSession : IDisposable
                 if (_resume.IsSet && _runTask is { IsCompleted: false })
                     throw new InvalidOperationException("Pause execution before stepping.");
                 _stepBudget = 1;
-                _machine!.Cpu.InstructionExecuted -= _stepObserver;
-                _machine.Cpu.InstructionExecuted += _stepObserver;
+                if (_machine!.UsesHostedSupervisorServices) _loader!.InstructionExecuted = _stepObserver;
+                else
+                {
+                    _machine.Cpu.InstructionExecuted -= _stepObserver;
+                    _machine.Cpu.InstructionExecuted += _stepObserver;
+                }
                 await SendStateAsync("Stepping");
                 _resume.Set();
                 StartExecution();
@@ -214,7 +219,13 @@ public sealed partial class WorkerSession : IDisposable
         await SendStateAsync("Loading");
         try
         {
-            if (command.MachineModel.StartsWith("supervisor-", StringComparison.Ordinal)) { await StartStandaloneAsync(command); return; }
+            if (command.MachineModel.StartsWith("supervisor-", StringComparison.Ordinal))
+            {
+                bool json = (await File.ReadAllTextAsync(command.JobPath)).TrimStart('\uFEFF', ' ', '\r', '\n', '\t').StartsWith('{');
+                if (json) { await StartStandaloneAsync(command); return; }
+                if (command.MachineModel == "supervisor-hardware")
+                    throw new InvalidDataException("Hosted .dub jobs require Supervisor — functional. Hardware mode requires a native machine .json configuration.");
+            }
             var cfg = Config.Load(Path.Combine(AppContext.BaseDirectory, "besm6.json"));
             cfg.Tapes = Path.Combine(AppContext.BaseDirectory, "tapes");
             cfg.Disk = Path.Combine(_directory, "disk.bin");
@@ -223,6 +234,7 @@ public sealed partial class WorkerSession : IDisposable
             cfg.Speed = speed;
             cfg.GuestClock = command.GuestClock;
             cfg.BufferedMemory = command.MachineModel == "buffered";
+            cfg.SupervisorHostedServices = command.MachineModel == "supervisor-functional";
             var assets = MachineFactory.ValidateRuntimeAssets(cfg);
             _machine = MachineFactory.CreateMachine(cfg);
             _loader = MachineFactory.CreateLoader(cfg, _machine, assets);
@@ -285,7 +297,7 @@ public sealed partial class WorkerSession : IDisposable
 
     private void InstructionBoundary(Opcode opcode, CancellationToken token)
     {
-        Interlocked.Exchange(ref _instructions, _loader!.InstructionsExecuted + 1);
+        Interlocked.Exchange(ref _instructions, _loader!.InstructionsExecuted + (_machine!.UsesHostedSupervisorServices ? 0 : 1));
         token.ThrowIfCancellationRequested();
         if (_debug && _stepBudget > 0 && Interlocked.Decrement(ref _stepBudget) == 0 && opcode != Opcode.Stop)
         {

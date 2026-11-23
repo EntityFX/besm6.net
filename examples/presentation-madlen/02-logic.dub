@@ -1,0 +1,37 @@
+*name logic
+*madlen
+ PROGRAM: ,NAME,
+C BEGIN CODE
+          ,NTR,0
+          ,XTA,FLAGS
+          ,AAX,MASK
+          ,ATX,RESULT
+C END CODE
+          ,XTA,RESULT
+          ,AEX,EXPECT
+          ,U1A,FAIL
+          ,*64,OKINFO
+          ,*74,
+ FAIL:    ,*64,BADINFO
+          ,*74,
+C BEGIN DATA
+ FLAGS:   ,LOG,12
+ MASK:    ,LOG,14
+ RESULT:  ,LOG,0
+C END DATA
+ EXPECT:  ,LOG,10
+ OKINFO:  ,    ,OKTEXT
+          ,    ,OKTEXT
+          ,001,
+         8,    ,
+ BADINFO: ,    ,BADTEXT
+          ,    ,BADTEXT
+          ,001,
+         8,    ,
+ OKTEXT:  ,GOST,6HOK 02
+          ,GOST,6H'231'
+ BADTEXT: ,GOST,6HFAIL02
+          ,GOST,6H'231'
+          ,END,
+*execute
+*end file

@@ -54,6 +54,9 @@ namespace Besm6.Runtime.Configuration
         public int MemorySize { get; set; } = 32768;
         [JsonPropertyName("bufferedMemory")]
         public bool BufferedMemory { get; set; }
+        /// <summary>Functional supervisor CPU/MMU with explicit hosted Dubna services, not a booted guest OS.</summary>
+        [JsonPropertyName("supervisorHostedServices")]
+        public bool SupervisorHostedServices { get; set; }
 
         /// <summary>
         /// E50 067 (DATE*): использовать реальное системное время (localtime).

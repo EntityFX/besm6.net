@@ -3,29 +3,23 @@
   const $ = id => document.getElementById(id);
   let entries = [], pending, updating = false;
   const changed = () => window.dispatchEvent(new Event('exampleSelectionChanged'));
-  const machineProfile = () => $('machineModel').value;
-  const isSupervisor = () => machineProfile().startsWith('supervisor-');
-  const compatible = entry => {
-    const json = entry.id.endsWith('.json');
-    return isSupervisor() ? json : !json;
-  };
   function options() {
     if (updating) return;
     updating = true;
     const selected = $('exampleSelect').value, filter = $('exampleFilter').value.toLowerCase();
     const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = t('Select an example');
     const groups = new Map();
-    for (const entry of entries.filter(entry => compatible(entry) && entry.id.toLowerCase().includes(filter))) {
+    for (const entry of entries.filter(entry => entry.id.toLowerCase().includes(filter))) {
       if (!groups.has(entry.group)) { const group = document.createElement('optgroup'); group.label = entry.group; groups.set(entry.group, group); }
       const option = document.createElement('option'); option.value = entry.id; option.textContent = entry.name; groups.get(entry.group).append(option);
     }
     $('exampleSelect').replaceChildren(placeholder, ...groups.values());
     $('exampleSelect').value = selected;
-    if (!$('exampleSelect').value || !compatible({ id: $('exampleSelect').value })) {
+    if (!$('exampleSelect').value) {
       $('exampleSelect').value = '';
       pending?.abort(); ui('exampleSource', 'Выберите пример для просмотра.');
     }
-    ui('exampleMessage', `${entries.filter(entry => compatible(entry) && entry.id.toLowerCase().includes(filter)).length} примеров`);
+    ui('exampleMessage', `${entries.filter(entry => entry.id.toLowerCase().includes(filter)).length} примеров`);
     changed();
     updating = false;
   }

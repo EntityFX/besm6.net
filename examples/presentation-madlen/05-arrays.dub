@@ -1,0 +1,52 @@
+*name arrays
+*madlen
+ PROGRAM: ,NAME,
+C BEGIN CODE
+          ,NTR,0
+         1,VTM,2
+         1,XTA,ARRAY
+          ,A*X,SCALE
+         1,ATX,ARRAY
+C END CODE
+          ,XTA,ARRAY
+          ,AEX,EXP0
+          ,U1A,FAIL
+          ,XTA,ARRAY+1
+          ,AEX,EXP1
+          ,U1A,FAIL
+          ,XTA,ARRAY+2
+          ,AEX,EXP2
+          ,U1A,FAIL
+          ,XTA,ARRAY+3
+          ,AEX,EXP3
+          ,U1A,FAIL
+          ,*64,OKINFO
+          ,*74,
+ FAIL:    ,*64,BADINFO
+          ,*74,
+C BEGIN DATA
+ ARRAY:   ,REAL,10.
+          ,REAL,20.
+          ,REAL,30.
+          ,REAL,40.
+ SCALE:   ,REAL,2.
+C END DATA
+ EXP0:    ,REAL,10.
+ EXP1:    ,REAL,20.
+ EXP2:    ,REAL,60.
+ EXP3:    ,REAL,40.
+ OKINFO:  ,    ,OKTEXT
+          ,    ,OKTEXT
+          ,001,
+         8,    ,
+ BADINFO: ,    ,BADTEXT
+          ,    ,BADTEXT
+          ,001,
+         8,    ,
+ OKTEXT:  ,GOST,6HOK 05
+          ,GOST,6H'231'
+ BADTEXT: ,GOST,6HFAIL05
+          ,GOST,6H'231'
+          ,END,
+*execute
+*end file

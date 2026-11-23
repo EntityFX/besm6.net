@@ -5,7 +5,7 @@ namespace Besm6.Runtime;
 public sealed record BufferRegisterView(string Name, int Slot, ulong Value, uint? Address, bool? Active, bool? Ready, bool? PendingWrite = null);
 public sealed record DetailedMachineState(string MemoryModel, string ExecutionModel, BufferRegisterView[] Buffers,
     uint[] SpecialRegisters, ulong? ControlFlags, ulong? Interrupts, ulong? HardwareNanoseconds, uint[] ArithmeticCommands,
-    uint[] PageAssignment, uint? OperandProtection);
+    uint[] PageAssignment, uint? OperandProtection, string ProcessorProfile, string ServiceRuntime);
 
 public partial class MachineCore
 {
@@ -36,7 +36,8 @@ public partial class MachineCore
             supervisor?.Status.EncodedControls, supervisor?.InternalInterrupts,
             ExistingHardwareModel?.Timeline.Now.Nanoseconds, ExistingHardwareModel?.InspectArithmeticCommands() ?? [],
             MappedMemory is { } mmu ? Enumerable.Range(0,32).Select(page => mmu.Assignment.GetPhysicalPage((uint)page)).ToArray() : [],
-            MappedMemory?.Assignment.OperandProtectionMask);
+            MappedMemory?.Assignment.OperandProtectionMask, Cpu.Profile.ToString(),
+            UsesHostedSupervisorServices ? "HostedDubna" : Cpu.Profile == Architecture.Machine.ProcessorProfile.Dubna ? "Dubna" : "Native");
 
         void AddPhysical(string name, MemoryBufferEntry[] entries)
         {

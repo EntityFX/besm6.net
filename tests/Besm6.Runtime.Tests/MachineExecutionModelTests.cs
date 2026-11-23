@@ -80,6 +80,14 @@ public sealed class MachineExecutionModelTests
     }
 
     [TestMethod]
+    public void HostedSupervisorCannotBeRelabelledAsHardware()
+    {
+        var machine = MachineCore.CreateHostedSupervisor();
+        Assert.ThrowsExactly<InvalidOperationException>(() => machine.UseHardwareExecution(Timing()));
+        Assert.AreEqual(MachineExecutionModel.Functional, machine.ExecutionModel);
+    }
+
+    [TestMethod]
     public void SwitchingOwnersPreservesRegistersAndBothTimes()
     {
         var machine = Machine(); var timing = Timing(); machine.UseHardwareExecution(timing);

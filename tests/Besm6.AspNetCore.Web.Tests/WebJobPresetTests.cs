@@ -44,6 +44,15 @@ public sealed class WebJobPresetTests
     }
 
     [TestMethod]
+    public void PresetCanExplicitlySelectHostedSupervisorForDub()
+    {
+        var json = Encoding.UTF8.GetBytes("{\"kind\":\"web-job\",\"example\":\"fortran.dub\",\"machineModel\":\"supervisor-functional\"}");
+        var job = WebJobPreset.Resolve(json, true, new ExampleCatalog());
+        Assert.AreEqual("dub", job.Options.Format);
+        Assert.AreEqual("supervisor-functional", job.Options.MachineModel);
+    }
+
+    [TestMethod]
     [DataRow("hardware")]
     [DataRow("functional")]
     public void MachineImageSelectsItsExecutionModelAndKeepsOriginalBytes(string model)

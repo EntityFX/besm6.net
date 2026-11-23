@@ -71,12 +71,12 @@ public sealed class WorkerTests
     private const string TwoInstructions = "*assem\natx 1234\nstop\n*end file\n";
 
     [TestMethod]
-    public async Task SupervisorRejectsDubWithActionableErrorAndCanRestartInDubna()
+    public async Task HardwareRejectsDubWithActionableErrorAndCanRestartInDubna()
     {
         await using var f = new Fixture(); await f.StartAsync(TwoInstructions);
-        await f.Host.SendAsync(new WorkerCommand("start", Path.Combine(f.DirectoryPath, "job.dub"), "full", MachineModel: "supervisor-functional"));
+        await f.Host.SendAsync(new WorkerCommand("start", Path.Combine(f.DirectoryPath, "job.dub"), "full", MachineModel: "supervisor-hardware"));
         string message = Fixture.Data(await f.UntilAsync("error", allowError: true)).GetProperty("message").GetString()!;
-        StringAssert.Contains(message, "Select Dubna");
+        StringAssert.Contains(message, "Supervisor — functional");
         StringAssert.Contains(message, ".json");
         await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Failed");
         await f.SendAsync("start", "full");
@@ -284,6 +284,32 @@ public sealed class WorkerTests
         Assert.IsTrue(done.GetProperty("limitExceeded").GetBoolean());
         Assert.AreEqual(10L, done.GetProperty("instructions").GetInt64());
         Assert.IsFalse(string.IsNullOrWhiteSpace(done.GetProperty("errorMessage").GetString()));
+    }
+
+    [TestMethod]
+    [DataRow("full")]
+    [DataRow("debug")]
+    public async Task HostedSupervisorRunsDubWithoutChangingSelectedProcessor(string mode)
+    {
+        await using var f = new Fixture(); await f.StartAsync(TwoInstructions);
+        await f.Host.SendAsync(new WorkerCommand("start", Path.Combine(f.DirectoryPath, "job.dub"), mode,
+            InstructionLimit: 0, MachineModel: "supervisor-functional"));
+        if (mode == "debug")
+        {
+            await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Paused");
+            await f.SendAsync("step");
+            await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Paused");
+            await f.Host.SendAsync(new WorkerCommand("snapshot"));
+            Assert.AreEqual(1L, Fixture.Data(await f.UntilAsync("registers")).GetProperty("instructions").GetInt64());
+            await f.SendAsync("resume");
+        }
+        Assert.IsTrue(Fixture.Data(await f.UntilAsync("completed")).GetProperty("success").GetBoolean());
+        await f.Host.SendAsync(new WorkerCommand("snapshot"));
+        var state = Fixture.Data(await f.UntilAsync("machineRegisters"));
+        Assert.AreEqual("Supervisor", state.GetProperty("processorProfile").GetString());
+        Assert.AreEqual("HostedDubna", state.GetProperty("serviceRuntime").GetString());
+        Assert.AreEqual("Mapped", state.GetProperty("memoryModel").GetString());
+        Assert.IsFalse(state.GetProperty("buffers").EnumerateArray().Any(buffer => buffer.GetProperty("name").GetString() == "БРЧ"));
     }
 
     [TestMethod]
