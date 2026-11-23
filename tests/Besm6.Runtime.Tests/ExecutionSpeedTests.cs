@@ -101,6 +101,33 @@ public sealed class ExecutionSpeedTests
     }
 
     [TestMethod]
+    [DataRow(ExecutionSpeed.Max, false)]
+    [DataRow(ExecutionSpeed.Max, true)]
+    [DataRow(ExecutionSpeed.Original, true)]
+    [DataRow(ExecutionSpeed.Virtual, false)]
+    public void ZeroInstructionLimitRunsUntilStop(ExecutionSpeed speed, bool statistics)
+    {
+        var machine = new MachineCore();
+        var loader = new DubnaLoader(machine) { InstructionLimit = 0, Speed = speed, CollectStatistics = statistics };
+        machine.LoadProgram(new[] { new Word48(Assembler.Legacy.Assembler.Asm("vtm 1(1), stop")) }, 1);
+        var result = loader.RunLoaded();
+        Assert.IsTrue(result.Stopped);
+        Assert.IsFalse(result.LimitExceeded);
+        Assert.AreEqual(2L, loader.InstructionsExecuted);
+    }
+
+    [TestMethod]
+    public void ZeroInstructionLimitKeepsWallClockLimit()
+    {
+        var machine = new MachineCore();
+        var loader = new DubnaLoader(machine) { InstructionLimit = 0, WallClockLimitMs = 10 };
+        machine.LoadProgram(new[] { new Word48(Assembler.Legacy.Assembler.Asm("uj 1")) }, 1);
+        var result = loader.RunLoaded();
+        Assert.IsTrue(result.LimitExceeded);
+        Assert.IsTrue(loader.InstructionsExecuted > 0);
+    }
+
+    [TestMethod]
     public void FailedInstructionAndIntercept_MatchFullProfiler()
     {
         var machine = new MachineCore();

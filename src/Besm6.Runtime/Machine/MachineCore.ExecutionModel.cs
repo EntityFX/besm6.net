@@ -71,7 +71,7 @@ public partial class MachineCore
     {
         if (_publicHardwareRunning || Cpu.ExecutionProhibited)
             throw new InvalidOperationException("Nested machine execution is not allowed.");
-        if (instructionLimit < 1) throw new ArgumentOutOfRangeException(nameof(instructionLimit));
+        if (instructionLimit < 0) throw new ArgumentOutOfRangeException(nameof(instructionLimit));
         if (ExecutionModel != MachineExecutionModel.Hardware) throw new InvalidOperationException("Select hardware execution first.");
         if (!Enum.IsDefined(speed)) throw new ArgumentOutOfRangeException(nameof(speed));
         var model = HardwareModel; ulong started = model.Timeline.Now.Nanoseconds;
@@ -90,7 +90,7 @@ public partial class MachineCore
         try
         {
             // Bound failed attempts independently, just as the functional supervisor runner does.
-            for (long attempt = 0; attempt < instructionLimit; attempt++)
+            for (long attempt = 0; instructionLimit == 0 || attempt < instructionLimit; attempt++)
             {
                 executionCheckpoint?.Invoke(checked((long)completed));
                 if (wallLimit is not null && wallLimit.ElapsedMilliseconds >= wallClockLimitMs) break;

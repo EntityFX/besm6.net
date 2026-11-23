@@ -293,7 +293,8 @@ namespace Besm6.Runtime
         }
 
         /// <summary>
-        /// Bounded execution with shared pacing, without installing hosted extracodes.
+        /// Execution with shared pacing, without installing hosted extracodes. A zero
+        /// instruction limit disables the instruction and supervisor attempt limits.
         /// For the supervisor profile the limit also bounds step attempts, including
         /// fault delivery, preventing a faulting handler from running forever without
         /// completed commands. Failed attempts do not advance guest ticks or counters.
@@ -302,13 +303,13 @@ namespace Besm6.Runtime
             ExecutionSpeed speed = ExecutionSpeed.Max, bool collectStatistics = false,
             Action<long>? executionCheckpoint = null, long wallClockLimitMs = 0)
         {
-            if (instructionLimit < 1) throw new ArgumentOutOfRangeException(nameof(instructionLimit));
+            if (instructionLimit < 0) throw new ArgumentOutOfRangeException(nameof(instructionLimit));
             if (ExecutionModel == MachineExecutionModel.Hardware)
                 return RunHardwareInstructions(instructionLimit, speed, collectStatistics, executionCheckpoint: executionCheckpoint, wallClockLimitMs: wallClockLimitMs);
             var loop = new ExecutionLoop(this)
             {
                 InstructionLimit = instructionLimit,
-                StepAttemptLimit = Cpu.Profile == ProcessorProfile.Supervisor ? instructionLimit : null,
+                StepAttemptLimit = Cpu.Profile == ProcessorProfile.Supervisor && instructionLimit > 0 ? instructionLimit : null,
                 Speed = speed,
                 CollectStatistics = collectStatistics,
                 ExecutionCheckpoint = executionCheckpoint,

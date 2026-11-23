@@ -88,7 +88,7 @@ public sealed class MachineCommandTests
     }
 
     [TestMethod]
-    [DataRow("--execution", "fast")] [DataRow("--speed", "fast")] [DataRow("--limit", "0")]
+    [DataRow("--execution", "fast")] [DataRow("--speed", "fast")] [DataRow("--limit", "-1")]
     public void InvalidOptionsAreRejectedBeforeReadingMissingConfiguration(string option, string value)
     {
         var output = new StringWriter(); var error = new StringWriter();
@@ -114,6 +114,22 @@ public sealed class MachineCommandTests
         using var json = JsonDocument.Parse(limit.Output); Assert.IsTrue(json.RootElement.GetProperty("limitExceeded").GetBoolean());
         var missing = Job("hardware"); missing.Timing!.ControlDurationsNs.Remove("Stop");
         var failure = Run(missing); Assert.AreEqual(1, failure.Code); StringAssert.Contains(failure.Error, "No explicit UU duration");
+    }
+
+    [TestMethod]
+    [DataRow("functional")]
+    [DataRow("hardware")]
+    public void ZeroLimitInJsonAndCliRunsToStop(string model)
+    {
+        var job = Job(model); job.InstructionLimit = 0;
+        var fromJson = Run(job);
+        Assert.AreEqual(0, fromJson.Code, fromJson.Error);
+        using var parsed = JsonDocument.Parse(fromJson.Output);
+        Assert.IsTrue(parsed.RootElement.GetProperty("stopped").GetBoolean());
+        Assert.AreEqual(2L, parsed.RootElement.GetProperty("instructions").GetInt64());
+        job.InstructionLimit = 1;
+        var fromCli = Run(job, "--limit", "0");
+        Assert.AreEqual(0, fromCli.Code, fromCli.Error);
     }
 
     [TestMethod]

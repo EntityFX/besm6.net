@@ -151,7 +151,8 @@ namespace Besm6.Runtime.Execution
 
         private LoadResult RunCore(Stopwatch? wallStopwatch, ExecutionDiagnosticsSession diagnostics)
         {
-            long limit = InstructionLimit;
+            if (InstructionLimit < 0) throw new ArgumentOutOfRangeException(nameof(InstructionLimit));
+            long limit = InstructionLimit == 0 ? long.MaxValue : InstructionLimit;
             long wallLimitMs = WallClockLimitMs;
             var pacer = Speed == ExecutionSpeed.Original
                 ? new ExecutionPacer(new StopwatchExecutionTimeSource(wallStopwatch!)) : null;

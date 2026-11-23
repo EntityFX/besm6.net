@@ -34,6 +34,16 @@ public sealed class WebJobPresetTests
     }
 
     [TestMethod]
+    [DataRow(0L)]
+    [DataRow(1L)]
+    public void PresetAcceptsZeroOrPositiveInstructionLimit(long limit)
+    {
+        string json = "{\"kind\":\"web-job\",\"example\":\"dhrystone-forex.dub\",\"instructionLimit\":" + limit + "}";
+        var job = WebJobPreset.Resolve(Encoding.UTF8.GetBytes(json), true, new ExampleCatalog());
+        Assert.AreEqual(limit, job.Options.InstructionLimit);
+    }
+
+    [TestMethod]
     [DataRow("hardware")]
     [DataRow("functional")]
     public void MachineImageSelectsItsExecutionModelAndKeepsOriginalBytes(string model)

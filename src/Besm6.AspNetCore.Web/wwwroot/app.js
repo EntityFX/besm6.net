@@ -304,9 +304,9 @@
     const wallClockLimitMs = Math.round(Number($('wallClockLimit').value) * 1000);
     if (!$('instructionLimit').value.trim() || !$('wallClockLimit').value.trim()
       || !$('instructionLimit').checkValidity() || !$('wallClockLimit').checkValidity()
-      || !Number.isInteger(instructionLimit) || instructionLimit < 1 || instructionLimit > 1_000_000_000
+      || !Number.isInteger(instructionLimit) || instructionLimit < 0 || instructionLimit > 1_000_000_000
       || !Number.isInteger(wallClockLimitMs) || wallClockLimitMs < 0 || wallClockLimitMs > 3_600_000) {
-      showError({message: 'Use 1–1,000,000,000 instructions and a time limit from 0 to 3,600 seconds.'}); return;
+      showError({message: 'Use 0–1,000,000,000 instructions (0 = unlimited) and a time limit from 0 to 3,600 seconds.'}); return;
     }
     activeMode = document.querySelector('input[name=mode]:checked').value;
     const speed = $('speed').value;

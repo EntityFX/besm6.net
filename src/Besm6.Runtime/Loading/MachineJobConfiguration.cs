@@ -62,8 +62,8 @@ public sealed class MachineJobConfiguration
             "simh512k" => Processor.Memory.MemoryConfiguration.Simh512K,
             _ => throw new ArgumentException("memoryConfiguration must be 'classical32k' or 'simh512k'.")
         };
-        if (InstructionLimit < 1 || EntryAddress >= ArchitectureConstants.WordCount)
-            throw new ArgumentException("Instruction limit must be positive and CPU entry address must fit 15 bits.");
+        if (InstructionLimit < 0 || EntryAddress >= ArchitectureConstants.WordCount)
+            throw new ArgumentException("Instruction limit must be non-negative (0 disables it) and CPU entry address must fit 15 bits.");
         var status = new ControlUnitStatus((ControlUnitFlags)ControlFlags);
         ArgumentNullException.ThrowIfNull(MemoryWords);
         uint capacity = memory == Processor.Memory.MemoryConfiguration.Classical32K ? 32768U : 524288U;

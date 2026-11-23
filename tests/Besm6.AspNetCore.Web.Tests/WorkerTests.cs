@@ -287,6 +287,37 @@ public sealed class WorkerTests
     }
 
     [TestMethod]
+    [DataRow("dubna")]
+    [DataRow("buffered")]
+    [DataRow("supervisor-functional")]
+    [DataRow("supervisor-hardware")]
+    public async Task ZeroInstructionLimitRunsToStop(string model)
+    {
+        string job = model.StartsWith("supervisor-")
+            ? await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "machine-template.json"))
+            : TwoInstructions;
+        await using var f = new Fixture();
+        await f.StartAsync(job);
+        await f.Host.SendAsync(new WorkerCommand("start", Path.Combine(f.DirectoryPath, "job.dub"), "full",
+            InstructionLimit: 0, MachineModel: model));
+        var done = Fixture.Data(await f.UntilAsync("completed"));
+        Assert.IsTrue(done.GetProperty("success").GetBoolean());
+        Assert.IsFalse(done.GetProperty("limitExceeded").GetBoolean());
+        Assert.IsTrue(done.GetProperty("instructions").GetInt64() > 0);
+    }
+
+    [TestMethod]
+    public async Task ZeroInstructionLimitStillAllowsStoppingInfiniteJob()
+    {
+        await using var f = new Fixture();
+        await f.StartAsync("*assem\nuj 1000\n*end file\n");
+        await f.SendAsync("start", "full", limit: 0);
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Running");
+        await f.SendAsync("stop");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Halted");
+    }
+
+    [TestMethod]
     public async Task DebugPauseResumeAndStop()
     {
         await using var f = new Fixture();

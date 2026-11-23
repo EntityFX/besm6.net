@@ -39,7 +39,7 @@ public sealed class WebJobPreset
         var preset = JsonSerializer.Deserialize<WebJobPreset>(document.RootElement.GetRawText(), new JsonSerializerOptions {
             PropertyNameCaseInsensitive = true, UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow })!;
         if (preset.MachineModel is not ("dubna" or "buffered") || preset.Speed is not ("max" or "original" or "virtual")
-            || preset.Mode is not ("full" or "debug") || preset.InstructionLimit is < 1 or > 1_000_000_000)
+            || preset.Mode is not ("full" or "debug") || preset.InstructionLimit is < 0 or > 1_000_000_000)
             throw new ArgumentException("Invalid preset machine, speed, mode or instruction limit.");
         if (!catalog.TryGetPath(preset.Example, out string path) || Path.GetExtension(path) != ".dub")
             throw new ArgumentException("Preset example must reference a bundled .dub program.");

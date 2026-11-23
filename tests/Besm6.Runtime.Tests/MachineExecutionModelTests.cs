@@ -43,6 +43,34 @@ public sealed class MachineExecutionModelTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void UnlimitedMachineCanBeInterruptedAtCheckpoint(bool hardware)
+    {
+        var machine = Machine("uj 10");
+        if (hardware) machine.UseHardwareExecution(Timing());
+        long last = 0;
+        Assert.ThrowsExactly<OperationCanceledException>(() => machine.RunInstructions(0, executionCheckpoint: count =>
+        {
+            last = count;
+            if (count >= 10) throw new OperationCanceledException();
+        }));
+        Assert.IsTrue(last >= 10);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void UnlimitedMachineStillHonorsWallClockLimit(bool hardware)
+    {
+        var machine = Machine("uj 10");
+        if (hardware) machine.UseHardwareExecution(Timing());
+        var result = machine.RunInstructions(0, wallClockLimitMs: 10);
+        Assert.IsTrue(result.Outcome.LimitExceeded);
+        Assert.IsTrue(result.Outcome.Instructions > 0);
+    }
+
+    [TestMethod]
     public void DirectCpuAndHostedLoopCannotBypassHardwareOwner()
     {
         var machine = Machine(); machine.UseHardwareExecution(Timing());

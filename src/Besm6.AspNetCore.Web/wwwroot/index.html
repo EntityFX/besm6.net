@@ -24,11 +24,12 @@
             </fieldset>
             <div><label for="speed" class="form-label">Speed</label>
               <select id="speed" class="form-select form-select-sm"><option value="max">Maximum</option><option value="original">Original</option><option value="virtual">Virtual</option></select></div>
-            <div><label for="instructionLimit" class="form-label">Instruction limit</label>
-              <input id="instructionLimit" type="number" min="1" max="1000000000" value="20000000" class="form-control form-control-sm"></div>
+            <div><label for="instructionLimit" class="form-label">Instruction limit (0 = ∞)</label>
+              <input id="instructionLimit" type="number" min="0" max="1000000000" value="20000000" class="form-control form-control-sm" aria-describedby="instructionHelp"></div>
             <div><label for="wallClockLimit" class="form-label">Time, s (0 = ∞)</label>
               <input id="wallClockLimit" type="number" min="0" max="3600" step="0.1" value="0" class="form-control form-control-sm" aria-describedby="timeHelp"></div>
           </div>
+          <p id="instructionHelp" class="visually-hidden">Instruction limit: 0 = unlimited.</p>
           <p id="timeHelp" class="visually-hidden">Time limit in seconds: 0 = unlimited.</p>
           <div class="job-toggles mb-1">
             <div class="form-check"><input id="guestClock" class="form-check-input" type="checkbox"><label class="form-check-label" for="guestClock">Guest Clock</label></div>

@@ -300,6 +300,12 @@ await Check("instruction-limit", async (page, _) =>
     await page.FillAsync("#instructionLimit", "10"); await page.ClickAsync("#run"); await Status(page, "Failed");
     if (string.IsNullOrWhiteSpace(await page.Locator("#error").InnerTextAsync())) throw new Exception("Limit reached without explanation");
 });
+await Check("instruction-limit-zero", async (page, _) =>
+{
+    await Upload(page, loop); await page.CheckAsync("input[value=full]");
+    await page.FillAsync("#instructionLimit", "0"); await page.ClickAsync("#run"); await Status(page, "Running");
+    await page.ClickAsync("#stop"); await Status(page, "Halted");
+});
 await Check("invalid-options", async (page, _) =>
 {
     await Upload(page); await page.FillAsync("#instructionLimit", "1000000001"); await page.ClickAsync("#run");

@@ -12,7 +12,7 @@ public sealed class MachineCommand : ICommand
 {
     public string Name => "machine";
     public string Description => "Run a standalone supervisor machine with functional or hardware execution";
-    public string Usage => "besm6 machine <machine.json> [--execution functional|hardware] [--speed original|max|virtual] [--limit N] [--stats] [--machine-state] [--dump-mem FILE]";
+    public string Usage => "besm6 machine <machine.json> [--execution functional|hardware] [--speed original|max|virtual] [--limit N (0 = unlimited)] [--stats] [--machine-state] [--dump-mem FILE]";
 
     public int Execute(string[] args)
     {
@@ -32,7 +32,7 @@ public sealed class MachineCommand : ICommand
                             throw new ArgumentException("--speed requires 'original' or 'max' or 'virtual'.");
                         speed = parsed; break;
                     case "--limit":
-                        if (!long.TryParse(Value(), out var count) || count < 1) throw new ArgumentException("--limit requires a positive integer.");
+                        if (!long.TryParse(Value(), out var count) || count < 0) throw new ArgumentException("--limit requires a non-negative integer (0 disables the limit).");
                         limit = count; break;
                     case "--stats": stats = true; break;
                     case "--machine-state": detailed = true; break;

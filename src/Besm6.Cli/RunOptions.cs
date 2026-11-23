@@ -6,9 +6,9 @@ namespace Besm6.Cli;
 /// <summary>Immutable invocation data, separated from machine creation and execution.</summary>
 internal sealed record RunOptions
 {
-    internal const string Usage = "besm6 run <file.dub> [--speed original|max|virtual] [--stats] [--guest-clock] [--buffered-memory] [--machine-state] [--limit N] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--config path]";
+    internal const string Usage = "besm6 run <file.dub> [--speed original|max|virtual] [--stats] [--guest-clock] [--buffered-memory] [--machine-state] [--limit N (0 = unlimited)] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--config path]";
     internal string JobFile { get; init; } = string.Empty;
-    internal long Limit { get; init; }
+    internal long? Limit { get; init; }
     internal bool Verbose { get; init; }
     internal bool Trace { get; init; }
     internal string? ConfigPath { get; init; }
@@ -45,7 +45,7 @@ internal sealed record RunOptions
             }
         }
         string jobFile = args[0];
-        long limit = 0;
+        long? limit = null;
         bool verbose = false;
         bool trace = false;
         string? configPath = null;
@@ -85,8 +85,16 @@ internal sealed record RunOptions
                     guestClock = true;
                     break;
                 case "--limit" when i + 1 < args.Length:
-                    long.TryParse(args[++i], out limit);
+                    if (!long.TryParse(args[++i], out var parsedLimit) || parsedLimit < 0)
+                    {
+                        error = "Error: --limit requires a non-negative integer (0 disables the limit).";
+                        return false;
+                    }
+                    limit = parsedLimit;
                     break;
+                case "--limit":
+                    error = "Error: --limit requires a non-negative integer (0 disables the limit).";
+                    return false;
                 case "--verbose":
                     verbose = true;
                     break;
@@ -181,7 +189,7 @@ internal sealed record RunOptions
 
     internal void ConfigureLoader(DubnaLoader loader, Config config)
     {
-        loader.InstructionLimit = Limit == 0 ? config.DefaultLimit : Limit;
+        loader.InstructionLimit = Limit ?? config.DefaultLimit;
         loader.CollectStatistics = Stats;
         loader.Verbose = Verbose;
         loader.LoopDetect = LoopDetect && !NoLoopDetect;

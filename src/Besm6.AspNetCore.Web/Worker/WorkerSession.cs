@@ -189,7 +189,7 @@ public sealed partial class WorkerSession : IDisposable
         if (command.MachineModel is not ("dubna" or "buffered" or "supervisor-functional" or "supervisor-hardware")) throw new InvalidDataException("Invalid machine model.");
         if (!ExecutionSpeedNames.TryParse(command.Speed ?? "max", out var speed))
             throw new InvalidDataException("Invalid speed.");
-        if (command.InstructionLimit is < 1 or > 1_000_000_000 || command.WallClockLimitMs is < 0 or > 3_600_000)
+        if (command.InstructionLimit is < 0 or > 1_000_000_000 || command.WallClockLimitMs is < 0 or > 3_600_000)
             throw new InvalidDataException("Invalid execution limit.");
 
         _machine?.Puncher.Finish();
