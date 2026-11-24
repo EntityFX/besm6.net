@@ -15,12 +15,14 @@ public sealed class WorkerTests
         private readonly SemaphoreSlim _arrived = new(0);
         public string DirectoryPath { get; } = Path.Combine(Path.GetTempPath(), "besm6-web-tests", Guid.NewGuid().ToString("N"));
         public WorkerProcessHost Host { get; }
+        public ConcurrentDictionary<string, int> EventCounts { get; } = new();
 
         public Fixture()
         {
             Host = new WorkerProcessHost(new WorkerOptions(DirectoryPath, "besm6-test-" + Guid.NewGuid().ToString("N")), e =>
             {
                 _events.Enqueue(e);
+                EventCounts.AddOrUpdate(e.Type, 1, (_, count) => count + 1);
                 _history.Enqueue(e.Type == "state" ? "state:" + Data(e).GetProperty("status").GetString() : e.Type);
                 _arrived.Release();
                 return Task.CompletedTask;
@@ -105,6 +107,56 @@ public sealed class WorkerTests
         var state=Fixture.Data(await f.UntilAsync("machineRegisters"));
         Assert.AreEqual(model.EndsWith("hardware") ? "Hardware" : "Functional",state.GetProperty("executionModel").GetString());
         Assert.AreEqual(model.EndsWith("hardware") ? 4 : 0,state.GetProperty("buffers").EnumerateArray().Count(b=>b.GetProperty("name").GetString()=="БРЧ"));
+    }
+
+    [TestMethod]
+    [DataRow("dubna")]
+    [DataRow("buffered")]
+    [DataRow("supervisor-functional")]
+    [DataRow("supervisor-hardware")]
+    public async Task RunningSnapshotsAreLimitedToOnePerSecondButPauseAndStepAreImmediate(string model)
+    {
+        string job = "*assem\nuj 1000\n*end file\n";
+        if (model == "supervisor-hardware")
+        {
+            var native = System.Text.Json.Nodes.JsonNode.Parse(await File.ReadAllTextAsync(
+                Path.Combine(AppContext.BaseDirectory, "machine-template.json")))!;
+            native["entryAddress"] = 8;
+            native["timing"]!["controlDurationsNs"]!["Uj"] = 300;
+            native["memoryWords"] = JsonSerializer.SerializeToNode(new[] { new { address = 8,
+                raw50 = Besm6.Architecture.Memory.MemoryWord50.Form(new(Asm("uj 10, uj 10")), false, false).RawValue } });
+            job = native.ToJsonString();
+        }
+        await using var f = new Fixture(); await f.StartAsync(job);
+        await f.Host.SendAsync(new WorkerCommand("start", Path.Combine(f.DirectoryPath, "job.dub"), "debug",
+            InstructionLimit: 0, MachineModel: model));
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Paused");
+        await f.SendAsync("resume");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Running");
+        await Task.Delay(1100);
+        int before = f.EventCounts.GetValueOrDefault("registers");
+        for (int request = 0; request < 12; request++)
+        {
+            await f.Host.SendAsync(new WorkerCommand("snapshot"));
+            // Device acknowledgements still arrive for throttled requests.
+            await f.UntilAsync("storage");
+        }
+        Assert.AreEqual(before + 1, f.EventCounts.GetValueOrDefault("registers"));
+        Assert.AreEqual(before + 1, f.EventCounts.GetValueOrDefault("machineRegisters"));
+        Assert.AreEqual(before + 1, f.EventCounts.GetValueOrDefault("memory"));
+        await Task.Delay(1100);
+        await f.Host.SendAsync(new WorkerCommand("snapshot"));
+        await f.UntilAsync("storage");
+        Assert.AreEqual(before + 2, f.EventCounts.GetValueOrDefault("registers"));
+        await f.SendAsync("pause");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Paused");
+        Assert.AreEqual(before + 3, f.EventCounts.GetValueOrDefault("registers"));
+        await f.SendAsync("step");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Paused");
+        Assert.AreEqual(before + 4, f.EventCounts.GetValueOrDefault("registers"));
+        await f.SendAsync("stop");
+        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Halted");
+        Assert.AreEqual(before + 5, f.EventCounts.GetValueOrDefault("registers"));
     }
 
     [TestMethod]

@@ -21,8 +21,30 @@ public sealed class MachineInspectionTests
         ulong ticks = machine.Clock.Tick;
         var snapshot = machine.InspectRegisters();
         Assert.IsTrue(snapshot.Buffers.Any(b => b.Name.StartsWith("БРЗ") && b.Value == 42));
+        Assert.IsTrue(snapshot.Buffers.All(b => b.Raw50.HasValue && new MemoryWord50(b.Raw50.Value).Data.Value == b.Value));
         Assert.AreEqual(before, JsonSerializer.Serialize(machine.BufferedMemory.Buffers.GetOperandSnapshot()));
         Assert.AreEqual(ticks, machine.Clock.Tick); Assert.IsNull(snapshot.HardwareNanoseconds);
+    }
+
+    [TestMethod]
+    public void MappedInspectionExposesPhysicalWordsWithTheirControlBits()
+    {
+        var machine = new MachineJobConfiguration().CreateMachine(MachineExecutionModel.Functional);
+        var memory = machine.MappedMemory!;
+        var command = MemoryWord50.Form(new(new MadlenAssembler().AssembleWord("stop, stop")), false, false);
+        memory.PhysicalMemory.WriteRaw(8, command);
+        memory.FetchInstruction(8, false);
+        memory.WriteOperandBufferRegister(7, new Word48(0x800000000001));
+        string before = JsonSerializer.Serialize(memory.GetInstructionSnapshot());
+
+        var snapshot = machine.InspectRegisters();
+        Assert.AreEqual(8, snapshot.Buffers.Count(b => b.Name == "БРЗ"));
+        Assert.AreEqual(4, snapshot.Buffers.Count(b => b.Name == "БРС"));
+        Assert.AreEqual(command.RawValue, snapshot.Buffers.Single(b => b.Name == "БРС" && b.Slot == 0).Raw50);
+        Assert.AreEqual(memory.ReadOperandBufferRegister(7).RawValue,
+            snapshot.Buffers.Single(b => b.Name == "БРЗ" && b.Slot == 7).Raw50);
+        Assert.AreEqual(before, JsonSerializer.Serialize(memory.GetInstructionSnapshot()));
+        Assert.AreEqual(command, memory.ReadInstructionBufferRegister(0));
     }
 
     [TestMethod]

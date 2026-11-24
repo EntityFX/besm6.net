@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BESM-6 Console</title>
   <link rel="stylesheet" href="lib/bootstrap/bootstrap.min.css">
-  <link rel="stylesheet" href="site.css">
+  <link rel="stylesheet" href="site.css?v=registers-1">
 </head>
 <body>
   <nav class="navbar navbar-dark bg-dark px-3" aria-label="Main navigation"><span class="navbar-brand mb-0 h1">BESM-6 Console</span><a class="small text-light me-3" href="/">About BESM-6</a><div class="language-picker"><label for="languageSelect" class="visually-hidden">Language</label><select id="languageSelect" class="form-select form-select-sm" aria-label="Language"><option value="ru" lang="ru">Русский</option><option value="en" lang="en">English</option></select></div><span class="small text-light" id="connection">Connecting…</span></nav>
@@ -36,7 +36,9 @@
             <div class="form-check"><input id="autoRefresh" class="form-check-input" type="checkbox" aria-describedby="refreshHelp"><label class="form-check-label" for="autoRefresh">Auto-refresh</label></div>
             <div class="form-check"><input id="statistics" class="form-check-input" type="checkbox"><label class="form-check-label" for="statistics">Statistics</label></div>
           </div>
-          <p id="refreshHelp" class="visually-hidden">Refresh every 300 ms while running. Leave unchecked for faster execution. Device output continues updating.</p>
+          <p id="refreshHelp" class="visually-hidden">Refresh at most once per second while running. Leave unchecked for faster execution. Device output continues updating.</p>
+          <div class="auto-step-controls mb-1"><label class="form-check"><input id="autoStep" class="form-check-input" type="checkbox" aria-describedby="autoStepHelp" disabled> <span>Auto-step</span></label><label for="stepDelay">Step delay, s</label><input id="stepDelay" type="number" class="form-control form-control-sm" min="0.01" max="60" step="0.01" value="1" disabled></div>
+          <p id="autoStepHelp" class="visually-hidden">Debug only. Executes one instruction after each delay (0.1–60 seconds). Uncheck or Pause to stop automatic steps.</p>
           <div class="d-flex flex-wrap gap-1" role="group" aria-label="Execution controls">
             <button id="run" class="btn btn-sm btn-primary" disabled>Run</button>
             <button id="pause" class="btn btn-sm btn-outline-secondary" disabled>Pause</button>
@@ -62,6 +64,7 @@
             <li class="nav-item" role="presentation"><button id="manualTab" class="nav-link active" data-bs-toggle="tab" data-bs-target="#manualPane" type="button" role="tab" aria-controls="manualPane" aria-selected="true">User guide</button></li>
             <li class="nav-item" role="presentation"><button id="examplesTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#examplesPane" type="button" role="tab" aria-controls="examplesPane" aria-selected="false">Examples</button></li>
             <li class="nav-item" role="presentation"><button id="printTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#printPane" type="button" role="tab" aria-controls="printPane" aria-selected="false">Printer</button></li>
+            <li class="nav-item" role="presentation"><button id="panelTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#panelPane" type="button" role="tab" aria-controls="panelPane" aria-selected="false">Panel</button></li>
             <li class="nav-item" role="presentation"><button id="punchTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#punchPane" type="button" role="tab" aria-controls="punchPane" aria-selected="false">Punch cards</button></li>
             <li class="nav-item" role="presentation"><button id="plotterTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#plotterPane" type="button" role="tab" aria-controls="plotterPane" aria-selected="false">Plotter</button></li>
             <li class="nav-item" role="presentation"><button id="terminalTab" class="nav-link" data-bs-toggle="tab" data-bs-target="#terminalPane" type="button" role="tab" aria-controls="terminalPane" aria-selected="false">Terminal</button></li>
@@ -110,6 +113,13 @@
             </section>
           </div></div>
           <div id="printPane" class="tab-pane fade" role="tabpanel" aria-labelledby="printTab"><pre id="printOutput" class="console mb-0" role="region" aria-label="Print output" tabindex="0"></pre></div>
+          <div id="panelPane" class="tab-pane fade" role="tabpanel" aria-labelledby="panelTab">
+            <div id="lampPanel" class="device-view lamp-panel" role="region" aria-label="Register lamp panel" tabindex="0">
+              <div class="lamp-panel-heading"><div><span class="lamp-machine-name">БЭСМ-6</span><h3>Register panel</h3></div><div class="lamp-panel-actions"><a id="panelVisualize" class="btn btn-sm btn-outline-light" href="#" target="_blank" rel="noopener" aria-disabled="true">Visualization</a><label class="lamp-live-label" for="panelLive"><input id="panelLive" type="checkbox" disabled> Live</label><button id="panelRefresh" type="button" class="btn btn-sm btn-outline-light" disabled>Refresh snapshot</button></div></div>
+              <div class="lamp-legend"><span><i class="register-lamp is-on" aria-hidden="true"></i> 1</span><span><i class="register-lamp" aria-hidden="true"></i> 0</span><span><i class="register-lamp lamp-control-bit" aria-hidden="true"></i> <span>Control bit</span></span></div>
+              <div class="lamp-banks"></div>
+            </div>
+          </div>
           <div id="punchPane" class="tab-pane fade" role="tabpanel" aria-labelledby="punchTab"><div class="device-view punch-device-view">
             <div class="d-flex align-items-center flex-wrap gap-2 p-2"><label for="punchFormat">Format</label><select id="punchFormat" class="form-select form-select-sm card-select"><option value="braille">Braille</option><option value="ascii">ASCII</option><option value="grid">Grid</option><option value="card">Card</option></select><span id="punchCount" class="small text-muted">0 cards</span></div>
             <pre id="punchOutput" class="console punch-braille mb-0" role="region" aria-label="Punch card output" tabindex="0"></pre><div id="punchVisual" class="card-preview p-2" hidden></div>
@@ -179,7 +189,7 @@ stop
   </main>
   <script src="lib/bootstrap/bootstrap.bundle.min.js"></script>
   <script src="lib/signalr/signalr.min.js"></script>
-  <script src="i18n.js"></script>
+  <script src="i18n.js?v=registers-1"></script>
   <script src="plotter.js"></script>
   <script src="card-view.js"></script>
   <script src="card-generator.js"></script>
@@ -187,6 +197,8 @@ stop
   <script src="instructions.js"></script>
   <script src="examples.js"></script>
   <script src="media.js"></script>
-  <script src="app.js"></script>
+  <script src="lamp-panel-config.js?v=registers-1"></script>
+  <script src="lamp-panel.js?v=registers-1"></script>
+  <script src="app.js?v=registers-1"></script>
 </body>
 </html>

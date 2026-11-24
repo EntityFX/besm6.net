@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BESM-6 Panel Visualization</title>
+  <link rel="stylesheet" href="lib/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="site.css?v=registers-1">
+</head>
+<body class="panel-page">
+  <nav class="navbar navbar-dark bg-dark px-3" aria-label="Main navigation">
+    <span class="navbar-brand mb-0 h1">BESM-6 · Panel visualization</span>
+    <a class="small text-light me-3" href="/">Back to console</a>
+    <div class="language-picker"><label for="languageSelect" class="visually-hidden">Language</label><select id="languageSelect" class="form-select form-select-sm" aria-label="Language"><option value="ru" lang="ru">Русский</option><option value="en" lang="en">English</option></select></div>
+    <span class="small text-light" id="vizSession">Waiting for the console session…</span>
+  </nav>
+  <main>
+    <div id="lampPanel" class="lamp-panel" role="region" aria-label="Register lamp panel" tabindex="0">
+      <div class="lamp-panel-heading"><div><span class="lamp-machine-name">БЭСМ-6</span><h3>Register panel</h3></div></div>
+      <div class="lamp-legend"><span><i class="register-lamp is-on" aria-hidden="true"></i> 1</span><span><i class="register-lamp" aria-hidden="true"></i> 0</span><span><i class="register-lamp lamp-control-bit" aria-hidden="true"></i> <span>Control bit</span></span></div>
+      <div class="lamp-banks"></div>
+    </div>
+  </main>
+  <script src="i18n.js?v=registers-1"></script>
+  <script src="lamp-panel-config.js?v=registers-1"></script>
+  <script src="lamp-panel.js?v=registers-1"></script>
+  <script src="panel-view.js?v=registers-1"></script>
+</body>
+</html>

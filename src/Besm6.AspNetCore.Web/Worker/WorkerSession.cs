@@ -5,6 +5,7 @@ using Besm6.Runtime;
 using Besm6.Runtime.Configuration;
 using Besm6.Runtime.Loading;
 using Besm6.Runtime.Machine;
+using System.Diagnostics;
 using System.Threading.Channels;
 
 namespace Besm6.AspNetCore.Web.Worker;
@@ -31,6 +32,7 @@ public sealed partial class WorkerSession : IDisposable
     private int _stepBudget = -1;
     private Action<Opcode>? _stepObserver;
     private int _snapshotRequested;
+    private long _lastMachineSnapshotAt;
     private int _memoryAddress = -1;
     private int _memoryCount = 32;
     private long _punchPosition;
@@ -344,6 +346,14 @@ public sealed partial class WorkerSession : IDisposable
         await _snapshotLock.WaitAsync();
         try
         {
+            // Limit before disassembly, memory reads, register inspection and
+            // serialization. A fast/misbehaving client cannot slow RUN by
+            // requesting more diagnostic snapshots. Pause/step/stop are immediate.
+            bool running = !_terminal && !_waitingForInput && _resume.IsSet
+                && _stepBudget < 0 && _runTask is { IsCompleted: false };
+            if (includeMachineState && running && _lastMachineSnapshotAt != 0
+                && Stopwatch.GetElapsedTime(_lastMachineSnapshotAt) < TimeSpan.FromSeconds(1))
+                includeMachineState = false;
             await _output.FlushAsync();
             if (includeMachineState)
             {
@@ -363,6 +373,7 @@ public sealed partial class WorkerSession : IDisposable
                     .ToArray();
                 await SendAsync("memory", new MemoryData(words));
                 await SendAsync("machineRegisters", _machine.InspectRegisters());
+                _lastMachineSnapshotAt = Stopwatch.GetTimestamp();
             }
             await SendDeviceOutputAsync();
         }

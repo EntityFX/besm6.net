@@ -2,7 +2,8 @@ using Besm6.Processor.Memory;
 
 namespace Besm6.Runtime;
 
-public sealed record BufferRegisterView(string Name, int Slot, ulong Value, uint? Address, bool? Active, bool? Ready, bool? PendingWrite = null);
+public sealed record BufferRegisterView(string Name, int Slot, ulong Value, uint? Address, bool? Active, bool? Ready,
+    bool? PendingWrite = null, ulong? Raw50 = null);
 public sealed record DetailedMachineState(string MemoryModel, string ExecutionModel, BufferRegisterView[] Buffers,
     uint[] SpecialRegisters, ulong? ControlFlags, ulong? Interrupts, ulong? HardwareNanoseconds, uint[] ArithmeticCommands,
     uint[] PageAssignment, uint? OperandProtection, string ProcessorProfile, string ServiceRuntime);
@@ -21,15 +22,24 @@ public partial class MachineCore
         if (MappedMemory is { } mapped)
         {
             for (int slot = 0; slot < 8; slot++)
-                buffers.Add(new("БРЗ", slot, mapped.ReadOperandBufferRegister(slot).Data.Value, null, null, null));
+            {
+                var word = mapped.ReadOperandBufferRegister(slot);
+                buffers.Add(new("БРЗ", slot, word.Data.Value, null, null, null, Raw50: word.RawValue));
+            }
             AddAddressed("БАЗ/БРЗ (MRU)", mapped.GetOperandSnapshot());
+            for (int slot = 0; slot < 4; slot++)
+            {
+                var word = mapped.ReadInstructionBufferRegister(slot);
+                buffers.Add(new("БРС", slot, word.Data.Value, null, null, null, Raw50: word.RawValue));
+            }
             AddAddressed("БАС/БРС (MRU)", mapped.GetInstructionSnapshot());
         }
         if (ExistingHardwareModel is { } hardware)
             for (byte slot = 0; slot < 4; slot++)
             {
                 var register = hardware.ReadRegisters.Inspect(slot);
-                buffers.Add(new("БРЧ", slot, register.Word?.Data.Value ?? 0, null, register.Owner != 0, register.Ready));
+                buffers.Add(new("БРЧ", slot, register.Word?.Data.Value ?? 0, null, register.Owner != 0, register.Ready,
+                    Raw50: register.Word?.RawValue));
             }
         var supervisor = Cpu.Supervisor?.Snapshot();
         return new(MemoryModel.ToString(), ExecutionModel.ToString(), buffers.ToArray(), supervisor?.SpecialRegisters ?? [],
@@ -42,12 +52,12 @@ public partial class MachineCore
         void AddPhysical(string name, MemoryBufferEntry[] entries)
         {
             for (int i = 0; i < entries.Length; i++) buffers.Add(new(name + " (MRU)", i, entries[i].Word.Data.Value,
-                entries[i].PhysicalAddress, true, null, name == "БРЗ" ? entries[i].PendingWrite : null));
+                entries[i].PhysicalAddress, true, null, name == "БРЗ" ? entries[i].PendingWrite : null, entries[i].Word.RawValue));
         }
         void AddAddressed(string name, AddressedMemoryBufferEntry[] entries)
         {
             for (int i = 0; i < entries.Length; i++) buffers.Add(new(name, i, entries[i].Word.Data.Value,
-                entries[i].Request.EncodedValue, true, null));
+                entries[i].Request.EncodedValue, true, null, Raw50: entries[i].Word.RawValue));
         }
     }
 }

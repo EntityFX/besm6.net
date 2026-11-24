@@ -56,6 +56,8 @@ public sealed partial class MappedMemoryBackend : IInstructionMemory, ICommandMe
     public AddressedMemoryBufferEntry[] GetInstructionSnapshot() => _instructions.Snapshot();
     /// <summary>Physical BRZ storage, independent of its current recency/tag validity.</summary>
     public MemoryWord50 ReadOperandBufferRegister(int register) => _operands.ReadRegister(register);
+    /// <summary>Physical BRS storage; observation does not fetch a word or change recency.</summary>
+    public MemoryWord50 ReadInstructionBufferRegister(int register) => _instructions.ReadRegister(register);
     public void WriteOperandBufferRegister(int register, Word48 value) => _operands.WriteRegister(register,
         MemoryWord50.Form(value, InvertLeftStoreControl, InvertRightStoreControl));
     public int FindOperandBufferRegister(MemoryRequestAddress request) => _operands.FindRegister(request);

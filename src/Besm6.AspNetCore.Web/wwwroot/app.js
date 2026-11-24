@@ -4,6 +4,7 @@
   const connection = new signalR.HubConnectionBuilder().withUrl('/emulator').withAutomaticReconnect().build();
   const plotter = new Besm6Plotter($('plotterCanvas'), $('plotterRaw'), $('plotterEmpty'));
   const punch = new Besm6PunchOutput();
+  const lamps = new Besm6LampPanel($('lampPanel'));
   let media;
   let ready = false, uploaded = false, uploading = false, hasSnapshot = false;
   let jobFormat = 'dub';
@@ -14,14 +15,79 @@
   };
   let terminalPending = false;
   let activeMode = 'full', state = 'Idle';
+  let autoStepTimer = 0, autoStepInFlight = false;
+  const stopAutoStep = () => {
+    clearTimeout(autoStepTimer); autoStepTimer = 0;
+    $('autoStep').checked = false;
+  };
+  const scheduleAutoStep = () => {
+    clearTimeout(autoStepTimer); autoStepTimer = 0;
+    if (!$('autoStep').checked) return;
+    const delay = Number($('stepDelay').value);
+    if (!$('stepDelay').value.trim() || !$('stepDelay').checkValidity() || !Number.isFinite(delay)) {
+      stopAutoStep(); refreshButtons();
+      showError({ message: 'Use a step delay from 0.01 to 60 seconds.' }); return;
+    }
+    if (!ready || activeMode !== 'debug' || state !== 'Paused' || autoStepInFlight) return;
+    // A single-shot timer, rearmed only after both the worker's Paused event
+    // and command acknowledgement. Slow instructions never queue more steps.
+    autoStepTimer = setTimeout(async () => {
+      autoStepTimer = 0;
+      if (!$('autoStep').checked || !ready || state !== 'Paused' || autoStepInFlight) return;
+      autoStepInFlight = true; setState('Stepping');
+      const ok = await command('step');
+      autoStepInFlight = false;
+      if (!ok) { stopAutoStep(); if (state === 'Stepping') setState('Paused'); }
+      scheduleAutoStep(); refreshButtons();
+    }, delay * 1000);
+  };
   let memoryAddress = -1, snapshotPending = false, snapshotStarted = 0, plotterFrame = 0;
+  let lastRunningSnapshotRequest = -Infinity;
   let plotterPage = 0;
   let numberBase = 8, lastRegisters = null, lastMemory = [], lastMounts = [];
   let lastDetailedState = null, lastStatistics = null;
   const pendingOutput = new Map();
   let outputFrame = 0;
+  let sessionId = null, panelChannel = null, panelWatchUntil = 0;
+  const panelPost = (type, data) => {
+    try { panelChannel?.postMessage({ type, data }); }
+    catch { /* The mirror is optional; the console must keep working. */ }
+  };
+  const syncVisualization = () => {
+    const link = $('panelVisualize');
+    link.setAttribute('aria-disabled', String(!sessionId));
+    link.href = sessionId ? `panel.html?session=${encodeURIComponent(sessionId)}` : '#';
+  };
+  const openPanelChannel = id => {
+    panelChannel?.close(); panelChannel = null;
+    sessionId = id;
+    if ('BroadcastChannel' in window) {
+      panelChannel = new BroadcastChannel(`besm6-panel:${id}`);
+      panelChannel.onmessage = event => {
+        if (event.data?.type === 'watch') {
+          panelWatchUntil = performance.now() + 4000;
+          return;
+        }
+        if (event.data?.type !== 'request') return;
+        panelPost('registers', lastRegisters);
+        panelPost('detail', lastDetailedState);
+        panelPost('state', state);
+        panelPost('base', numberBase);
+      };
+    }
+    syncVisualization();
+  };
+  const closePanelChannel = () => {
+    panelPost('disconnected');
+    panelChannel?.close(); panelChannel = null; sessionId = null; panelWatchUntil = 0; syncVisualization();
+  };
   const activeStates = new Set(['Loading', 'Running', 'WaitingInput', 'Paused', 'Pausing', 'Stepping', 'Stopping', 'Resetting']);
-  const setState = value => { state = value; ui('status', value); refreshButtons(); };
+  const setState = value => {
+    state = value;
+    if (!['Paused', 'Stepping'].includes(value)) stopAutoStep();
+    ui('status', value); lamps.updateState(value); refreshButtons(); scheduleAutoStep();
+    panelPost('state', value);
+  };
   const refreshButtons = () => {
     const active = activeStates.has(state);
     $('run').disabled = !ready || !uploaded || uploading || active;
@@ -31,15 +97,20 @@
     $('exampleEdit').disabled = !$('exampleSelect').value || $('exampleSource').dataset.loaded !== $('exampleSelect').value;
     $('terminalSend').disabled = !ready || terminalPending || ['Loading', 'Resetting', 'Stopping'].includes(state);
     media?.updateState(ready, state);
-    $('pause').disabled = !ready || state !== 'Running';
+    $('pause').disabled = !ready || (state !== 'Running' && !$('autoStep').checked);
     $('resume').disabled = !ready || state !== 'Paused';
-    $('step').disabled = !ready || activeMode !== 'debug' || state !== 'Paused';
-    $('stop').disabled = !ready || !['Running', 'WaitingInput', 'Paused', 'Loading'].includes(state);
+    $('step').disabled = !ready || activeMode !== 'debug' || state !== 'Paused' || $('autoStep').checked || autoStepInFlight;
+    $('autoStep').disabled = !ready || activeMode !== 'debug' || !['Paused', 'Stepping'].includes(state);
+    $('stepDelay').disabled = $('autoStep').disabled;
+    $('stop').disabled = !ready || !['Running', 'WaitingInput', 'Paused', 'Stepping', 'Loading'].includes(state);
     $('file').disabled = !ready || uploading || active;
     $('dropzone').setAttribute('aria-disabled', String($('file').disabled));
     document.querySelectorAll('input[name=mode], #speed, #machineModel, #instructionLimit, #wallClockLimit, #guestClock, #statistics')
       .forEach(input => { input.disabled = active || uploading; });
     $('inspect').disabled = !ready || ['Loading', 'WaitingInput'].includes(state) || (!hasSnapshot && !['Running', 'Paused'].includes(state));
+    $('panelRefresh').disabled = $('inspect').disabled;
+    $('panelLive').disabled = !ready || uploading;
+    $('panelLive').checked = $('autoRefresh').checked;
   };
   const showError = e => { ui('error', e?.message || String(e)); };
   const command = async (type, more = {}) => {
@@ -80,7 +151,12 @@
   }));
   const requestSnapshot = async (includeMachineState = true) => {
     if (!ready || snapshotPending) return;
-    snapshotPending = true; snapshotStarted = performance.now();
+    const now = performance.now();
+    if (state === 'Running') {
+      if (now - lastRunningSnapshotRequest < 1000) return;
+      lastRunningSnapshotRequest = now;
+    }
+    snapshotPending = true; snapshotStarted = now;
     if (!await command(includeMachineState ? 'snapshot' : 'devices', { memoryAddress, memoryCount: 32, decodeMemory: $('decodeMemory').checked })) snapshotPending = false;
   };
   const formatNumber = (value, sourceBase, bits = 15) => {
@@ -93,6 +169,7 @@
     $('memory').textContent = lastMemory.map(w => `${formatNumber(w.address, 8).padStart(addressWidth(), '0')}  ${formatNumber(w.hex, 16, 48)}${$('decodeMemory').checked && w.disassembly != null ? '  ' + Besm6Source.disassembly(w.disassembly, numberBase) : ''}`).join('\n');
   };
   const renderDetailedState = d => {
+    lamps.updateDetail(d);
     ui('machineStateInfo', d ? `${d.memoryModel} / ${d.executionModel}`
       + (d.serviceRuntime === 'HostedDubna' ? ' · ' + t('Hosted Dubna services') : '')
       + (d.hardwareNanoseconds == null ? ' · ' + t('Read buffers require hardware mode') : ` · ${d.hardwareNanoseconds} ns`) : 'Состояние появится после загрузки машины.');
@@ -104,9 +181,12 @@
       ...d.pageAssignment.map((value, i) => `РП[${i.toString(8)}] ${formatNumber(String(value),10)}`),
       ...(d.operandProtection == null ? [] : [`РЗ ${formatNumber(String(d.operandProtection),10,32)}`])
     ].join('\n') || 'В текущем режиме буферные регистры отсутствуют.' : '';
+    panelPost('detail', d);
   };
   const renderMounts = () => renderRows('storageMounts', lastMounts.map(m => [m.kind, formatNumber(m.unit, 8, 6), m.words.toLocaleString(Besm6I18n.language), m.readOnly ? 'Read only' : 'Read / write']));
   const renderRegisters = d => {
+    lamps.updateRegisters(d);
+    lamps.setBase(numberBase);
     const fields = [['K', d ? `${formatNumber(d.k, 8)}${d.rightHalf ? ' R' : ' L'}` : '—'],
       ['A', d ? formatNumber(d.a, 16, 48) : '—'], ['Y', d ? formatNumber(d.y, 16, 48) : '—'],
       ['R', d ? formatNumber(d.r, 8, 6) : '—'], ['C', d ? formatNumber(d.c, 8) : '—'],
@@ -121,6 +201,7 @@
     ui('instructionCount', `${count} ${count === 1 ? 'instruction' : 'instructions'}`);
     const disassembly = d ? Besm6Source.disassembly(d.disassembly, numberBase) : '';
     $('disassembly').textContent = d ? `K ${formatNumber(d.k, 8)}: ${disassembly}` : '—';
+    panelPost('registers', d);
   };
   const renderStatistics = d => {
     lastStatistics = d;
@@ -139,6 +220,7 @@
     }));
   };
   const clearMachine = () => {
+    stopAutoStep();
     hasSnapshot = false;
     lastRegisters = null; lastMemory = []; lastMounts = [];
     lastDetailedState = null; renderDetailedState(null);
@@ -150,10 +232,11 @@
     $('printOutput').textContent = ''; $('punchOutput').textContent = '';
     $('terminalOutput').textContent = '';
     snapshotPending = false; memoryAddress = -1; $('address').value = '';
+    lastRunningSnapshotRequest = -Infinity;
     plotterPage = 0; plotter.reset(); renderPlotter();
     $('storageMounts').replaceChildren(); $('storageFiles').replaceChildren();
   };
-  connection.on('sessionReady', () => { ready = true; ui('connection', 'Connected'); refreshButtons(); });
+  connection.on('sessionReady', id => { ready = true; openPanelChannel(id); ui('connection', 'Connected'); refreshButtons(); });
   connection.on('uploaded', name => { uploaded = true; ui('fileName', name); refreshButtons(); });
   connection.on('jobOptions', options => {
     selectJobFormat(options.format);
@@ -202,17 +285,19 @@
         snapshotPending = false;
         break;
       case 'commandError':
-        terminalPending = false; refreshButtons(); showError(d); break;
-      case 'error': showError(d); break;
+        stopAutoStep(); terminalPending = false; refreshButtons(); showError(d); break;
+      case 'error': stopAutoStep(); refreshButtons(); showError(d); break;
       case 'reset': clearMachine(); ui('error', ''); break;
       case 'statistics': renderStatistics(d); break;
       case 'completed':
+        stopAutoStep(); refreshButtons();
         if (!d.success) showError({message: d.errorMessage || (d.limitExceeded ? 'Instruction or time limit reached.' : 'Execution failed.')});
         break;
     }
   });
   connection.onreconnecting(() => {
     ready = false; uploaded = false;
+    closePanelChannel();
     media.sessionLost();
     $('file').value = '';
     ui('fileName', 'Connection lost. Upload the job again after reconnecting.');
@@ -220,7 +305,7 @@
     ui('connection', 'Reconnecting…');
   });
   connection.onreconnected(() => { if (!ready) ui('connection', 'Connecting session…'); });
-  connection.onclose(e => { ready = false; ui('connection', 'Disconnected'); if (e) showError(e); refreshButtons(); });
+  connection.onclose(e => { stopAutoStep(); closePanelChannel(); ready = false; ui('connection', 'Disconnected'); if (e) showError(e); refreshButtons(); });
   async function upload(file) {
     if (!file || !ready || uploading || activeStates.has(state)) return;
     uploaded = false;
@@ -321,9 +406,15 @@
   });
   for (const [id, nextState] of [['pause', 'Pausing'], ['resume', 'Running'], ['step', 'Stepping'], ['stop', 'Stopping'], ['reset', 'Resetting']])
     $(id).addEventListener('click', async () => {
+      if ($(id).disabled) return;
+      if (id === 'pause' && $('autoStep').checked) { stopAutoStep(); refreshButtons(); return; }
+      stopAutoStep();
       const previous = state; setState(nextState);
       if (!await command(id)) setState(previous);
     });
+  $('autoStep').addEventListener('change', () => { refreshButtons(); scheduleAutoStep(); });
+  $('stepDelay').addEventListener('input', () => { clearTimeout(autoStepTimer); autoStepTimer = 0; });
+  $('stepDelay').addEventListener('change', scheduleAutoStep);
   const inspect = () => {
     if ($('inspect').disabled) return;
     const text = $('address').value.trim();
@@ -341,6 +432,7 @@
   $('numberBase').addEventListener('change', () => {
     const draft = $('address').value.trim(), oldBase = numberBase;
     numberBase = Number($('numberBase').value);
+    panelPost('base', numberBase);
     if (draft && { 8: /^[0-7]+$/, 10: /^[0-9]+$/, 16: /^[0-9a-f]+$/i }[oldBase].test(draft))
       $('address').value = parseInt(draft, oldBase).toString(numberBase).toUpperCase();
     $('address').placeholder = t(`Address (${({8:'OCT',10:'DEC',16:'HEX'})[numberBase]})`);
@@ -352,7 +444,21 @@
     media.setBase(numberBase);
   });
   $('autoRefresh').addEventListener('change', () => {
+    $('panelLive').checked = $('autoRefresh').checked;
     if ($('autoRefresh').checked && state === 'Running') requestSnapshot();
+  });
+  $('panelLive').addEventListener('change', () => {
+    $('autoRefresh').checked = $('panelLive').checked;
+    $('autoRefresh').dispatchEvent(new Event('change'));
+  });
+  $('panelRefresh').addEventListener('click', () => requestSnapshot());
+  $('panelTab').addEventListener('shown.bs.tab', () => {
+    lamps.render();
+    if (ready && (hasSnapshot || ['Running', 'Paused'].includes(state))) requestSnapshot();
+  });
+  $('panelVisualize').addEventListener('click', event => {
+    event.preventDefault();
+    if (sessionId) window.open($('panelVisualize').href, '_blank', 'noopener');
   });
   $('decodeMemory').addEventListener('change', () => { renderMemory(); if (ready && hasSnapshot && state !== 'Loading') requestSnapshot(); });
   $('machineTemplate').addEventListener('click', async () => {
@@ -387,10 +493,13 @@
   const refreshTimer = setInterval(() => {
     if (ready && state === 'Running') {
       if (snapshotPending && performance.now() - snapshotStarted > 1500) snapshotPending = false;
-      requestSnapshot($('autoRefresh').checked);
+      requestSnapshot($('autoRefresh').checked || performance.now() < panelWatchUntil);
     }
-  }, 300);
-  window.addEventListener('pagehide', () => clearInterval(refreshTimer));
+  }, 1000);
+  // Console and mirror share the same one-second diagnostic budget during RUN.
+  window.addEventListener('pagehide', () => {
+    stopAutoStep(); closePanelChannel(); clearInterval(refreshTimer);
+  });
   window.addEventListener('languagechange', () => {
     $('address').placeholder = t(`Address (${({8:'OCT',10:'DEC',16:'HEX'})[numberBase]})`);
     $('address').setAttribute('aria-label', t(`Memory address in ${addressName()}`));
@@ -398,6 +507,7 @@
     renderRegisters(lastRegisters); renderDetailedState(lastDetailedState);
     renderStatistics(lastStatistics); renderMounts(); renderPlotter(); punch.render();
     media.options(); if (media.view) media.display(media.view);
+    lamps.schedule();
   });
   clearMachine(); refreshButtons();
   connection.start().catch(showError);

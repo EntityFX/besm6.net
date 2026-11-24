@@ -254,6 +254,415 @@ await Check("languages-and-guide", async (page, _) =>
     if (await russian.Locator("html").GetAttributeAsync("lang") != "ru") throw new Exception("Browser language was not detected");
 });
 
+await Check("lamp-panel-racks", async (page, _) =>
+{
+    await Upload(page, Raw([Asm("xta 1003, atx 1004"), Asm("stop"), 0UL, 0x800000000001UL, 0UL]));
+    await page.SelectOptionAsync("#machineModel", "supervisor-functional");
+    await page.CheckAsync("input[value=debug]"); await page.ClickAsync("#run"); await Status(page, "Paused");
+    await page.ClickAsync("#panelTab");
+    if (await page.Locator("#panelLayout").CountAsync() != 0) throw new Exception("Obsolete layout switch is still present");
+    await page.ClickAsync("#step");
+    await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-register=A]')?.dataset.value==='800000000001'");
+    await page.ClickAsync("#step");
+    await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-bank=write] .lamp-row[data-value=\"800000000001\"]')");
+    var titles = await page.Locator(".lamp-racks > .lamp-rack > h4").AllTextContentsAsync();
+    if (!titles.SequenceEqual(new[] { "BRUS", "UU", "AU" })) throw new Exception("Expected three racks in BRUS, UU, AU order");
+    if (!await page.EvaluateAsync<bool>("""
+    (() => {
+      const root=document.getElementById('lampPanel');
+      const word=root.querySelector('[data-register="БРЗ[0]"]');
+      const lamps=[...word.querySelectorAll('.register-lamp')];
+      const centers=lamps.map(l => { const r=l.getBoundingClientRect(); return r.top+r.height/2; });
+      const firstTitle=lamps[0].title;
+      return word.closest('.lamp-rack').dataset.rack==='brus'
+        && root.querySelector('[data-register=A]').closest('.lamp-rack').dataset.rack==='au'
+        && root.querySelector('[data-register=K]').closest('.lamp-rack').dataset.rack==='uu'
+        && word.querySelectorAll('.lamp-control-bit').length===2
+        && lamps.length===50 && lamps[0].dataset.bit==='48' && lamps[47].dataset.bit==='1'
+        && lamps[48].dataset.bit==='49' && lamps[49].dataset.bit==='50'
+        && Math.max(...centers)-Math.min(...centers)<1
+        && lamps[48].getBoundingClientRect().left > lamps[47].getBoundingClientRect().right
+        && firstTitle.includes('BRZ[0]') && firstTitle.includes('48')
+        && word.querySelector('.lamp-register-label')?.textContent==='BRZ[0]'
+        && word.querySelector('.lamp-register-label').getBoundingClientRect().width>0
+        && (() => {
+          const control=word.querySelector('.lamp-control-bit');
+          const regular=word.querySelector('.register-lamp:not(.lamp-control-bit)');
+          const a=getComputedStyle(control), b=getComputedStyle(regular);
+          return (a.backgroundColor!==b.backgroundColor || a.backgroundImage!==b.backgroundImage)
+            && a.outlineStyle==='none';
+        })()
+        && root.querySelectorAll('.lamp-tier').length===12
+        && root.querySelector('[data-reg="БРЧ[0]"]').dataset.tier==='2'
+        && root.querySelector('[data-reg="БРЧ[0]"]').dataset.line==='upper'
+        && root.querySelector('[data-reg="БРС[0]"]').dataset.line==='lower'
+        && root.querySelector('[data-reg="БРЗ[0]"]').dataset.tier==='3'
+        && root.querySelector('[data-reg=INTERRUPTS]').dataset.rack==='brus'
+        && root.querySelector('[data-reg=INTERRUPTS]').dataset.tier==='4'
+        && root.querySelector('[data-reg=M1]').dataset.tier==='2'
+        && root.querySelector('[data-reg=A]').dataset.tier==='3'
+        && !root.querySelector('[data-reg=A1], [data-reg=RM], [data-reg=RP0], [data-reg=M1_LOW]')
+        && root.querySelector('[data-reg=RZ]').dataset.tier==='1'
+        && !root.querySelector('[data-bank=read]').hidden;
+    })()
+    """)) throw new Exception("Register rows do not match the conditional rack/tier map or correction-bit order");
+    foreach (int width in new[] { 1440, 1024, 768, 390, 320 })
+    {
+        await page.SetViewportSizeAsync(width, 900);
+        if (!await page.EvaluateAsync<bool>("document.documentElement.scrollWidth<=innerWidth && document.getElementById('lampPanel').scrollWidth<=document.getElementById('lampPanel').clientWidth"))
+            throw new Exception("Rack schematic overflows at " + width);
+    }
+    await page.SetViewportSizeAsync(1440, 1000);
+    await page.SelectOptionAsync("#languageSelect", "ru");
+    await page.Locator("#lampPanel").EvaluateAsync("e=>e.scrollTop=0");
+    await page.ScreenshotAsync(new() { Path=Path.Combine(output,"lamp-panel-racks.png"), FullPage=true, Animations=ScreenshotAnimations.Disabled });
+});
+await Check("lamp-panel-config", async (page, _) =>
+{
+    // Rows are built before the tab is opened and before any machine snapshot.
+    if (await page.Locator("#lampPanel .lamp-row").CountAsync() == 0)
+        throw new Exception("Lamp rows were not pre-rendered");
+    await page.ClickAsync("#panelTab");
+    await page.WaitForFunctionAsync("document.querySelector('#lampPanel .lamp-rack') != null");
+    if (!await page.EvaluateAsync<bool>("""
+    (() => {
+      const c = Besm6LampPanelConfig;
+      return Object.isFrozen(c) && Object.isFrozen(c.registers.find(r => r.id === 'A').source.path)
+        && c.placement === 'conditional-register-map'
+        && c.racks.length === 3
+        && c.registers.filter(r => r.bank === 'index').length === 15
+        && c.registers.every(r => r.source && r.bits > 0)
+        && document.querySelector('#lampPanel .lamp-map, #lampPanel .lamp-quad, #panelTezVisualize, [data-slot], [data-coordinate]') === null;
+    })()
+    """)) throw new Exception("Lamp panel configuration is invalid");
+    if (await page.Locator("#lampPanel [data-register=M0]").GetAttributeAsync("data-known") != "false")
+        throw new Exception("M0 was invented before the first sample");
+    if (await page.Locator("#lampPanel [data-reg=BAZ], #lampPanel [data-reg=A1], #lampPanel [data-reg=RP0]").CountAsync() != 0
+        || await page.Locator("#lampPanel .lamp-rack:visible").CountAsync() != 3
+        || await page.Locator("#lampPanel .lamp-row:visible").CountAsync() != await page.Locator("#lampPanel .lamp-row").CountAsync())
+        throw new Exception("Unsupported registers were added or real register strips were not drawn up front");
+    // Prove that the renderer reads new definitions, without adding a CPU observer.
+    if (!await page.EvaluateAsync<bool>("""
+    (() => {
+      const root = document.getElementById('lampPanel').cloneNode(true);
+      const config = { ...Besm6LampPanelConfig, buffers: [], registers: [{
+        id: 'CONFIG-PROBE', bank: 'cpu', rack: 'uu', bits: 6,
+        source: {snapshot: 'registers', path: ['r'], radix: 8}, availability: 'snapshot'
+      }] };
+      const panel = new Besm6LampPanel(root, config);
+      panel.registers = { r: '77' }; panel.render();
+      const row = root.querySelector('[data-register=CONFIG-PROBE]');
+      return row.dataset.source === 'registers.r' && row.dataset.rack === 'uu'
+        && row.dataset.reg === 'CONFIG-PROBE' && row.dataset.tier === '4'
+        && row.querySelectorAll('.is-on').length === 6
+        && [...row.querySelectorAll('[data-bit]')].map(l => l.dataset.bit).join(',') === '6,5,4,3,2,1';
+    })()
+    """)) throw new Exception("Register layout is not driven by the configuration");
+    foreach (int width in new[] { 1440, 768, 390, 320 })
+    {
+        await page.SetViewportSizeAsync(width, 900);
+        if (!await page.EvaluateAsync<bool>("document.documentElement.scrollWidth<=innerWidth && document.getElementById('lampPanel').scrollWidth<=document.getElementById('lampPanel').clientWidth"))
+            throw new Exception("Lamp panel overflows at " + width);
+    }
+});
+await Check("lamp-panel-registers", async (page, _) =>
+{
+    await page.ClickAsync("#panelTab");
+    await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-register=A]')?.dataset.known==='false'");
+    if (await page.Locator("#lampPanel [data-register=A] .lamp-word .register-lamp").CountAsync() != 48)
+        throw new Exception("A must expose all 48 main lamps before the first sample");
+    if (await page.Locator("#lampPanel [data-register=A] .is-on").CountAsync() != 0)
+        throw new Exception("Unknown register was presented as an active value");
+    if (await page.Locator("#lampPanel [data-bank=control] .lamp-row").CountAsync() != 1
+        || await page.Locator("#lampPanel [data-bank=control] .is-on").CountAsync() != 0)
+        throw new Exception("Unavailable supervisor control lost its lamp strips");
+    const ulong value = 0x800000000001;
+    await Upload(page, Raw([Asm("xta 1002"), Asm("stop"), value]));
+    await page.CheckAsync("input[value=debug]"); await page.ClickAsync("#run"); await Status(page, "Paused");
+    await page.ClickAsync("#step");
+    await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-register=A]')?.dataset.value==='800000000001'");
+    if (await page.Locator("#lampPanel [data-register=A] .is-on").CountAsync() != 2)
+        throw new Exception("48-bit sample was truncated or had invented lit bits");
+    foreach (int bit in new[] { 48, 1 })
+        if (await page.Locator($"#lampPanel [data-register=A] [data-bit='{bit}']").GetAttributeAsync("data-on") != "true")
+            throw new Exception("Incorrect bit order: " + bit);
+    if (await page.Locator("#lampPanel [data-register=M1] .register-lamp").CountAsync() != 15)
+        throw new Exception("Index registers must have 15 lamps, not 48");
+    if (await page.Locator("#lampPanel [data-register=A] .lamp-correction .register-lamp").CountAsync() != 0)
+        throw new Exception("A must not invent correction bits missing from its snapshot");
+    if (await page.Locator("#lampPanel .lamp-row .lamp-register-label").CountAsync() == 0
+        || !await page.Locator("#lampPanel [data-register=A] .lamp-register-label").IsVisibleAsync())
+        throw new Exception("Register labels are not shown to the left of the lamps");
+    foreach (int radix in new[] { 16, 10, 8 })
+    {
+        await page.SelectOptionAsync("#numberBase", radix.ToString());
+        string expected = Convert.ToString((long)value, radix).ToUpperInvariant();
+        if (radix != 10) expected = expected.PadLeft(radix == 8 ? 16 : 12, '0');
+        await page.WaitForFunctionAsync("text=>document.querySelector('#lampPanel [data-register=A]').title.includes(text)", expected);
+        if (await page.Locator("#lampPanel [data-register=A] .is-on").CountAsync() != 2) throw new Exception("Changing radix changed bits");
+    }
+    await page.SelectOptionAsync("#languageSelect", "ru");
+    if (await page.Locator("#panelTab").InnerTextAsync() != "Пульт") throw new Exception("Panel label was not translated");
+    await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-bank=cpu] h6').textContent==='Основные регистры [?]'");
+    await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-register=\"БРЗ[0]\"] .lamp-register-label')?.textContent==='БРЗ[0]'");
+    if (await page.Locator("#lampPanel [data-rack=brus] > .lamp-rack-heading").InnerTextAsync() != "БРУС")
+        throw new Exception("Rack heading was not translated to Russian");
+    if (await page.Locator("#lampPanel [data-register=K] .lamp-register-label").InnerTextAsync() != "СчАК (K)")
+        throw new Exception("The counter label was not translated to Russian");
+    await page.SelectOptionAsync("#languageSelect", "en");
+    await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-register=\"БРЗ[0]\"] .lamp-register-label')?.textContent==='BRZ[0]'");
+    if (await page.Locator("#lampPanel [data-rack=brus] > .lamp-rack-heading").InnerTextAsync() != "BRUS")
+        throw new Exception("Rack heading was not translated to English");
+    if (await page.Locator("#lampPanel [data-register=K] .lamp-register-label").InnerTextAsync() != "SchAK (K)")
+        throw new Exception("The counter label was not translated to English");
+    await page.ClickAsync("#reset"); await Status(page, "Idle");
+    await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-register=A]').dataset.value==='0'");
+    if (await page.Locator("#lampPanel [data-register=A] .is-on").CountAsync() != 0) throw new Exception("Reset kept old lit bits");
+});
+await Check("lamp-panel-live", async (page, _) =>
+{
+    await Upload(page, loop); await page.FillAsync("#instructionLimit", "0");
+    await page.ClickAsync("#panelTab"); await page.ClickAsync("#run"); await Status(page, "Running");
+    await page.CheckAsync("#panelLive");
+    if (!await page.Locator("#autoRefresh").IsCheckedAsync()) throw new Exception("Panel created an independent refresh setting");
+    await page.WaitForFunctionAsync("window.__events.filter(e=>e.type==='registers' && e.data.instructions>0).length>=3");
+    await page.WaitForFunctionAsync("document.getElementById('lampPanel').dataset.state==='Running'");
+    await page.ClickAsync("#pause"); await Status(page, "Paused");
+    await page.WaitForFunctionAsync("document.getElementById('lampPanel').dataset.state==='Paused'");
+    await page.UncheckAsync("#autoRefresh");
+    if (await page.Locator("#panelLive").IsCheckedAsync()) throw new Exception("Auto-refresh toggle did not synchronize");
+    await page.ClickAsync("#panelRefresh");
+    await page.ClickAsync("#stop"); await Status(page, "Halted");
+    await page.WaitForFunctionAsync("document.getElementById('lampPanel').dataset.state==='Halted'");
+});
+await Check("lamp-panel-buffers", async (page, _) =>
+{
+    const ulong value = 0x800000000001;
+    await Upload(page, Raw([Asm("xta 1003, atx 1004"), Asm("stop"), 0UL, value, 0UL]));
+    await page.SelectOptionAsync("#machineModel", "supervisor-functional");
+    await page.CheckAsync("input[value=debug]"); await page.ClickAsync("#run"); await Status(page, "Paused");
+    await page.ClickAsync("#panelTab");
+    await page.ClickAsync("#step");
+    await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-register=A]')?.dataset.value==='800000000001'");
+    await page.ClickAsync("#step");
+    await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-bank=write] .lamp-row[data-value=\"800000000001\"]')");
+    if (await page.Locator("#lampPanel [data-bank=write] .lamp-row[data-width='48']").CountAsync() != 8) throw new Exception("Mapped physical BRZ slots were not preserved");
+    if (await page.Locator("#lampPanel [data-bank=instruction] .lamp-row[data-width='48']").CountAsync() != 4) throw new Exception("Mapped physical BRS slots were not preserved");
+    var word = page.Locator("#lampPanel [data-register='БРЗ[0]']");
+    if (await word.Locator(".register-lamp").CountAsync() != 50 || await word.Locator(".lamp-word .register-lamp").CountAsync() != 48
+        || await word.Locator(".lamp-correction .register-lamp").CountAsync() != 2)
+        throw new Exception("BRZ must expose a 48-bit word followed by correction bits 49/50");
+    var addressRow = page.Locator("#lampPanel [data-bank=instruction] .lamp-row[data-width='15']").First;
+    if (await addressRow.CountAsync() == 0 || await addressRow.Locator(".register-lamp").CountAsync() != 15)
+        throw new Exception("15-bit address rows must expose 15 lamps, not 8");
+    if (await page.Locator("#lampPanel [data-bank=instruction] .lamp-row:not([hidden])").CountAsync() == 0) throw new Exception("BRS snapshot was not displayed");
+    if (await page.Locator("#lampPanel [data-bank=read] .lamp-row[data-width='48']").CountAsync() != 4) throw new Exception("Functional supervisor omitted the BRCh lamp strips");
+    if (await page.Locator("#lampPanel [data-bank=read] .lamp-row[data-width='48'][data-known='false']").CountAsync() != 4
+        || await page.Locator("#lampPanel [data-bank=read] .is-on").CountAsync() != 0)
+        throw new Exception("Unavailable BRCh lamps were presented as sampled bits");
+    if (!await page.Locator("#lampPanel [data-bank=read]").IsVisibleAsync())
+        throw new Exception("BRCh lamps must stay in place, unlit outside hardware execution");
+    foreach (int width in new[] { 1440, 768, 390, 320 })
+    {
+        await page.SetViewportSizeAsync(width, 900);
+        if (!await page.EvaluateAsync<bool>("document.documentElement.scrollWidth<=innerWidth && document.getElementById('lampPanel').scrollWidth<=document.getElementById('lampPanel').clientWidth"))
+            throw new Exception("Lamp panel overflows at " + width);
+    }
+    await page.SetViewportSizeAsync(1440, 900);
+    await page.Locator("#lampPanel [data-bank=write]").ScrollIntoViewIfNeededAsync();
+    await page.ScreenshotAsync(new() { Path=Path.Combine(output,"lamp-panel.png"), FullPage=true, Animations=ScreenshotAnimations.Disabled });
+});
+await Check("lamp-panel-hardware", async (page, _) =>
+{
+    var config = System.Text.Json.JsonSerializer.Deserialize<Besm6.Runtime.Loading.MachineJobConfiguration>(
+        File.ReadAllText("examples/machines/supervisor-hardware.json"), new JsonSerializerOptions { PropertyNameCaseInsensitive=true })!;
+    config.MemoryWords = new() {
+        new() { Address=8, Raw50=Besm6.Architecture.Memory.MemoryWord50.Form(new(Asm("xta 20, aax 20")),false,false).RawValue },
+        new() { Address=9, Raw50=Besm6.Architecture.Memory.MemoryWord50.Form(new(Asm("stop, stop")),false,false).RawValue },
+        new() { Address=16, Raw50=Besm6.Architecture.Memory.MemoryWord50.Form(new(12345),true,true).RawValue }
+    };
+    config.Timing!.ControlDurationsNs["Xta"] = 300; config.Timing.ControlDurationsNs["Aax"] = 300;
+    await Upload(page,JsonSerializer.Serialize(config, new JsonSerializerOptions { PropertyNamingPolicy=JsonNamingPolicy.CamelCase }),"lamp-native.json");
+    if (await page.Locator("#machineModel").InputValueAsync() != "supervisor-hardware") throw new Exception("Native hardware image did not select the hardware model");
+    await page.ClickAsync("#panelTab"); await page.ClickAsync("#run"); await Status(page,"Completed");
+    await page.WaitForFunctionAsync("document.querySelectorAll('#lampPanel [data-bank=read] .lamp-row[data-width=\"48\"]').length===4");
+    await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-bank=read] .lamp-row[data-value=\"3039\"]')");
+    var meta = await page.Locator("#lampPanel [data-bank=read] .lamp-row[data-value='3039']").GetAttributeAsync("title") ?? "";
+    if (!meta.Contains("Ready=0") || !meta.Contains("Active=0")) throw new Exception("Consumed BRCh was shown as ready/active");
+});
+await Check("panel-visualization", async (page, context) =>
+{
+    const ulong value = 0x800000000001;
+    await Upload(page, Raw([Asm("xta 1002"), Asm("stop"), value]));
+    await page.CheckAsync("input[value=debug]"); await page.ClickAsync("#run"); await Status(page, "Paused");
+    string id = await page.EvaluateAsync<string>("window.__sessionId");
+    await page.ClickAsync("#panelTab");
+    string href = await page.Locator("#panelVisualize").GetAttributeAsync("href") ?? "";
+    if (!href.Contains("panel.html?session=" + id)) throw new Exception("Visualization link does not target this session");
+
+    var viz = await context.NewPageAsync();
+    viz.SetDefaultTimeout(20000);
+    viz.PageError += (_, message) => Console.WriteLine("VIZ PAGE ERROR " + message);
+    await viz.SetViewportSizeAsync(1600, 900);
+    await viz.GotoAsync(root + "/panel.html?session=" + Uri.EscapeDataString(id));
+    await viz.WaitForFunctionAsync("document.querySelectorAll('#lampPanel .lamp-rack').length===3");
+    await viz.WaitForFunctionAsync("document.getElementById('vizSession').textContent.startsWith('Live mirror')");
+    await page.ClickAsync("#step");
+    await viz.WaitForFunctionAsync("document.querySelector('#lampPanel [data-register=A]')?.dataset.value==='800000000001'");
+    await viz.WaitForFunctionAsync("document.getElementById('lampPanel').dataset.state==='Paused'");
+    if (await viz.Locator("#lampPanel .lamp-map").CountAsync() != 0) throw new Exception("Visualization still contains the old register map");
+    double[] tops = await viz.Locator("#lampPanel .lamp-rack:visible").EvaluateAllAsync<double[]>("racks => racks.map(r => r.getBoundingClientRect().top)");
+    if (tops.Distinct().Count() != 1) throw new Exception("Visualization racks are not in one row");
+    if (!await viz.Locator("#lampPanel [data-register=A] .lamp-register-label").IsVisibleAsync())
+        throw new Exception("Visualization lost register labels");
+    await viz.SelectOptionAsync("#languageSelect", "ru");
+    await viz.WaitForFunctionAsync("document.querySelector('#lampPanel [data-register=\"БРЗ[0]\"] .lamp-register-label')?.textContent==='БРЗ[0]'");
+    if (await viz.Locator("#lampPanel [data-rack=brus] > .lamp-rack-heading").InnerTextAsync() != "БРУС")
+        throw new Exception("Visualization did not translate register labels and rack headings");
+    await viz.ScreenshotAsync(new() { Path=Path.Combine(output,"panel-visualization.png"), FullPage=true, Animations=ScreenshotAnimations.Disabled });
+    await viz.CloseAsync();
+});
+await Check("lamp-panel-samples", async (page, _) =>
+{
+    await page.ClickAsync("#panelTab");
+    if (!await page.EvaluateAsync<bool>("""
+    (() => {
+      const host = document.createElement('div'); host.innerHTML = '<div class="lamp-banks"></div>';
+      const panel = new Besm6LampPanel(host);
+      panel.registers = { a: '800000000001', y: '0', k: '1', r: '0', c: '0', m: Array(16).fill('1') };
+      panel.detail = { pageAssignment: [3], operandProtection: 1, buffers: [
+        { name: 'БРЧ', slot: 0, value: 2, raw50: (1n << 48n | 2n).toString() },
+        { name: 'БРС', slot: 0, value: 1, raw50: (1n << 49n | 1n).toString() },
+        { name: 'БРЗ', slot: 0, value: 1, raw50: '1' },
+        { name: 'БРЗ', slot: 1, value: 2, raw50: '2' }
+      ] };
+      panel.render();
+      const row = id => host.querySelector(`[data-reg="${id}"]`);
+      const on = (id, bit) => row(id).querySelector(`[data-bit="${bit}"]`).dataset.on === 'true';
+      const correct = on('БРЧ[0]', 2) && on('БРЧ[0]', 49) && !on('БРЧ[0]', 50)
+        && on('БРС[0]', 1) && on('БРС[0]', 50) && !on('БРС[0]', 49)
+        && on('БРЗ[0]', 1) && on('БРЗ[1]', 2) && !on('БРЗ[0]', 2)
+        && on('RZ', 1) && !row('RP0')
+        && on('M1', 1) && !row('M1_LOW')
+        && row('A').querySelectorAll('.lamp-control-bit').length === 0
+        && !row('RM');
+      const observer = new MutationObserver(() => {});
+      observer.observe(host, { subtree: true, childList: true, attributes: true, characterData: true });
+      panel.render();
+      const unchanged = observer.takeRecords().length === 0; observer.disconnect();
+      panel.detail = { buffers: [
+        { name: 'БРС (MRU)', slot: 0, value: 3, raw50: '3', address: 7 },
+        { name: 'БРС', slot: 0, value: 4, raw50: '4' }
+      ] }; panel.render();
+      const physicalPreferred = on('БРС[0]', 3) && !on('БРС[0]', 1)
+        && row('БРС[0]:address').dataset.known === 'false';
+      panel.detail = { buffers: [{ name: 'БРС (MRU)', slot: 0, value: 3, raw50: '3', address: 7 }] };
+      panel.render();
+      const mru = row('БРС[0]').title.includes(Besm6I18n.t('MRU order, not physical slots'))
+        && row('БРС[0]:address').dataset.value === '7';
+      panel.registers = { a: '1000000000000', r: -1 }; panel.detail = null; panel.render();
+      return correct && unchanged && physicalPreferred && mru
+        && !row('A').hidden && !row('R').hidden && !row('БРС[0]').hidden
+        && row('A').dataset.known === 'false' && row('R').dataset.known === 'false'
+        && row('БРС[0]').querySelectorAll('.is-on').length === 0;
+    })()
+    """)) throw new Exception("Register samples, correction bits, missing data or snapshot reuse are incorrect");
+});
+await Check("lamp-panel-throttle", async (page, _) =>
+{
+    if (!await page.EvaluateAsync<bool>("""
+    async () => {
+      const host = document.createElement('div'); host.innerHTML = '<div class="lamp-banks"></div>';
+      const panel = new Besm6LampPanel(host);
+      const row = () => host.querySelector('[data-reg=A]');
+      panel.state = 'Running'; panel.lastPaint = -Infinity;
+      panel.registers = { a: '1' }; panel.render();
+      const first = panel.lastPaint;
+      panel.registers = { a: '2' }; panel.render();
+      panel.updateRegisters({ a: '4' });
+      if (row().dataset.value !== '1') return false;
+      await new Promise(resolve => setTimeout(resolve, 1150));
+      if (row().dataset.value !== '4' || panel.lastPaint - first < 1000) return false;
+      panel.updateRegisters({ a: '8' });
+      panel.updateState('Paused');
+      await new Promise(requestAnimationFrame);
+      return row().dataset.value === '8' && panel.repaintTimer === 0;
+    }
+    """)) throw new Exception("RUN repaints faster than once per second, loses the latest value or delays pause");
+});
+await Check("panel-visualization-live", async (page, context) =>
+{
+    string job = Raw([Asm("utm 1(1), ita 1"), Asm("atx 1004, uj 1000"), 0UL, 0UL, 0UL]);
+    await Upload(page, job); await page.FillAsync("#instructionLimit", "1000000000");
+    await page.CheckAsync("input[value=full]");
+    await page.ClickAsync("#run"); await Status(page, "Running");
+    if (await page.Locator("#autoRefresh").IsCheckedAsync()) throw new Exception("Live mirror test requires console Auto-refresh off");
+    string id = await page.EvaluateAsync<string>("window.__sessionId");
+    var viz = await context.NewPageAsync();
+    viz.SetDefaultTimeout(20000);
+    await viz.SetViewportSizeAsync(1600, 900);
+    await viz.GotoAsync(root + "/panel.html?session=" + Uri.EscapeDataString(id));
+    await viz.WaitForFunctionAsync("document.querySelector('#lampPanel [data-register=A]')?.dataset.known==='true'");
+    string before = await viz.Locator("#lampPanel [data-register=A]").GetAttributeAsync("data-value") ?? "";
+    await viz.WaitForFunctionAsync("value => document.querySelector('#lampPanel [data-register=A]').dataset.value !== value", before);
+    await page.WaitForFunctionAsync("window.__events.filter(e=>e.type==='registers' && e.data.instructions>0).length>=3");
+    if (!await page.EvaluateAsync<bool>("""
+      (() => {
+        const samples = window.__events.filter(e => e.type === 'registers' && e.data.instructions > 0);
+        return samples.slice(1).every((sample, i) => sample.at - samples[i].at >= 950);
+      })()
+      """)) throw new Exception("Console and mirror exceed their shared one-second RUN snapshot budget");
+    await page.ClickAsync("#stop"); await Status(page, "Halted");
+    await viz.CloseAsync();
+});
+await Check("debug-auto-step", async (page, _) =>
+{
+    await Upload(page, loop); await page.FillAsync("#instructionLimit", "0");
+    await page.CheckAsync("input[value=debug]"); await page.ClickAsync("#run"); await Status(page, "Paused");
+    if (await page.Locator("#stepDelay").InputValueAsync() != "1") throw new Exception("Default step delay must be one second");
+    await page.FillAsync("#stepDelay", "0.01");
+    if (!await page.EvaluateAsync<bool>("document.getElementById('stepDelay').checkValidity()"))
+        throw new Exception("The minimum step delay must accept 0.01 seconds");
+    await page.FillAsync("#stepDelay", "1");
+    await page.EvaluateAsync("window.__autoStarted=performance.now();window.__autoEventOffset=window.__events.length");
+    await page.CheckAsync("#autoStep");
+    if (await page.Locator("#step").IsEnabledAsync() || !await page.Locator("#pause").IsEnabledAsync())
+        throw new Exception("Auto-step controls allow overlapping manual steps or cannot be paused");
+    await page.WaitForFunctionAsync("Number(document.getElementById('instructionCount').textContent.split(' ')[0])>=2");
+    var intervals = await page.EvaluateAsync<double[]>("""
+    (()=>{
+      const events=window.__events.slice(window.__autoEventOffset).filter(e=>e.type==='registers'&&e.data.instructions>0);
+      const first=events.find(e=>e.data.instructions===1), second=events.find(e=>e.data.instructions===2);
+      return [first.at-window.__autoStarted,second.at-first.at];
+    })()
+    """);
+    if (intervals.Any(delay => delay < 850)) throw new Exception("Automatic steps ignored the one-second delay");
+    await page.ClickAsync("#pause"); await Status(page, "Paused");
+    if (await page.Locator("#autoStep").IsCheckedAsync()) throw new Exception("Pause did not disable automatic steps");
+    string paused = await page.Locator("#instructionCount").InnerTextAsync();
+    await Task.Delay(1200);
+    if (await page.Locator("#instructionCount").InnerTextAsync() != paused) throw new Exception("Automatic steps continued after Pause");
+    await page.FillAsync("#stepDelay", "0.1"); await page.CheckAsync("#autoStep");
+    await page.WaitForFunctionAsync("Number(document.getElementById('instructionCount').textContent.split(' ')[0])>=5");
+    // Changing the delay while enabled cancels the old timer and uses the new value.
+    await page.FillAsync("#stepDelay", "0"); await page.Locator("#stepDelay").DispatchEventAsync("change");
+    if (await page.Locator("#autoStep").IsCheckedAsync()) throw new Exception("Invalid delay did not stop auto-step");
+    await page.FillAsync("#stepDelay", "0.2"); await page.CheckAsync("#autoStep");
+    await page.ClickAsync("#reset"); await Status(page, "Idle");
+    if (await page.Locator("#autoStep").IsCheckedAsync() || await page.Locator("#autoStep").IsEnabledAsync())
+        throw new Exception("Reset left automatic stepping armed");
+});
+await Check("debug-auto-step-completion", async (page, _) =>
+{
+    await Upload(page); await page.CheckAsync("input[value=debug]");
+    await page.ClickAsync("#run"); await Status(page, "Paused");
+    await page.FillAsync("#stepDelay", "0.1"); await page.CheckAsync("#autoStep");
+    await Status(page, "Completed");
+    if (await page.Locator("#autoStep").IsCheckedAsync() || await page.Locator("#autoStep").IsEnabledAsync())
+        throw new Exception("Completion did not stop automatic stepping");
+    await page.CheckAsync("input[value=full]"); await page.ClickAsync("#run"); await Status(page, "Completed");
+    if (await page.Locator("#autoStep").IsEnabledAsync()) throw new Exception("Full run exposes debug auto-step");
+});
 await Check("debug", async (page, _) =>
 {
     await Upload(page);
@@ -771,6 +1180,59 @@ await Check("cli-performance-parity", async (page, _) =>
     }
     await File.WriteAllTextAsync(Path.Combine(output,"cli-performance-parity.json"),JsonSerializer.Serialize(comparisons,new JsonSerializerOptions {WriteIndented=true}));
 });
+await Check("lamp-panel-performance", async (page, context) =>
+{
+    page.SetDefaultTimeout(120000);
+    await page.ClickAsync("#examplesTab");
+    await page.WaitForFunctionAsync("document.querySelector('#exampleSelect option[value=\"web-jobs/dhrystone-max.json\"]')");
+    await page.SelectOptionAsync("#exampleSelect", "web-jobs/dhrystone-max.json");
+    await page.ClickAsync("#exampleLoad");
+    await page.WaitForFunctionAsync("document.getElementById('fileName').textContent==='web-jobs/dhrystone-max.json' && !document.getElementById('run').disabled");
+    var samples = new List<object>();
+    var medians = new Dictionary<string, double>();
+    long? expectedInstructions = null, expectedCycles = null;
+    foreach (string view in new[] { "printer", "panel", "mirror" })
+    {
+        await page.Locator("#autoRefresh").SetCheckedAsync(view == "panel");
+        await page.ClickAsync(view == "panel" ? "#panelTab" : "#printTab");
+        IPage? mirror = null;
+        if (view == "mirror")
+        {
+            string href = await page.Locator("#panelVisualize").GetAttributeAsync("href") ?? "";
+            mirror = await context.NewPageAsync();
+            await mirror.GotoAsync(new Uri(new Uri(simulatorUrl), href).ToString());
+            await mirror.WaitForFunctionAsync("document.querySelectorAll('.lamp-rack').length===3");
+        }
+        try
+        {
+            var timings = new List<double>();
+            for (int repeat = 0; repeat < 3; repeat++)
+            {
+                int previous = await page.EvaluateAsync<int>("window.__events.filter(e=>e.type==='statistics').length");
+                await page.ClickAsync("#run"); await Status(page, "Completed");
+                await page.WaitForFunctionAsync("previous=>window.__events.filter(e=>e.type==='statistics').length>previous", previous);
+                var statistics = await page.EvaluateAsync<JsonElement>("window.__events.findLast(e=>e.type==='statistics').data");
+                long instructions = statistics.GetProperty("completedInstructions").GetInt64();
+                long cycles = statistics.GetProperty("modelCycles").GetInt64();
+                expectedInstructions ??= instructions; expectedCycles ??= cycles;
+                if (instructions != expectedInstructions || cycles != expectedCycles)
+                    throw new Exception("Panel changed the benchmark workload");
+                string text = await GuestOutput(page);
+                if (!text.Contains("ALL 18 CONTROL VALUES MATCH") || !text.Contains("ALL 4 STRING VALUES MATCH: YES"))
+                    throw new Exception("Dhrystone control values failed");
+                double seconds = statistics.GetProperty("elapsedSeconds").GetDouble();
+                timings.Add(seconds);
+                samples.Add(new { view, repeat, seconds, instructions, cycles });
+                Console.WriteLine($"PANEL PERFORMANCE {view} #{repeat + 1}: {seconds:F4}s / {instructions} instructions");
+            }
+            medians[view] = timings.Order().ElementAt(1);
+        }
+        finally { if (mirror is not null) await mirror.CloseAsync(); }
+    }
+    await File.WriteAllTextAsync(Path.Combine(output, "lamp-panel-performance.json"),
+        JsonSerializer.Serialize(new { url = simulatorUrl, medians, samples }, new JsonSerializerOptions { WriteIndented = true }));
+    Console.WriteLine("PANEL PERFORMANCE MEDIANS " + JsonSerializer.Serialize(medians));
+});
 await Check("dhrystone-modes", async (page, _) =>
 {
     page.SetDefaultTimeout(120000);
@@ -1180,7 +1642,7 @@ await Check("layout", async (page, _) =>
     foreach (int width in new[] { 1440, 768, 320 })
     {
         await page.SetViewportSizeAsync(width, 900);
-        foreach (string tab in new[] { "editorTab", "storageTab", "terminalTab", "punchTab", "cardTab", "instructionTab" })
+        foreach (string tab in new[] { "panelTab", "editorTab", "storageTab", "terminalTab", "punchTab", "cardTab", "instructionTab" })
         {
             await page.ClickAsync("#" + tab);
             await page.WaitForFunctionAsync("tab=>document.querySelector(document.getElementById(tab).dataset.bsTarget).classList.contains('show')", tab);
@@ -1205,7 +1667,7 @@ await Check("accessibility", async (page, _) =>
     }
     await page.AddScriptTagAsync(new() { Path = axePath });
     var audits = new List<object>();
-    foreach (string tab in new[] { "printTab", "cardTab", "examplesTab", "editorTab", "storageTab", "terminalTab", "punchTab", "instructionTab" })
+    foreach (string tab in new[] { "panelTab", "printTab", "cardTab", "examplesTab", "editorTab", "storageTab", "terminalTab", "punchTab", "instructionTab" })
     {
         await page.ClickAsync("#" + tab);
         var violations = await page.EvaluateAsync<JsonElement>("async()=>{const result=await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});return result.violations.map(v=>({id:v.id,impact:v.impact,description:v.description,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}));}");
