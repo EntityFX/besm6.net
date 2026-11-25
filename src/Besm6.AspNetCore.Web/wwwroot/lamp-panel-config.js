@@ -33,7 +33,8 @@
       { id: 'index', rack: 'uu', tier: 2, title: 'Index registers' },
       { id: 'supervisor', rack: 'uu', tier: 3, title: 'Special registers — M [?]' },
       { id: 'cpu', rack: 'uu', tier: 4, title: 'Main registers [?]' },
-      { id: 'arithmetic', rack: 'au', tier: 3, title: 'Arithmetic registers' }
+      { id: 'arithmetic', rack: 'au', tier: 3, title: 'Arithmetic registers' },
+      { id: 'commands', rack: 'au', tier: 2, title: 'Arithmetic command buffer — BAK [?]' }
     ],
     registers: [
       { id: 'RZ', label: 'РЗ', bank: 'protection', bits: 32, source: source('detail', 'operandProtection') },
@@ -53,7 +54,11 @@
       register('C', 'C', 'cpu', 15, 'c'),
       { id: 'M0', bank: 'cpu', bits: 15, source: { ...source('registers', 'm', 0), radix: 8 } },
       register('A', 'СМ (A)', 'arithmetic', 48, 'a', 16),
-      register('Y', 'Y (РМР)', 'arithmetic', 48, 'y', 16)
+      register('Y', 'Y (РМР)', 'arithmetic', 48, 'y', 16),
+      ...Array.from({ length: 4 }, (_, i) => ({
+        id: `БАК[${i}]`, bank: 'commands', bits: 24,
+        source: source('detail', 'arithmeticCommands', i)
+      }))
     ],
     buffers: [
       { bank: 'read', prefix: 'БРЧ', count: 4, requireRawWord: true },

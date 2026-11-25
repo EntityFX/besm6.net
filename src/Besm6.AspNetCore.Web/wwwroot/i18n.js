@@ -48,6 +48,7 @@
     'Debug only. Executes one instruction after each delay (0.01–60 seconds). Uncheck or Pause to stop automatic steps.': 'Только отладка. По одной команде с задержкой 0,01–60 секунд. Снимите флажок или нажмите «Пауза», чтобы выключить автошаг.',
     'Use a step delay from 0.01 to 60 seconds.': 'Укажите задержку шага от 0,01 до 60 секунд.',
     'Arithmetic registers': 'Регистры арифметического устройства',
+    'Arithmetic command buffer — BAK [?]': 'Буфер арифметических команд — БАК [?]',
     'Arithmetic unit': 'Арифметическое устройство',
     'Control unit': 'Устройство управления',
     'Buffers and communication': 'Буферные регистры и связь',

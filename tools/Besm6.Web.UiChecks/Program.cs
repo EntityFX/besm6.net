@@ -343,6 +343,7 @@ await Check("lamp-panel-config", async (page, _) =>
         && c.registers.filter(r => r.bank === 'index').length === 15
         && c.registers.filter(r => r.bank === 'page').length === 8
         && c.registers.filter(r => r.bank === 'supervisor').length === 6
+        && c.registers.filter(r => r.bank === 'commands').length === 4
         && c.registers.every(r => r.source && r.bits > 0)
         && document.querySelector('#lampPanel .lamp-map, #lampPanel .lamp-quad, #panelTezVisualize, [data-slot], [data-coordinate]') === null;
     })()
@@ -476,6 +477,9 @@ await Check("lamp-panel-buffers", async (page, _) =>
     if (await page.Locator("#lampPanel [data-bank=read] .lamp-row[data-width='48'][data-known='false']").CountAsync() != 4
         || await page.Locator("#lampPanel [data-bank=read] .is-on").CountAsync() != 0)
         throw new Exception("Unavailable BRCh lamps were presented as sampled bits");
+    if (await page.Locator("#lampPanel [data-bank=commands] .lamp-row").CountAsync() != 4
+        || await page.Locator("#lampPanel [data-bank=commands] .lamp-row[data-known='false']").CountAsync() != 4)
+        throw new Exception("Functional supervisor invented BAK contents");
     if (!await page.Locator("#lampPanel [data-bank=read]").IsVisibleAsync())
         throw new Exception("BRCh lamps must stay in place, unlit outside hardware execution");
     foreach (int width in new[] { 1440, 768, 390, 320 })
@@ -541,6 +545,8 @@ await Check("lamp-panel-hardware", async (page, _) =>
     await page.ClickAsync("#panelTab"); await page.ClickAsync("#run"); await Status(page,"Completed");
     await page.WaitForFunctionAsync("document.querySelectorAll('#lampPanel [data-bank=read] .lamp-row[data-width=\"48\"]').length===4");
     await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-bank=read] .lamp-row[data-value=\"3039\"]')");
+    if (await page.Locator("#lampPanel [data-bank=commands] .lamp-row").CountAsync() != 4)
+        throw new Exception("Hardware BAK lamp strips were not created");
     var meta = await page.Locator("#lampPanel [data-bank=read] .lamp-row[data-value='3039']").GetAttributeAsync("title") ?? "";
     if (!meta.Contains("Ready=0") || !meta.Contains("Active=0")) throw new Exception("Consumed BRCh was shown as ready/active");
 });
