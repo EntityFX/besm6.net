@@ -469,6 +469,9 @@ await Check("lamp-panel-buffers", async (page, _) =>
     if (await addressRow.CountAsync() == 0 || await addressRow.Locator(".register-lamp").CountAsync() != 15)
         throw new Exception("15-bit address rows must expose 15 lamps, not 8");
     if (await page.Locator("#lampPanel [data-bank=instruction] .lamp-row:not([hidden])").CountAsync() == 0) throw new Exception("BRS snapshot was not displayed");
+    if (await page.Locator("#lampPanel [data-bank=instruction] .lamp-row[data-width='48'][data-known='true']").CountAsync() == 0
+        || await page.Locator("#lampPanel [data-bank=instruction] .lamp-row[data-width='48'] .is-on").CountAsync() == 0)
+        throw new Exception("Functional supervisor did not expose BRS contents");
     if (await page.Locator("#lampPanel [data-bank=read] .lamp-row[data-width='48']").CountAsync() != 4) throw new Exception("Functional supervisor omitted the BRCh lamp strips");
     if (await page.Locator("#lampPanel [data-bank=read] .lamp-row[data-width='48'][data-known='false']").CountAsync() != 4
         || await page.Locator("#lampPanel [data-bank=read] .is-on").CountAsync() != 0)
