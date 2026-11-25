@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Text.Json.Serialization;
 using Besm6.Architecture.Machine;
 using Besm6.Assembler.Disassembly;
 using Besm6.Runtime.Configuration;
@@ -101,8 +102,14 @@ namespace Besm6.Cli
                 var result = loader.RunScript(jobFile);
                 Console.WriteLine(result);
                 if (capturedDump is not null) RunOutput.WriteDecodedDump(capturedDump, memDumpFile!);
-                if (options.MachineState) Console.WriteLine("Machine state: " + System.Text.Json.JsonSerializer.Serialize(machine.InspectRegisters(),
-                    new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+                if (options.MachineState)
+                {
+                    var json = new System.Text.Json.JsonSerializerOptions
+                        { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase };
+                    json.Converters.Add(new JsonStringEnumConverter());
+                    Console.WriteLine("Machine state: " + System.Text.Json.JsonSerializer.Serialize(
+                        machine.InspectRegisters(), json));
+                }
 
                 if (memDumpFile != null && !memDumpDone)
                     RunOutput.DumpMemory(machine, memDumpFile, memDumpCount);

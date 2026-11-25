@@ -43,6 +43,62 @@ public sealed class MachineCommandTests
     }
 
     [TestMethod]
+    public void DetailedStateExposesAllDocumentedRegistersAndAliases()
+    {
+        var result = Run(Job(), "--machine-state");
+        Assert.AreEqual(0, result.Code, result.Error);
+        using var json = JsonDocument.Parse(result.Output);
+        var registers = json.RootElement.GetProperty("registers").GetProperty("registers")
+            .EnumerateArray().ToDictionary(r => r.GetProperty("name").GetString()!, r => r);
+
+        foreach (string name in new[]
+                 {
+                     "K", "H", "A", "Y", "R", "C", "ApplyC", "M0", "M15",
+                     "M16", "M17", "M23", "M26", "M27", "M28", "M29",
+                     "RP0", "RP31", "RZ0", "RZ3", "РГПр", "РСП", "РИ", "МСП"
+                 })
+            Assert.IsTrue(registers.ContainsKey(name), $"Missing register {name}.");
+
+        foreach (string name in new[] { "M24", "M25", "M30", "M31" })
+            Assert.IsFalse(registers.ContainsKey(name), $"Unconfirmed register {name} must stay absent.");
+
+        Assert.AreEqual("M16", registers["C"].GetProperty("alias").GetString());
+        Assert.AreEqual("20B", registers["M16"].GetProperty("alias").GetString());
+        Assert.AreEqual("21B", registers["M17"].GetProperty("alias").GetString());
+        Assert.AreEqual("27B", registers["M23"].GetProperty("alias").GetString());
+        Assert.AreEqual("32B", registers["M26"].GetProperty("alias").GetString());
+        Assert.AreEqual("33B", registers["M27"].GetProperty("alias").GetString());
+        Assert.AreEqual("34B", registers["M28"].GetProperty("alias").GetString());
+        Assert.AreEqual("35B", registers["M29"].GetProperty("alias").GetString());
+        Assert.AreEqual("WriteOnly", registers["M17"].GetProperty("access").GetString());
+        Assert.AreEqual("WriteOnly", registers["M28"].GetProperty("access").GetString());
+        Assert.AreEqual("WriteOnly", registers["M29"].GetProperty("access").GetString());
+        Assert.AreEqual("020", registers["RP0"].GetProperty("address").GetString());
+        Assert.AreEqual("027", registers["RP31"].GetProperty("address").GetString());
+        Assert.AreEqual("030", registers["RZ0"].GetProperty("address").GetString());
+        Assert.AreEqual("033", registers["RZ3"].GetProperty("address").GetString());
+        Assert.AreEqual("0237", registers["РГПр"].GetProperty("address").GetString());
+        Assert.AreEqual("0036", registers["РИ"].GetProperty("address").GetString());
+        Assert.AreEqual(48, registers["РГПр"].GetProperty("width").GetInt32());
+        Assert.AreEqual(24, registers["РСП"].GetProperty("width").GetInt32());
+        Assert.AreEqual(24, registers["МСП"].GetProperty("width").GetInt32());
+    }
+
+    [TestMethod]
+    public void DetailedStateUsesNineBitPageRegistersFor512K()
+    {
+        var job = Job();
+        job.MemoryConfiguration = "simh512k";
+        var result = Run(job, "--machine-state");
+        Assert.AreEqual(0, result.Code, result.Error);
+        using var json = JsonDocument.Parse(result.Output);
+        var registers = json.RootElement.GetProperty("registers").GetProperty("registers")
+            .EnumerateArray().ToDictionary(r => r.GetProperty("name").GetString()!, r => r);
+        Assert.AreEqual(9, registers["RP0"].GetProperty("width").GetInt32());
+        Assert.AreEqual(9, registers["RP31"].GetProperty("width").GetInt32());
+    }
+
+    [TestMethod]
     public void JsonSelectionAndCliOverridesKeepGuestStateIdentical()
     {
         var functional = Run(Job("functional", "original"), "--execution", "functional", "--speed", "max", "--stats");
