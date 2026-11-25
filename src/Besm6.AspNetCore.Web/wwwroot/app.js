@@ -173,10 +173,12 @@
     ui('machineStateInfo', d ? `${d.memoryModel} / ${d.executionModel}`
       + (d.serviceRuntime === 'HostedDubna' ? ' · ' + t('Hosted Dubna services') : '')
       + (d.hardwareNanoseconds == null ? ' · ' + t('Read buffers require hardware mode') : ` · ${d.hardwareNanoseconds} ns`) : 'Состояние появится после загрузки машины.');
+    const named = d?.registers ?? [];
     $('machineRegisters').textContent = d ? [
       ...[...d.buffers.filter(b => b.name === 'БРЧ'), ...d.buffers.filter(b => b.name !== 'БРЧ')].map(b => `${b.name}[${b.slot}] ${formatNumber(String(b.value), 10, 48)}${b.address == null ? '' : ' @' + formatNumber(String(b.address), 10, 16)}${b.active == null ? '' : ' · active=' + Number(b.active)}${b.ready == null ? '' : ' ready=' + Number(b.ready)}${b.pendingWrite == null ? '' : ' pendingWrite=' + Number(b.pendingWrite)}`),
-      ...(d.controlFlags == null ? [] : [`УУ ${formatNumber(String(d.controlFlags),10)} · ${t('interrupts')} ${formatNumber(String(d.interrupts),10,48)}`]),
-      ...d.specialRegisters.map((value, i) => `M${(i + 16).toString(8)} ${formatNumber(String(value),10)}`),
+      ...(d.controlFlags == null ? [] : [`УУ ${formatNumber(String(d.controlFlags),10)}`]),
+      ...named.filter(r => r.group === 'Supervisor').map(r => `${r.name} ${formatNumber(String(r.value),10,r.width)}`),
+      ...named.filter(r => r.group === 'Interrupts').map(r => `${r.name} ${formatNumber(String(r.value),10,r.width)}`),
       ...d.arithmeticCommands.map((value, i) => `БАК[${i}] ${formatNumber(String(value),10,24)}`),
       ...d.pageAssignment.map((value, i) => `РП[${i.toString(8)}] ${formatNumber(String(value),10)}`),
       ...(d.operandProtection == null ? [] : [`РЗ ${formatNumber(String(d.operandProtection),10,32)}`])

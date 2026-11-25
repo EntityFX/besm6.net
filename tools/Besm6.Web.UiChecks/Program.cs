@@ -266,7 +266,7 @@ await Check("lamp-panel-racks", async (page, _) =>
     await page.ClickAsync("#step");
     await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-bank=write] .lamp-row[data-value=\"800000000001\"]')");
     var titles = await page.Locator(".lamp-racks > .lamp-rack > h4").AllTextContentsAsync();
-    if (!titles.SequenceEqual(new[] { "BRUS", "UU", "AU" })) throw new Exception("Expected three racks in BRUS, UU, AU order");
+    if (!titles.SequenceEqual(new[] { "BRUS", "UU", "AU / UVU" })) throw new Exception("Expected racks in BRUS, UU, AU / UVU order");
     if (!await page.EvaluateAsync<bool>("""
     (() => {
       const root=document.getElementById('lampPanel');
@@ -301,6 +301,16 @@ await Check("lamp-panel-racks", async (page, _) =>
         && root.querySelector('[data-reg=INTERRUPTS]').dataset.tier==='4'
         && root.querySelector('[data-reg=M1]').dataset.tier==='2'
         && root.querySelector('[data-reg=A]').dataset.tier==='3'
+        && root.querySelector('[data-reg="РП0"]').dataset.rack==='brus'
+        && root.querySelector('[data-reg="РП0"]').dataset.tier==='1'
+        && root.querySelector('[data-reg="РП7"]').dataset.tier==='1'
+        && root.querySelector('[data-reg="M16"]').dataset.rack==='uu'
+        && root.querySelector('[data-reg="M16"]').dataset.tier==='3'
+        && root.querySelector('[data-reg="M23"]').dataset.rack==='uu'
+        && root.querySelector('[data-reg="РИ"]').dataset.rack==='brus'
+        && root.querySelector('[data-reg="РИ"]').dataset.tier==='4'
+        && root.querySelector('[data-reg="РСП"]').dataset.rack==='au'
+        && root.querySelector('[data-reg="РСП"]').dataset.tier==='1'
         && !root.querySelector('[data-reg=A1], [data-reg=RM], [data-reg=RP0], [data-reg=M1_LOW]')
         && root.querySelector('[data-reg=RZ]').dataset.tier==='1'
         && !root.querySelector('[data-bank=read]').hidden;
@@ -331,6 +341,8 @@ await Check("lamp-panel-config", async (page, _) =>
         && c.placement === 'conditional-register-map'
         && c.racks.length === 3
         && c.registers.filter(r => r.bank === 'index').length === 15
+        && c.registers.filter(r => r.bank === 'page').length === 8
+        && c.registers.filter(r => r.bank === 'supervisor').length === 6
         && c.registers.every(r => r.source && r.bits > 0)
         && document.querySelector('#lampPanel .lamp-map, #lampPanel .lamp-quad, #panelTezVisualize, [data-slot], [data-coordinate]') === null;
     })()
@@ -338,6 +350,7 @@ await Check("lamp-panel-config", async (page, _) =>
     if (await page.Locator("#lampPanel [data-register=M0]").GetAttributeAsync("data-known") != "false")
         throw new Exception("M0 was invented before the first sample");
     if (await page.Locator("#lampPanel [data-reg=BAZ], #lampPanel [data-reg=A1], #lampPanel [data-reg=RP0]").CountAsync() != 0
+        || await page.Locator("#lampPanel [data-reg='РП0'], #lampPanel [data-reg=M16], #lampPanel [data-reg=РСП]").CountAsync() != 3
         || await page.Locator("#lampPanel .lamp-rack:visible").CountAsync() != 3
         || await page.Locator("#lampPanel .lamp-row:visible").CountAsync() != await page.Locator("#lampPanel .lamp-row").CountAsync())
         throw new Exception("Unsupported registers were added or real register strips were not drawn up front");
@@ -472,6 +485,44 @@ await Check("lamp-panel-buffers", async (page, _) =>
     await page.Locator("#lampPanel [data-bank=write]").ScrollIntoViewIfNeededAsync();
     await page.ScreenshotAsync(new() { Path=Path.Combine(output,"lamp-panel.png"), FullPage=true, Animations=ScreenshotAnimations.Disabled });
 });
+await Check("lamp-panel-supervisor-registers", async (page, _) =>
+{
+    var config = JsonSerializer.Deserialize<Besm6.Runtime.Loading.MachineJobConfiguration>(
+        File.ReadAllText("examples/machines/supervisor-functional.json"),
+        new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+    static ulong Word(string text) => Besm6.Architecture.Memory.MemoryWord50.Form(new(Asm(text)), false, false).RawValue;
+    config.MemoryWords = new()
+    {
+        new() { Address = 8, Raw50 = Word("xta 20, mod 20") },
+        new() { Address = 9, Raw50 = Word("xta 21, mod 30") },
+        new() { Address = 10, Raw50 = Word("xta 22, mod 36") },
+        new() { Address = 11, Raw50 = Word("xta 23, ext 31") },
+        new() { Address = 12, Raw50 = Word("xta 24, ext 34") },
+        new() { Address = 13, Raw50 = Word("stop, stop") },
+        new() { Address = 16, Raw50 = Besm6.Architecture.Memory.MemoryWord50.Form(new(0x20C41), true, true).RawValue },
+        new() { Address = 17, Raw50 = Besm6.Architecture.Memory.MemoryWord50.Form(new(0xA5UL << 20), true, true).RawValue },
+        new() { Address = 18, Raw50 = Besm6.Architecture.Memory.MemoryWord50.Form(new(0x800), true, true).RawValue },
+        new() { Address = 19, Raw50 = Besm6.Architecture.Memory.MemoryWord50.Form(new(1), true, true).RawValue },
+        new() { Address = 20, Raw50 = Besm6.Architecture.Memory.MemoryWord50.Form(new(0x200), true, true).RawValue }
+    };
+    config.InstructionLimit = 20;
+    await Upload(page, JsonSerializer.Serialize(config, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }), "supervisor-registers.json");
+    await page.ClickAsync("#panelTab"); await page.ClickAsync("#run"); await Status(page, "Completed");
+    await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-reg=\"РП0\"]')?.dataset.known==='true'");
+    if (await page.Locator("#lampPanel [data-reg='РП0'] .is-on").CountAsync() != 5)
+        throw new Exception("RP0 did not show four assignment pages");
+    if (await page.Locator("#lampPanel [data-reg='РЗ0'] .is-on").CountAsync() != 4
+        || await page.Locator("#lampPanel [data-reg='RZ'] .is-on").CountAsync() != 4)
+        throw new Exception("RZ did not show the written protection mask");
+    if (await page.Locator("#lampPanel [data-reg='РИ'] .is-on").CountAsync() != 1)
+        throw new Exception("RI did not show the written interrupt mask");
+    if (await page.Locator("#lampPanel [data-reg='INTERRUPTS'] .is-on").CountAsync() != 1)
+        throw new Exception("RGP did not show the raised external interrupt");
+    if (await page.Locator("#lampPanel [data-reg='МСП'] .is-on").CountAsync() != 1)
+        throw new Exception("MSP did not show the written peripheral mask");
+    if (await page.Locator("#lampPanel [data-reg='CONTROL'] .is-on").CountAsync() != 3)
+        throw new Exception("M17 did not show the supervisor control flags");
+});
 await Check("lamp-panel-hardware", async (page, _) =>
 {
     var config = System.Text.Json.JsonSerializer.Deserialize<Besm6.Runtime.Loading.MachineJobConfiguration>(
@@ -530,7 +581,24 @@ await Check("lamp-panel-samples", async (page, _) =>
       const host = document.createElement('div'); host.innerHTML = '<div class="lamp-banks"></div>';
       const panel = new Besm6LampPanel(host);
       panel.registers = { a: '800000000001', y: '0', k: '1', r: '0', c: '0', m: Array(16).fill('1') };
-      panel.detail = { pageAssignment: [3], operandProtection: 1, buffers: [
+      panel.detail = { pageAssignment: [3], operandProtection: 1, registers: [
+        { name: 'M16', value: 9, width: 15, access: 'ReadWrite', address: '20B' },
+        { name: 'M17', value: 0x403, width: 15, access: 'WriteOnly', address: '21B' },
+        { name: 'M23', value: 0x13, width: 15, access: 'ReadWrite', address: '27B' },
+        { name: 'M26', value: 0x100, width: 15, access: 'ReadWrite', address: '32B' },
+        { name: 'M27', value: 0x101, width: 15, access: 'ReadWrite', address: '33B' },
+        { name: 'M28', value: 0x102, width: 15, access: 'WriteOnly', address: '34B' },
+        { name: 'M29', value: 0x103, width: 15, access: 'WriteOnly', address: '35B' },
+        { name: 'RZ0', value: 0xA5, width: 8, access: 'WriteOnly', address: '030' },
+        { name: 'RP0', value: 1, width: 9, access: 'WriteOnly', address: '020' },
+        { name: 'RP1', value: 2, width: 9, access: 'WriteOnly', address: '020' },
+        { name: 'RP2', value: 3, width: 9, access: 'WriteOnly', address: '020' },
+        { name: 'RP3', value: 4, width: 9, access: 'WriteOnly', address: '020' },
+        { name: 'РГПр', value: 0x800000000001, width: 48, access: 'ReadOnly', address: '0237' },
+        { name: 'РСП', value: 0x200, width: 24, access: 'ReadOnly' },
+        { name: 'РИ', value: 0x800, width: 48, access: 'WriteOnly', address: '0036' },
+        { name: 'МСП', value: 0x200, width: 24, access: 'WriteOnly' }
+      ], buffers: [
         { name: 'БРЧ', slot: 0, value: 2, raw50: (1n << 48n | 2n).toString() },
         { name: 'БРС', slot: 0, value: 1, raw50: (1n << 49n | 1n).toString() },
         { name: 'БРЗ', slot: 0, value: 1, raw50: '1' },
@@ -543,6 +611,11 @@ await Check("lamp-panel-samples", async (page, _) =>
         && on('БРС[0]', 1) && on('БРС[0]', 50) && !on('БРС[0]', 49)
         && on('БРЗ[0]', 1) && on('БРЗ[1]', 2) && !on('БРЗ[0]', 2)
         && on('RZ', 1) && !row('RP0')
+        && on('CONTROL', 1) && on('CONTROL', 2) && on('CONTROL', 11)
+        && on('РЗ0', 1) && on('РЗ0', 8)
+        && on('РП0', 1) && on('РП0', 11) && on('РП0', 19) && on('РП0', 20) && on('РП0', 30)
+        && on('INTERRUPTS', 1) && on('INTERRUPTS', 48) && on('РСП', 10)
+        && row('РП0').dataset.source === 'detail.registers.RP0,RP1,RP2,RP3'
         && on('M1', 1) && !row('M1_LOW')
         && row('A').querySelectorAll('.lamp-control-bit').length === 0
         && !row('RM');

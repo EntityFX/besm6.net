@@ -21,7 +21,8 @@
     } else if (message.type === 'detail') {
       const key = JSON.stringify(message.data ? [
         message.data.buffers, message.data.controlFlags, message.data.interrupts,
-        message.data.specialRegisters, message.data.pageAssignment, message.data.operandProtection
+        message.data.specialRegisters, message.data.registers,
+        message.data.pageAssignment, message.data.operandProtection
       ] : null);
       if (key === lastDetail) return;
       lastDetail = key; panel.updateDetail(message.data ?? null);

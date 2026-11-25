@@ -121,6 +121,8 @@ body { background: #f3f5f7; font-size: .875rem; }
 .lamp-row[hidden], .lamp-bank[hidden], .lamp-tier[hidden], .lamp-rack[hidden] { display: none !important; }
 .lamp-bank-heading { margin: 0 0 .2rem; color: #e7d3a1; font: .62rem Consolas, monospace; }
 .lamp-row { display: grid; grid-template-columns: 5.8rem minmax(0, 1fr); gap: .05rem .4rem; align-items: center; min-height: 19px; padding: .1rem 0; }
+.lamp-row[data-known="false"] { opacity: .55; }
+.lamp-row[data-known="false"] .lamp-register-label::after { content: " ?"; color: #8b978f; }
 .lamp-register-label { grid-column: 1; color: #cfc5a8; font: .6rem Consolas, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lamp-track { grid-column: 2; display: flex; align-items: center; gap: 6px; min-width: 0; }
 .lamp-word { display: grid; grid-template-columns: repeat(var(--lamp-bits), minmax(0, 1fr)); gap: 2px; width: 100%; max-width: calc(var(--lamp-bits) * 10px); }

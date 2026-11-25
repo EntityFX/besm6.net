@@ -23,9 +23,12 @@ JOBS = ("empty", "periodic")
 PREFIX = "Supervisor measurement: "
 
 SOURCE = r'''
-using Besm6.Architecture;
+using Besm6.Architecture.Isa;
+using Besm6.Architecture.Machine;
 using Besm6.Core;
 using Besm6.Runtime;
+using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Profiling;
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Security.Cryptography;
@@ -49,8 +52,8 @@ const ulong period = 100000;
 var events = new List<object>();
 ulong? nextEvent = null;
 void Callback() {
-    events.Add(new { tick = machine.Clock.Tick, k = machine.Cpu.GetK(), right = machine.Cpu.RightInstruction,
-        a = machine.Cpu.GetA().Value, m1 = machine.Cpu.GetM(1), m2 = machine.Cpu.GetM(2) });
+    events.Add(new { tick = machine.Clock.Tick, k = machine.Cpu.K, right = machine.Cpu.RightInstruction,
+        a = machine.Cpu.A.Value, m1 = machine.Cpu.GetM(1), m2 = machine.Cpu.GetM(2) });
     nextEvent = machine.Clock.Tick + period;
     machine.Scheduler.Schedule(period, Callback);
 }
@@ -72,8 +75,8 @@ for (uint address = 0; address < memory.Size; address++) {
     physicalHash.AppendData(bytes);
 }
 var state = new {
-    k = machine.Cpu.GetK(), right = machine.Cpu.RightInstruction, a = machine.Cpu.GetA().Value,
-    y = machine.Cpu.GetY().Value, r = machine.Cpu.GetR(), c = machine.Cpu.C, applyC = machine.Cpu.ApplyC,
+    k = machine.Cpu.K, right = machine.Cpu.RightInstruction, a = machine.Cpu.A.Value,
+    y = machine.Cpu.Y.Value, r = machine.Cpu.R, c = machine.Cpu.C, applyC = machine.Cpu.ApplyC,
     m = Enumerable.Range(0,16).Select(machine.Cpu.GetM).ToArray(), tick = machine.Clock.Tick,
     supervisor = machine.Cpu.Supervisor!.Snapshot(),
     physicalMemorySha256 = Convert.ToHexString(physicalHash.GetHashAndReset()),

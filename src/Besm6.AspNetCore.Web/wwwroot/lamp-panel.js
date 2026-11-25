@@ -18,12 +18,16 @@
   };
   const label = name => Besm6I18n.language === 'ru' ? name : name
     .replace(/БРЗ/g, 'BRZ').replace(/БРС/g, 'BRS').replace(/БРЧ/g, 'BRCh')
+    .replace(/РГПр/g, 'RGP').replace(/РСП/g, 'RSP').replace(/МСП/g, 'MSP')
     .replace(/ГРП/g, 'GRP').replace(/РП/g, 'RP').replace(/РЗ/g, 'RZ').replace(/Маска/g, 'Mask')
+    .replace(/^РИ$/, 'RI')
     .replace(/СчАК/g, 'SchAK').replace(/РгВ/g, 'RgV').replace(/РгМ/g, 'RgM')
     .replace(/СМ/g, 'SM').replace(/РМР/g, 'RMR').replace(/РМ/g, 'RM').replace(/БАЗ/g, 'BAZ')
     .replace(/БАБУ/g, 'BABU').replace(/ИСУ А/g, 'ISU A').replace(/ИСУ Б/g, 'ISU B').replace(/мл\./g, 'low')
     .replace(/М-регистры \(дубль\)/g, 'M registers (copy)').replace(/адр\./g, 'addr.')
     .replace(/У54–У51/g, 'U54–U51').replace(/ПАУ/g, 'PAU').replace(/УПР/g, 'UPR').replace(/^УУ$/, 'UU');
+  const access = value => ({ ReadOnly: 'read-only', WriteOnly: 'write-only',
+    ReadWrite: 'read/write', HostOnly: 'host-only' }[value] || '');
 
   // One schematic renderer for the console and its single standalone mirror.
   // No physical coordinates, presence masks, TEZ cells, timers or machine reads.
@@ -73,7 +77,9 @@
         tier: String(group.definition.tier), line: group.definition.line || 'single',
         width: bits == null ? '' : String(bits), storageWidth: bits == null ? '' : String(bits + controlBits),
         placement: this.config.placement,
-        source: definition.source ? [definition.source.snapshot, ...definition.source.path].join('.')
+        source: definition.register ? `detail.registers.${definition.register}`
+          : definition.groupRegisters ? `detail.registers.${definition.groupRegisters.join(',')}`
+          : definition.source ? [definition.source.snapshot, ...definition.source.path].join('.')
           : definition.buffer ? 'detail.buffers' : '—' });
       if (definition.address) node.dataset.kind = 'address';
       node.setAttribute('role', 'img');
@@ -127,6 +133,25 @@
 
     sample(definition) {
       const { source, buffer, slot, bits } = definition;
+      if (definition.register || definition.groupRegisters) {
+        const registers = this.detail?.registers || [];
+        const byName = new Map(registers.map(entry => [entry.name, entry]));
+        if (definition.register) {
+          const entry = byName.get(definition.register);
+          if (!entry) return { value: null, control: null, note: 'No snapshot' };
+          const note = [t(access(entry.access)), entry.address, entry.alias].filter(Boolean).join(' · ');
+          return { value: parse(entry.value, 10, entry.width ?? bits), control: null, note };
+        }
+        const entries = definition.groupRegisters.map(name => byName.get(name));
+        if (entries.some(entry => !entry)) return { value: null, control: null, note: 'No snapshot' };
+        const width = definition.fieldBits ?? 9;
+        let packed = 0n;
+        for (let index = entries.length - 1; index >= 0; index--)
+          packed = (packed << BigInt(width)) | BigInt(entries[index].value ?? 0);
+        const pages = entries.map(entry => entry.value).join(', ');
+        const note = [t(access(entries[0].access)), entries[0].address, pages].filter(Boolean).join(' · ');
+        return { value: packed, control: null, note };
+      }
       if (!buffer) return {
         value: bits == null ? null : parse(source?.path.reduce((value, key) => value?.[key], this[source.snapshot]), source?.radix, bits),
         control: null, note: definition.note || (!source ? 'No snapshot' : '')
