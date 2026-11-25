@@ -19,6 +19,8 @@ public sealed class PageAssignment
 {
     public const uint PageSize = 1024;
     public const uint PageCount = 32;
+    public const uint AssignmentGroupCount = 8;
+    public const uint ProtectionGroupCount = 4;
     private readonly uint[] _physicalPages = new uint[PageCount];
     public MemoryConfiguration Configuration { get; }
     public uint PhysicalPageCount { get; }
@@ -43,6 +45,28 @@ public sealed class PageAssignment
     {
         ValidatePage(mathematicalPage);
         return _physicalPages[mathematicalPage];
+    }
+
+    /// <summary>
+    /// Host observation of one RP group (four mathematical pages). This is not a
+    /// guest-readable register: TO-8 §3.57 lists RP only in the write table.
+    /// </summary>
+    public uint[] GetAssignmentGroup(uint group)
+    {
+        if (group >= AssignmentGroupCount) throw new ArgumentOutOfRangeException(nameof(group));
+        int first = (int)(group * 4);
+        return [_physicalPages[first], _physicalPages[first + 1],
+            _physicalPages[first + 2], _physicalPages[first + 3]];
+    }
+
+    /// <summary>
+    /// Host observation of one RZ group (eight mathematical pages). This is not a
+    /// guest-readable register: TO-8 §3.57 lists RZ only in the write table.
+    /// </summary>
+    public uint GetProtectionGroup(uint group)
+    {
+        if (group >= ProtectionGroupCount) throw new ArgumentOutOfRangeException(nameof(group));
+        return (OperandProtectionMask >> (int)(group * 8)) & 0xFF;
     }
 
     public void SetPhysicalPage(uint mathematicalPage, uint physicalPage)
