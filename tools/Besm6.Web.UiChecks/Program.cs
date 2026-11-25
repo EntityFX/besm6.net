@@ -554,6 +554,31 @@ await Check("lamp-panel-hardware", async (page, _) =>
     var meta = await page.Locator("#lampPanel [data-bank=read] .lamp-row[data-value='3039']").GetAttributeAsync("title") ?? "";
     if (!meta.Contains("Ready=0") || !meta.Contains("Active=0")) throw new Exception("Consumed BRCh was shown as ready/active");
 });
+await Check("supervisor-hardware-dub", async (page, _) =>
+{
+    await Upload(page, tiny);
+    await page.SelectOptionAsync("#machineModel", "supervisor-hardware");
+    await page.CheckAsync("input[value=full]");
+    await page.ClickAsync("#run"); await Status(page, "Completed");
+    if (!string.IsNullOrWhiteSpace(await page.Locator("#error").InnerTextAsync()))
+        throw new Exception("Supervisor hardware rejected a .dub job");
+    var detail = await page.EvaluateAsync<JsonElement>("window.__events.findLast(e=>e.type==='machineRegisters').data");
+    if (detail.GetProperty("executionModel").GetString() != "Hardware")
+        throw new Exception(".dub in supervisor hardware did not use the hardware model");
+    if (!detail.GetProperty("buffers").EnumerateArray().Any(buffer => buffer.GetProperty("name").GetString() == "БРЧ"))
+        throw new Exception("Hardware .dub run did not expose BRCh");
+});
+await Check("supervisor-hardware-dub-debug", async (page, _) =>
+{
+    await Upload(page, tiny);
+    await page.SelectOptionAsync("#machineModel", "supervisor-hardware");
+    await page.CheckAsync("input[value=debug]");
+    await page.ClickAsync("#run"); await Status(page, "Paused");
+    await page.ClickAsync("#step"); await Status(page, "Paused");
+    await page.ClickAsync("#resume"); await Status(page, "Completed");
+    if (!string.IsNullOrWhiteSpace(await page.Locator("#error").InnerTextAsync()))
+        throw new Exception("Supervisor hardware .dub debug run failed");
+});
 await Check("panel-visualization", async (page, context) =>
 {
     const ulong value = 0x800000000001;

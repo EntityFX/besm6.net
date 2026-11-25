@@ -73,14 +73,16 @@ public sealed class WorkerTests
     private const string TwoInstructions = "*assem\natx 1234\nstop\n*end file\n";
 
     [TestMethod]
-    public async Task HardwareRejectsDubWithActionableErrorAndCanRestartInDubna()
+    public async Task HardwareRunsDubAndCanRestartInDubna()
     {
         await using var f = new Fixture(); await f.StartAsync(TwoInstructions);
         await f.Host.SendAsync(new WorkerCommand("start", Path.Combine(f.DirectoryPath, "job.dub"), "full", MachineModel: "supervisor-hardware"));
-        string message = Fixture.Data(await f.UntilAsync("error", allowError: true)).GetProperty("message").GetString()!;
-        StringAssert.Contains(message, "Supervisor — functional");
-        StringAssert.Contains(message, ".json");
-        await f.UntilAsync("state", e => Fixture.Data(e).GetProperty("status").GetString() == "Failed");
+        Assert.IsTrue(Fixture.Data(await f.UntilAsync("completed")).GetProperty("success").GetBoolean());
+        await f.Host.SendAsync(new WorkerCommand("snapshot"));
+        var state = Fixture.Data(await f.UntilAsync("machineRegisters"));
+        Assert.AreEqual("Hardware", state.GetProperty("executionModel").GetString());
+        Assert.IsTrue(state.GetProperty("buffers").EnumerateArray()
+            .Any(buffer => buffer.GetProperty("name").GetString() == "БРЧ"));
         await f.SendAsync("start", "full");
         Assert.IsTrue(Fixture.Data(await f.UntilAsync("completed")).GetProperty("success").GetBoolean());
     }

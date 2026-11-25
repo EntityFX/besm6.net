@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json.Serialization;
 using Besm6.Architecture.Machine;
+using Besm6.Runtime;
 using Besm6.Assembler.Disassembly;
 using Besm6.Runtime.Configuration;
 using Besm6.Runtime.Execution;
@@ -47,9 +48,24 @@ namespace Besm6.Cli
             try
             {
                 Config cfg = options.LoadConfiguration();
-                var session = MachineFactory.CreateRunSession(cfg, options.SessionSettings(cfg));
-                var machine = session.Machine;
-                var loader = session.Loader;
+                MachineCore machine;
+                DubnaLoader loader;
+                if (options.SupervisorHardware)
+                {
+                    long hardwareLimit = options.Limit ?? cfg.DefaultLimit;
+                    var hardwareDefaults = HardwareSupervisorDefaults.Create(cfg.Speed, hardwareLimit);
+                    machine = hardwareDefaults.CreateMachine(MachineExecutionModel.Hardware);
+                    loader = MachineFactory.CreateLoader(cfg, machine,
+                        MachineFactory.ValidateRuntimeAssets(cfg));
+                    loader.InstructionLimit = hardwareLimit;
+                    loader.CollectStatistics = options.Stats;
+                }
+                else
+                {
+                    var session = MachineFactory.CreateRunSession(cfg, options.SessionSettings(cfg));
+                    machine = session.Machine;
+                    loader = session.Loader;
+                }
                 loader.Verbose = options.Verbose;
                 loader.LoopDetect = options.LoopDetect && !options.NoLoopDetect;
                 loader.HangDetect = options.HangDetect && !options.NoHangDetect;
@@ -99,7 +115,16 @@ namespace Besm6.Cli
                     loader.RegisterTrace = (name, val) => sink(RunOutput.RegLine(name, val));
                 }
 
-                var result = loader.RunScript(jobFile);
+                LoadResult result;
+                Besm6.Runtime.Execution.ExecutionStatistics? hardwareStatistics = null;
+                if (options.SupervisorHardware)
+                {
+                    loader.LoadScript(jobFile);
+                    var hardwareRun = machine.RunInstructions(loader.InstructionLimit, cfg.Speed, options.Stats);
+                    result = hardwareRun.Outcome;
+                    hardwareStatistics = hardwareRun.Statistics;
+                }
+                else result = loader.RunScript(jobFile);
                 Console.WriteLine(result);
                 if (capturedDump is not null) RunOutput.WriteDecodedDump(capturedDump, memDumpFile!);
                 if (options.MachineState)
@@ -117,9 +142,9 @@ namespace Besm6.Cli
                 if (opcodeProfiler != null)
                     Console.Write(opcodeProfiler.FormatSummary());
 
-                if (stats && loader.Statistics is ExecutionStatistics statistics)
-                    RunOutput.WriteStatistics(machine, statistics);
-                if (loader.Statistics is { OriginalTempoMet: false })
+                var statistics = hardwareStatistics ?? loader.Statistics;
+                if (stats && statistics is { } measured) RunOutput.WriteStatistics(machine, measured);
+                if (statistics is { OriginalTempoMet: false })
                     Console.Error.WriteLine("Original speed target not met: host execution is slower than modeled BESM-6 time.");
 
                 if (result.Success) return 0;

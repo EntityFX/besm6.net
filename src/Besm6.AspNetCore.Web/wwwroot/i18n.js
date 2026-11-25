@@ -101,7 +101,7 @@
     'Machine': 'Машина',
     'Dubna + write/instruction buffers (.dub)': 'Dubna + БРЗ/БРС (.dub)',
     'Supervisor — functional (.json)': 'Супервизор — функциональный (.json)',
-    'Supervisor — hardware (.json)': 'Супервизор — аппаратный (.json)',
+    'Supervisor — hardware (.json / .dub)': 'Супервизор — аппаратный (.json / .dub)',
     'Drop .dub / .json or browse': 'Перетащите .dub / .json или выберите файл',
     'No file selected': 'Файл не выбран',
     'Mode': 'Режим',

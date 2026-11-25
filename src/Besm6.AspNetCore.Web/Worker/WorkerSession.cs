@@ -112,6 +112,7 @@ public sealed partial class WorkerSession : IDisposable
                 if (!_debug) throw new InvalidOperationException("Load a debug job first.");
                 if (_resume.IsSet && _runTask is { IsCompleted: false })
                     throw new InvalidOperationException("Pause execution before stepping.");
+                if (_hardwareDub) { await StepHardwareAsync(); break; }
                 _stepBudget = 1;
                 if (_machine!.UsesHostedSupervisorServices) _loader!.InstructionExecuted = _stepObserver;
                 else
@@ -210,6 +211,7 @@ public sealed partial class WorkerSession : IDisposable
         _stepObserver = null;
         _debug = command.Mode == "debug";
         _standalone = false;
+        _hardwareDub = false;
         _decodeMemory = command.DecodeMemory;
         _jobPath = command.JobPath;
         _instructions = 0;
@@ -225,22 +227,31 @@ public sealed partial class WorkerSession : IDisposable
             {
                 bool json = (await File.ReadAllTextAsync(command.JobPath)).TrimStart('\uFEFF', ' ', '\r', '\n', '\t').StartsWith('{');
                 if (json) { await StartStandaloneAsync(command); return; }
-                if (command.MachineModel == "supervisor-hardware")
-                    throw new InvalidDataException("Hosted .dub jobs require Supervisor — functional. Hardware mode requires a native machine .json configuration.");
             }
-            var cfg = Config.Load(Path.Combine(AppContext.BaseDirectory, "besm6.json"));
-            var session = MachineFactory.CreateRunSession(cfg, new RunSessionSettings(
-                speed, command.InstructionLimit, command.GuestClock,
-                BufferedMemory: command.MachineModel == "buffered",
-                SupervisorHostedServices: command.MachineModel == "supervisor-functional",
-                WallClockLimitMs: command.WallClockLimitMs,
-                CollectStatistics: command.Statistics,
-                TapesDirectory: Path.Combine(AppContext.BaseDirectory, "tapes"),
-                DiskPath: Path.Combine(_directory, "disk.bin"),
-                DrumPath: Path.Combine(_directory, "drum.bin"),
-                HostFileDirectory: _directory));
-            _machine = session.Machine;
-            _loader = session.Loader;
+            if (command.MachineModel == "supervisor-hardware")
+            {
+                var hardware = CreateHardwareSupervisorSession(command, speed);
+                _machine = hardware.Machine;
+                _loader = hardware.Loader;
+                _hardwareDub = true;
+                _loader.LoadScript(command.JobPath);
+            }
+            else
+            {
+                var cfg = Config.Load(Path.Combine(AppContext.BaseDirectory, "besm6.json"));
+                var session = MachineFactory.CreateRunSession(cfg, new RunSessionSettings(
+                    speed, command.InstructionLimit, command.GuestClock,
+                    BufferedMemory: command.MachineModel == "buffered",
+                    SupervisorHostedServices: command.MachineModel == "supervisor-functional",
+                    WallClockLimitMs: command.WallClockLimitMs,
+                    CollectStatistics: command.Statistics,
+                    TapesDirectory: Path.Combine(AppContext.BaseDirectory, "tapes"),
+                    DiskPath: Path.Combine(_directory, "disk.bin"),
+                    DrumPath: Path.Combine(_directory, "drum.bin"),
+                    HostFileDirectory: _directory));
+                _machine = session.Machine;
+                _loader = session.Loader;
+            }
             _loader.Output = text => _output.Append("print", text);
             _loader.TerminalOutput = WriteTerminalOutput;
             _loader.Input = ReadTerminalInput;
@@ -255,7 +266,7 @@ public sealed partial class WorkerSession : IDisposable
             };
             if (_debug)
             {
-                _loader.LoadScript(command.JobPath);
+                if (!_hardwareDub) _loader.LoadScript(command.JobPath);
                 _resume.Reset();
                 await SendSnapshotAsync();
                 await SendStateAsync("Paused");
@@ -281,7 +292,9 @@ public sealed partial class WorkerSession : IDisposable
         {
             try
             {
-                var result = _standalone ? RunStandalone() : _debug ? _loader!.RunLoaded() : _loader!.RunScript(_jobPath!);
+                var result = _hardwareDub ? RunHardwareLoaded()
+                    : _standalone ? RunStandalone()
+                    : _debug ? _loader!.RunLoaded() : _loader!.RunScript(_jobPath!);
                 _instructions = result.Instructions;
                 await CompleteAsync(result);
             }
@@ -331,7 +344,8 @@ public sealed partial class WorkerSession : IDisposable
         Interlocked.Exchange(ref _snapshotRequested, 0);
         await SendSnapshotAsync();
         if (_standalone && _machineCommand!.Statistics) await SendAsync("statistics", _standaloneStatistics);
-        else if (_loader?.CollectStatistics == true) await SendAsync("statistics", _loader.Statistics);
+        else if (_loader?.CollectStatistics == true)
+            await SendAsync("statistics", _standaloneStatistics ?? _loader.Statistics);
         await SendAsync("completed", new CompletionData(result.Success, result.Stopped,
             result.LimitExceeded, result.K, _instructions, result.ErrorMessage
                 ?? (result.LimitExceeded ? "Instruction or wall clock limit reached." : null)));

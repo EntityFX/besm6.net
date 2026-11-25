@@ -383,11 +383,8 @@
   drop.addEventListener('drop', e => upload(e.dataTransfer.files[0]));
   $('run').addEventListener('click', async () => {
     if ($('run').disabled) return;
-    if ((jobFormat === 'json' && !$('machineModel').value.startsWith('supervisor-'))
-      || (jobFormat === 'dub' && $('machineModel').value === 'supervisor-hardware')) {
-      showError({message: jobFormat === 'dub'
-        ? 'Hardware Supervisor cannot run .dub jobs yet. Select Supervisor — functional to run this job; the selected model has not been changed.'
-        : 'Загружена конфигурация машины .json. Выберите Supervisor — functional или hardware.'});
+    if (jobFormat === 'json' && !$('machineModel').value.startsWith('supervisor-')) {
+      showError({message: 'Загружена конфигурация машины .json. Выберите Supervisor — functional или hardware.'});
       return;
     }
     const instructionLimit = Number($('instructionLimit').value);

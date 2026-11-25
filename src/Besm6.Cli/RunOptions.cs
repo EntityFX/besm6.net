@@ -7,7 +7,7 @@ namespace Besm6.Cli;
 /// <summary>Immutable invocation data, separated from machine creation and execution.</summary>
 internal sealed record RunOptions
 {
-    internal const string Usage = "besm6 run <file.dub> [--speed original|max|virtual] [--stats] [--guest-clock] [--buffered-memory|--supervisor-hosted] [--machine-state] [--limit N (0 = unlimited)] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--config path]";
+    internal const string Usage = "besm6 run <file.dub> [--speed original|max|virtual] [--stats] [--guest-clock] [--buffered-memory|--supervisor-hosted|--supervisor-hardware] [--machine-state] [--limit N (0 = unlimited)] [--verbose] [--trace] [--dump-mem FILE] [--dump-mem-at N] [--dump-mem-count N] [--no-wall-clock] [--no-loop-detect] [--hang-detect|--no-hang-detect] [--profile] [--config path]";
     internal string JobFile { get; init; } = string.Empty;
     internal long? Limit { get; init; }
     internal bool Verbose { get; init; }
@@ -27,6 +27,7 @@ internal sealed record RunOptions
     internal bool GuestClock { get; init; }
     internal bool BufferedMemory { get; init; }
     internal bool SupervisorHostedServices { get; init; }
+    internal bool SupervisorHardware { get; init; }
     internal bool MachineState { get; init; }
     internal ExecutionSpeed? SpeedOverride { get; init; }
 
@@ -63,7 +64,7 @@ internal sealed record RunOptions
         bool profile = false;
         bool stats = false;
         bool guestClock = false;
-        bool bufferedMemory = false, machineState = false, supervisorHostedServices = false;
+        bool bufferedMemory = false, machineState = false, supervisorHostedServices = false, supervisorHardware = false;
         ExecutionSpeed? speedOverride = null;
 
         for (int i = 1; i < args.Length; i++)
@@ -72,6 +73,7 @@ internal sealed record RunOptions
             {
                 case "--buffered-memory": bufferedMemory = true; break;
                 case "--supervisor-hosted": supervisorHostedServices = true; break;
+                case "--supervisor-hardware": supervisorHardware = true; break;
                 case "--machine-state": machineState = true; break;
                 case "--speed":
                     if (++i >= args.Length || !ExecutionSpeedNames.TryParse(args[i], out var parsedSpeed))
@@ -176,6 +178,7 @@ internal sealed record RunOptions
             GuestClock = guestClock,
             BufferedMemory = bufferedMemory,
             SupervisorHostedServices = supervisorHostedServices,
+            SupervisorHardware = supervisorHardware,
             MachineState = machineState,
             SpeedOverride = speedOverride,
         };

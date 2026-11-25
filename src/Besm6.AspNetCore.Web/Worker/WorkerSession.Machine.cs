@@ -1,4 +1,5 @@
 using Besm6.AspNetCore.Web.Protocol;
+using Besm6.Runtime;
 using Besm6.Runtime.Configuration;
 using Besm6.Runtime.Execution;
 using Besm6.Runtime.Loading;
@@ -9,9 +10,31 @@ namespace Besm6.AspNetCore.Web.Worker;
 public sealed partial class WorkerSession
 {
     private bool _standalone;
+    private bool _hardwareDub;
     private WorkerCommand? _machineCommand;
     private ExecutionStatistics? _standaloneStatistics;
     private bool _decodeMemory = true;
+
+    private (MachineCore Machine, DubnaLoader Loader) CreateHardwareSupervisorSession(
+        WorkerCommand command, ExecutionSpeed speed)
+    {
+        var defaults = HardwareSupervisorDefaults.Create(speed, command.InstructionLimit);
+        var machine = defaults.CreateMachine(MachineExecutionModel.Hardware);
+        var config = Config.Load(Path.Combine(AppContext.BaseDirectory, "besm6.json"));
+        config.Speed = speed;
+        config.DefaultLimit = command.InstructionLimit;
+        config.GuestClock = command.GuestClock;
+        config.Tapes = Path.Combine(AppContext.BaseDirectory, "tapes");
+        config.Disk = Path.Combine(_directory, "disk.bin");
+        config.Drum = Path.Combine(_directory, "drum.bin");
+        var assets = MachineFactory.ValidateRuntimeAssets(config);
+        var loader = MachineFactory.CreateLoader(config, machine, assets);
+        loader.InstructionLimit = command.InstructionLimit;
+        loader.CollectStatistics = command.Statistics;
+        loader.WallClockLimitMs = command.WallClockLimitMs;
+        loader.HostFileDirectory = _directory;
+        return (machine, loader);
+    }
 
     private async Task StartStandaloneAsync(WorkerCommand command)
     {
@@ -33,6 +56,29 @@ public sealed partial class WorkerSession
         _machine.SupervisorIo.SerialOutput += (_, value) => _output.Append("terminal", ((char)value).ToString());
         if (_debug) { _resume.Reset(); await SendSnapshotAsync(); await SendStateAsync("Paused"); }
         else { await SendStateAsync("Running"); StartExecution(); }
+    }
+
+    private LoadResult RunHardwareLoaded()
+    {
+        var token = _runCancellation!.Token;
+        var result = _machine!.RunInstructions(_loader!.InstructionLimit, _loader.Speed,
+            _loader.CollectStatistics, count =>
+            {
+                Interlocked.Exchange(ref _instructions, count);
+                ExecutionBoundary(token);
+            }, _loader.WallClockLimitMs);
+        _standaloneStatistics = result.Statistics;
+        return result.Outcome;
+    }
+
+    private async Task StepHardwareAsync()
+    {
+        _stepBudget = 1;
+        bool stopped = _machine!.Step();
+        Interlocked.Exchange(ref _instructions, _instructions + 1);
+        await SendSnapshotAsync();
+        if (stopped) { _terminal = true; await SendStateAsync("Halted"); }
+        else await SendStateAsync("Paused");
     }
 
     private LoadResult RunStandalone()
