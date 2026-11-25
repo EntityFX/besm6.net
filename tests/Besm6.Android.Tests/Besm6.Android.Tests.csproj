@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <PackageReference Include="MSTest" Version="4.0.2" />
+    <PackageReference Include="MSTest.TestAdapter" Version="4.2.3" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Using Include="Besm6.Android.Services" />
+    <Using Include="Besm6.Runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Besm6.Runtime\Besm6.Runtime.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\Besm6.Android\Services\RunSettings.cs" Link="Linked\RunSettings.cs" />
+    <Compile Include="..\..\src\Besm6.Android\Services\RegisterFormatter.cs" Link="Linked\RegisterFormatter.cs" />
+    <Compile Include="..\..\src\Besm6.Android\Services\DeviceTextBuffer.cs" Link="Linked\DeviceTextBuffer.cs" />
+    <Compile Include="..\..\src\Besm6.Android\Services\PlotterParser.cs" Link="Linked\PlotterParser.cs" />
+    <Compile Include="..\..\src\Besm6.Android\Services\MachineRunService.cs" Link="Linked\MachineRunService.cs" />
+  </ItemGroup>
+</Project>

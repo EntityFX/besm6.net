@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Besm6.Android.ViewModels"
+             xmlns:services="clr-namespace:Besm6.Android.Services"
+             xmlns:ui="clr-namespace:Besm6.Android.Ui"
+             x:Class="Besm6.Android.MainPage"
+             x:DataType="vm:MainViewModel"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageLight}, Dark={StaticResource PageDark}}"
+             Title="БЭСМ-6">
+    <Grid RowDefinitions="Auto,Auto,*,Auto"
+          BackgroundColor="{AppThemeBinding Light={StaticResource PageLight}, Dark={StaticResource PageDark}}">
+
+        <Border Grid.Row="0" Style="{StaticResource Card}" Margin="8,4,8,4"
+                Padding="10,7">
+            <VerticalStackLayout Spacing="4">
+                <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6">
+                    <Label Text="БЭСМ-6" FontSize="15" FontAttributes="Bold"
+                           VerticalTextAlignment="Center" />
+                    <BoxView Grid.Column="1" WidthRequest="7" HeightRequest="7"
+                             CornerRadius="3.5" Color="{Binding StatusColor}"
+                             VerticalOptions="Center" />
+                    <Label Grid.Column="2" Text="{Binding Status}" FontSize="10.5"
+                           MaxLines="2" LineBreakMode="TailTruncation"
+                           VerticalTextAlignment="Center" />
+                </Grid>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                    <Label Text="ПРИМЕР" Style="{StaticResource SectionLabel}"
+                           VerticalOptions="Center" />
+                    <Picker Grid.Column="1" ItemsSource="{Binding Examples}"
+                            ItemDisplayBinding="{Binding DisplayName}"
+                            SelectedItem="{Binding SelectedExample, Mode=TwoWay}"
+                            FontSize="11" HeightRequest="34" />
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+
+        <ScrollView Grid.Row="1" Orientation="Horizontal"
+                    HorizontalScrollBarVisibility="Never"
+                    Margin="8,0,8,3">
+            <HorizontalStackLayout Spacing="4">
+                <ui:TabButton Text="Код" IsActive="{Binding IsCodeTab}"
+                              Command="{Binding SelectTabCommand}" CommandParameter="code" />
+                <ui:TabButton Text="Поиск" IsActive="{Binding IsSearchTab}"
+                              Command="{Binding SelectTabCommand}" CommandParameter="search" />
+                <ui:TabButton Text="Регистры" IsActive="{Binding IsRegistersTab}"
+                              Command="{Binding SelectTabCommand}" CommandParameter="registers" />
+                <ui:TabButton Text="Память" IsActive="{Binding IsMemoryTab}"
+                              Command="{Binding SelectTabCommand}" CommandParameter="memory" />
+                <ui:TabButton Text="Терминал" IsActive="{Binding IsTerminalTab}"
+                              Command="{Binding SelectTabCommand}" CommandParameter="terminal" />
+                <ui:TabButton Text="Печать" IsActive="{Binding IsPrinterTab}"
+                              Command="{Binding SelectTabCommand}" CommandParameter="print" />
+                <ui:TabButton Text="Карты" IsActive="{Binding IsPunchTab}"
+                              Command="{Binding SelectTabCommand}" CommandParameter="punch" />
+                <ui:TabButton Text="График" IsActive="{Binding IsPlotterTab}"
+                              Command="{Binding SelectTabCommand}" CommandParameter="plotter" />
+            </HorizontalStackLayout>
+        </ScrollView>
+
+        <Grid Grid.Row="2" Margin="8,0,8,4">
+
+            <Border Style="{StaticResource Card}" Padding="0" IsVisible="{Binding IsCodeTab}">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid Padding="12,8,12,0" ColumnDefinitions="*,Auto">
+                        <Label Text="ЗАДАНИЕ .DUB" Style="{StaticResource SectionLabel}" />
+                        <Label Grid.Column="1" Text="{Binding SelectedExample.RelativePath}"
+                               Style="{StaticResource SectionLabel}" />
+                    </Grid>
+                    <ui:SyntaxEditor Grid.Row="1" Text="{Binding Code, Mode=TwoWay}"
+                                     FontFamily="monospace" FontSize="11"
+                                     AutoSize="Disabled"
+                                     IsSpellCheckEnabled="False"
+                                     IsTextPredictionEnabled="False"
+                                     VerticalOptions="Fill" HorizontalOptions="Fill"
+                                     Margin="8,0,8,6" />
+                </Grid>
+            </Border>
+
+            <Grid IsVisible="{Binding IsSearchTab}"
+                  RowDefinitions="Auto,Auto,*" RowSpacing="6">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                    <Entry Text="{Binding SearchQuery, Mode=TwoWay}"
+                           Placeholder="имя файла или строка кода"
+                           FontSize="12"
+                           ReturnCommand="{Binding SearchFilesCommand}" />
+                    <Button Grid.Column="1" Text="Найти"
+                            Command="{Binding SearchFilesCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            MinimumHeightRequest="38" FontSize="12" />
+                </Grid>
+                <Label Grid.Row="1" Text="{Binding SearchStatus}"
+                       Style="{StaticResource SubtitleLabel}" />
+                <CollectionView Grid.Row="2" ItemsSource="{Binding SearchResults}"
+                                SelectedItem="{Binding SelectedSearchHit, Mode=TwoWay}"
+                                SelectionMode="Single">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="services:SearchHit">
+                            <Border Style="{StaticResource GroupCard}"
+                                    Margin="0,0,0,5" Padding="9">
+                                <VerticalStackLayout Spacing="1">
+                                    <Label Text="{Binding RelativePath}" FontSize="11"
+                                           FontAttributes="Bold" />
+                                    <Label Text="{Binding Snippet}"
+                                           Style="{StaticResource MonoLabel}"
+                                           FontSize="10" MaxLines="2"
+                                           LineBreakMode="TailTruncation" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+
+            <Border Style="{StaticResource Card}" Padding="10"
+                    IsVisible="{Binding IsRegistersTab}">
+                <ScrollView>
+                    <ScrollView Orientation="Horizontal">
+                        <Label Text="{Binding RegistersText}"
+                               Style="{StaticResource MonoLabel}" />
+                    </ScrollView>
+                </ScrollView>
+            </Border>
+
+            <Grid IsVisible="{Binding IsMemoryTab}" RowDefinitions="Auto,*" RowSpacing="6">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6">
+                    <Label Text="Адрес" Style="{StaticResource SectionLabel}"
+                           VerticalTextAlignment="Center" />
+                    <Entry Grid.Column="1" Text="{Binding MemoryAddressText, Mode=TwoWay}"
+                           FontFamily="monospace" FontSize="12"
+                           ReturnCommand="{Binding InspectMemoryCommand}" />
+                    <Button Grid.Column="2" Text="Смотреть"
+                            Command="{Binding InspectMemoryCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            MinimumHeightRequest="38" FontSize="12" />
+                </Grid>
+                <Border Grid.Row="1" Style="{StaticResource Card}" Padding="10">
+                    <ScrollView>
+                        <ScrollView Orientation="Horizontal">
+                            <Label Text="{Binding MemoryText}"
+                                   Style="{StaticResource MonoLabel}" />
+                        </ScrollView>
+                    </ScrollView>
+                </Border>
+            </Grid>
+
+            <Grid IsVisible="{Binding IsTerminalTab}" RowDefinitions="*,Auto" RowSpacing="6">
+                <Border Style="{StaticResource Card}" Padding="10">
+                    <ScrollView>
+                        <ScrollView Orientation="Horizontal">
+                            <Label Text="{Binding TerminalText}"
+                                   Style="{StaticResource MonoLabel}" />
+                        </ScrollView>
+                    </ScrollView>
+                </Border>
+                <Border Grid.Row="1" Style="{StaticResource Card}" Padding="10"
+                        IsVisible="{Binding IsWaitingInput}">
+                    <Grid RowDefinitions="Auto,Auto" RowSpacing="5">
+                        <Label Text="{Binding InputPrompt}" Style="{StaticResource SectionLabel}" />
+                        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                            <Entry Text="{Binding InputText, Mode=TwoWay}"
+                                   Placeholder="строка для программы"
+                                   FontFamily="monospace" FontSize="12"
+                                   ReturnCommand="{Binding SendInputCommand}" />
+                            <Button Grid.Column="1" Text="Ввод"
+                                    Command="{Binding SendInputCommand}"
+                                    Style="{StaticResource PrimaryButton}"
+                                    MinimumHeightRequest="38" FontSize="12" />
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Border Style="{StaticResource Card}" Padding="10"
+                    IsVisible="{Binding IsPrinterTab}">
+                <ScrollView>
+                    <ScrollView Orientation="Horizontal">
+                        <Label Text="{Binding PrinterText}"
+                               Style="{StaticResource MonoLabel}" />
+                    </ScrollView>
+                </ScrollView>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Padding="10"
+                    IsVisible="{Binding IsPunchTab}">
+                <ScrollView>
+                    <ScrollView Orientation="Horizontal">
+                        <Label Text="{Binding PunchText}"
+                               Style="{StaticResource MonoLabel}" />
+                    </ScrollView>
+                </ScrollView>
+            </Border>
+
+            <Grid IsVisible="{Binding IsPlotterTab}" RowDefinitions="Auto,*" RowSpacing="6">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                    <Label Text="Плоттер" Style="{StaticResource SectionLabel}"
+                           VerticalTextAlignment="Center" />
+                    <Picker Grid.Column="1" ItemsSource="{Binding PlotterTypeOptions}"
+                            SelectedIndex="{Binding PlotterTypeIndex, Mode=TwoWay}"
+                            FontSize="12" HeightRequest="38" />
+                </Grid>
+                <Border Grid.Row="1" Style="{StaticResource Card}" Padding="6">
+                    <ui:PlotterView Data="{Binding PlotterText}"
+                                    Kind="{Binding PlotterKind}" />
+                </Border>
+            </Grid>
+        </Grid>
+
+        <VerticalStackLayout Grid.Row="3" Spacing="4" Margin="8,0,8,6">
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="4"
+                  IsVisible="{Binding IsDebugMode}">
+                <Button Text="Пауза" Command="{Binding PauseCommand}"
+                        Style="{StaticResource BarButton}" />
+                <Button Grid.Column="1" Text="Шаг" Command="{Binding StepCommand}"
+                        Style="{StaticResource BarButton}" />
+                <Button Grid.Column="2" Text="Продолжить" Command="{Binding ResumeCommand}"
+                        Style="{StaticResource BarButton}" />
+            </Grid>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                <Button Text="Пуск" Command="{Binding RunCommand}"
+                        IsEnabled="{Binding CanRun}"
+                        Style="{StaticResource PrimaryButton}"
+                        HeightRequest="54" FontSize="16" />
+                <Button Grid.Column="1" Text="Стоп" Command="{Binding StopCommand}"
+                        IsEnabled="{Binding IsRunning}"
+                        Style="{StaticResource SecondaryButton}"
+                        WidthRequest="88" HeightRequest="42" VerticalOptions="Center" />
+            </Grid>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+                <Button Text="Настройки" Command="{Binding OpenSettingsCommand}"
+                        Style="{StaticResource BarButton}" FontSize="10" HeightRequest="32" />
+                <Button Grid.Column="1"
+                        Text="{Binding ThemeLabel, StringFormat='Тема: {0}'}"
+                        Command="{Binding ToggleThemeCommand}"
+                        Style="{StaticResource BarButton}" FontSize="10" HeightRequest="32"
+                        SemanticProperties.Description="Переключить тему оформления" />
+            </Grid>
+        </VerticalStackLayout>
+
+        <Grid Grid.RowSpan="4" IsVisible="{Binding IsPopupOpen}"
+              BackgroundColor="{AppThemeBinding Light=#99000000, Dark=#B3000000}"
+              Padding="12,24,12,12">
+            <Border Style="{StaticResource PopupCard}"
+                    VerticalOptions="Fill" HorizontalOptions="Fill"
+                    MaximumWidthRequest="680">
+                <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="8" Padding="14,10">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <Label Text="Настройки запуска" FontSize="17"
+                               FontAttributes="Bold" VerticalTextAlignment="Center" />
+                        <Button Grid.Column="1" Text="✕"
+                                Command="{Binding ClosePopupCommand}"
+                                Style="{StaticResource GhostButton}"
+                                FontSize="17" WidthRequest="38" HeightRequest="34" />
+                    </Grid>
+
+                    <ScrollView Grid.Row="1">
+                        <VerticalStackLayout Spacing="8">
+                            <Border Style="{StaticResource GroupCard}">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="СКОРОСТЬ" Style="{StaticResource SectionLabel}" />
+                                    <Picker ItemsSource="{Binding SpeedOptions}"
+                                            SelectedIndex="{Binding SpeedIndex, Mode=TwoWay}" />
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <Border Style="{StaticResource GroupCard}">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="МОДЕЛЬ МАШИНЫ" Style="{StaticResource SectionLabel}" />
+                                    <Picker ItemsSource="{Binding ModelOptions}"
+                                            SelectedIndex="{Binding ModelIndex, Mode=TwoWay}" />
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <Border Style="{StaticResource GroupCard}">
+                                <VerticalStackLayout Spacing="7">
+                                    <Label Text="ЛИМИТЫ" Style="{StaticResource SectionLabel}" />
+                                    <Grid ColumnDefinitions="*,120" ColumnSpacing="8">
+                                        <Label Text="Команд (0 — без лимита)" FontSize="11"
+                                               VerticalTextAlignment="Center" />
+                                        <Entry Grid.Column="1"
+                                               Text="{Binding InstructionLimitText, Mode=TwoWay}"
+                                               Keyboard="Numeric" HorizontalTextAlignment="End"
+                                               FontSize="12" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,120" ColumnSpacing="8">
+                                        <Label Text="Время, с (0 — без лимита)" FontSize="11"
+                                               VerticalTextAlignment="Center" />
+                                        <Entry Grid.Column="1"
+                                               Text="{Binding WallClockSecondsText, Mode=TwoWay}"
+                                               Keyboard="Numeric" HorizontalTextAlignment="End"
+                                               FontSize="12" />
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <Border Style="{StaticResource GroupCard}">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="ДОПОЛНИТЕЛЬНО" Style="{StaticResource SectionLabel}" />
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Text="Гостевые часы CTIME/STIME" FontSize="11"
+                                               VerticalTextAlignment="Center" />
+                                        <Switch Grid.Column="1"
+                                                IsToggled="{Binding GuestClock, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Text="Собирать статистику" FontSize="11"
+                                               VerticalTextAlignment="Center" />
+                                        <Switch Grid.Column="1"
+                                                IsToggled="{Binding Statistics, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Text="Отладка (старт с паузы)" FontSize="11"
+                                               VerticalTextAlignment="Center" />
+                                        <Switch Grid.Column="1"
+                                                IsToggled="{Binding DebugMode, Mode=TwoWay}" />
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <Label Text="БРЧ доступны только в аппаратной модели. БРС и БРЗ — в моделях с буферной памятью."
+                                   FontSize="10" Style="{StaticResource SubtitleLabel}" />
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <Label Grid.Row="2" Text="{Binding PopupError}" FontSize="11"
+                           TextColor="{AppThemeBinding Light={StaticResource DangerLight}, Dark={StaticResource DangerDark}}"
+                           IsVisible="{Binding HasPopupError}" />
+
+                    <HorizontalStackLayout Grid.Row="3" Spacing="8"
+                                           HorizontalOptions="End">
+                        <Button Text="Применить" Command="{Binding ApplySettingsCommand}"
+                                Style="{StaticResource PrimaryButton}"
+                                MinimumHeightRequest="40" FontSize="12" />
+                        <Button Text="Закрыть" Command="{Binding ClosePopupCommand}"
+                                Style="{StaticResource SecondaryButton}"
+                                MinimumHeightRequest="40" FontSize="12" />
+                    </HorizontalStackLayout>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>

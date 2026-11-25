@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android36.0</TargetFramework>
+    <SupportedOSPlatformVersion>29.0</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Besm6.Android</RootNamespace>
+    <AssemblyName>Besm6.Android</AssemblyName>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <MauiXamlInflator>SourceGen</MauiXamlInflator>
+    <ApplicationTitle>БЭСМ-6</ApplicationTitle>
+    <ApplicationId>ru.besm6.android</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <PublishTrimmed>false</PublishTrimmed>
+    <!-- Release APK is intended for a physical arm64 phone. Debug keeps the
+         default ABIs so the x86_64 emulator can run it. -->
+    <RuntimeIdentifiers Condition="'$(Configuration)' == 'Release'">android-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Besm6.Runtime\Besm6.Runtime.csproj" />
+    <ProjectReference Include="..\Besm6.Assembler\Besm6.Assembler.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <MauiIcon Include="Resources\AppIcon\appicon.svg"
+              ForegroundFile="Resources\AppIcon\appiconfg.svg"
+              Color="#3E2823" />
+    <MauiSplashScreen Include="Resources\Splash\splash.svg"
+                      Color="#3E2823"
+                      BaseSize="128,128" />
+    <AndroidAsset Include="..\..\tapes\**\*"
+                  Link="tapes\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="..\..\examples\**\*.dub"
+                  Link="examples\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+  </ItemGroup>
+</Project>
