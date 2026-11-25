@@ -265,8 +265,8 @@ await Check("lamp-panel-racks", async (page, _) =>
     await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-register=A]')?.dataset.value==='800000000001'");
     await page.ClickAsync("#step");
     await page.WaitForFunctionAsync("document.querySelector('#lampPanel [data-bank=write] .lamp-row[data-value=\"800000000001\"]')");
-    var titles = await page.Locator(".lamp-racks > .lamp-rack > h4").AllTextContentsAsync();
-    if (!titles.SequenceEqual(new[] { "BRUS", "UU", "AU / UVU" })) throw new Exception("Expected racks in BRUS, UU, AU / UVU order");
+    var titles = await page.Locator(".lamp-racks .lamp-rack > h4").AllTextContentsAsync();
+    if (!titles.SequenceEqual(new[] { "BRUS", "UU", "AU", "UVU" })) throw new Exception("Expected racks in BRUS, UU, AU, UVU order");
     if (!await page.EvaluateAsync<bool>("""
     (() => {
       const root=document.getElementById('lampPanel');
@@ -292,7 +292,7 @@ await Check("lamp-panel-racks", async (page, _) =>
           return (a.backgroundColor!==b.backgroundColor || a.backgroundImage!==b.backgroundImage)
             && a.outlineStyle==='none';
         })()
-        && root.querySelectorAll('.lamp-tier').length===12
+        && root.querySelectorAll('.lamp-tier').length===16
         && root.querySelector('[data-reg="БРЧ[0]"]').dataset.tier==='2'
         && root.querySelector('[data-reg="БРЧ[0]"]').dataset.line==='upper'
         && root.querySelector('[data-reg="БРС[0]"]').dataset.line==='lower'
@@ -309,8 +309,11 @@ await Check("lamp-panel-racks", async (page, _) =>
         && root.querySelector('[data-reg="M23"]').dataset.rack==='uu'
         && root.querySelector('[data-reg="РИ"]').dataset.rack==='brus'
         && root.querySelector('[data-reg="РИ"]').dataset.tier==='4'
-        && root.querySelector('[data-reg="РСП"]').dataset.rack==='au'
+        && root.querySelector('[data-reg="РСП"]').dataset.rack==='uvu'
         && root.querySelector('[data-reg="РСП"]').dataset.tier==='1'
+        && root.querySelectorAll('.lamp-column').length===3
+        && root.querySelector('[data-rack="au"]').parentElement.dataset.column==='au-uvu'
+        && root.querySelector('[data-rack="uvu"]').parentElement.dataset.column==='au-uvu'
         && !root.querySelector('[data-reg=A1], [data-reg=RM], [data-reg=RP0], [data-reg=M1_LOW]')
         && root.querySelector('[data-reg=RZ]').dataset.tier==='1'
         && !root.querySelector('[data-bank=read]').hidden;
@@ -339,7 +342,7 @@ await Check("lamp-panel-config", async (page, _) =>
       const c = Besm6LampPanelConfig;
       return Object.isFrozen(c) && Object.isFrozen(c.registers.find(r => r.id === 'A').source.path)
         && c.placement === 'conditional-register-map'
-        && c.racks.length === 3
+        && c.racks.length === 4
         && c.registers.filter(r => r.bank === 'index').length === 15
         && c.registers.filter(r => r.bank === 'page').length === 8
         && c.registers.filter(r => r.bank === 'supervisor').length === 6
@@ -352,7 +355,8 @@ await Check("lamp-panel-config", async (page, _) =>
         throw new Exception("M0 was invented before the first sample");
     if (await page.Locator("#lampPanel [data-reg=BAZ], #lampPanel [data-reg=A1], #lampPanel [data-reg=RP0]").CountAsync() != 0
         || await page.Locator("#lampPanel [data-reg='РП0'], #lampPanel [data-reg=M16], #lampPanel [data-reg=РСП]").CountAsync() != 3
-        || await page.Locator("#lampPanel .lamp-rack:visible").CountAsync() != 3
+        || await page.Locator("#lampPanel .lamp-rack:visible").CountAsync() != 4
+        || await page.Locator("#lampPanel .lamp-column:visible").CountAsync() != 3
         || await page.Locator("#lampPanel .lamp-row:visible").CountAsync() != await page.Locator("#lampPanel .lamp-row").CountAsync())
         throw new Exception("Unsupported registers were added or real register strips were not drawn up front");
     // Prove that the renderer reads new definitions, without adding a CPU observer.
@@ -565,14 +569,14 @@ await Check("panel-visualization", async (page, context) =>
     viz.PageError += (_, message) => Console.WriteLine("VIZ PAGE ERROR " + message);
     await viz.SetViewportSizeAsync(1600, 900);
     await viz.GotoAsync(root + "/panel.html?session=" + Uri.EscapeDataString(id));
-    await viz.WaitForFunctionAsync("document.querySelectorAll('#lampPanel .lamp-rack').length===3");
+    await viz.WaitForFunctionAsync("document.querySelectorAll('#lampPanel .lamp-rack').length===4");
     await viz.WaitForFunctionAsync("document.getElementById('vizSession').textContent.startsWith('Live mirror')");
     await page.ClickAsync("#step");
     await viz.WaitForFunctionAsync("document.querySelector('#lampPanel [data-register=A]')?.dataset.value==='800000000001'");
     await viz.WaitForFunctionAsync("document.getElementById('lampPanel').dataset.state==='Paused'");
     if (await viz.Locator("#lampPanel .lamp-map").CountAsync() != 0) throw new Exception("Visualization still contains the old register map");
-    double[] tops = await viz.Locator("#lampPanel .lamp-rack:visible").EvaluateAllAsync<double[]>("racks => racks.map(r => r.getBoundingClientRect().top)");
-    if (tops.Distinct().Count() != 1) throw new Exception("Visualization racks are not in one row");
+    double[] tops = await viz.Locator("#lampPanel .lamp-column").EvaluateAllAsync<double[]>("columns => columns.map(c => c.getBoundingClientRect().top)");
+    if (tops.Distinct().Count() != 1) throw new Exception("Visualization columns are not in one row");
     if (!await viz.Locator("#lampPanel [data-register=A] .lamp-register-label").IsVisibleAsync())
         throw new Exception("Visualization lost register labels");
     await viz.SelectOptionAsync("#languageSelect", "ru");
@@ -1284,7 +1288,7 @@ await Check("lamp-panel-performance", async (page, context) =>
             string href = await page.Locator("#panelVisualize").GetAttributeAsync("href") ?? "";
             mirror = await context.NewPageAsync();
             await mirror.GotoAsync(new Uri(new Uri(simulatorUrl), href).ToString());
-            await mirror.WaitForFunctionAsync("document.querySelectorAll('.lamp-rack').length===3");
+            await mirror.WaitForFunctionAsync("document.querySelectorAll('.lamp-rack').length===4");
         }
         try
         {

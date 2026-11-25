@@ -37,13 +37,23 @@
       this.registers = null; this.detail = null; this.state = 'Idle'; this.base = 8; this.frame = 0;
       this.lastPaint = -Infinity; this.repaintTimer = 0;
       this.rows = new Map(); this.groups = new Map(); this.racks = new Map(); this.tiers = new Map();
+      this.columns = new Map();
       const host = root.querySelector('.lamp-banks');
       this.rackHost = host;
       host.replaceChildren(); host.className = 'lamp-banks lamp-racks';
       for (const definition of config.racks) {
+        const columnId = definition.column || definition.id;
+        let column = this.columns.get(columnId)?.node;
+        if (!column) {
+          column = element('section', 'lamp-column');
+          column.dataset.column = columnId;
+          host.append(column);
+          this.columns.set(columnId, { node: column, racks: [] });
+        }
         const rack = element('section', 'lamp-rack'); rack.dataset.rack = definition.id;
-        const heading = element('h4', 'lamp-rack-heading'); rack.append(heading); host.append(rack);
+        const heading = element('h4', 'lamp-rack-heading'); rack.append(heading); column.append(rack);
         this.racks.set(definition.id, { definition, heading, node: rack });
+        this.columns.get(columnId).racks.push(rack);
         for (let number = 1; number <= 4; number++) {
           const tier = element('section', 'lamp-tier');
           Object.assign(tier.dataset, { rack: definition.id, tier: String(number) });
@@ -225,9 +235,13 @@
         const hidden = [...rack.node.querySelectorAll('.lamp-tier')].every(tier => tier.hidden);
         if (rack.node.hidden !== hidden) rack.node.hidden = hidden;
       }
-      const rackCount = String(Math.max(1, [...this.racks.values()].filter(rack => !rack.node.hidden).length));
-      if (this.rackHost.style.getPropertyValue('--lamp-rack-count') !== rackCount)
-        this.rackHost.style.setProperty('--lamp-rack-count', rackCount);
+      for (const column of this.columns.values()) {
+        const hidden = column.racks.every(rack => rack.hidden);
+        if (column.node.hidden !== hidden) column.node.hidden = hidden;
+      }
+      const columnCount = String(Math.max(1, [...this.columns.values()].filter(column => !column.node.hidden).length));
+      if (this.rackHost.style.getPropertyValue('--lamp-rack-count') !== columnCount)
+        this.rackHost.style.setProperty('--lamp-rack-count', columnCount);
     }
   }
   window.Besm6LampPanel = LampPanel;

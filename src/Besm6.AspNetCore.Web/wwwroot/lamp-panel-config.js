@@ -19,7 +19,8 @@
     racks: [
       { id: 'brus', title: 'BRUS' },
       { id: 'uu', title: 'UU' },
-      { id: 'au', title: 'AU / UVU' }
+      { id: 'au', title: 'AU', column: 'au-uvu' },
+      { id: 'uvu', title: 'UVU', column: 'au-uvu' }
     ],
     banks: [
       { id: 'protection', rack: 'brus', tier: 1, title: 'Operand protection' },
@@ -28,7 +29,7 @@
       { id: 'instruction', rack: 'brus', tier: 2, line: 'lower', title: 'Lower line — BRS' },
       { id: 'write', rack: 'brus', tier: 3, title: 'Write buffers — BRZ' },
       { id: 'interrupts', rack: 'brus', tier: 4, title: 'Interrupts and mask [?]' },
-      { id: 'peripheral', rack: 'au', tier: 1, title: 'Peripheral interrupts — UVU [?]' },
+      { id: 'peripheral', rack: 'uvu', tier: 1, title: 'Peripheral interrupts — UVU [?]' },
       { id: 'control', rack: 'uu', tier: 1, title: 'Supervisor control' },
       { id: 'index', rack: 'uu', tier: 2, title: 'Index registers' },
       { id: 'supervisor', rack: 'uu', tier: 3, title: 'Special registers — M [?]' },
