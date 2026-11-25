@@ -96,6 +96,35 @@ Besm6.Runtime.dll
 стандартными аппаратными таймингами. Выбранный файл сохраняется при ручной
 смене модели.
 
+## Обновление 25.11.2026: экстракоды в аппаратном Supervisor
+
+Коммит `5dc3a08` (`Fix supervisor hardware extracode durations`) устраняет
+`No explicit UU duration configured for 56.` при запуске `.dub` в
+**Supervisor — hardware** без machine JSON. Стандартные тайминги теперь содержат
+явные числовые ключи для экстракодов 040–077 и длинных 0200/0210: 50 тактов,
+то есть 5000 нс на экстракод. Именованные опкоды сохранили прежние значения.
+
+Публикация развёрнута 25.11.2026 в 16:42 UTC; предыдущий каталог сохранён как
+`publish-backup-5dc3a08-20261125-164206`. SHA-256 архива публикации:
+`44a0aa6859e70cbbe3c848e8a119d587d5f8c2ebec2770e46b44081fe2b701ab`.
+
+Доставленные сборки:
+
+```text
+Besm6.AspNetCore.Web.dll  6e1e26ad52829fa580b9296b7eb5b38c300b7295f7a96de21e7da729be7771f2
+Besm6.Runtime.dll         035b9a8c9ca10f2d223ff3a1a38cba966013c0a85567cbe1325f031b2a6b9f3f
+Besm6.Architecture.dll    1fd9d0338e671fdad7e73214b4be66b032453b1d060f9d2e5229fd140e9c8e24
+Besm6.Processor.dll       ff1d66b821175ffe3d0f477744012013d31fadfaea99af22640eab9f46731421
+Besm6.Assembler.dll       dbe19e56486f1fe17b9d5c810e2836c484850d1ec49c568bbd2738eb816468ec
+```
+
+Локальные наборы: Runtime.Tests — 1535, Cli.Tests — 48,
+AspNetCore.Web.Tests — 53; все успешно. На Linux прошли браузерные сценарии
+`deployment-smoke`, `supervisor-hardware-dub`, `supervisor-hardware-dub-extracode`
+и `supervisor-hardware-dub-debug`, ошибок JavaScript нет. Сценарий с экстракодом
+070 (56) выполнил ровно две команды — экстракод и STOP — за 7000 нс модельного
+времени (5000 нс экстракод + 2000 нс STOP).
+
 ## Ограничения
 
 Hosted-сервисы выполняются на хосте. Это не загрузка гостевого диспетчера,
