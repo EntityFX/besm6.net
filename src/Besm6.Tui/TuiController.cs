@@ -179,8 +179,9 @@ namespace Besm6.Tui
 
         private void InitMachine()
         {
-            _machine = MachineFactory.CreateMachine(_config);
-            _loader = MachineFactory.CreateLoader(_config, _machine);
+            var session = MachineFactory.CreateRunSession(_config, RunSessionSettings.FromConfig(_config));
+            _machine = session.Machine;
+            _loader = session.Loader;
             State.HasMachine = true;
         }
 

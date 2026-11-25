@@ -1,5 +1,6 @@
 using Besm6.Runtime.Configuration;
 using Besm6.Runtime.Loading;
+using Besm6.Runtime.Machine;
 
 namespace Besm6.Cli;
 
@@ -191,13 +192,13 @@ internal sealed record RunOptions
         return config;
     }
 
-    internal void ConfigureLoader(DubnaLoader loader, Config config)
-    {
-        loader.InstructionLimit = Limit ?? config.DefaultLimit;
-        loader.CollectStatistics = Stats;
-        loader.Verbose = Verbose;
-        loader.LoopDetect = LoopDetect && !NoLoopDetect;
-        loader.HangDetect = HangDetect && !NoHangDetect;
-        if (NoWallClock) loader.UseWallClock = false;
-    }
+    internal RunSessionSettings SessionSettings(Config config) => new(
+        config.Speed,
+        Limit ?? config.DefaultLimit,
+        config.GuestClock,
+        config.BufferedMemory,
+        config.SupervisorHostedServices,
+        CollectStatistics: Stats,
+        UseWallClock: NoWallClock ? false : null);
+
 }

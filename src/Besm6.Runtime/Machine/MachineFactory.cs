@@ -55,6 +55,35 @@ namespace Besm6.Runtime.Machine
             };
         }
 
+        /// <summary>Single construction path for hosted runs and native tools. Settings are
+        /// applied to the supplied Config before assets and the machine are created.</summary>
+        public static MachineRunSession CreateRunSession(Config config, RunSessionSettings settings)
+        {
+            ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(settings);
+            if (settings.InstructionLimit < 0)
+                throw new ArgumentOutOfRangeException(nameof(settings.InstructionLimit));
+
+            config.Speed = settings.Speed;
+            config.DefaultLimit = settings.InstructionLimit;
+            config.GuestClock = settings.GuestClock;
+            config.BufferedMemory = settings.BufferedMemory;
+            config.SupervisorHostedServices = settings.SupervisorHostedServices;
+            if (settings.TapesDirectory is { } tapes) config.Tapes = tapes;
+            if (settings.DiskPath is { } disk) config.Disk = disk;
+            if (settings.DrumPath is { } drum) config.Drum = drum;
+
+            var assets = ValidateRuntimeAssets(config);
+            var machine = CreateMachine(config);
+            var loader = CreateLoader(config, machine, assets);
+            loader.InstructionLimit = settings.InstructionLimit;
+            loader.CollectStatistics = settings.CollectStatistics;
+            loader.WallClockLimitMs = settings.WallClockLimitMs;
+            if (settings.UseWallClock is { } useWallClock) loader.UseWallClock = useWallClock;
+            if (settings.HostFileDirectory is { } hostDirectory) loader.HostFileDirectory = hostDirectory;
+            return new(machine, loader);
+        }
+
         /// <summary>
         /// Проверить runtime-ресурсы ДО запуска процессора.
         /// Возвращает разрешённые пути; при отсутствии/несоответствии checksum бросает

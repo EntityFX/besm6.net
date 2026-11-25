@@ -229,20 +229,18 @@ public sealed partial class WorkerSession : IDisposable
                     throw new InvalidDataException("Hosted .dub jobs require Supervisor — functional. Hardware mode requires a native machine .json configuration.");
             }
             var cfg = Config.Load(Path.Combine(AppContext.BaseDirectory, "besm6.json"));
-            cfg.Tapes = Path.Combine(AppContext.BaseDirectory, "tapes");
-            cfg.Disk = Path.Combine(_directory, "disk.bin");
-            cfg.Drum = Path.Combine(_directory, "drum.bin");
-            cfg.DefaultLimit = command.InstructionLimit;
-            cfg.Speed = speed;
-            cfg.GuestClock = command.GuestClock;
-            cfg.BufferedMemory = command.MachineModel == "buffered";
-            cfg.SupervisorHostedServices = command.MachineModel == "supervisor-functional";
-            var assets = MachineFactory.ValidateRuntimeAssets(cfg);
-            _machine = MachineFactory.CreateMachine(cfg);
-            _loader = MachineFactory.CreateLoader(cfg, _machine, assets);
-            _loader.HostFileDirectory = _directory;
-            _loader.WallClockLimitMs = command.WallClockLimitMs;
-            _loader.CollectStatistics = command.Statistics;
+            var session = MachineFactory.CreateRunSession(cfg, new RunSessionSettings(
+                speed, command.InstructionLimit, command.GuestClock,
+                BufferedMemory: command.MachineModel == "buffered",
+                SupervisorHostedServices: command.MachineModel == "supervisor-functional",
+                WallClockLimitMs: command.WallClockLimitMs,
+                CollectStatistics: command.Statistics,
+                TapesDirectory: Path.Combine(AppContext.BaseDirectory, "tapes"),
+                DiskPath: Path.Combine(_directory, "disk.bin"),
+                DrumPath: Path.Combine(_directory, "drum.bin"),
+                HostFileDirectory: _directory));
+            _machine = session.Machine;
+            _loader = session.Loader;
             _loader.Output = text => _output.Append("print", text);
             _loader.TerminalOutput = WriteTerminalOutput;
             _loader.Input = ReadTerminalInput;

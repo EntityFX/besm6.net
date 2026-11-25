@@ -46,12 +46,12 @@ namespace Besm6.Cli
             try
             {
                 Config cfg = options.LoadConfiguration();
-                // Validate bundled runtime assets before machine creation or execution.
-                ResolvedRuntimeAssets runtimeAssets = MachineFactory.ValidateRuntimeAssets(cfg);
-
-                var machine = MachineFactory.CreateMachine(cfg);
-                var loader = MachineFactory.CreateLoader(cfg, machine, runtimeAssets);
-                options.ConfigureLoader(loader, cfg);
+                var session = MachineFactory.CreateRunSession(cfg, options.SessionSettings(cfg));
+                var machine = session.Machine;
+                var loader = session.Loader;
+                loader.Verbose = options.Verbose;
+                loader.LoopDetect = options.LoopDetect && !options.NoLoopDetect;
+                loader.HangDetect = options.HangDetect && !options.NoHangDetect;
 
                 OpcodeProfiler? opcodeProfiler = null;
                 if (profile)
