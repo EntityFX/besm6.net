@@ -41,16 +41,17 @@ public partial class MachineCore
     private static void AddSupervisor(List<MachineRegisterView> registers, SupervisorSnapshot? supervisor)
     {
         if (supervisor is null) return;
-        Add(0, "M16", MachineRegisterAccess.ReadWrite, "20B", "alias of C");
-        Add(1, "M17", MachineRegisterAccess.WriteOnly, "21B", "control unit flags");
-        Add(7, "M23", MachineRegisterAccess.ReadWrite, "27B", "saved flags and mode");
-        Add(10, "M26", MachineRegisterAccess.ReadWrite, "32B", "extracode return");
-        Add(11, "M27", MachineRegisterAccess.ReadWrite, "33B", "interrupt return");
-        Add(12, "M28", MachineRegisterAccess.WriteOnly, "34B", "instruction comparison");
-        Add(13, "M29", MachineRegisterAccess.WriteOnly, "35B", "operand comparison");
+        Add(0, "M16", 15, MachineRegisterAccess.ReadWrite, "20B", "alias of C");
+        Add(1, "M17", 15, MachineRegisterAccess.WriteOnly, "21B", "control unit flags");
+        Add(7, "M23", 15, MachineRegisterAccess.ReadWrite, "27B", "saved flags and mode");
+        Add(10, "M26", 15, MachineRegisterAccess.ReadWrite, "32B", "extracode return");
+        Add(11, "M27", 15, MachineRegisterAccess.ReadWrite, "33B", "interrupt return");
+        // 15 address bits plus the assignment-mode flag retained at write time.
+        Add(12, "M28", 16, MachineRegisterAccess.WriteOnly, "34B", "instruction comparison");
+        Add(13, "M29", 16, MachineRegisterAccess.WriteOnly, "35B", "operand comparison");
 
-        void Add(int index, string name, MachineRegisterAccess access, string alias, string detail) =>
-            registers.Add(new(name, "Supervisor", 15, supervisor.SpecialRegisters[index], access,
+        void Add(int index, string name, int width, MachineRegisterAccess access, string alias, string detail) =>
+            registers.Add(new(name, "Supervisor", width, supervisor.SpecialRegisters[index], access,
                 Alias: alias, Detail: detail));
     }
 

@@ -46,8 +46,8 @@
       { id: 'CONTROL', label: 'УУ', bank: 'control', bits: 15, source: source('detail', 'registers'), register: 'M17' },
       ...Array.from({ length: 15 }, (_, i) => ({ id: `M${i + 1}`, bank: 'index', bits: 15,
         source: { ...source('registers', 'm', i + 1), radix: 8 } })),
-      ...['M16', 'M23', 'M26', 'M27', 'M28', 'M29'].map(name =>
-        mapped(name, name, 'supervisor', 15, name)),
+      ...['M16', 'M23', 'M26', 'M27'].map(name => mapped(name, name, 'supervisor', 15, name)),
+      ...['M28', 'M29'].map(name => mapped(name, name, 'supervisor', 16, name)),
       register('K', 'СчАК (K)', 'cpu', 15, 'k'),
       register('R', 'R', 'cpu', 6, 'r'),
       register('C', 'C', 'cpu', 15, 'c'),

@@ -30,6 +30,8 @@ public sealed class MachineRegisterInspectionTests
         Assert.AreEqual(MachineRegisterAccess.WriteOnly, byName["M17"].Access);
         Assert.AreEqual(MachineRegisterAccess.WriteOnly, byName["M28"].Access);
         Assert.AreEqual(MachineRegisterAccess.WriteOnly, byName["M29"].Access);
+        Assert.AreEqual(16, byName["M28"].Width);
+        Assert.AreEqual(16, byName["M29"].Width);
         Assert.AreEqual("M16", byName["C"].Alias);
         Assert.AreEqual("20B", byName["M16"].Alias);
         Assert.AreEqual(5, byName["RP0"].Width);

@@ -73,6 +73,8 @@ public sealed class MachineCommandTests
         Assert.AreEqual("WriteOnly", registers["M17"].GetProperty("access").GetString());
         Assert.AreEqual("WriteOnly", registers["M28"].GetProperty("access").GetString());
         Assert.AreEqual("WriteOnly", registers["M29"].GetProperty("access").GetString());
+        Assert.AreEqual(16, registers["M28"].GetProperty("width").GetInt32());
+        Assert.AreEqual(16, registers["M29"].GetProperty("width").GetInt32());
         Assert.AreEqual("020", registers["RP0"].GetProperty("address").GetString());
         Assert.AreEqual("027", registers["RP31"].GetProperty("address").GetString());
         Assert.AreEqual("030", registers["RZ0"].GetProperty("address").GetString());

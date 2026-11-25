@@ -587,8 +587,8 @@ await Check("lamp-panel-samples", async (page, _) =>
         { name: 'M23', value: 0x13, width: 15, access: 'ReadWrite', address: '27B' },
         { name: 'M26', value: 0x100, width: 15, access: 'ReadWrite', address: '32B' },
         { name: 'M27', value: 0x101, width: 15, access: 'ReadWrite', address: '33B' },
-        { name: 'M28', value: 0x102, width: 15, access: 'WriteOnly', address: '34B' },
-        { name: 'M29', value: 0x103, width: 15, access: 'WriteOnly', address: '35B' },
+        { name: 'M28', value: 0x8102, width: 16, access: 'WriteOnly', address: '34B' },
+        { name: 'M29', value: 0x8103, width: 16, access: 'WriteOnly', address: '35B' },
         { name: 'RZ0', value: 0xA5, width: 8, access: 'WriteOnly', address: '030' },
         { name: 'RP0', value: 1, width: 9, access: 'WriteOnly', address: '020' },
         { name: 'RP1', value: 2, width: 9, access: 'WriteOnly', address: '020' },
@@ -612,6 +612,7 @@ await Check("lamp-panel-samples", async (page, _) =>
         && on('БРЗ[0]', 1) && on('БРЗ[1]', 2) && !on('БРЗ[0]', 2)
         && on('RZ', 1) && !row('RP0')
         && on('CONTROL', 1) && on('CONTROL', 2) && on('CONTROL', 11)
+        && on('M28', 2) && on('M28', 16)
         && on('РЗ0', 1) && on('РЗ0', 8)
         && on('РП0', 1) && on('РП0', 11) && on('РП0', 19) && on('РП0', 20) && on('РП0', 30)
         && on('INTERRUPTS', 1) && on('INTERRUPTS', 48) && on('РСП', 10)
