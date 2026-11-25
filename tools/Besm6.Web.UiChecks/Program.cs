@@ -568,6 +568,28 @@ await Check("supervisor-hardware-dub", async (page, _) =>
     if (!detail.GetProperty("buffers").EnumerateArray().Any(buffer => buffer.GetProperty("name").GetString() == "БРЧ"))
         throw new Exception("Hardware .dub run did not expose BRCh");
 });
+await Check("supervisor-hardware-dub-extracode", async (page, _) =>
+{
+    // Octal 070 is extracode 56. Its supervisor vector 0170 (decimal 376) is the
+    // next word, which holds a left-half STOP, so the job must halt immediately.
+    ulong extracode = (ulong)0x38 << 36; // *70 0 in the left half
+    ulong stop = (ulong)0xD8 << 36;      // STOP 0 in the left half
+    await Upload(page, Raw([extracode, stop], 375), "extracode.dub");
+    await page.SelectOptionAsync("#machineModel", "supervisor-hardware");
+    await page.CheckAsync("input[value=full]");
+    await page.ClickAsync("#run"); await Status(page, "Completed");
+    if (!string.IsNullOrWhiteSpace(await page.Locator("#error").InnerTextAsync()))
+        throw new Exception("Supervisor hardware rejected a .dub extracode job");
+    var completed = await page.EvaluateAsync<JsonElement>("window.__events.findLast(e=>e.type==='completed').data");
+    if (!completed.GetProperty("stopped").GetBoolean()) throw new Exception("Extracode job did not halt by STOP");
+    if (completed.GetProperty("instructions").GetInt64() != 2)
+        throw new Exception("Extracode and STOP were not the only retired instructions");
+    var detail = await page.EvaluateAsync<JsonElement>("window.__events.findLast(e=>e.type==='machineRegisters').data");
+    if (detail.GetProperty("executionModel").GetString() != "Hardware")
+        throw new Exception(".dub extracode run did not use the hardware model");
+    if (detail.GetProperty("hardwareNanoseconds").GetUInt64() != 7000)
+        throw new Exception("Extracode UU duration was not 50 cycles plus the STOP duration");
+});
 await Check("supervisor-hardware-dub-debug", async (page, _) =>
 {
     await Upload(page, tiny);

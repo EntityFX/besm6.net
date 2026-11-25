@@ -1,3 +1,4 @@
+using System.Globalization;
 using Besm6.Architecture.Isa;
 using Besm6.Runtime.Configuration;
 using Besm6.Runtime.Profiling;
@@ -29,8 +30,7 @@ public static class HardwareSupervisorDefaults
             Banking = "documentedClassical",
             BufferHitNs = 100,
             ArithmeticCycleNs = 100,
-            ControlDurationsNs = Enum.GetValues<Opcode>().ToDictionary(
-                opcode => opcode.ToString(), opcode => (ulong)Besm6Timing.CyclesOf(opcode) * 100),
+            ControlDurationsNs = ControlDurations(),
             ArithmeticDurationsNs = new(),
             Devices = new()
             {
@@ -45,4 +45,20 @@ public static class HardwareSupervisorDefaults
             }
         }
     };
+
+    private static Dictionary<string, ulong> ControlDurations()
+    {
+        var durations = Enum.GetValues<Opcode>().ToDictionary(
+            opcode => opcode.ToString(), Cycles);
+        // BESM-6 extracodes are numeric opcodes (octal 050–077 and long 0200/0210),
+        // not Opcode enum members, so the supervisor also needs explicit numeric keys.
+        for (uint code = 0x28; code <= 0x3F; code++)
+            durations.Add(code.ToString(CultureInfo.InvariantCulture), Cycles((Opcode)code));
+        durations.Add(((uint)0x80).ToString(CultureInfo.InvariantCulture), Cycles((Opcode)0x80));
+        durations.Add(((uint)0x88).ToString(CultureInfo.InvariantCulture), Cycles((Opcode)0x88));
+        return durations;
+    }
+
+    private static ulong Cycles(Opcode opcode) =>
+        (ulong)Besm6Timing.CyclesOf(opcode) * Besm6Timing.NanosecondsPerCycle;
 }
