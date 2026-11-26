@@ -1,26 +1,28 @@
 using Besm6.Android.Services;
+using Besm6.Runtime;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Graphics;
 
 namespace Besm6.Android.Ui;
 
-/// <summary>Compact lamp-panel visualization of the BESM-6 register racks.</summary>
+/// <summary>Phone-friendly lamp panel; wide words wrap into 24-bit lines.</summary>
 public sealed class LampPanelView : GraphicsView
 {
     public static readonly BindableProperty SnapshotProperty = BindableProperty.Create(
         nameof(Snapshot), typeof(RegisterSnapshot), typeof(LampPanelView), null,
         propertyChanged: (bindable, _, _) => ((LampPanelView)bindable).Refresh());
 
-    private const float RowHeight = 20;
-    private const float BitStep = 9;
-    private const float BitsLeft = 104;
-    private const float LampRadius = 3.2f;
+    private const float RowHeight = 19;
+    private const float LabelWidth = 66;
+    private const float RightPadding = 6;
+    private const float LampRadius = 3.4f;
 
     public LampPanelView()
     {
         Drawable = new Renderer(this);
-        WidthRequest = 720;
+        HorizontalOptions = LayoutOptions.Fill;
         HeightRequest = 180;
+        SizeChanged += (_, _) => UpdateHeight();
         if (Application.Current is { } app)
             app.RequestedThemeChanged += (_, _) => Invalidate();
     }
@@ -31,18 +33,32 @@ public sealed class LampPanelView : GraphicsView
         set => SetValue(SnapshotProperty, value);
     }
 
+    private static int BitsPerLine(float width) => width < 330 ? 16 : 24;
+
     private void Refresh()
     {
-        int rows = 3;
-        if (Snapshot is { } snapshot)
-        {
-            rows += snapshot.Buffers.Length;
-            rows += snapshot.Interrupts is null ? 0 : 1;
-            rows += 1 + 16 + 3 + 2 + 2;
-        }
-        HeightRequest = 32 + rows * RowHeight;
+        UpdateHeight();
         Invalidate();
     }
+
+    private void UpdateHeight()
+    {
+        int bitsPerLine = BitsPerLine(Width > 0 ? (float)Width : 360);
+        int bufferLines = LinesFor(50, bitsPerLine);
+        int lines = 3; // section headings
+        lines += 1; // РЗ
+        lines += bufferLines * 4; // БРЧ
+        lines += bufferLines * 4; // БРС
+        lines += bufferLines * 8; // БРЗ
+        lines += 1; // ГРП
+        lines += 1; // управление
+        lines += 16; // M0..M15
+        lines += 3; // K, C, R
+        lines += LinesFor(48, bitsPerLine) * 2; // A, Y
+        HeightRequest = 28 + lines * RowHeight;
+    }
+
+    private static int LinesFor(int bits, int perLine) => (bits + perLine - 1) / perLine;
 
     private sealed class Renderer(LampPanelView owner) : IDrawable
     {
@@ -61,36 +77,39 @@ public sealed class LampPanelView : GraphicsView
             canvas.FontSize = 10;
 
             var snapshot = owner.Snapshot;
-            if (snapshot is null)
+            BufferRegisterView[] buffers = snapshot?.Buffers ?? [];
+
+            float width = rect.Width > 0 ? rect.Width : 360;
+            int perLine = BitsPerLine(width);
+            float step = Math.Max(7.0f, (width - LabelWidth - RightPadding) / perLine);
+            float radius = Math.Min(LampRadius, step * 0.34f);
+            float y = 16;
+
+            ulong BufferValue(string name, int slot)
             {
-                canvas.FontColor = muted;
-                canvas.DrawString("Снимок ламп ещё не получен.", rect,
-                    HorizontalAlignment.Center, VerticalAlignment.Center);
-                return;
+                var buffer = buffers.FirstOrDefault(item =>
+                    string.Equals(item.Name, name, StringComparison.Ordinal) && item.Slot == slot);
+                return buffer?.Raw50 ?? buffer?.Value ?? 0;
             }
 
-            float y = 18;
             Section("БРУС");
-            if (snapshot.OperandProtection is { } protection)
-                Row("РЗ", protection, 32);
-            foreach (var buffer in snapshot.Buffers)
-                Row($"{buffer.Name}[{buffer.Slot}]", buffer.Raw50 ?? buffer.Value,
-                    buffer.Raw50 is null ? 48 : 50);
-            if (snapshot.Interrupts is { } interrupts)
-                Row("ГРП", interrupts, 48);
+            Row("РЗ", snapshot?.OperandProtection ?? 0, 32);
+            for (int slot = 0; slot < 4; slot++) Row($"БРЧ[{slot}]", BufferValue("БРЧ", slot), 50);
+            for (int slot = 0; slot < 4; slot++) Row($"БРС[{slot}]", BufferValue("БРС", slot), 50);
+            for (int slot = 0; slot < 8; slot++) Row($"БРЗ[{slot}]", BufferValue("БРЗ", slot), 50);
+            Row("ГРП", snapshot?.Interrupts ?? 0, 48);
 
             Section("УУ");
-            if (snapshot.ControlFlags is { } controls)
-                Row("Управление", controls, 15);
-            for (int index = 0; index < 16 && index < snapshot.M.Length; index++)
-                Row($"M{index}", snapshot.M[index], 15);
-            Row("K", snapshot.K, 15);
-            Row("C", snapshot.C, 15);
-            Row("R", snapshot.R, 6);
+            Row("Управление", snapshot?.ControlFlags ?? 0, 15);
+            for (int index = 0; index < 16; index++)
+                Row($"M{index}", snapshot is { } s && index < s.M.Length ? s.M[index] : 0, 15);
+            Row("K", snapshot?.K ?? 0, 15);
+            Row("C", snapshot?.C ?? 0, 15);
+            Row("R", snapshot?.R ?? 0, 6);
 
             Section("АУ");
-            Row("A", snapshot.A, 48);
-            Row("Y", snapshot.Y, 48);
+            Row("A", snapshot?.A ?? 0, 48);
+            Row("Y", snapshot?.Y ?? 0, 48);
 
             void Section(string title)
             {
@@ -99,21 +118,35 @@ public sealed class LampPanelView : GraphicsView
                 canvas.DrawString(title, 8, y + 3, HorizontalAlignment.Left);
                 canvas.FontColor = ink;
                 canvas.FontSize = 10;
-                y += RowHeight + 2;
+                y += RowHeight + 1;
             }
 
-            void Row(string label, ulong value, int width)
+            void Row(string label, ulong value, int widthBits)
             {
-                canvas.FontColor = muted;
-                canvas.DrawString(label, 8, y + 3, HorizontalAlignment.Left);
-                for (int bit = width - 1; bit >= 0; bit--)
+                int remaining = widthBits;
+                int high = widthBits - 1;
+                bool first = true;
+                while (remaining > 0)
                 {
-                    bool set = ((value >> bit) & 1) != 0;
-                    canvas.FillColor = set ? on : off;
-                    float x = BitsLeft + (width - 1 - bit) * BitStep;
-                    canvas.FillCircle(x, y + 4, LampRadius);
+                    int count = Math.Min(perLine, remaining);
+                    canvas.FontColor = muted;
+                    canvas.FontSize = 9;
+                    canvas.DrawString(first ? label : $"… {high}..{high - count + 1}",
+                        8, y + 3, HorizontalAlignment.Left);
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        int bit = high - i;
+                        bool set = ((value >> bit) & 1) != 0;
+                        canvas.FillColor = set ? on : off;
+                        canvas.FillCircle(LabelWidth + i * step, y + 4, radius);
+                    }
+
+                    y += RowHeight;
+                    remaining -= count;
+                    high -= count;
+                    first = false;
                 }
-                y += RowHeight;
             }
         }
     }
