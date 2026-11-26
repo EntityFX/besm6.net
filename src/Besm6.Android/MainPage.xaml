@@ -45,6 +45,8 @@
                               Command="{Binding SelectTabCommand}" CommandParameter="search" />
                 <ui:TabButton Text="Регистры" IsActive="{Binding IsRegistersTab}"
                               Command="{Binding SelectTabCommand}" CommandParameter="registers" />
+                <ui:TabButton Text="Лампы" IsActive="{Binding IsLampTab}"
+                              Command="{Binding SelectTabCommand}" CommandParameter="lamps" />
                 <ui:TabButton Text="Память" IsActive="{Binding IsMemoryTab}"
                               Command="{Binding SelectTabCommand}" CommandParameter="memory" />
                 <ui:TabButton Text="Терминал" IsActive="{Binding IsTerminalTab}"
@@ -68,7 +70,8 @@
                                Style="{StaticResource SectionLabel}" />
                     </Grid>
                     <ui:SyntaxEditor Grid.Row="1" Text="{Binding Code, Mode=TwoWay}"
-                                     FontFamily="monospace" FontSize="11"
+                                     FontFamily="{Binding OutputFontFamily}"
+                                     FontSize="{Binding EditorFontSize}"
                                      AutoSize="Disabled"
                                      IsSpellCheckEnabled="False"
                                      IsTextPredictionEnabled="False"
@@ -117,17 +120,25 @@
                 <ScrollView>
                     <ScrollView Orientation="Horizontal">
                         <Label Text="{Binding RegistersText}"
-                               Style="{StaticResource MonoLabel}" />
+                               FontFamily="{Binding OutputFontFamily}"
+                               FontSize="{Binding OutputFontSize}" />
                     </ScrollView>
                 </ScrollView>
             </Border>
+
+            <ScrollView IsVisible="{Binding IsLampTab}">
+                <ScrollView Orientation="Horizontal">
+                    <ui:LampPanelView Snapshot="{Binding Snapshot}" />
+                </ScrollView>
+            </ScrollView>
 
             <Grid IsVisible="{Binding IsMemoryTab}" RowDefinitions="Auto,*" RowSpacing="6">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6">
                     <Label Text="Адрес" Style="{StaticResource SectionLabel}"
                            VerticalTextAlignment="Center" />
                     <Entry Grid.Column="1" Text="{Binding MemoryAddressText, Mode=TwoWay}"
-                           FontFamily="monospace" FontSize="12"
+                           FontFamily="{Binding OutputFontFamily}"
+                           FontSize="{Binding OutputFontSize}"
                            ReturnCommand="{Binding InspectMemoryCommand}" />
                     <Button Grid.Column="2" Text="Смотреть"
                             Command="{Binding InspectMemoryCommand}"
@@ -138,7 +149,8 @@
                     <ScrollView>
                         <ScrollView Orientation="Horizontal">
                             <Label Text="{Binding MemoryText}"
-                                   Style="{StaticResource MonoLabel}" />
+                                   FontFamily="{Binding OutputFontFamily}"
+                                   FontSize="{Binding OutputFontSize}" />
                         </ScrollView>
                     </ScrollView>
                 </Border>
@@ -146,10 +158,11 @@
 
             <Grid IsVisible="{Binding IsTerminalTab}" RowDefinitions="*,Auto" RowSpacing="6">
                 <Border Style="{StaticResource Card}" Padding="10">
-                    <ScrollView>
+                    <ScrollView x:Name="TerminalScroll">
                         <ScrollView Orientation="Horizontal">
                             <Label Text="{Binding TerminalText}"
-                                   Style="{StaticResource MonoLabel}" />
+                                   FontFamily="{Binding OutputFontFamily}"
+                                   FontSize="{Binding OutputFontSize}" />
                         </ScrollView>
                     </ScrollView>
                 </Border>
@@ -158,9 +171,10 @@
                     <Grid RowDefinitions="Auto,Auto" RowSpacing="5">
                         <Label Text="{Binding InputPrompt}" Style="{StaticResource SectionLabel}" />
                         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-                            <Entry Text="{Binding InputText, Mode=TwoWay}"
+                            <Entry x:Name="TerminalInput" Text="{Binding InputText, Mode=TwoWay}"
                                    Placeholder="строка для программы"
-                                   FontFamily="monospace" FontSize="12"
+                                   FontFamily="{Binding OutputFontFamily}"
+                                   FontSize="{Binding OutputFontSize}"
                                    ReturnCommand="{Binding SendInputCommand}" />
                             <Button Grid.Column="1" Text="Ввод"
                                     Command="{Binding SendInputCommand}"
@@ -176,7 +190,8 @@
                 <ScrollView>
                     <ScrollView Orientation="Horizontal">
                         <Label Text="{Binding PrinterText}"
-                               Style="{StaticResource MonoLabel}" />
+                               FontFamily="{Binding OutputFontFamily}"
+                               FontSize="{Binding OutputFontSize}" />
                     </ScrollView>
                 </ScrollView>
             </Border>
@@ -186,7 +201,8 @@
                 <ScrollView>
                     <ScrollView Orientation="Horizontal">
                         <Label Text="{Binding PunchText}"
-                               Style="{StaticResource MonoLabel}" />
+                               FontFamily="{Binding OutputFontFamily}"
+                               FontSize="{Binding OutputFontSize}" />
                     </ScrollView>
                 </ScrollView>
             </Border>
@@ -268,6 +284,8 @@
                                     <Label Text="МОДЕЛЬ МАШИНЫ" Style="{StaticResource SectionLabel}" />
                                     <Picker ItemsSource="{Binding ModelOptions}"
                                             SelectedIndex="{Binding ModelIndex, Mode=TwoWay}" />
+                                    <Label Text="Аппаратный supervisor выполняет простые *assem-задания. Fortran, Algol и Pascal запускайте в Дубне."
+                                           FontSize="9" Style="{StaticResource SubtitleLabel}" />
                                 </VerticalStackLayout>
                             </Border>
 
@@ -294,6 +312,50 @@
                             </Border>
 
                             <Border Style="{StaticResource GroupCard}">
+                                <VerticalStackLayout Spacing="7">
+                                    <Label Text="ОТОБРАЖЕНИЕ" Style="{StaticResource SectionLabel}" />
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Spacing="1">
+                                            <Label Text="Шрифт" FontSize="10"
+                                                   Style="{StaticResource SubtitleLabel}" />
+                                            <Picker ItemsSource="{Binding FontFamilyOptions}"
+                                                    SelectedIndex="{Binding FontFamilyIndex, Mode=TwoWay}"
+                                                    FontSize="11" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="1">
+                                            <Label Text="Система счисления" FontSize="10"
+                                                   Style="{StaticResource SubtitleLabel}" />
+                                            <Picker ItemsSource="{Binding NumberBaseOptions}"
+                                                    SelectedIndex="{Binding NumberBaseIndex, Mode=TwoWay}"
+                                                    FontSize="11" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <Label Text="Размер шрифта вывода" FontSize="11"
+                                               VerticalTextAlignment="Center" />
+                                        <Stepper Grid.Column="1" Minimum="8" Maximum="20"
+                                                 Increment="0.5"
+                                                 Value="{Binding OutputFontSize, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <Label Text="Размер шрифта редактора" FontSize="11"
+                                               VerticalTextAlignment="Center" />
+                                        <Stepper Grid.Column="1" Minimum="8" Maximum="20"
+                                                 Increment="0.5"
+                                                 Value="{Binding EditorFontSize, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <Label Text="Слов памяти на экран" FontSize="11"
+                                               VerticalTextAlignment="Center" />
+                                        <Picker Grid.Column="1" WidthRequest="90"
+                                                ItemsSource="{Binding MemoryWordsOptions}"
+                                                SelectedIndex="{Binding MemoryWordsIndex, Mode=TwoWay}"
+                                                FontSize="11" />
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <Border Style="{StaticResource GroupCard}">
                                 <VerticalStackLayout Spacing="2">
                                     <Label Text="ДОПОЛНИТЕЛЬНО" Style="{StaticResource SectionLabel}" />
                                     <Grid ColumnDefinitions="*,Auto">
@@ -312,7 +374,38 @@
                                         <Label Text="Отладка (старт с паузы)" FontSize="11"
                                                VerticalTextAlignment="Center" />
                                         <Switch Grid.Column="1"
+                                                IsEnabled="{Binding IsDebugEnabled}"
                                                 IsToggled="{Binding DebugMode, Mode=TwoWay}" />
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <Border Style="{StaticResource GroupCard}">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="МАШИНА" Style="{StaticResource SectionLabel}" />
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Text="Системное время DATE*" FontSize="11"
+                                               VerticalTextAlignment="Center" />
+                                        <Switch Grid.Column="1"
+                                                IsToggled="{Binding UseWallClock, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Text="Обнаружение циклов" FontSize="11"
+                                               VerticalTextAlignment="Center" />
+                                        <Switch Grid.Column="1"
+                                                IsToggled="{Binding LoopDetect, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Text="Обнаружение зависаний" FontSize="11"
+                                               VerticalTextAlignment="Center" />
+                                        <Switch Grid.Column="1"
+                                                IsToggled="{Binding HangDetect, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Text="*forex как *fortran" FontSize="11"
+                                               VerticalTextAlignment="Center" />
+                                        <Switch Grid.Column="1"
+                                                IsToggled="{Binding ForexAsFortran, Mode=TwoWay}" />
                                     </Grid>
                                 </VerticalStackLayout>
                             </Border>

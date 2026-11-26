@@ -46,19 +46,34 @@ public static class RegisterFormatter
         return text.ToString();
     }
 
-    public static string FormatMemory(MemorySnapshot? snapshot)
+    public static string FormatMemory(MemorySnapshot? snapshot,
+        NumberBase numberBase = NumberBase.Octal)
     {
         if (snapshot is null) return "Снимок памяти ещё не получен.";
         var text = new StringBuilder(snapshot.Words.Length * 64);
-        text.Append("ПАМЯТЬ, адрес ").Append(Address((uint)snapshot.Address)).Append('\n');
+        text.Append("ПАМЯТЬ, адрес ").Append(Address(numberBase, (uint)snapshot.Address)).Append('\n');
         foreach (var word in snapshot.Words)
         {
-            text.Append(Address((uint)word.Address)).Append("  ")
-                .Append(Word(word.Value)).Append("  ")
+            text.Append(Address(numberBase, (uint)word.Address)).Append("  ")
+                .Append(Word(numberBase, word.Value)).Append("  ")
                 .Append(word.Disassembly).Append('\n');
         }
         return text.ToString();
     }
+
+    private static string Address(NumberBase numberBase, uint value) => numberBase switch
+    {
+        NumberBase.Decimal => value.ToString("D5", System.Globalization.CultureInfo.InvariantCulture),
+        NumberBase.Hexadecimal => value.ToString("X4", System.Globalization.CultureInfo.InvariantCulture),
+        _ => Convert.ToString(value, 8).PadLeft(5, '0'),
+    };
+
+    private static string Word(NumberBase numberBase, ulong value) => numberBase switch
+    {
+        NumberBase.Decimal => value.ToString("D15", System.Globalization.CultureInfo.InvariantCulture),
+        NumberBase.Hexadecimal => value.ToString("X12", System.Globalization.CultureInfo.InvariantCulture),
+        _ => Word(value),
+    };
 
     private static void AppendGroup(StringBuilder text, BufferRegisterView[] buffers,
         string marker, string unavailableMessage)

@@ -19,7 +19,11 @@ public sealed record RunSettings(
     MachineModel Model,
     bool GuestClock,
     bool CollectStatistics,
-    bool DebugMode = false)
+    bool DebugMode = false,
+    bool UseWallClock = true,
+    bool LoopDetect = false,
+    bool HangDetect = false,
+    bool ForexAsFortran = false)
 {
     public const long MaxInstructionLimit = 1_000_000_000;
     public const long MaxWallClockMs = 3_600_000;
@@ -104,4 +108,9 @@ public sealed record RegisterSnapshot(
     uint[] M,
     long Instructions,
     Besm6.Runtime.BufferRegisterView[] Buffers,
-    Besm6.Architecture.Machine.MachineRegisterView[] Registers);
+    Besm6.Architecture.Machine.MachineRegisterView[] Registers,
+    ulong? ControlFlags = null,
+    ulong? Interrupts = null,
+    uint? OperandProtection = null,
+    uint[]? PageAssignment = null,
+    ulong? HardwareNanoseconds = null);

@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using Besm6.Architecture.Isa;
 using Besm6.Assembler.Disassembly;
+using Besm6.Processor.Supervisor;
 using Besm6.Runtime;
 using Besm6.Runtime.Configuration;
 using Besm6.Runtime.Devices;
@@ -186,8 +187,13 @@ public sealed class MachineRunService : IDisposable
         {
             _instructions = _loader?.InstructionsExecuted ?? _instructions;
             PublishSnapshot(_instructions);
+            string message = ex is SupervisorHaltException
+                ? "Аппаратный supervisor остановлен внутренним сигналом. " +
+                  "Для Fortran, Algol и Pascal выберите Дубну: аппаратный режим " +
+                  "предназначен для простых *assem-заданий."
+                : ex.Message;
             Completed?.Invoke(new RunOutcome(false, false, false, _instructions,
-                _machine?.Cpu.K ?? 0, ex.Message));
+                _machine?.Cpu.K ?? 0, message));
             PhaseChanged?.Invoke(RunPhase.Failed);
         }
         finally
@@ -217,6 +223,7 @@ public sealed class MachineRunService : IDisposable
             SupervisorHostedServices: settings.Model == MachineModel.SupervisorFunctional,
             WallClockLimitMs: settings.WallClockLimitMs,
             CollectStatistics: settings.CollectStatistics,
+            UseWallClock: settings.UseWallClock,
             TapesDirectory: _tapesDirectory,
             DiskPath: Path.Combine(_workDirectory, "disk.bin"),
             DrumPath: Path.Combine(_workDirectory, "drum.bin"),
@@ -224,6 +231,9 @@ public sealed class MachineRunService : IDisposable
 
         _machine = session.Machine;
         _loader = session.Loader;
+        _loader.LoopDetect = settings.LoopDetect;
+        _loader.HangDetect = settings.HangDetect;
+        _loader.ForexAsFortran = settings.ForexAsFortran;
         AttachMachine(_machine, _loader);
 
         if (settings.DebugMode)
@@ -254,6 +264,9 @@ public sealed class MachineRunService : IDisposable
         loader.InstructionLimit = settings.InstructionLimit;
         loader.CollectStatistics = settings.CollectStatistics;
         loader.WallClockLimitMs = settings.WallClockLimitMs;
+        loader.LoopDetect = settings.LoopDetect;
+        loader.HangDetect = settings.HangDetect;
+        loader.ForexAsFortran = settings.ForexAsFortran;
 
         _machine = machine;
         _loader = loader;
@@ -372,7 +385,12 @@ public sealed class MachineRunService : IDisposable
                 cpu.M.ToArray(),
                 instructions,
                 detail.Buffers,
-                detail.Registers);
+                detail.Registers,
+                detail.ControlFlags,
+                detail.Interrupts,
+                detail.OperandProtection,
+                detail.PageAssignment,
+                detail.HardwareNanoseconds);
             RegistersChanged?.Invoke(snapshot);
         }
         catch (Exception ex)

@@ -1,6 +1,8 @@
 using Besm6.Architecture.Isa;
 using Besm6.Architecture.Machine;
+using Besm6.Architecture.State;
 using Besm6.Runtime.Configuration;
+using Besm6.Runtime.Machine;
 using Besm6.Runtime.Execution;
 using System;
 using System.Collections.Generic;
@@ -158,7 +160,17 @@ namespace Besm6.Runtime.Loading
         {
             var job = JobParser.ParseFile(path);
             var rawLines = File.ReadAllLines(path);
+            // A hardware supervisor is configured with control flags that allow
+            // normal internal interrupts to be serviced. ResetCpu installs the
+            // stop-on-interrupt bootstrap flags; restore the configured set before
+            // the job is loaded and executed.
+            ControlUnitStatus? hardwareControls =
+                _machine.ExecutionModel == MachineExecutionModel.Hardware
+                    ? _machine.Cpu.Supervisor?.Status
+                    : null;
             _machine.Reset();
+            if (hardwareControls is { } controls && _machine.Cpu.Supervisor is { } supervisor)
+                supervisor.Status = controls;
             _exec.InstallHook();
 
             if (job.RawWords.Count > 0)

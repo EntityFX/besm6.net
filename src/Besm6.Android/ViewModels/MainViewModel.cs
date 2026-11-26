@@ -23,6 +23,9 @@ public sealed class MainViewModel : ObservableObject
         DeviceChannels.Tektronix,
     ];
 
+    private static readonly string[] FontFamilies = ["monospace", "sans-serif", "serif"];
+    private static readonly int[] MemoryWordCounts = [16, 32, 64, 128];
+
     private readonly AssetInstaller _installer;
     private readonly SettingsStore _settingsStore;
     private readonly ThemeService _theme;
@@ -81,6 +84,15 @@ public sealed class MainViewModel : ObservableObject
     private bool _guestClock;
     private bool _statistics;
     private bool _debugMode;
+    private bool _useWallClock = true;
+    private bool _loopDetect;
+    private bool _hangDetect;
+    private bool _forexAsFortran;
+    private int _fontFamilyIndex;
+    private double _outputFontSize = 10.5;
+    private double _editorFontSize = 11;
+    private int _memoryWordsIndex = 1;
+    private int _numberBaseIndex;
 
     public MainViewModel(
         AssetInstaller installer,
@@ -137,6 +149,19 @@ public sealed class MainViewModel : ObservableObject
         "Дубна + БРЗ/БРС",
         "Supervisor (функциональный)",
         "Supervisor (аппаратный)",
+    ];
+    public IReadOnlyList<string> FontFamilyOptions { get; } =
+    [
+        "Моноширинный",
+        "Системный",
+        "С засечками",
+    ];
+    public IReadOnlyList<string> MemoryWordsOptions { get; } = ["16", "32", "64", "128"];
+    public IReadOnlyList<string> NumberBaseOptions { get; } =
+    [
+        "Восьмеричная",
+        "Десятичная",
+        "Шестнадцатеричная",
     ];
 
     public RelayCommand RunCommand { get; }
@@ -419,6 +444,7 @@ public sealed class MainViewModel : ObservableObject
     public bool IsCodeTab => _activeTab == "code";
     public bool IsSearchTab => _activeTab == "search";
     public bool IsRegistersTab => _activeTab == "registers";
+    public bool IsLampTab => _activeTab == "lamps";
     public bool IsMemoryTab => _activeTab == "memory";
     public bool IsTerminalTab => _activeTab == "terminal";
     public bool IsPrinterTab => _activeTab == "print";
@@ -504,8 +530,80 @@ public sealed class MainViewModel : ObservableObject
     public int ModelIndex
     {
         get => _modelIndex;
-        set => SetProperty(ref _modelIndex, value);
+        set
+        {
+            if (!SetProperty(ref _modelIndex, value)) return;
+            if (value == (int)MachineModel.SupervisorHardware) DebugMode = false;
+            OnPropertyChanged(nameof(IsDebugEnabled));
+        }
     }
+
+    public bool IsDebugEnabled => ModelIndex != (int)MachineModel.SupervisorHardware;
+
+    public bool UseWallClock
+    {
+        get => _useWallClock;
+        set => SetProperty(ref _useWallClock, value);
+    }
+
+    public bool LoopDetect
+    {
+        get => _loopDetect;
+        set => SetProperty(ref _loopDetect, value);
+    }
+
+    public bool HangDetect
+    {
+        get => _hangDetect;
+        set => SetProperty(ref _hangDetect, value);
+    }
+
+    public bool ForexAsFortran
+    {
+        get => _forexAsFortran;
+        set => SetProperty(ref _forexAsFortran, value);
+    }
+
+    public int FontFamilyIndex
+    {
+        get => _fontFamilyIndex;
+        set
+        {
+            if (!SetProperty(ref _fontFamilyIndex, value)) return;
+            OnPropertyChanged(nameof(OutputFontFamily));
+        }
+    }
+
+    public string OutputFontFamily =>
+        FontFamilies[Math.Clamp(FontFamilyIndex, 0, FontFamilies.Length - 1)];
+
+    public double OutputFontSize
+    {
+        get => _outputFontSize;
+        set => SetProperty(ref _outputFontSize, value);
+    }
+
+    public double EditorFontSize
+    {
+        get => _editorFontSize;
+        set => SetProperty(ref _editorFontSize, value);
+    }
+
+    public int MemoryWordsIndex
+    {
+        get => _memoryWordsIndex;
+        set => SetProperty(ref _memoryWordsIndex, value);
+    }
+
+    public int MemoryWords => MemoryWordCounts[Math.Clamp(MemoryWordsIndex, 0, MemoryWordCounts.Length - 1)];
+
+    public int NumberBaseIndex
+    {
+        get => _numberBaseIndex;
+        set => SetProperty(ref _numberBaseIndex, value);
+    }
+
+    public NumberBase NumberBase => (NumberBase)Math.Clamp(NumberBaseIndex, 0, 2);
 
     public string InstructionLimitText
     {
@@ -544,6 +642,7 @@ public sealed class MainViewModel : ObservableObject
                 Examples.Clear();
                 foreach (var entry in entries) Examples.Add(entry);
                 Settings = _settingsStore.Load();
+                ApplyDisplay(_settingsStore.LoadDisplay());
                 IsInitialized = true;
                 Status = entries.Count == 0
                     ? "Примеры не найдены."
@@ -555,6 +654,18 @@ public sealed class MainViewModel : ObservableObject
         {
             await MainThread.InvokeOnMainThreadAsync(() => Status = "Ошибка подготовки: " + ex.Message);
         }
+    }
+
+    private void ApplyDisplay(DisplaySettings display)
+    {
+        int fontIndex = Array.FindIndex(FontFamilies,
+            value => string.Equals(value, display.OutputFontFamily, StringComparison.Ordinal));
+        FontFamilyIndex = fontIndex < 0 ? 0 : fontIndex;
+        OutputFontSize = display.OutputFontSize;
+        EditorFontSize = display.EditorFontSize;
+        int wordsIndex = Array.IndexOf(MemoryWordCounts, display.MemoryWords);
+        MemoryWordsIndex = wordsIndex < 0 ? 1 : wordsIndex;
+        NumberBaseIndex = (int)display.NumberBase;
     }
 
     private void LoadExample(ExampleEntry entry)
@@ -682,6 +793,10 @@ public sealed class MainViewModel : ObservableObject
         GuestClock = Settings.GuestClock;
         Statistics = Settings.CollectStatistics;
         DebugMode = Settings.DebugMode;
+        UseWallClock = Settings.UseWallClock;
+        LoopDetect = Settings.LoopDetect;
+        HangDetect = Settings.HangDetect;
+        ForexAsFortran = Settings.ForexAsFortran;
         PopupTitle = "Настройки запуска";
         IsRegistersOpen = false;
         IsDeviceOpen = false;
@@ -715,16 +830,27 @@ public sealed class MainViewModel : ObservableObject
         };
         var model = (MachineModel)Math.Clamp(ModelIndex, 0, ModelOptions.Count - 1);
         long wallClockMs = (long)Math.Round(seconds * 1000, MidpointRounding.AwayFromZero);
+        bool debug = model == MachineModel.SupervisorHardware ? false : DebugMode;
         var candidate = new RunSettings(speed, instructionLimit, wallClockMs, model,
-            GuestClock, Statistics, DebugMode);
+            GuestClock, Statistics, debug, UseWallClock, LoopDetect, HangDetect, ForexAsFortran);
         if (!candidate.TryValidate(out string? error))
         {
             PopupError = error ?? "Некорректные настройки.";
             return;
         }
 
+        var display = new DisplaySettings(OutputFontFamily, OutputFontSize, EditorFontSize,
+            MemoryWords, NumberBase);
+        if (!display.TryValidate(out string? displayError))
+        {
+            PopupError = displayError ?? "Некорректные настройки отображения.";
+            return;
+        }
+
         Settings = candidate;
         _settingsStore.Save(candidate);
+        _settingsStore.SaveDisplay(display);
+        ApplyDisplay(display);
         PopupError = string.Empty;
         ClosePopup();
         Status = "Настройки сохранены.";
@@ -732,7 +858,7 @@ public sealed class MainViewModel : ObservableObject
 
     private void SelectTab(string? tab)
     {
-        string value = tab is "code" or "search" or "registers" or "memory"
+        string value = tab is "code" or "search" or "registers" or "lamps" or "memory"
             or "terminal" or "print" or "punch" or "plotter" ? tab : "code";
         if (_activeTab != value)
         {
@@ -750,7 +876,7 @@ public sealed class MainViewModel : ObservableObject
                 if (Snapshot is { } snapshot)
                 {
                     int address = snapshot.K == 0 ? 512 : (int)snapshot.K;
-                    MemoryAddressText = Convert.ToString(address, 8);
+                    MemoryAddressText = MemoryAddress(address);
                 }
                 InspectMemory();
                 break;
@@ -781,6 +907,7 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsCodeTab));
         OnPropertyChanged(nameof(IsSearchTab));
         OnPropertyChanged(nameof(IsRegistersTab));
+        OnPropertyChanged(nameof(IsLampTab));
         OnPropertyChanged(nameof(IsMemoryTab));
         OnPropertyChanged(nameof(IsTerminalTab));
         OnPropertyChanged(nameof(IsPrinterTab));
@@ -833,10 +960,17 @@ public sealed class MainViewModel : ObservableObject
             Status = "Некорректный адрес памяти.";
             return;
         }
-        _runService.RequestMemorySnapshot(address, 32);
+        _runService.RequestMemorySnapshot(address, MemoryWords);
     }
 
-    private static bool TryParseAddress(string? text, out int address)
+    private string MemoryAddress(int address) => NumberBase switch
+    {
+        NumberBase.Decimal => address.ToString("D5", CultureInfo.InvariantCulture),
+        NumberBase.Hexadecimal => address.ToString("X4", CultureInfo.InvariantCulture),
+        _ => Convert.ToString(address, 8).PadLeft(5, '0'),
+    };
+
+    private bool TryParseAddress(string? text, out int address)
     {
         text = (text ?? string.Empty).Trim();
         if (text.Length == 0)
@@ -845,7 +979,12 @@ public sealed class MainViewModel : ObservableObject
             return true;
         }
 
-        int radix = 8;
+        int radix = NumberBase switch
+        {
+            NumberBase.Decimal => 10,
+            NumberBase.Hexadecimal => 16,
+            _ => 8,
+        };
         if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
         {
             radix = 16;
@@ -967,7 +1106,6 @@ public sealed class MainViewModel : ObservableObject
     {
         _dispatcher.Post(() =>
         {
-            InputText = string.Empty;
             InputPrompt = string.IsNullOrWhiteSpace(prompt) ? "Введите строку:" : prompt.Trim();
             IsWaitingInput = true;
             Status = "Ожидание ввода.";
@@ -990,8 +1128,8 @@ public sealed class MainViewModel : ObservableObject
     {
         _dispatcher.Post(() =>
         {
-            MemoryText = RegisterFormatter.FormatMemory(snapshot);
-            MemoryAddressText = Convert.ToString(snapshot.Address, 8);
+            MemoryText = RegisterFormatter.FormatMemory(snapshot, NumberBase);
+            MemoryAddressText = MemoryAddress(snapshot.Address);
         });
     }
 

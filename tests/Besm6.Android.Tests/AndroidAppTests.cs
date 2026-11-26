@@ -155,6 +155,39 @@ public sealed class MachineRunServiceTests
     }
 
     [TestMethod]
+    public async Task HardwareSupervisorRunsAssemblerJob()
+    {
+        string work = Path.Combine(Path.GetTempPath(), "besm6-android-hw-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(work);
+        try
+        {
+            string job = Path.Combine(work, "job.dub");
+            await File.WriteAllTextAsync(job, """
+                *assem
+                atx 1234
+                stop
+                *end file
+                """, new UTF8Encoding(false));
+
+            using var service = new MachineRunService(TapeImage.DefaultTapesDir(), work);
+            var completion = new TaskCompletionSource<RunOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
+            service.Completed += outcome => completion.TrySetResult(outcome);
+
+            await service.Start(job, RunSettings.Default with
+            {
+                Model = MachineModel.SupervisorHardware,
+                InstructionLimit = 50_000_000,
+            });
+            RunOutcome result = await completion.Task.WaitAsync(TimeSpan.FromSeconds(180));
+            Assert.IsTrue(result.Success, result.Error);
+        }
+        finally
+        {
+            try { Directory.Delete(work, recursive: true); } catch (IOException) { }
+        }
+    }
+
+    [TestMethod]
     public async Task DebugModeStartsPausedAndSupportsStepAndResume()
     {
         string work = Path.Combine(Path.GetTempPath(), "besm6-android-debug-" + Guid.NewGuid().ToString("N"));

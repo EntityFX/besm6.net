@@ -24,9 +24,38 @@ public sealed class SettingsStore
             model,
             Preferences.Default.Get("guestClock", defaults.GuestClock),
             Preferences.Default.Get("statistics", defaults.CollectStatistics),
-            Preferences.Default.Get("debugMode", defaults.DebugMode));
+            Preferences.Default.Get("debugMode", defaults.DebugMode),
+            Preferences.Default.Get("useWallClock", defaults.UseWallClock),
+            Preferences.Default.Get("loopDetect", defaults.LoopDetect),
+            Preferences.Default.Get("hangDetect", defaults.HangDetect),
+            Preferences.Default.Get("forexAsFortran", defaults.ForexAsFortran));
 
         return result.TryValidate(out _) ? result : defaults;
+    }
+
+    public DisplaySettings LoadDisplay()
+    {
+        DisplaySettings defaults = DisplaySettings.Default;
+        int rawBase = Preferences.Default.Get("numberBase", (int)defaults.NumberBase);
+        var numberBase = Enum.IsDefined(typeof(NumberBase), rawBase)
+            ? (NumberBase)rawBase
+            : defaults.NumberBase;
+        var result = new DisplaySettings(
+            Preferences.Default.Get("outputFontFamily", defaults.OutputFontFamily),
+            Preferences.Default.Get("outputFontSize", defaults.OutputFontSize),
+            Preferences.Default.Get("editorFontSize", defaults.EditorFontSize),
+            Preferences.Default.Get("memoryWords", defaults.MemoryWords),
+            numberBase);
+        return result.TryValidate(out _) ? result : defaults;
+    }
+
+    public void SaveDisplay(DisplaySettings settings)
+    {
+        Preferences.Default.Set("outputFontFamily", settings.OutputFontFamily);
+        Preferences.Default.Set("outputFontSize", settings.OutputFontSize);
+        Preferences.Default.Set("editorFontSize", settings.EditorFontSize);
+        Preferences.Default.Set("memoryWords", settings.MemoryWords);
+        Preferences.Default.Set("numberBase", (int)settings.NumberBase);
     }
 
     public void Save(RunSettings settings)
@@ -44,5 +73,9 @@ public sealed class SettingsStore
         Preferences.Default.Set("guestClock", settings.GuestClock);
         Preferences.Default.Set("statistics", settings.CollectStatistics);
         Preferences.Default.Set("debugMode", settings.DebugMode);
+        Preferences.Default.Set("useWallClock", settings.UseWallClock);
+        Preferences.Default.Set("loopDetect", settings.LoopDetect);
+        Preferences.Default.Set("hangDetect", settings.HangDetect);
+        Preferences.Default.Set("forexAsFortran", settings.ForexAsFortran);
     }
 }
